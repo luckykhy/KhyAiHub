@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "protocol": "khy-amoon/1",
+  "port": 18765,
+  "base_url": "http://127.0.0.1:18765",
+  "token_file": "/sdcard/khy-amoon-bridge/token",
+  "mailbox": "/sdcard/khy-amoon-bridge",
+  "_note": "由 deploy-phone.js / bootstrap 写入实际 port；本文件不含 token 本体。"
+}

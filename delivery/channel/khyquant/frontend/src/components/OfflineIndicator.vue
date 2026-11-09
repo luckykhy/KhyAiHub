@@ -27,7 +27,10 @@ const { isOnline } = useOnlineStatus()
 <style scoped>
 .offline-bar {
   position: fixed;
-  top: 0;
+  /* Under viewport-fit=cover this clears the status bar; on mobile it also
+     starts below MobileLayout's 56px top bar so the hamburger/bell/avatar stay
+     visible and tappable while offline. */
+  top: env(safe-area-inset-top);
   left: 0;
   right: 0;
   z-index: 10001;
@@ -41,6 +44,12 @@ const { isOnline } = useOnlineStatus()
   font-size: 13px;
   font-weight: 500;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .offline-bar {
+    top: calc(56px + env(safe-area-inset-top));
+  }
 }
 
 .offline-bar__icon {

@@ -224,6 +224,9 @@ import {
   DataBoard,
   Cpu,
   InfoFilled,
+  Key,
+  Box,
+  Operation,
   UserFilled,
   SwitchButton
 } from '@element-plus/icons-vue'
@@ -294,6 +297,10 @@ const onTouchEnd = () => {
 // NOTE: every path here must be a route registered in router/index.js — the
 // interaction.wiring contract test asserts this, so don't add a menu entry
 // that points at an unregistered (dead) route.
+//
+// The last three mirror the host menu in plugins/pluginManager.js
+// (HOST_MENU_ITEMS): without them those routes had no phone entry at all, so
+// API Key / 依赖管理 / 统一管理 were unreachable on mobile.
 const menuItems = [
   { path: '/dashboard', label: '主页', icon: 'Odometer' },
   { path: '/trading', label: '智能交易', icon: 'TrendCharts' },
@@ -301,6 +308,9 @@ const menuItems = [
   { path: '/backtest', label: '回测分析', icon: 'DataAnalysis' },
   { path: '/announcements', label: '通知公告', icon: 'Bell' },
   { path: '/feedback', label: '意见反馈', icon: 'ChatDotRound' },
+  { path: '/api-keys', label: 'API Key', icon: 'Key' },
+  { path: '/dependencies', label: '依赖管理', icon: 'Box' },
+  { path: '/system-management', label: '统一管理', icon: 'Operation' },
   { path: '/profile', label: '个人中心', icon: 'UserFilled' },
 ]
 
@@ -313,25 +323,12 @@ const bottomTabs = [
 ]
 
 // Notifications
+// No notification feed is wired yet. A hardcoded demo list pinned the bell badge
+// at 3 and froze the drawer on the same three fake rows, so start empty and
+// derive the badge from real unread state (el-empty covers the empty case).
 const notificationDrawer = ref(false)
-const notificationCount = ref(3)
-const notifications = ref([
-  {
-    id: 1, type: 'success', title: '回测完成',
-    message: '策略“箱体突破”回测已结束',
-    createdAt: new Date(), read: false
-  },
-  {
-    id: 2, type: 'warning', title: '系统提醒',
-    message: '账户余额偏低，请注意风险控制',
-    createdAt: new Date(Date.now() - 3600000), read: false
-  },
-  {
-    id: 3, type: 'info', title: '公告通知',
-    message: '系统将于今晚 22:00 进行维护',
-    createdAt: new Date(Date.now() - 7200000), read: true
-  }
-])
+const notifications = ref([])
+const notificationCount = computed(() => notifications.value.filter(n => !n.read).length)
 
 const isActive = (path) => route.path === path || route.path.startsWith(path + '/')
 
@@ -346,7 +343,6 @@ const showNotifications = () => {
 
 const handleNotificationClick = (notification) => {
   notification.read = true
-  notificationCount.value = notifications.value.filter(n => !n.read).length
 }
 
 const handleLogout = () => {
@@ -527,8 +523,8 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.85);
   border-radius: 999px;
   font-size: 12px;
-  padding: 6px 10px;
-  min-height: 32px;
+  padding: 8px 14px;
+  min-height: 44px;
 }
 
 .drawer-mode-btn.active {
@@ -542,7 +538,9 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 200;
-  height: 56px;
+  /* Add the inset to the height, don't subtract it — a fixed 56px + padding-top
+     shrank the usable row once a safe-area inset became non-zero. */
+  height: calc(56px + env(safe-area-inset-top));
   padding-top: env(safe-area-inset-top);
   background: linear-gradient(135deg, #304156 0%, #1f2d3d 100%);
   display: flex;
@@ -642,8 +640,10 @@ onUnmounted(() => {
 
 /* ===== Page content ===== */
 .mobile-page-content {
-  min-height: calc(100vh - 56px);
-  min-height: calc(100dvh - 56px);
+  /* Match the top bar's own height (56px + inset) so the page never hides
+     content behind it. */
+  min-height: calc(100vh - 56px - env(safe-area-inset-top));
+  min-height: calc(100dvh - 56px - env(safe-area-inset-top));
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
   padding-left: 12px;
   padding-right: 12px;

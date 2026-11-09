@@ -3399,7 +3399,7 @@ export default {
 
               position: signal.type === 'buy' ? 'belowBar' : 'aboveBar',
 
-              color: signal.type === 'buy' ? 'var(--khy-success)' : 'var(--khy-danger)',
+              color: signal.type === 'buy' ? 'var(--khy-trade-buy)' : 'var(--khy-trade-sell)',
 
               shape: signal.type === 'buy' ? 'arrowUp' : 'arrowDown',
 
@@ -6659,7 +6659,7 @@ export default {
 
                 position: s.type === 'buy' ? 'belowBar' : 'aboveBar',
 
-                color: s.type === 'buy' ? '#26a69a' : 'var(--khy-danger)',
+                color: s.type === 'buy' ? 'var(--khy-trade-buy)' : 'var(--khy-trade-sell)',
 
                 shape: s.type === 'buy' ? 'arrowUp' : 'arrowDown',
 

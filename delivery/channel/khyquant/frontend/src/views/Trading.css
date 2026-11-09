@@ -3,11 +3,11 @@
 
   height: 100vh;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   color: var(--khy-white);
 
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  font-family: var(--font-family);
 
   font-size: 12px;
 
@@ -31,9 +31,9 @@
 
   height: 60px;
 
-  background: linear-gradient(to bottom, var(--khy-gray-900), var(--khy-gray-900));
+  background: linear-gradient(to bottom, var(--surface-trading-bg), var(--surface-trading-bg));
 
-  border-bottom: 1px solid var(--khy-gray-700);
+  border-bottom: 1px solid var(--surface-trading-border);
 
   display: flex;
 
@@ -65,7 +65,7 @@
 
 :deep(.symbol-select .el-select__wrapper) {
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   border-color: rgba(42, 46, 57, 0.8);
 
@@ -93,7 +93,7 @@
 
 .option-code {
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
   font-weight: 600;
 
@@ -165,7 +165,7 @@
 
   color: white;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -175,7 +175,7 @@
 
   font-size: 14px;
 
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 
 }
 
@@ -187,7 +187,7 @@
 
   font-weight: bold;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -199,7 +199,7 @@
 
   font-weight: 600;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -217,7 +217,7 @@
 
 .detail-item {
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
   font-size: 12px;
 
@@ -227,7 +227,7 @@
 
 .detail-item .value {
 
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 
   font-weight: 600;
 
@@ -259,9 +259,9 @@
 
   flex-shrink: 0; /* 🔥 防止被压缩 */
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
-  border-right: 1px solid var(--khy-gray-700);
+  border-right: 1px solid var(--surface-trading-border);
 
   display: flex;
 
@@ -317,9 +317,9 @@
 
   height: 60px;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
-  border: 1px solid var(--khy-gray-700);
+  border: 1px solid var(--surface-trading-border);
 
   border-left: none;
 
@@ -351,7 +351,7 @@
 
   right: auto;
 
-  border-left: 1px solid var(--khy-gray-700);
+  border-left: 1px solid var(--surface-trading-border);
 
   border-right: none;
 
@@ -375,7 +375,7 @@
 
 .left-panel-toggle-btn .el-icon {
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
   font-size: 16px;
 
@@ -403,7 +403,7 @@
 
   flex-direction: column;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   transition: all 0.3s ease;
 
@@ -421,9 +421,9 @@
 
   height: 40px;
 
-  background: linear-gradient(to bottom, #2a2a2a, var(--khy-gray-900));
+  background: linear-gradient(to bottom, #2a2a2a, var(--surface-trading-bg));
 
-  border-bottom: 1px solid var(--khy-gray-700);
+  border-bottom: 1px solid var(--surface-trading-border);
 
   display: flex;
 
@@ -463,9 +463,9 @@
 
 .strategy-symbol {
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 
   font-size: 12px;
 
@@ -595,9 +595,9 @@
 
   height: 24px;
 
-  background: linear-gradient(to bottom, #2a2a2a, var(--khy-gray-900));
+  background: linear-gradient(to bottom, #2a2a2a, var(--surface-trading-bg));
 
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
 
   display: flex;
 
@@ -625,7 +625,7 @@
 
 .status-item {
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
 }
 
@@ -635,7 +635,9 @@
 
 .price-up {
 
-  color: #ff4444 !important;
+  color: var(--khy-quote-up) !important;
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -643,7 +645,9 @@
 
 .price-down {
 
-  color: #00aa00 !important;
+  color: var(--khy-quote-down) !important;
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -671,7 +675,7 @@
 
 ::-webkit-scrollbar-track {
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
 }
 
@@ -679,7 +683,7 @@
 
 ::-webkit-scrollbar-thumb {
 
-  background: var(--khy-gray-600);
+  background: var(--surface-trading-border-strong);
 
   border-radius: 3px;
 
@@ -689,7 +693,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
 
-  background: var(--khy-gray-500);
+  background: var(--surface-trading-text-tertiary);
 
 }
 
@@ -699,11 +703,11 @@
 
 :deep(.el-button) {
 
-  background: var(--khy-gray-700);
+  background: var(--surface-trading-border);
 
-  border-color: var(--khy-gray-600);
+  border-color: var(--surface-trading-border-strong);
 
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 
 }
 
@@ -711,9 +715,9 @@
 
 :deep(.el-button:hover) {
 
-  background: var(--khy-gray-600);
+  background: var(--surface-trading-border-strong);
 
-  border-color: var(--khy-gray-500);
+  border-color: var(--surface-trading-text-tertiary);
 
   color: #00aaff;
 
@@ -863,7 +867,7 @@
 
     font-size: 13px;
 
-    color: var(--khy-gray-400);
+    color: var(--surface-trading-text-secondary);
 
   }
 
@@ -1443,7 +1447,7 @@
 
     gap: 2px;
 
-    color: var(--khy-gray-400);
+    color: var(--surface-trading-text-secondary);
 
     white-space: nowrap;
 
@@ -1519,7 +1523,7 @@
 
     padding: 16px;
 
-    background: var(--khy-gray-900);
+    background: var(--surface-trading-bg);
 
   }
 
@@ -1631,7 +1635,9 @@
 
   right: 16px;
 
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  /* Clear the 62px MobileLayout bottom nav + a 12px gap; env() covers the
+     gesture bar once the shell declares viewport-fit=cover. */
+  bottom: calc(74px + env(safe-area-inset-bottom));
 
   width: 56px;
 
@@ -1653,7 +1659,9 @@
 
   cursor: pointer;
 
-  z-index: 800;
+  /* Below the position panel (840) and the bottom nav (850): the FAB clears the
+     nav by position, so it only needs to stay above page content. */
+  z-index: 830;
 
   color: white;
 
@@ -1671,7 +1679,9 @@
 
   left: 16px;
 
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  /* Clear the 62px MobileLayout bottom nav + a 12px gap; env() covers the
+     gesture bar once the shell declares viewport-fit=cover. */
+  bottom: calc(74px + env(safe-area-inset-bottom));
 
   width: 56px;
 
@@ -1693,7 +1703,9 @@
 
   cursor: pointer;
 
-  z-index: 800;
+  /* Below the position panel (840) and the bottom nav (850): the FAB clears the
+     nav by position, so it only needs to stay above page content. */
+  z-index: 830;
 
   color: white;
 
@@ -1765,7 +1777,7 @@
 
   max-height: 70vh;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   border-radius: 16px 16px 0 0;
 
@@ -1783,7 +1795,7 @@
 
   height: 4px;
 
-  background: var(--khy-gray-600);
+  background: var(--surface-trading-border-strong);
 
   border-radius: 2px;
 
@@ -1811,7 +1823,7 @@
 
   background: #2a2a2a;
 
-  border: 1px solid var(--khy-gray-600);
+  border: 1px solid var(--surface-trading-border-strong);
 
   border-radius: 8px;
 
@@ -1827,7 +1839,7 @@
 
 }
 
-.sheet-search::placeholder { color: var(--khy-gray-400); }
+.sheet-search::placeholder { color: var(--surface-trading-text-secondary); }
 
 .sheet-list {
 
@@ -1861,9 +1873,9 @@
 
 .sheet-symbol-item.active { background: rgba(64, 158, 255, 0.12); }
 
-.sym-code { color: var(--khy-primary); font-family: monospace; font-weight: 600; font-size: 14px; }
+.sym-code { color: var(--khy-primary); font-family: var(--font-family-mono); font-weight: 600; font-size: 14px; }
 
-.sym-name { color: var(--khy-gray-200); font-size: 13px; }
+.sym-name { color: var(--surface-trading-text); font-size: 13px; }
 
 
 
@@ -1889,7 +1901,7 @@
 
   width: 100%;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   border-radius: 16px 16px 0 0;
 
@@ -1909,7 +1921,7 @@
 
   height: 4px;
 
-  background: var(--khy-gray-600);
+  background: var(--surface-trading-border-strong);
 
   border-radius: 2px;
 
@@ -1969,7 +1981,9 @@
 
   font-weight: 700;
 
-  font-family: monospace;
+  font-family: var(--font-family-mono);
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -1978,6 +1992,8 @@
   font-size: 16px;
 
   font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -2009,15 +2025,15 @@
 
   background: #2a2a2a;
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
   touch-action: manipulation;
 
 }
 
-.order-type-btn.active { background: #00aa00; color: var(--khy-white); }
+.order-type-btn.active { background: var(--khy-trade-buy); color: var(--khy-white); }
 
-.order-type-btn.sell.active { background: #ff4444; color: var(--khy-white); }
+.order-type-btn.sell.active { background: var(--khy-trade-sell); color: var(--khy-white); }
 
 .drawer-input-row {
 
@@ -2033,7 +2049,7 @@
 
 .drawer-input-row label {
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
   font-size: 13px;
 
@@ -2051,7 +2067,7 @@
 
   background: #2a2a2a;
 
-  border: 1px solid var(--khy-gray-600);
+  border: 1px solid var(--surface-trading-border-strong);
 
   border-radius: 8px;
 
@@ -2083,13 +2099,13 @@
 
   min-height: 36px;
 
-  border: 1px solid var(--khy-gray-600);
+  border: 1px solid var(--surface-trading-border-strong);
 
   border-radius: 6px;
 
   background: transparent;
 
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 
   font-size: 13px;
 
@@ -2123,9 +2139,9 @@
 
 }
 
-.drawer-submit-btn.buy { background: #00aa00; }
+.drawer-submit-btn.buy { background: var(--khy-trade-buy); }
 
-.drawer-submit-btn.sell { background: #ff4444; }
+.drawer-submit-btn.sell { background: var(--khy-trade-sell); }
 
 .drawer-submit-btn:active { opacity: 0.85; }
 

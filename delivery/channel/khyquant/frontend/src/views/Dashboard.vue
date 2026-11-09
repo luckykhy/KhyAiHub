@@ -1170,6 +1170,7 @@ onUnmounted(() => {
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .handover-retention-block {
@@ -1419,7 +1420,7 @@ onUnmounted(() => {
   height: 200px;
   max-width: 100%;
   min-height: 200px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
 }
 
 .qr-toggle-btn {
@@ -1442,7 +1443,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--khy-gray-900) 0%, #2d2d2d 100%);
+  background: linear-gradient(135deg, var(--surface-trading-bg) 0%, #2d2d2d 100%);
   border: 3px solid #FFD700;
   border-radius: 50px;
   color: #FFD700;
@@ -1507,21 +1508,29 @@ onUnmounted(() => {
   letter-spacing: 0.5px;
 }
 
-/* 响应式:移动端调整按钮位置 */
+/* 响应式:移动端改回流式布局
+   absolute + right:16px 的圆钮会压在局域网 IP 卡片/复制图标上，
+   改为 .lan-access-info 之下的一枚全宽按钮 */
 @media (max-width: 768px) {
   .call-ai-btn {
-    right: 16px;
+    position: static;
+    order: 3; /* banner 为纵向 flex：content → actions → lan-info(2) → 本按钮 */
+    width: 100%;
+    min-height: 44px;
+    margin-top: var(--spacing-md);
+    justify-content: center;
     padding: 10px 16px;
     font-size: 14px;
   }
-  
+
+  .call-ai-btn:hover,
+  .call-ai-btn:active {
+    transform: none;
+  }
+
   .ai-icon-wrapper {
     width: 32px;
     height: 32px;
-  }
-  
-  .ai-text {
-    display: none;
   }
 }
 
@@ -1939,11 +1948,14 @@ onUnmounted(() => {
   font-size: 18px;
   font-weight: 700;
   line-height: 1;
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .quote-change {
   font-size: 13px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .favorite-btn {
@@ -1960,11 +1972,13 @@ onUnmounted(() => {
 }
 
 .price-up {
-  color: var(--khy-danger);
+  color: var(--khy-quote-up);
+  font-variant-numeric: tabular-nums;
 }
 
 .price-down {
-  color: var(--khy-success);
+  color: var(--khy-quote-down);
+  font-variant-numeric: tabular-nums;
 }
 
 .price-neutral {
@@ -2013,7 +2027,7 @@ onUnmounted(() => {
 
 /* 行情空状态样式 */
 .empty-state-quotes {
-  padding: var(--spacing-3xl) var(--spacing-xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
   text-align: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
   border-radius: var(--radius-lg);
@@ -2065,7 +2079,7 @@ onUnmounted(() => {
 
 .empty-actions :deep(.el-button--default) {
   background: white;
-  border: 1px solid var(--border-base);
+  border: 1px solid var(--border-color);
 }
 
 .empty-actions :deep(.el-button--default:hover) {

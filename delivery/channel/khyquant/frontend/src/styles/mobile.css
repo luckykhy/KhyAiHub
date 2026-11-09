@@ -683,12 +683,6 @@
    ======================================== */
 
 @media (max-width: 768px) {
-  /* 减少动画 */
-  * {
-    animation-duration: 0.2s !important;
-    transition-duration: 0.2s !important;
-  }
-
   /* 简化阴影 */
   .card,
   .el-card {
@@ -699,6 +693,19 @@
   .glass-effect {
     backdrop-filter: none;
     background: white;
+  }
+}
+
+/* 不再用 `*` 把抽屉/面板/Toast 自己写好的 0.25–0.3s 缓动统一压成 0.2s；
+   压时长只在用户主动要求减少动效（系统设置）时生效 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
