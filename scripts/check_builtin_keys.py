@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""校验「出厂客户端里没有明文内置密钥」——即 APK 里只有混淆后的字节数组。
+"""校验「出厂客户端里没有明文内置密钥/端点」——即 APK 里只有混淆后的字节数组。
 
 为什么需要它
 ------------
-`built_in_keys.dart` 里的密钥是 XOR 混淆的（`s[i] = bytes[i] ^ KEY[i % 4]`），
-所以 **APK 里不应出现任何明文密钥**。这个脚本把 Dart 数组**解码**成明文候选，
-再去源树与 APK 里搜，命中即失败。
+`built_in_keys.dart` 里的密钥与「不希望暴露在 APK 里」的端点都是 XOR 混淆的
+（`s[i] = bytes[i] ^ KEY[i % 4]`），所以 **APK 里不应出现任何明文**。这个脚本把
+Dart 数组**解码**成明文候选，再去源树与 APK 里搜，命中即失败。
+
+端点为什么也走这套：端点是「这个包连着哪」的答案。明文写在 APK 里，任何一次
+`strings app.apk` 都能列出来——等于把自建网关的位置和免费档入口一起递给任何
+拿到安装包的人。R2 只强制密钥，但同一条理由适用于端点。
 
 与旧版 `check_keys.ps1` 的区别（旧版有三个坑，都已修）：
 1. 旧版硬编码 6 个前缀 ⇒ 第 7 把 `_stepfun` 从未被检查；
@@ -49,8 +53,20 @@ import sys
 import zipfile
 from pathlib import Path
 
+# 本脚本的人类可读输出含中文与 ✓/✗/⚠ 等符号，在 Windows 默认 GBK 控制台上
+# 会抛 UnicodeEncodeError——把「扫描通过」变成「扫描崩溃」，守卫一崩就等于没跑。
+# 在任何 stdout 使用前统一切到 UTF-8，并对无法编码的字符降级而不中断。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding='utf-8', errors='replace')
+    except (AttributeError, ValueError):  # 非 TextIO（重定向到二进制流等）
+        pass
+
 ROOT = Path(__file__).resolve().parent.parent
-CLIENT = ROOT / 'apps' / 'khy-os-client-app'
+# Flutter 客户端已从 apps/ 迁到 delivery/mobile/（apps/ 现只剩 khyos-desktop 桌面端）。
+# 路径不跟随迁移就会让本脚本在 DART 不存在时以 exit 2 退出——守卫不是「发现明文」，
+# 而是「跑不起来」，后者更危险：R2 的 0 命中承诺从未被真正验证过。
+CLIENT = ROOT / 'delivery' / 'mobile' / 'khy-os-client-app'
 DART = CLIENT / 'lib' / 'core' / 'config' / 'built_in_keys.dart'
 
 # 与 built_in_keys.dart / gen_keys.py 保持一致
@@ -66,17 +82,29 @@ SKIP_DIR_PARTS = {'build', '.dart_tool', '.git', 'node_modules', '__pycache__'}
 
 _ARRAY_RE = re.compile(r'static const List<int> _(\w+)\s*=\s*\[(.*?)\];', re.S)
 _NUM_RE = re.compile(r'\d+')
+# 数组体内的注释。必须先剥掉再取数字，否则注释里的日期（"2026-09-27 消毒"）
+# 会被当成字节解出一串垃圾——而搜那串垃圾永远搜不到，守卫于是**假绿**：
+# 报告"无明文密钥"，实际上一个字节都没查。这比没有守卫更危险。
+_COMMENT_RE = re.compile(r'//[^\n]*|/\*.*?\*/', re.S)
+
+
+def array_bytes(body: str) -> list[int]:
+    return [int(x) for x in _NUM_RE.findall(_COMMENT_RE.sub('', body))]
 
 
 def decode_arrays(dart_path: Path = DART) -> dict[str, str]:
-    """从 Dart 源里解出全部明文候选。键 = 数组名（去掉前导下划线）。"""
+    """从 Dart 源里解出全部明文候选。键 = 数组名（去掉前导下划线）。
+
+    钥匙数组（`_supxh` 等）与端点数组（`_epKhyosGw` 等）用同一套 XOR，
+    所以这里一并解出；调用方按 `ep` 前缀区分两类。
+    """
     if not dart_path.exists():
         raise FileNotFoundError(f'找不到 {dart_path}')
     txt = dart_path.read_text(encoding='utf-8')
     out: dict[str, str] = {}
     for m in _ARRAY_RE.finditer(txt):
         name = m.group(1)
-        nums = [int(x) for x in _NUM_RE.findall(m.group(2))]
+        nums = array_bytes(m.group(2))
         if not nums:
             continue
         out[name] = ''.join(
@@ -148,14 +176,42 @@ def main() -> int:
     args = ap.parse_args()
 
     try:
-        plains = decode_arrays()
+        decoded = decode_arrays()
     except Exception as exc:  # noqa: BLE001
         print(f'ERROR: {exc}', file=sys.stderr)
         return 2
-    plains = {k: v for k, v in plains.items() if v and v != 'public'}
+    # 两类分开：钥匙与端点都该只以混淆形态随包分发，但报告里必须说清是哪类
+    # 泄露——把端点泄露标成「密钥」会让人去轮换一把并不存在的钥匙。
+    keys = {k: v for k, v in decoded.items()
+            if not k.startswith('ep') and v and v != 'public'}
+    endpoints = {k: v for k, v in decoded.items()
+                 if k.startswith('ep') and v and v != 'public'}
+    plains = {**keys, **endpoints}
     if not plains:
-        print(f'ERROR: 从 {DART.name} 解不出任何密钥数组', file=sys.stderr)
-        return 2
+        # 仓库消毒后的常态：所有数组都是空的，没有任何明文值可搜。
+        #
+        # 这里必须显式说清「本次一个值都没校验」，而不是打一句「无明文密钥」——
+        # 后者正是这个脚本修掉的假绿：以前它把注释里的日期当字节解出 3 个垃圾
+        # 字符，然后搜那串垃圾，永远搜不到，于是每次都"通过"。
+        #
+        # 放行（exit 0）是因为不变 vacuously 成立：没有密钥/端点，就没有明文可泄漏。
+        # 但开发者机器上跑过 gen_keys.py 贴回数组后，这里就变成真校验了。
+        if args.json:
+            print(json.dumps({
+                'ok': True,
+                'keys': [],
+                'endpoints': [],
+                'scannedSourceFiles': 0,
+                'apks': [],
+                'findings': [],
+                'note': 'no arrays decoded; nothing was actually verified',
+            }, ensure_ascii=False, indent=2))
+            return 0
+        print(f'{DART.name}: 所有 XOR 数组均为空（仓库消毒后的常态）')
+        print('  ⚠ 本次未校验任何明文值——没有密钥/端点可搜。')
+        print('  ⚠ 本机跑过 `python scripts/gen_keys.py` 贴回数组后，这里才是真校验。')
+        print('\n结论: ✓ 通过（vacuously —— 无值可泄漏）')
+        return 0
 
     # --changed 只看暂存改动；APK 是构建产物，提交时刻不存在 ⇒ 一并跳过
     src_only = args.src_only or args.changed
@@ -175,7 +231,9 @@ def main() -> int:
         except OSError:
             continue
         for name in scan_blob(data, plains):
-            findings.append({'where': rel, 'kind': 'source', 'key': name})
+            kind = 'endpoint' if name.startswith('ep') else 'key'
+            findings.append({'where': rel, 'kind': 'source',
+                             'key': name, 'secret': kind})
 
     scanned_apk: list[dict] = []
     if not src_only:
@@ -190,38 +248,49 @@ def main() -> int:
                         except (OSError, zipfile.BadZipFile):
                             continue
                         for name in scan_blob(data, plains):
-                            entry['leaks'].append({'entry': nm, 'key': name})
+                            entry['leaks'].append(
+                                {'entry': nm, 'key': name,
+                                 'secret': 'endpoint' if name.startswith('ep') else 'key'})
             except (OSError, zipfile.BadZipFile) as exc:
                 entry['error'] = str(exc)
             scanned_apk.append(entry)
             for leak in entry['leaks']:
                 findings.append({'where': f"{entry['apk']}!{leak['entry']}",
-                                 'kind': 'apk', 'key': leak['key']})
+                                 'kind': 'apk', 'key': leak['key'],
+                                 'secret': leak['secret']})
 
     ok = not findings
 
     if args.json:
         print(json.dumps({
             'ok': ok,
-            'keys': sorted(plains),
+            'keys': sorted(keys),
+            'endpoints': sorted(endpoints),
             'scannedSourceFiles': scanned_src,
             'apks': scanned_apk,
             'findings': findings,
         }, ensure_ascii=False, indent=2))
-        print(f"Summary: {len(findings)} plaintext hit(s) / {len(plains)} key(s) / {scanned_src} file(s)")
+        print(f"Summary: {len(findings)} plaintext hit(s) / "
+              f"{len(keys)} key(s) + {len(endpoints)} endpoint(s) / {scanned_src} file(s)")
         return 0 if ok else 1
 
     if args.gate:
         # 只输出聚合 finding 行，保持 stdout 对 ruleguard 解析器干净。
         for f in findings:
-            print(f'- [error] 出厂件出现明文内置密钥 [{f["key"]}] @ {f["where"]} '
+            what = '端点' if f.get('secret') == 'endpoint' else '密钥'
+            print(f'- [error] 出厂件出现明文内置{what} [{f["key"]}] @ {f["where"]} '
                   f'(id: {FINDING_ID})')
         return 0 if ok else 1
 
-    print(f'内置密钥 {len(plains)} 把（从 {DART.name} 解码，自动派生）')
-    for name in sorted(plains):
-        v = plains[name]
-        print(f'  _{name:<12} {v[:6]}…(len={len(v)})')
+    print(f'内置密钥 {len(keys)} 把、隐藏端点 {len(endpoints)} 个'
+          f'（从 {DART.name} 解码，自动派生）')
+    # 不打印密钥/端点前缀：本行既非判据所需，又会在 Windows GBK 控制台上抛
+    # UnicodeEncodeError（值含非 GBK 码位时）把整个扫描打断——让「扫描通过」
+    # 变成「扫描崩溃」，比多打几个字符危险得多。只报名字与长度。
+    for name in sorted(keys):
+        print(f'  _{name:<12} (len={len(keys[name])})')
+    for name in sorted(endpoints):
+        print(f'  _{name:<12} (len={len(endpoints[name])}) [endpoint]')
 
     scope = '（仅本次暂存改动）' if only is not None else ''
     print(f'\n[源树] 扫描 {scanned_src} 个文件{scope}'
@@ -229,9 +298,10 @@ def main() -> int:
     src_hits = [f for f in findings if f['kind'] == 'source']
     if src_hits:
         for f in src_hits:
-            print(f'  ✗ [明文] {f["where"]}  <- {f["key"]}')
+            what = '端点' if f.get('secret') == 'endpoint' else '密钥'
+            print(f'  ✗ [明文{what}] {f["where"]}  <- {f["key"]}')
     else:
-        print('  ✓ 源树无明文密钥')
+        print('  ✓ 源树无明文密钥/端点')
 
     if src_only:
         print('\n[APK] 已跳过（' + ('--changed' if args.changed else '--src-only') + '）')
@@ -245,11 +315,12 @@ def main() -> int:
             elif entry['leaks']:
                 print(f'  ✗ {entry["apk"]} ({entry["bytes"]:,}B) 发现明文:')
                 for leak in entry['leaks']:
-                    print(f'      [{leak["key"]}] in {leak["entry"]}')
+                    what = '端点' if leak['secret'] == 'endpoint' else '密钥'
+                    print(f'      [{what}:{leak["key"]}] in {leak["entry"]}')
             else:
-                print(f'  ✓ {entry["apk"]} ({entry["bytes"]:,}B) 无明文密钥')
+                print(f'  ✓ {entry["apk"]} ({entry["bytes"]:,}B) 无明文密钥/端点')
 
-    print('\n结论: ' + ('✓ 通过 —— 出厂客户端只有混淆密钥' if ok
+    print('\n结论: ' + ('✓ 通过 —— 出厂客户端只有混淆密钥与端点' if ok
                       else f'✗ 失败 —— {len(findings)} 处明文'))
     return 0 if ok else 1
 
