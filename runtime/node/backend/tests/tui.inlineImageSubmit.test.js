@@ -64,8 +64,18 @@ describe('Tui inline Image Submit', () => {
   });
 
   test('畸形输入不抛', () => {
-      expect(resolveInlineImageSubmit(undefined, { env: {} })).toEqual({ text: '', images: [] });
-      expect(resolveInlineImageSubmit(null, { env: {} })).toEqual({ text: '', images: [] });
+      // display 是 2026-11-01 新增的**只读显示面描述**(chip 行 / 回显用),
+      // 与 images(网关载荷)分开构造;无图时同样恒空。
+      expect(resolveInlineImageSubmit(undefined, { env: {} })).toEqual({
+          text: '',
+          images: [],
+          display: [],
+      });
+      expect(resolveInlineImageSubmit(null, { env: {} })).toEqual({
+          text: '',
+          images: [],
+          display: [],
+      });
   });
 
 });

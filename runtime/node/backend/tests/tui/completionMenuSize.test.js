@@ -130,10 +130,12 @@ describeOrSkip('BUG-60 补全下拉账本与 paint 同源', () => {
     const { rows, billed } = await mount(props, { cols: 80, rows: 24 });
     expect(rows[0]).toBe('╭' + '─'.repeat(78) + '╮');
     expect(rows[rows.length - 1]).toBe('╰' + '─'.repeat(78) + '╯');
-    expect(rows[rows.length - 2]).toContain('斜杠命令 · 1/3 · Tab/Enter 选择 · Esc 取消');
+    expect(rows[rows.length - 2]).toContain(
+      '斜杠命令 · 第 1/3 页 · 回车执行 · 左右键翻页 · Esc 取消 · 点击选中'
+    );
     expect(displayWidth(rows[rows.length - 2])).toBe(80);
     // 边框 2 + 一页 10 条 + 页脚 1
-    expect(rows.length).toBe(13);
+    expect(rows.length).toBe(14); // 边框 2 + 匹配数头 1 + 一页 10 条 + 页脚 1
     expect(billed).toBe(rows.length);
   });
 
@@ -174,7 +176,7 @@ describeOrSkip('BUG-60 补全下拉账本与 paint 同源', () => {
     expect(g.labelWidth + 2).toBeLessThanOrEqual(g.inner);
     // 剩余不足 8 列 ⇒ 整栏不画（descMax === 0），绝不折出第二视觉行
     expect(g.descMax).toBe(0);
-    expect(CompletionMenu.menuRowCount({ completion, page: 0, cols: 20 })).toBe(13);
+    expect(CompletionMenu.menuRowCount({ completion, page: 0, cols: 20 })).toBe(14);
     // 40 列还留得下一栏 desc
     expect(CompletionMenu.menuGeom({ completion, page: 0, cols: 40 }).descMax).toBeGreaterThan(0);
   });
@@ -184,7 +186,7 @@ describeOrSkip('BUG-60 补全下拉账本与 paint 同源', () => {
     const inner = (cols) =>
       CompletionMenu.footerLabel('slash', 0, 26, cols - 4 - 20);
     // margin 20 把 60 列压成 36 内宽 ⇒ 页脚退档，但仍是 1 视觉行
-    expect(CompletionMenu.menuRowCount({ completion, page: 0, cols: 60, marginLeft: 20 })).toBe(13);
+    expect(CompletionMenu.menuRowCount({ completion, page: 0, cols: 60, marginLeft: 20 })).toBe(14);
     expect(displayWidth(inner(60))).toBeLessThanOrEqual(36);
     // 极窄：退到只剩退出键，仍不许折行
     expect(displayWidth(CompletionMenu.footerLabel('slash', 0, 26, 10))).toBeLessThanOrEqual(10);
@@ -197,14 +199,14 @@ describeOrSkip('BUG-60 补全下拉账本与 paint 同源', () => {
       CompletionMenu.menuRowCount({ completion: { active: true, kind: 'file', items: [] } })
     ).toBe(0);
     const three = { active: true, kind: 'file', items: [{ value: 'a', label: 'a', desc: '文件' }] };
-    expect(CompletionMenu.menuRowCount({ completion: three, cols: 80 })).toBe(4);
+    expect(CompletionMenu.menuRowCount({ completion: three, cols: 80 })).toBe(5);
   });
 
   test('高度预算：一页条数按预算收缩；画不下一框就整框让位（账本 == 画出）', async () => {
     const completion = mkCompletion(260);
     // 预算 0 = 不受高度约束（今日形态）；13 → 一页 10 条；7 → 4 条；4 → 1 条；
     // < 4（边框 2 + 1 条 + 页脚 1 的最低框高）→ 画不下，组件不挂载、账本归零。
-    for (const [maxRows, want] of [[0, 13], [13, 13], [7, 7], [4, 4], [3, 0], [1, 0]]) {
+    for (const [maxRows, want] of [[0, 14], [13, 14], [7, 8], [4, 5], [3, 0], [1, 0]]) {
       const props = { completion, selectedIndex: 0, marginLeft: 0, page: 0, cols: 80, maxRows };
       // eslint-disable-next-line no-await-in-loop
       const { rows, billed } = await mount(props, { cols: 80, rows: 24 }, want > 0);

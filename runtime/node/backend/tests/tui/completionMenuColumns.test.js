@@ -110,11 +110,19 @@ function descColumnOf(line) {
   return m ? dw(line.slice(0, m[0].length)) : null;
 }
 
-/** 数据行：去掉右竖线，丢掉顶边框、页脚与只剩竖线的残行。 */
+/** 数据行：去掉右竖线，丢掉顶边框、页脚、匹配数头行与只剩竖线的残行。
+ * 2026-10-10 视觉细化给菜单加了一行「匹配 N 条」头（上下文，非数据），
+ * 它与页脚同样不归数据行。 */
 function dataRows(lines) {
   return lines
     .map((l) => l.replace(/│$/, ''))
-    .filter((l) => l.trim() && !/^│?\s*─+\s*$/.test(l) && !l.includes('Esc 取消'));
+    .filter(
+      (l) =>
+        l.trim() &&
+        !/^│?\s*─+\s*$/.test(l) &&
+        !l.includes('Esc 取消') &&
+        !/^│?\s*(匹配 )?\d+ 条/.test(l)
+    );
 }
 
 async function mount(items, opts) {
@@ -203,6 +211,8 @@ describeOrSkip('CompletionMenu 两列按显示列对齐(BUG-47)', () => {
     expect(rows[0]).toContain('src/services/backend/src');
   });
 
+  // 2026-10-10 视觉细化给菜单加了一行「匹配 N 条」头（上下文）。它与页脚
+  // 同样不归数据行（见 dataRows），因此数据行与旧行为逐字节一致。
   test('旧行为锁：无 cols 的纯窄 ASCII 列表逐字节不变', async () => {
     const rows = await mount(
       [

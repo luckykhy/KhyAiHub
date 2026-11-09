@@ -69,7 +69,7 @@ test('D1:每条 selfAudit evidenceAnchors.modules 都解析到真实文件(锚�
   }
 });
 
-test('D1:verifyAll 对全部 5 条追踪项核验通过(#7 不再假报核验失败)', () => {
+test('D1:verifyAll 对全部追踪项核验通过(#7 不再假报核验失败)', () => {
   const res = verifier.verifyAll({ env: {} });
   assert.ok(res && res.results, 'verifier 返回结果');
   for (const [id, r] of Object.entries(res.results)) {
@@ -174,11 +174,11 @@ test('getSelfFacet:未知分面 → ok:false + 诚实 reason(不伪造、不静�
   assert.doesNotThrow(() => selfProfile.getSelfFacet(null, null));
 });
 
-test('getSelfFacet(self_audit_verify):5 项证据全 verified', () => {
+test('getSelfFacet(self_audit_verify):6 项证据全 verified(#8 起随 #1..#7 逐项核验)', () => {
   const r = selfProfile.getSelfFacet('self_audit_verify', { env: {} });
   assert.strictEqual(r.ok, true);
   const items = r.data.items;
-  assert.ok(Array.isArray(items) && items.length === 5, '5 条追踪项');
+  assert.ok(Array.isArray(items) && items.length === 6, '6 条追踪项(2026-10-13 起含 #8)');
   for (const it of items) {
     assert.strictEqual(it.verified, true, `${it.id} 未通过核验:${it.reason}`);
   }
@@ -226,7 +226,9 @@ test('KhySelf 工具:既有 action 行为不回归(location/commands/all)', asyn
   const t = new KhySelfTool();
   const loc = await t.execute({ action: 'location' });
   assert.strictEqual(loc.success, true);
-  assert.match(loc.location.selfSourceDir, /services[\/\\]backend[\/\\]src$/);
+  // 自源目录随方案 P 迁到 runtime/node/backend/src（旧的 services/backend/src 已不存在）。
+  // 断言必须跟着真路径走，否则这条用例只是钉住一个已经不存在的目录布局。
+  assert.match(loc.location.selfSourceDir, /runtime[\/\\]node[\/\\]backend[\/\\]src$/);
   assert.strictEqual(loc.commands, undefined, 'location-only 不带 commands');
 
   const cmds = await t.execute({ action: 'commands' });
