@@ -20,6 +20,9 @@ class VfsNodeTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
+  /// 非空时这一行可被拖拽（拖到终端里补全路径）。
+  final String? dragPath;
+
   const VfsNodeTile({
     super.key,
     required this.node,
@@ -27,6 +30,7 @@ class VfsNodeTile extends StatelessWidget {
     required this.selectionMode,
     required this.onTap,
     required this.onLongPress,
+    this.dragPath,
   });
 
   @override
@@ -38,7 +42,7 @@ class VfsNodeTile extends StatelessWidget {
         ? Icons.folder_outlined
         : _iconForMime(node.mime);
 
-    return InkWell(
+    final tile = InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
@@ -106,6 +110,40 @@ class VfsNodeTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+
+    final path = dragPath;
+    if (path == null) return tile;
+    // 可拖拽：把路径拖到终端里补全。带路径的文件是拖拽源，
+    // 拖动时给个抓手图标提示——否则用户不知道这一行能拖。
+    return Draggable<String>(
+      data: path,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.cardPad,
+            vertical: AppSpacing.dense,
+          ),
+          decoration: BoxDecoration(
+            color: palette.surfaceHigh,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: palette.stroke),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.drag_indicator, size: 14, color: palette.textFaint),
+              const SizedBox(width: AppSpacing.dense),
+              Text(
+                node.name,
+                style: AppText.micro.copyWith(color: palette.textPrimary),
+              ),
+            ],
+          ),
+        ),
+      ),
+      child: tile,
     );
   }
 

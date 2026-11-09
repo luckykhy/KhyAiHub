@@ -12,19 +12,21 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/vfs/ai_plan.dart';
 import '../../core/vfs/app_manager.dart';
 import '../../core/vfs/automation_script.dart';
+import '../../core/vfs/automation_scheduler.dart';
 import '../../core/vfs/batch_rename.dart';
 import '../../core/vfs/vfs_copy_task.dart';
 import '../../core/vfs/operation_recorder.dart';
 import '../../core/vfs/vfs_audit.dart';
 import '../../core/vfs/vfs_archive.dart';
 import '../../core/vfs/vfs_organization.dart';
+import '../../core/vfs/vfs_suggestions.dart';
 import '../../core/vfs/vfs_watcher.dart';
 import '../../core/vfs/vfs_context.dart';
 import '../../core/vfs/vfs_node.dart';
@@ -40,6 +42,7 @@ import '../widgets/vfs/vfs_copy_progress_sheet.dart';
 import '../widgets/vfs/vfs_folder_picker.dart';
 import '../widgets/vfs/vfs_node_tile.dart';
 import '../widgets/vfs/vfs_sidebar.dart';
+import '../widgets/vfs/vfs_suggestion_card.dart';
 import '../widgets/vfs/vfs_terminal_drawer.dart';
 import '../widgets/vfs/vfs_text_editor.dart';
 import 'app_data_browser_screen.dart';
@@ -71,6 +74,10 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
   List<VfsBookmark> _bookmarks = const <VfsBookmark>[];
   List<VfsHistoryEntry> _history = const <VfsHistoryEntry>[];
 
+  /// AI 主动建议（仅在 AI 强度为「主动建议」以上时计算）。
+  List<VfsSuggestion> _suggestions = const <VfsSuggestion>[];
+  bool _suggestionsDismissed = false;
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +85,9 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
     // 装在文件管理器上是因为它是 App 的主界面，进程活着它就活着。
     VfsWatcherService.instance.start();
     VfsWatchTrigger.install();
+    // 定时脚本的调度器也挂在主界面上：App 进程活着它才活着——
+    // 没有前台服务的话，进程被杀后定时执行本来就不会继续，这一点在界面上写明。
+    AutomationScheduler.instance.start();
     _bootstrap();
   }
 
@@ -131,7 +141,9 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
         _listing = listing;
         _route = route;
         _loading = false;
+        _suggestionsDismissed = false;
       });
+      _computeSuggestions();
     } on VfsException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -151,7 +163,16 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
 
-    return Scaffold(
+    return CallbackShortcuts(
+      // 快捷键唤起 AI 面板：目标里写了「悬浮按钮、长按菜单或快捷键」三种入口，
+      // 这里补上第三种——已经盯着键盘的用户不该为了叫 AI 而去够屏幕角落。
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+            _openAiPanel,
+        const SingleActivator(LogicalKeyboardKey.keyI, control: true):
+            _openAiPanel,
+      },
+      child: Scaffold(
       drawer: VfsSidebar(
         currentPath: _path,
         status: _status,
@@ -214,6 +235,13 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
               },
             ),
             if (_route.readOnly) _readOnlyBanner(context),
+            if (_suggestions.isNotEmpty && !_suggestionsDismissed)
+              VfsSuggestionCard(
+                suggestions: _suggestions,
+                onTap: _handleSuggestion,
+                onDismiss: () =>
+                    setState(() => _suggestionsDismissed = true),
+              ),
             Expanded(child: _body(context)),
           ],
         ),
@@ -226,6 +254,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             )
           : null,
       backgroundColor: palette.pageBg,
+    ),
     );
   }
 
@@ -249,24 +278,22 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             tooltip: '位置',
           ),
           const SizedBox(width: AppSpacing.dense),
+          // 标题必须留得住：真机上顶栏一挤，「文件」两个字会被压成竖排两行。
+          // 所以标题用 Expanded 且不换行，剩下的操作收进溢出菜单。
           Expanded(
             child: Text(
               selecting ? '已选 ${_selected.length} 项' : '文件',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppText.title.copyWith(color: palette.textPrimary),
             ),
           ),
-          if (selecting) ...<Widget>[
-            TextButton(
-              onPressed: () => setState(_selected.clear),
-              child: const Text('取消'),
-            ),
-          ] else
-            IconButton(
-              onPressed: _showSearch,
-              icon: const Icon(Icons.search, size: 20),
-              color: palette.textSecondary,
-              tooltip: '搜索',
-            ),
+          IconButton(
+            onPressed: _showSearch,
+            icon: const Icon(Icons.search, size: 20),
+            color: palette.textSecondary,
+            tooltip: '搜索',
+          ),
           IconButton(
             onPressed: _toggleBookmark,
             icon: Icon(
@@ -276,42 +303,46 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             color: _isBookmarked ? palette.primary : palette.textSecondary,
             tooltip: _isBookmarked ? '取消书签' : '添加书签',
           ),
-          IconButton(
-            onPressed: _openTerminal,
-            icon: const Icon(Icons.terminal, size: 20),
-            color: palette.textSecondary,
-            tooltip: '终端',
-          ),
-          IconButton(
-            onPressed: _toggleRecorder,
-            icon: Icon(
-              OperationRecorder.instance.recording
-                  ? Icons.stop_circle_outlined
-                  : Icons.fiber_manual_record,
-              size: 20,
-            ),
-            color: OperationRecorder.instance.recording
-                ? palette.error
-                : palette.textSecondary,
-            tooltip: OperationRecorder.instance.recording
-                ? '停止录制'
-                : '录制操作为自动化脚本',
-          ),
-          IconButton(
-            onPressed: _showCreateMenu,
-            icon: const Icon(Icons.add, size: 20),
-            color: palette.textSecondary,
-            tooltip: '新建',
-          ),
-          IconButton(
-            onPressed: () => _open(_path),
-            icon: const Icon(Icons.refresh, size: 20),
-            color: palette.textSecondary,
-            tooltip: '刷新',
+          PopupMenuButton<String>(
+            onSelected: (String action) => _onOverflowAction(action),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'terminal',
+                child: Text('终端'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'record',
+                child: Text('录制操作为脚本'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'create',
+                child: Text('新建'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'refresh',
+                child: Text('刷新'),
+              ),
+            ],
+            icon: Icon(Icons.more_vert, size: 20, color: palette.textSecondary),
+            tooltip: '更多',
           ),
         ],
       ),
     );
+  }
+
+  /// 溢出菜单的动作。
+  Future<void> _onOverflowAction(String action) async {
+    switch (action) {
+      case 'terminal':
+        await _openTerminal();
+      case 'record':
+        await _toggleRecorder();
+      case 'create':
+        await _showCreateMenu();
+      case 'refresh':
+        await _open(_path);
+    }
   }
 
   Widget _readOnlyBanner(BuildContext context) {
@@ -414,6 +445,8 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           node: node,
           selected: _selected.contains(node.path),
           selectionMode: _selected.isNotEmpty,
+          // 路径可拖到终端里补全——目标里写的「从文件管理器拖拽文件路径到终端」。
+          dragPath: node.path,
           onTap: () => _onTapNode(node),
           onLongPress: () => _onLongPressNode(node),
         );
@@ -1000,6 +1033,107 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
       return;
     }
     if (mounted) await _open(_path);
+  }
+
+  /// 算 AI 建议。只有「主动建议」档才做——被动档不该在界面上主动说话。
+  void _computeSuggestions() {
+    if (!_vfs.policy.aiLevel.suggests) {
+      if (_suggestions.isNotEmpty) {
+        setState(() => _suggestions = const <VfsSuggestion>[]);
+      }
+      return;
+    }
+    final suggestions = VfsSuggestions.analyze(_listing.nodes);
+    if (!mounted) return;
+    setState(() => _suggestions = suggestions);
+  }
+
+  /// 处理一条建议：列出涉及的文件，让人决定删哪些。
+  Future<void> _handleSuggestion(VfsSuggestion suggestion) async {
+    final nodes = _listing.nodes
+        .where((VfsNode node) => suggestion.targets.contains(node.path))
+        .toList();
+    if (nodes.isEmpty) return;
+
+    final selected = <String>{};
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) => AlertDialog(
+          title: Text(suggestion.title),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 320,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  suggestion.reason,
+                  style: AppText.micro.copyWith(
+                    color: AppPalette.of(context).textFaint,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.dense),
+                Expanded(
+                  child: ListView(
+                    children: <Widget>[
+                      for (final node in nodes)
+                        CheckboxListTile(
+                          dense: true,
+                          value: selected.contains(node.path),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                selected.add(node.path);
+                              } else {
+                                selected.remove(node.path);
+                              }
+                            });
+                          },
+                          title: Text(
+                            node.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(node.readableSize),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: selected.isEmpty
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(true),
+              child: Text('清理选中的 ${selected.length} 项'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
+    var deleted = 0;
+    var failed = 0;
+    for (final path in selected) {
+      final node = nodes.firstWhere((VfsNode n) => n.path == path);
+      try {
+        await _vfs.delete(path, recursive: node.isDirectory);
+        deleted++;
+      } catch (_) {
+        failed++;
+      }
+    }
+    if (!mounted) return;
+    _toast(failed > 0 ? '已清理 $deleted 项，失败 $failed 项' : '已清理 $deleted 项');
+    await _open(_path);
   }
 
   Future<void> _openBatchRename() async {

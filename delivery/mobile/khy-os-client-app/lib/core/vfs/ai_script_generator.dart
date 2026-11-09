@@ -19,7 +19,6 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import 'ai_safety.dart';
 import 'automation_script.dart';
-import 'local_intent_parser.dart';
 import 'vfs_context.dart';
 
 /// 生成结果。

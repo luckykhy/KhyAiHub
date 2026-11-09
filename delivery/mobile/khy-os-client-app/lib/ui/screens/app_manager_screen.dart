@@ -35,6 +35,11 @@ class _AppManagerScreenState extends State<AppManagerScreen> {
   _AppFilter _filter = _AppFilter.all;
   bool _loading = true;
 
+  /// 精简模式：按安装包体积排系统应用，勾选后一键禁用。
+  bool _cleanupMode = false;
+  List<ManagedAppSize> _cleanupApps = const <ManagedAppSize>[];
+  final Set<String> _cleanupSelected = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -61,22 +66,116 @@ class _AppManagerScreenState extends State<AppManagerScreen> {
     });
   }
 
+  /// 载入精简清单。
+  ///
+  /// 「使用统计排序」做不到——那要 Usage Access 系统权限，普通应用拿不到。
+  /// 所以这里按**安装包体积**排，并在界面上说明为什么不是按使用频率。
+  Future<void> _loadCleanup() async {
+    setState(() => _loading = true);
+    final apps = await AppManager.listSystemAppsBySize();
+    if (!mounted) return;
+    setState(() {
+      _cleanupApps = apps;
+      _loading = false;
+    });
+  }
+
+  /// 切换精简模式。
+  void _toggleCleanup() {
+    setState(() {
+      _cleanupMode = !_cleanupMode;
+      _cleanupSelected.clear();
+    });
+    if (_cleanupMode) _loadCleanup();
+  }
+
+  /// 禁用所选的系统应用。
+  Future<void> _disableSelected() async {
+    final targets = _cleanupApps
+        .where((ManagedAppSize item) => _cleanupSelected.contains(item.app.pkg))
+        .toList();
+    if (targets.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: Text('禁用 ${targets.length} 个应用'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 260,
+          child: ListView(
+            children: <Widget>[
+              for (final item in targets)
+                ListTile(
+                  dense: true,
+                  title: Text(item.app.displayName),
+                  subtitle: Text(item.app.pkg),
+                ),
+              const Divider(height: 1),
+              Text(
+                '禁用后应用不会出现在桌面上，数据仍保留；可以在系统设置里恢复。',
+                style: AppText.micro.copyWith(
+                  color: AppPalette.of(dialogContext).warning,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('禁用'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
+    var done = 0;
+    var failed = 0;
+    for (final item in targets) {
+      final result = await AppManager.disable(item.app.pkg);
+      if (result.ok) {
+        done++;
+      } else {
+        failed++;
+      }
+    }
+    if (!mounted) return;
+    _toast(failed > 0 ? '已禁用 $done 个，失败 $failed 个' : '已禁用 $done 个');
+    await _loadCleanup();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final palette = AppPalette.of(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('应用管理'),
+        title: Text(_cleanupMode ? '精简' : '应用管理'),
         actions: <Widget>[
           IconButton(
-            onPressed: _load,
+            onPressed: _toggleCleanup,
+            icon: Icon(_cleanupMode ? Icons.list_alt : Icons.cleaning_services_outlined),
+            tooltip: _cleanupMode ? '返回应用列表' : '精简',
+          ),
+          IconButton(
+            onPressed: _cleanupMode ? _loadCleanup : _load,
             icon: const Icon(Icons.refresh),
             tooltip: '刷新',
           ),
         ],
       ),
-      body: Column(
+      body: _cleanupMode ? _cleanupBody(context) : _listBody(context),
+    );
+  }
+
+  /// 常规应用列表。
+  Widget _listBody(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return Column(
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -199,8 +298,111 @@ class _AppManagerScreenState extends State<AppManagerScreen> {
                       ),
           ),
         ],
-      ),
+      );
+  }
+
+  /// 精简视图：系统应用按安装包体积排序，勾选后一键禁用。
+  Widget _cleanupBody(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.cardGap,
+            AppSpacing.page,
+            AppSpacing.dense,
+          ),
+          child: Text(
+            '按安装包体积排序的系统应用。'
+            '（使用频率排序需要 Usage Access 系统权限，普通应用拿不到，故不提供。）',
+            style: AppText.micro.copyWith(color: palette.textFaint),
+          ),
+        ),
+        Expanded(
+          child: _loading
+              ? Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: palette.primary,
+                    ),
+                  ),
+                )
+              : _cleanupApps.isEmpty
+                  ? Center(
+                      child: Text(
+                        '没有可精简的系统应用',
+                        style:
+                            AppText.body.copyWith(color: palette.textFaint),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _cleanupApps.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final item = _cleanupApps[index];
+                        final selected =
+                            _cleanupSelected.contains(item.app.pkg);
+                        return CheckboxListTile(
+                          dense: true,
+                          value: selected,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                _cleanupSelected.add(item.app.pkg);
+                              } else {
+                                _cleanupSelected.remove(item.app.pkg);
+                              }
+                            });
+                          },
+                          title: Text(
+                            item.app.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                AppText.body.copyWith(color: palette.textPrimary),
+                          ),
+                          subtitle: Text(
+                            '${_readable(item.apkBytes)} · ${item.app.pkg}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.micro
+                                .copyWith(color: palette.textFaint),
+                          ),
+                        );
+                      },
+                    ),
+        ),
+        if (_cleanupSelected.isNotEmpty)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.page),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _disableSelected,
+                  child: Text('禁用所选 ${_cleanupSelected.length} 个'),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
+  }
+
+  static String _readable(int bytes) {
+    if (bytes <= 0) return '体积未知';
+    if (bytes < 1024) return '$bytes B';
+    const units = <String>['KB', 'MB', 'GB'];
+    var value = bytes / 1024;
+    var unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit++;
+    }
+    return '${value.toStringAsFixed(value >= 100 ? 0 : 1)} ${units[unit]}';
   }
 
   Future<void> _onAction(ManagedApp app, String action) async {
