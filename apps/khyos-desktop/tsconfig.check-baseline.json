@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "tsconfig.check.json（src/host + src/renderer）的既有类型错误基线。",
+    "npm run typecheck 只在出现**不在此列**的错误时判红。",
+    "本轮只报不改——清零既有错误并升为阻断门是独立的一条改造线。"
+  ],
+  "known": [
+    {
+      "file": "src/renderer/components/browser/BrowserPane.tsx",
+      "line": 13,
+      "code": "TS2430",
+      "message": "Interface 'WebviewElement' incorrectly extends interface 'HTMLElement'."
+    },
+    {
+      "file": "src/renderer/components/browser/BrowserPane.tsx",
+      "line": 43,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'webview' must be of type 'DetailedHTMLProps<WebViewHTMLAttributes<HTMLWebViewElement>, HTMLWebViewElement>', but here has type 'DetailedHTMLProps<HTMLAttributes<WebviewElement> & { src?: string | undefined; }, WebviewElement>'."
+    },
+    {
+      "file": "src/renderer/components/browser/BrowserPane.tsx",
+      "line": 274,
+      "code": "TS2322",
+      "message": "Type '(node: WebviewElement | null) => void' is not assignable to type 'Ref<HTMLWebViewElement> | undefined'."
+    },
+    {
+      "file": "src/renderer/i18n/index.ts",
+      "line": 12,
+      "code": "TS2339",
+      "message": "Property 'env' does not exist on type 'ImportMeta'."
+    }
+  ]
+}
