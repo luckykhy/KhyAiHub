@@ -119,7 +119,7 @@ test('listStartupSchedule:轻量模式含 gateway 预热、体积自检、后台
   // runtimeFootprintNotice 只在轻量模式出现:完整模式那边由 cleanupService 一并做掉。
   // bin/khy.js 以 `khy` 名调用时走的正是轻量模式,少了这条 .khy 就只增不减。
   assert.deepStrictEqual(light, [
-    'gatewayWarmup@300',
+    'gatewayWarmup@1500',
     'runtimeFootprintNotice@3500',
     'versionUpdateNotice@5000',
   ]);

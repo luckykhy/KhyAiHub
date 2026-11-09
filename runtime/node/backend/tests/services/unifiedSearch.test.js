@@ -7,13 +7,18 @@
  * session-history sources in parallel and routes them through crossSourceMerge.
  * Searchers are injected, so these tests use fakes — no network, no FS, no DB.
  * Contract under test: parallel fan-out, per-source fail-soft, ripgrep-safe
- * keyword pattern building, and graceful handling of empty/short queries.
+ * keyword pattern building, query-type routing (exact queries never reach the
+ * semantic source), and graceful handling of empty/short queries.
  */
 
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { unifiedSearch, buildGrepPattern } = require('../../src/services/domain/query/search/unifiedSearch.js');
+const {
+  unifiedSearch,
+  buildGrepPattern,
+  classifyQuery,
+} = require('../../src/services/domain/query/search/unifiedSearch.js');
 
 // ── buildGrepPattern ──────────────────────────────────────────────────────────
 
@@ -60,6 +65,20 @@ function fakeDeps(overrides = {}) {
       { sessionId: 's1', content: '历史会话片段', uuid: 'u1', rank: -2 },
     ],
     ...overrides,
+  };
+}
+
+// scoring.rankMemories result shape (what the memory-domain hybrid entry returns).
+function memoryEntry(filename, name, body, score = 0.8) {
+  return {
+    filename,
+    frontmatter: { name, description: `${name}的描述`, type: 'user' },
+    body,
+    score,
+    keywordScore: 2,
+    recency: 1,
+    modifiedAt: 1700000000000,
+    tier: 'hot',
   };
 }
 
@@ -121,4 +140,122 @@ test('cross-source dedup is applied end-to-end (local absorbs the matching web h
   assert.strictEqual(r.items[0].source, 'local-history');
   assert.deepStrictEqual(r.items[0].alsoFoundIn, ['web']);
   assert.strictEqual(r.deduped.droppedCrossSource, 1);
+});
+
+// ── query-type routing ────────────────────────────────────────────────────────
+
+test('classifyQuery routes identifier/path/exact-word queries to exact', () => {
+  assert.strictEqual(classifyQuery('buildGrepPattern'), 'exact'); // camelCase
+  assert.strictEqual(classifyQuery('KHY_UNIFIED_LOCAL_CAP'), 'exact'); // ENV_VAR
+  assert.strictEqual(classifyQuery('src/cli/router.js'), 'exact'); // path
+  assert.strictEqual(classifyQuery('unifiedSearch.js'), 'exact'); // filename.ext
+  assert.strictEqual(classifyQuery('"光合作用"'), 'exact'); // explicit exact string
+  assert.strictEqual(classifyQuery('sha256 校验值怎么算'), 'exact'); // letter-digit mix
+  assert.strictEqual(classifyQuery('RUNTIME-001 指的是什么'), 'exact'); // hyphenated id
+});
+
+test('classifyQuery routes paraphrases / natural language to semantic', () => {
+  assert.strictEqual(classifyQuery('某主题 关键词'), 'semantic');
+  assert.strictEqual(classifyQuery('为什么编译失败了'), 'semantic');
+  assert.strictEqual(classifyQuery('how do I fix a flaky test'), 'semantic');
+  assert.strictEqual(classifyQuery('版本 1.6 发布了什么'), 'semantic'); // bare version number is not a path
+  assert.strictEqual(classifyQuery('2026-11-05 的发布说明'), 'semantic'); // a date is not an identifier
+});
+
+test('exact-route query never invokes the semantic source (no embedding cost)', async () => {
+  let called = 0;
+  const deps = fakeDeps({
+    memorySearch: async () => {
+      called += 1;
+      return [];
+    },
+  });
+  const r = await unifiedSearch('unifiedSearch.js 里有什么', deps);
+  assert.strictEqual(called, 0, 'exact query must not reach the semantic source at all');
+  assert.strictEqual(r.sources.localMemory, 0);
+  assert.ok(!r.items.some((i) => i.source === 'local-memory'));
+});
+
+test('semantic-route query invokes the semantic source and merges its entries', async () => {
+  let called = 0;
+  const r = await unifiedSearch('终端配色偏好相关的记忆', fakeDeps({
+    memorySearch: async () => {
+      called += 1;
+      return [memoryEntry('pref-dark-mode.md', '偏好暗色模式', '用户偏好暗色模式界面')];
+    },
+  }));
+  assert.strictEqual(called, 1);
+  assert.strictEqual(r.sources.localMemory, 1);
+  const mem = r.items.find((i) => i.source === 'local-memory');
+  assert.ok(mem, 'memory entry present in merged items');
+  assert.strictEqual(mem.title, '偏好暗色模式');
+  assert.strictEqual(mem.snippet, '用户偏好暗色模式界面');
+  assert.strictEqual(mem.url, '');
+  assert.strictEqual(mem.path, 'pref-dark-mode.md');
+  assert.deepStrictEqual(Object.keys(mem).sort(), [
+    'domain', 'line', 'path', 'score', 'snippet', 'source', 'title', 'type', 'url',
+  ]);
+});
+
+// ── semantic-source fail-soft (degrade to the three sources) ──────────────────
+
+test('semantic source absent → three-source result, localMemory stays 0', async () => {
+  const r = await unifiedSearch('某主题 关键词', fakeDeps());
+  assert.strictEqual(r.sources.localMemory, 0);
+  assert.strictEqual(r.sources.web, 1);
+  assert.strictEqual(r.sources.localFile, 1);
+  assert.strictEqual(r.sources.localHistory, 1);
+});
+
+test('semantic source that throws degrades to the identical three-source result', async () => {
+  const q = '某主题 关键词';
+  const baseline = await unifiedSearch(q, fakeDeps());
+  const degraded = await unifiedSearch(q, fakeDeps({
+    memorySearch: async () => {
+      throw new Error('embedding endpoint unreachable');
+    },
+  }));
+  assert.deepStrictEqual(degraded, baseline);
+  assert.strictEqual(degraded.sources.localMemory, 0);
+});
+
+test('semantic source returning garbage contributes nothing', async () => {
+  const q = '某主题 关键词';
+  const baseline = await unifiedSearch(q, fakeDeps());
+  const garbageCases = [null, undefined, 'not-an-array', 42, { results: 'nope' }];
+  for (const garbage of garbageCases) {
+    const r = await unifiedSearch(q, fakeDeps({ memorySearch: async () => garbage }));
+    assert.deepStrictEqual(r, baseline, `garbage ${JSON.stringify(garbage)} degrades cleanly`);
+  }
+});
+
+test('semantic source entries are bounded by localCap', async () => {
+  const many = [
+    memoryEntry('a.md', '甲', '内容甲'),
+    memoryEntry('b.md', '乙', '内容乙'),
+    memoryEntry('c.md', '丙', '内容丙'),
+  ];
+  const r = await unifiedSearch('某主题 关键词', fakeDeps({
+    memorySearch: async () => many,
+  }), { localCap: 2 });
+  assert.strictEqual(r.sources.localMemory, 2);
+  assert.strictEqual(r.items.filter((i) => i.source === 'local-memory').length, 2);
+});
+
+test('merge shape does not regress when the semantic source is added', async () => {
+  const q = '某主题 关键词';
+  const three = await unifiedSearch(q, fakeDeps());
+  const four = await unifiedSearch(q, fakeDeps({
+    memorySearch: async () => [memoryEntry('m.md', '记忆标题', '记忆正文')],
+  }));
+  // Existing counters keep their keys and values; only localMemory is additive.
+  assert.strictEqual(four.sources.web, three.sources.web);
+  assert.strictEqual(four.sources.localFile, three.sources.localFile);
+  assert.strictEqual(four.sources.localHistory, three.sources.localHistory);
+  assert.deepStrictEqual(Object.keys(four.deduped).sort(), Object.keys(three.deduped).sort());
+  // The three legacy sources still come out first, in their existing priority.
+  assert.deepStrictEqual(
+    four.items.filter((i) => i.source !== 'local-memory').map((i) => i.source),
+    three.items.map((i) => i.source)
+  );
 });

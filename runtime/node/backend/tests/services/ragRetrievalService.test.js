@@ -9,16 +9,16 @@ describe('ragRetrievalService', () => {
     jest.clearAllMocks();
   });
 
-  test('returns skipped result when RAG is disabled', () => {
+  test('returns skipped result when RAG is disabled', async () => {
     process.env.KHY_RAG_ENABLED = 'false';
     const rag = require('../../src/services/ragRetrievalService');
-    const result = rag.buildRetrievalContext('RSI 指标怎么用');
+    const result = await rag.buildRetrievalContext('RSI 指标怎么用');
     expect(result).toBeTruthy();
     expect(result.used).toBe(false);
     expect(result.meta.reason).toBe('skipped');
   });
 
-  test('builds context from knowledge + session results', () => {
+  test('builds context from knowledge + session results', async () => {
     process.env.KHY_RAG_ENABLED = 'true';
     process.env.KHY_RAG_TOPK = '5';
     process.env.KHY_RAG_KNOWLEDGE_TOPK = '3';
@@ -53,7 +53,7 @@ describe('ragRetrievalService', () => {
     }));
 
     const rag = require('../../src/services/ragRetrievalService');
-    const result = rag.buildRetrievalContext('RSI 回测怎么优化');
+    const result = await rag.buildRetrievalContext('RSI 回测怎么优化');
 
     expect(result.used).toBe(true);
     expect(result.context).toContain('检索增强上下文');
@@ -63,7 +63,7 @@ describe('ragRetrievalService', () => {
     expect(result.meta.knowledgeHits).toBeGreaterThanOrEqual(1);
   });
 
-  test('uses in-memory cache for repeated same query', () => {
+  test('uses in-memory cache for repeated same query', async () => {
     process.env.KHY_RAG_ENABLED = 'true';
     process.env.KHY_RAG_CACHE_TTL_MS = '600000';
 
@@ -88,8 +88,8 @@ describe('ragRetrievalService', () => {
     }));
 
     const rag = require('../../src/services/ragRetrievalService');
-    const first = rag.buildRetrievalContext('回测要注意什么');
-    const second = rag.buildRetrievalContext('回测要注意什么');
+    const first = await rag.buildRetrievalContext('回测要注意什么');
+    const second = await rag.buildRetrievalContext('回测要注意什么');
 
     expect(first.used).toBe(true);
     expect(second.used).toBe(true);
