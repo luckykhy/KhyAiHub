@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import request from '@/api/request';
 import { unwrap } from '@/api/unwrap';
+import { useLoadError, loadInto } from '@/api/loadError';
 
 /**
  * Composable for the per-user Prompt Library.
@@ -14,26 +15,25 @@ export function usePromptLibrary() {
   const pending = ref([]);
   const builtinTemplates = ref([]);
   const loading = ref(false);
+  const loadError = useLoadError();
 
   async function fetchPrompts() {
+    loading.value = true;
     try {
-      loading.value = true;
-      const res = await request.get('/api/ai/prompts', { params: { status: 'active' } });
-      prompts.value = unwrap(res) || [];
-    } catch {
-      /* ignore */
+      const next = await loadInto('我的提示词', loadError, async () =>
+        unwrap(await request.get('/api/ai/prompts', { params: { status: 'active' } })) || []
+      );
+      if (next) prompts.value = next;
     } finally {
       loading.value = false;
     }
   }
 
   async function fetchPending() {
-    try {
-      const res = await request.get('/api/ai/prompts', { params: { status: 'pending' } });
-      pending.value = unwrap(res) || [];
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('待审核提示词', loadError, async () =>
+      unwrap(await request.get('/api/ai/prompts', { params: { status: 'pending' } })) || []
+    );
+    if (next) pending.value = next;
   }
 
   // Built-in multi-angle starter templates (backend catalog at
@@ -90,6 +90,7 @@ export function usePromptLibrary() {
     pending,
     builtinTemplates,
     loading,
+    loadError,
     fetchPrompts,
     fetchPending,
     fetchBuiltin,

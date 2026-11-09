@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import request from '@/api/request';
 import { unwrap } from '@/api/unwrap';
+import { useLoadError, loadInto } from '@/api/loadError';
 
 /**
  * Per-user (multi-tenant) plugin marketplace state.
@@ -18,13 +19,18 @@ export function useMarketplace() {
   const installed = ref([]);
   const loading = ref(false);
   const busy = ref(false);
+  const loadError = useLoadError();
 
   // ── Catalog (browse / search / detail) ──────────────────────────────────
   async function listCatalog(params = {}) {
     loading.value = true;
     try {
-      const res = await request.get('/api/marketplace', { params });
-      catalog.value = unwrap(res) || [];
+      // 读失败时 catalog 保持上一次的结果并把原因交给横幅：写回 [] 会让一个
+      // 500 的市场在页面上显示成「插件市场还空着」。
+      const next = await loadInto('插件市场', loadError, async () =>
+        unwrap(await request.get('/api/marketplace', { params })) || []
+      );
+      if (next) catalog.value = next;
       return catalog.value;
     } finally {
       loading.value = false;
@@ -32,8 +38,10 @@ export function useMarketplace() {
   }
 
   async function fetchCategories() {
-    const res = await request.get('/api/marketplace/categories');
-    categories.value = unwrap(res) || [];
+    const next = await loadInto('插件分类', loadError, async () =>
+      unwrap(await request.get('/api/marketplace/categories')) || []
+    );
+    if (next) categories.value = next;
     return categories.value;
   }
 
@@ -64,8 +72,10 @@ export function useMarketplace() {
   async function listInstalled() {
     loading.value = true;
     try {
-      const res = await request.get('/api/plugins');
-      installed.value = unwrap(res) || [];
+      const next = await loadInto('已安装插件', loadError, async () =>
+        unwrap(await request.get('/api/plugins')) || []
+      );
+      if (next) installed.value = next;
       return installed.value;
     } finally {
       loading.value = false;
@@ -128,6 +138,7 @@ export function useMarketplace() {
     installed,
     loading,
     busy,
+    loadError,
     listCatalog,
     fetchCategories,
     getDetail,

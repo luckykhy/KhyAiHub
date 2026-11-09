@@ -31,6 +31,8 @@ import {
   Share,
   Setting,
   Shop,
+  ShoppingBag,
+  SetUp,
   Tickets,
   User,
   Wallet,
@@ -70,12 +72,36 @@ export const NAV = [
         desc: '命名的多文件夹编码工作区（对齐 Hermes coding projects）',
       },
       {
+        path: '/envs',
+        label: '开发环境',
+        icon: SetUp,
+        desc: '盘点已装工具链与版本、一键安装缺失项、清单导出/导入（换电脑一键恢复）',
+      },
+      {
         path: '/marketplace',
         label: '插件市场',
         icon: Shop,
         desc: '导入 OpenAPI 插件扩展能力',
       },
+      {
+        path: '/eco-markets',
+        label: '生态市场',
+        // ShoppingBag，不是 Collection：Collection 已经是「提示词库」的图标，
+        // 两个不同入口共用一个图标在侧栏里分不开。与「插件市场」的 Shop 也是
+        // 有意区分的两件东西（这里是外部生态的勘察编目，那边是 OpenAPI 插件）。
+        icon: ShoppingBag,
+        desc: '各外部生态独立成市：条目、兼容判定与导入路由一页可查',
+      },
       { path: '/proxies', label: '代理管理', icon: Link, desc: '粘贴订阅链接，导入代理节点订阅组' },
+      {
+        path: '/tasks',
+        label: '任务监控',
+        // Monitor 与「管理控制台 → 监控中心」共用：两者不是同一件事（那边是
+        // 平台指标归因，这边是本机在跑/排队的具体活儿），但同一抽象用同一图标
+        // 反而好认，且分处两个外壳不会并排出现。
+        icon: Monitor,
+        desc: '只读查看本进程在跑的会话工具调用与队列/后台任务，可展开详情',
+      },
       {
         path: '/security',
         label: '账户安全',

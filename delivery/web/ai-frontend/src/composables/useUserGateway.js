@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import request from '@/api/request';
 import { unwrap } from '@/api/unwrap';
+import { useLoadError, loadInto, describeLoadError } from '@/api/loadError';
 
 /**
  * Per-user (multi-tenant) gateway state.
@@ -26,6 +27,17 @@ export function useUserGateway() {
   const imageConfig = ref(null);
   const loading = ref(false);
   const saving = ref(false);
+  // detectionSummary 的 error 标签是给「已发起探测但上游有问题」用的；列表读取本身
+  // 失败时页面上还没有任何探测上下文，只能靠这条错误位让横幅说话。
+  const loadError = useLoadError();
+
+  // 读取失败要同时喂两条通道：detectionSummary.errors 是本文件既有的错误面
+  // （MyGateway 的 danger 标签在渲染它），loadError 是页面级横幅。两条都得写，
+  // 少一条就有一处 UI 拿不到失败原因。
+  function recordFetchFailure(source, subject, err) {
+    surfaceError(source, err);
+    loadError.value = describeLoadError(err, subject);
+  }
 
   // ── Relay config (per-user upstream) ──
   async function fetchRelayConfig() {
@@ -83,9 +95,10 @@ export function useUserGateway() {
     try {
       const res = await request.get('/api/user-gateway/custom-providers');
       providers.value = unwrap(res) || [];
+      loadError.value = '';
     } catch (err) {
       providers.value = [];
-      surfaceError('providers', err);
+      recordFetchFailure('providers', '供应商列表', err);
     }
   }
 
@@ -159,10 +172,11 @@ export function useUserGateway() {
       const payload = unwrap(res) || {};
       catalogEdges.value = Array.isArray(payload.edges) ? payload.edges : [];
       catalogSources.value = payload.sources || null;
+      loadError.value = '';
     } catch (err) {
       catalogEdges.value = [];
       catalogSources.value = null;
-      surfaceError('catalog', err);
+      recordFetchFailure('catalog', '模型目录', err);
     }
   }
 
@@ -199,12 +213,10 @@ export function useUserGateway() {
   }
 
   async function fetchCcTokens() {
-    try {
-      const res = await request.get('/api/user-gateway/cc/tokens');
-      ccTokens.value = unwrap(res) || [];
-    } catch {
-      ccTokens.value = [];
-    }
+    const next = await loadInto('CC 令牌', loadError, async () =>
+      unwrap(await request.get('/api/user-gateway/cc/tokens')) || []
+    );
+    if (next) ccTokens.value = next;
   }
 
   // Returns the freshly issued token row, including the one-time plaintext `key`.
@@ -225,15 +237,11 @@ export function useUserGateway() {
   // local Ollama + system metadata; this is the editable source of truth for the
   // user's OWN models. Every write refreshes the catalog so pivots stay in sync.
   async function fetchModels(provider) {
-    try {
-      const url = provider
-        ? `/api/user-gateway/models?provider=${encodeURIComponent(provider)}`
-        : '/api/user-gateway/models';
-      const res = await request.get(url);
-      models.value = unwrap(res) || [];
-    } catch {
-      models.value = [];
-    }
+    const url = provider
+      ? `/api/user-gateway/models?provider=${encodeURIComponent(provider)}`
+      : '/api/user-gateway/models';
+    const next = await loadInto('我的模型', loadError, async () => unwrap(await request.get(url)) || []);
+    if (next) models.value = next;
     return models.value;
   }
 
@@ -312,6 +320,7 @@ export function useUserGateway() {
     imageConfig,
     loading,
     saving,
+    loadError,
     fetchRelayConfig,
     saveRelayConfig,
     fetchProviders,

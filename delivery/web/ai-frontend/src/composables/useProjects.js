@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import request from '@/api/request';
 import { unwrap } from '@/api/unwrap';
+import { useLoadError, loadInto } from '@/api/loadError';
 
 /**
  * Per-user coding projects state ("项目工作区").
@@ -45,6 +46,7 @@ export function useProjects() {
   const projects = ref([]);
   const loading = ref(false);
   const busy = ref(false);
+  const loadError = useLoadError();
 
   // List the caller's projects. Pass { includeArchived:true } for the management
   // toggle; default hides archived rows.
@@ -54,9 +56,9 @@ export function useProjects() {
       const url = options.includeArchived
         ? '/api/ai/projects?includeArchived=1'
         : '/api/ai/projects';
-      const res = await request.get(url);
-      const data = unwrap(res);
-      projects.value = Array.isArray(data) ? data : [];
+      const data = await loadInto('项目列表', loadError, async () => unwrap(await request.get(url)));
+      // 读失败时保留上一次的项目列表；写回 [] 会把「读不到」说成「还没有项目」。
+      if (Array.isArray(data)) projects.value = data;
       return projects.value;
     } finally {
       loading.value = false;
@@ -121,6 +123,7 @@ export function useProjects() {
     projects,
     loading,
     busy,
+    loadError,
     activeProjectId,
     list,
     get,

@@ -6,6 +6,8 @@ import {
   isImageAttachment,
   attachmentBadge,
   downloadFileName,
+  attachmentFormat,
+  FILE_FORMATS,
 } from '@/utils/attachmentView';
 
 function fakeStorage(map) {
@@ -67,5 +69,61 @@ describe('downloadFileName', () => {
     expect(downloadFileName({ name: 'BLOB', id: 'ab12' })).toBe('attachment-ab12');
     expect(downloadFileName({ name: '', id: 'x1' })).toBe('attachment-x1');
     expect(downloadFileName({})).toBe('attachment-file');
+  });
+});
+
+// 附件格式细分：同一批代表扩展名在桌面端 attachmentKind.test.mjs 里也有断言，
+// 两端口径必须一致（两个 app 各自构建，表只能各存一份，靠测试对齐）。
+describe('attachmentFormat（显示细分，不参与处理链路）', () => {
+  it('用户点名的格式各归其桶', () => {
+    const cases = [
+      ['report.pdf', 'pdf'],
+      ['demo.mp4', 'video'],
+      ['合同.docx', 'doc'],
+      ['notes.txt', 'text'],
+      ['screenshot.png', 'image'],
+      ['photo.jpg', 'image'],
+      ['budget.xlsx', 'sheet'],
+      ['pitch.pptx', 'slide'],
+      ['voice.mp3', 'audio'],
+      ['src.zip', 'archive'],
+      ['Composer.tsx', 'code'],
+      ['README.md', 'md'],
+    ];
+    for (const [name, format] of cases) {
+      expect(attachmentFormat({ name, kind: 'other' })).toBe(format);
+    }
+  });
+
+  it('md 与 txt 分开（同是 text kind，但不是同一种东西）', () => {
+    expect(attachmentFormat({ name: 'README.md', kind: 'text' })).toBe('md');
+    expect(attachmentFormat({ name: 'notes.txt', kind: 'text' })).toBe('text');
+  });
+
+  it('扩展名大小写不敏感', () => {
+    expect(attachmentFormat({ name: 'REPORT.PDF', kind: 'document' })).toBe('pdf');
+    expect(attachmentFormat({ name: 'Clip.MP4', kind: 'video' })).toBe('video');
+  });
+
+  it('没有扩展名时按后端 kind 兜底', () => {
+    expect(attachmentFormat({ name: 'blob', kind: 'document' })).toBe('doc');
+    expect(attachmentFormat({ name: 'blob', kind: 'image' })).toBe('image');
+    expect(attachmentFormat({ name: 'blob', kind: 'audio' })).toBe('audio');
+    expect(attachmentFormat({ name: 'blob', kind: 'other' })).toBe('file');
+    expect(attachmentFormat({ name: 'blob' })).toBe('file');
+    expect(attachmentFormat(null)).toBe('file');
+  });
+
+  it('认不出的扩展名不瞎猜，回落到 kind', () => {
+    expect(attachmentFormat({ name: 'firmware.bin', kind: 'document' })).toBe('doc');
+    expect(attachmentFormat({ name: 'firmware.bin', kind: 'other' })).toBe('file');
+    expect(attachmentFormat({ name: '.gitignore', kind: 'text' })).toBe('text');
+  });
+
+  it('FILE_FORMATS 清单与 12 个桶一致（FileTypeIcon 按它校验字形）', () => {
+    expect(FILE_FORMATS).toEqual([
+      'image', 'pdf', 'doc', 'sheet', 'slide', 'video',
+      'audio', 'archive', 'code', 'md', 'text', 'file',
+    ]);
   });
 });

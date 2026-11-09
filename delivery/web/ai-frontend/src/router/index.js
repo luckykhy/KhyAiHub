@@ -254,10 +254,23 @@ const routes = [
         component: viewLoaders['/projects'],
       },
       {
+        // Dev environment inventory (开发环境盘点) — auth only, NO requiresAdmin.
+        // Read-only scan view plus curated install/export/import against
+        // /api/dev-env on the web backend ('/api' catch-all, no daemon namespace).
+        path: 'envs',
+        name: 'DevEnvironment',
+        component: viewLoaders['/envs'],
+      },
+      {
         // Per-user plugin marketplace — auth only, NO requiresAdmin.
         path: 'marketplace',
         name: 'Marketplace',
         component: viewLoaders['/marketplace'],
+      },
+      {
+        path: 'eco-markets',
+        name: 'EcoMarkets',
+        component: viewLoaders['/eco-markets'],
       },
       {
         // 代理管理. The sidebar has had a /proxies entry all along while the
@@ -268,6 +281,11 @@ const routes = [
         path: 'proxies',
         name: 'Proxies',
         component: viewLoaders['/proxies'],
+      },
+      {
+        path: 'tasks',
+        name: 'TaskMonitor',
+        component: viewLoaders['/tasks'],
       },
     ],
   },
