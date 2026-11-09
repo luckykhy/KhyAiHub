@@ -50,8 +50,20 @@ function buildConfig(env = process.env) {
       maxChildren: parseIntEnv('KHY_A2A_MAX_CHILDREN', 10, env),
       agentTimeoutMs: parseIntEnv('KHY_A2A_AGENT_TIMEOUT_MS', 300000, env),
       maxTotalAgents: parseIntEnv('KHY_A2A_MAX_TOTAL_AGENTS', 50, env),
-      workspaceBaseDir: env.KHY_A2A_WORKSPACE_DIR || 
-        require('path').resolve(process.cwd(), '.khy', 'agent-workspaces'),
+      workspaceBaseDir: env.KHY_A2A_WORKSPACE_DIR ||
+        // Was require('path').resolve(process.cwd(), '.khy', 'agent-workspaces')
+        // — cwd-relative, so the config forked a second workspace tree per cwd.
+        // dataHome decides it now; KHY_A2A_WORKSPACE_DIR still wins.
+        (() => {
+          try {
+            return require('path').join(
+              require('../utils/dataHome').getDataHome(),
+              'agent-workspaces',
+            );
+          } catch {
+            return require('path').resolve(process.cwd(), '.khy', 'agent-workspaces');
+          }
+        })(),
     },
     
     // Router settings

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>clientApps（路由单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>routes<span class="sep">›</span>clientApps<span class="sep">›</span>clientApps（路由单元）</div>
+      <header class="hero reveal"><h1>clientApps（路由单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#clientapps-路由单元">clientApps（路由单元）</a></li><li class="lvl-2"><a href="#边界">边界</a></li><li class="lvl-2"><a href="#为什么没有-一键配置">为什么没有「一键配置」</a></li><li class="lvl-2"><a href="#门禁">门禁</a></li><li class="lvl-2"><a href="#已知上游缺陷-p3-已在原语层容错-写编排仍须逐个适配">已知上游缺陷（P3 已在原语层容错，写编排仍须逐个适配）</a></li><li class="lvl-2"><a href="#测试">测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="clientapps-路由单元">clientApps（路由单元）<a class="anchor" href="#clientapps-路由单元" aria-label="锚点">#</a></h1>
+<p><code>[DESIGN-ARCH-189]</code> 应用中心方案的 <strong>S1 只读层</strong>。本目录只有一个文件 <code>index.js</code>，<br>把「本机装了哪些 AI 客户端、每个配好了没」暴露成两个 HTTP 端点。</p>
+<pre><code>GET  /api/client-apps/catalog   登记表本身（appId/name/desc/pkgName/category）
+POST /api/client-apps/scan      探测本机（installed / configured / configuredVerified / badge）</code></pre>
+<h2 id="边界">边界<a class="anchor" href="#边界" aria-label="锚点">#</a></h2>
+<p><strong>本单元不做任何 IO。</strong> 不读写客户端配置文件、不碰 SQLite、不发起探测——<br><code>catalog.json</code> 的装载与 <code>scan.js</code> 的机器探测都在 D2 的<br><code>services/domain/config/clientApps/</code> 里发生，这里只做 Express 适配、admin 门禁<br>与入参校验。数据形状以那两个模块为真源，本单元不复制、不改写。</p>
+<p>覆盖范围按裁决 <strong>D2 = ①</strong>：只有 <code>ccSwitch</code> 在册的 12 个 CLI 应用。<br>桌面端与参考对象的其余项需要新的 <code>externalApps</code> 写者，不在本切片内。</p>
+<h2 id="为什么没有-一键配置">为什么没有「一键配置」<a class="anchor" href="#为什么没有-一键配置" aria-label="锚点">#</a></h2>
+<p>按 <code>RUNTIME-010</code>，S1 的「只读」必须由<strong>执行面</strong>保证——本单元不挂载任何写路由——<br>而不是靠前端把按钮置灰。所以 <code>/configure</code> 与 <code>/restore</code> 在这里<strong>不存在</strong><br>（测试用源码文本断言 + 404 探测双向钉住）。前端因此把这两个动作显示成<br><strong>常驻不可用</strong>，而不是「禁用中」这种暗示即将开放的说法。</p>
+<p>模型绑定同样未开放：per-app 绑定表（裁决 <strong>D6 = ②</strong>）尚未落地，没有可绑的数据。<br>显示一个能选但选了不生效的下拉就是 fail-open，所以页面上只有一句<br>「模型绑定：未开放」。</p>
+<h2 id="门禁">门禁<a class="anchor" href="#门禁" aria-label="锚点">#</a></h2>
+<p>两端点都需登录且需 admin 角色（裁决 <strong>D5 = ①</strong>，对齐 <code>/api/cc-switch</code>）。<br>「按本机用户放宽」需要新判据（多用户主机、远程访问），没有判据就不放宽。</p>
+<h2 id="已知上游缺陷-p3-已在原语层容错-写编排仍须逐个适配">已知上游缺陷（P3 已在原语层容错，写编排仍须逐个适配）<a class="anchor" href="#已知上游缺陷-p3-已在原语层容错-写编排仍须逐个适配" aria-label="锚点">#</a></h2>
+<p>D2 的 <code>scan.js</code> / 写者对三个 adapter 不同构，S1 只读面不受影响。<strong>P3 的双档备份原语已在原语层容忍这三个形状</strong><br>（目录/空路径 → 跳过并说明原因，绝不 throw），但 S2 写编排仍须逐个适配：</p>
+<table><thead><tr><th>adapter</th><th>问题</th></tr></thead><tbody><tr><td><code>traeAppAdapter.js</code></td><td><code>remove(query, {confirmed}, env)</code> 是<strong>位置参数</strong>，统一按 options 调会失败</td></tr><tr><td><code>codexAdapter.js</code></td><td>写者在 <code>gateway/adapters/</code>，探测返回形状与 CLI adapter 不同</td></tr><tr><td><code>cozeAdapter.js</code></td><td><code>configPath()</code> 返回<strong>目录</strong>而非文件，且 <code>COZE_HOME</code> 未设时返回空串</td></tr></tbody></table>
+<p>已记入 <code>[DESIGN-ARCH-189]</code> 实施计划的 P5。</p>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<p><code>index.test.js</code>（与 D2 侧 <code>catalog.test.js</code> 同样同名同目录共置（C-5 晋级判据要求））。<br>53 例（含 D2 侧 catalog/scan/backup），本单元 8 例钉住四件事：server.js 真挂载（防死代码 404）、门禁接线、<strong>无写路由</strong>、<br>未知 appId 报 400 而非静默返回短清单。</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> runtime/node/backend
+node --<span class="hljs-built_in">test</span> src/routes/clientApps/index.test.js</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/data/cliAnythingTemplates/STAGE_7_PACKAGE.html"><div class="dir">← 上一篇</div><div class="ttl">Stage 7: Packaging &amp; Registration</div></a><a class="next" href="../../../../../../runtime/node/backend/src/services/domain/account/accountPool/README.html"><div class="dir">下一篇 →</div><div class="ttl">accountPool — 凭据池：探测、导入、调度与回写</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/routes/clientApps/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

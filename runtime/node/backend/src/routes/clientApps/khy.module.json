@@ -1,0 +1,35 @@
+{
+  "name": "clientApps",
+  "domain": "D1",
+  "mayDependOn": [
+    "D1",
+    "D2"
+  ],
+  "_mayDependOn_note": "名义边界 D1 -> {D1,D2,D3}。本单元实测两条边，都在界内：`../../middleware/auth`（src/middleware 在 DOMAIN-DEPS 里没有域根映射，被路径前缀判成 D1）与 `../../services/domain/config/clientApps/{catalog,scan}.js`（D2 真源）。无 D3 边——本单元不碰 utils/constants，路径与端点串全部自查。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "server.js（/api/client-apps 挂载点）"
+  ],
+  "_fanIn_note": "外部非测试消费者去重 1 个：monolith Express server 的挂载行。前端 `delivery/web/ai-frontend/src/api/clientApps.js` 是 HTTP 消费方，不算本仓内的 require 边。计数排除 *.test.js。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-10-14",
+    "provenance": "new-code-entering-buffer",
+    "enteredVia": "[DESIGN-ARCH-189] S1 只读层"
+  },
+  "_lifecycle_note": "本单元是 [DESIGN-ARCH-189] 的 S1「观察者」切片，**新代码**，因此走入口缓冲而不是事后补录（contrast: accountPool 的 recorded-after-the-fact）。晋级三判据已齐：① 单元级 README.md（本目录）；② fanIn 已声明为 1（整数）；③ 源文件有同名同目录测试 `index.test.js`（8 例， colocated 而非放 tests/routes/——C-5 的判据要求同名同目录，`catalog.test.js` 在 D2 侧同样是共置的）。故 lifecycle 记 stable。",
+  "contract": {
+    "purpose": "把「本机装了哪些 AI 客户端、每个配好了没」暴露成两个只读 HTTP 端点。数据全部来自 services/domain/config/clientApps 的既有真源（catalog.json 登记表 + scan.js 探测），本单元不做任何探测或写配置，只做 Express 适配、admin 门禁与入参校验。",
+    "ioOwner": "本单元不持有任何 IO：不读写配置文件、不碰 SQLite、不发起对客户端的探测。catalog.json 与扫描的读取都在 D2 的 clientApps 服务里发生，本单元只转送其结果。唯一副作用是把请求记进 Express 的访问日志。",
+    "gates": "两个端点都需登录且需 admin 角色（裁决 D5 = ①，对齐 /api/cc-switch：卡片切换会改写本机各 agent 的 live 配置，属 admin 级操作；「按本机用户放宽」没有判据，故不放宽）。**S1 只读由执行面保证（RUNTIME-010）：本单元不挂载任何写路由**，「一键配置」在 UI 上是常驻不可用而不是置灰——tests/routes/clientApps.route.test.js 用源码文本断言 + 404 探测双向钉住这条。",
+    "coverage_note": "purpose/ioOwner/gates 覆盖本轮实测到的面（路由文件全文约 100 行 + 8 例路由契约测试 + D2 侧 45 例 + D2 服务的导出签名），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "本单元自身零 KNOWN-DEFECT 断言（新代码，尚无在野缺陷记录）",
+    "上游已知、本单元不修复也不掩盖：D2 scan.js 对 trae/codex/coze 三个 adapter 不同构（trae 的 remove() 是位置参数签名；codex 写者在 gateway/adapters 且探测形状不同；coze 的 configPath() 返回目录而非文件）。S1 只读面不受影响，但 S2 写编排必须逐个适配——已记入 [DESIGN-ARCH-189] 实施计划的 P5。"
+  ],
+  "_known_defects_note": "一律登记不修：三条都涉及 D2 侧既有写者的签名与语义，改动面超出本单元，且 S1 不触发它们。",
+  "tests": [
+    "index.test.js（8 例，同名同目录共置）；另依赖 D2 clientApps/ 的 catalog/scan/backup 测试共 45 例"
+  ]
+}

@@ -22,6 +22,9 @@
  *
  * Event shape (as persisted and published):
  *   { ts, seq, type, source, traceId, payload }
+ * `type` is contract-checked against TYPE_PREFIXES + EXACT_TYPES (see
+ * _acceptedType): out-of-contract types normalize to 'unknown' rather than
+ * being rejected, keeping append() fail-soft.
  */
 const fs = require('fs');
 const path = require('path');
@@ -116,6 +119,29 @@ function _warnOnce(err) {
   }
 }
 
+// 事件类型契约:族前缀 + 精确表。append() 的调用方历史上只有 8 个内部模块,
+// 类型散在 agent.* / perf.* / usage.record / snapshot / task.*;A5 前端埋点
+// (user.behavior.*)进来后不收敛就会长出无限长尾——拼错一个字母就是一个新
+// type,read({type}) 与 eventBus 的按类型订阅全部静默失配。表外类型归一为
+// 'unknown' 而不是拒绝:本模块的契约是 fail-soft,生产者不该因类型拼写被抛。
+// 新族登记在这里,不要在各调用点各自放宽。
+const TYPE_PREFIXES = ['agent.', 'perf.', 'task.', 'user.behavior.'];
+const EXACT_TYPES = new Set(['usage.record', 'snapshot', 'unknown']);
+
+function _acceptedType(raw) {
+  const type = String(raw == null ? '' : raw).trim();
+  if (!type) {
+    return 'unknown';
+  }
+  if (EXACT_TYPES.has(type)) {
+    return type;
+  }
+  // 前缀至少要跟一个字符:'user.behavior.' 本身不是类型。
+  return TYPE_PREFIXES.some((p) => type.length > p.length && type.startsWith(p))
+    ? type
+    : 'unknown';
+}
+
 function _normalize(event) {
   const ev = event || {};
   let ts;
@@ -130,7 +156,7 @@ function _normalize(event) {
   return {
     ts,
     seq: ++_seq,
-    type: String(ev.type || 'unknown'),
+    type: _acceptedType(ev.type),
     source: ev.source != null ? String(ev.source) : 'unknown',
     traceId: ev.traceId != null ? String(ev.traceId) : null,
     payload: ev.payload !== undefined ? ev.payload : {},

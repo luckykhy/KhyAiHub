@@ -478,7 +478,9 @@ function tick() {
 
       const deliver = _enqueueCallback || _defaultEnqueue;
       try {
-        deliver(job.prompt);
+        // 第二个参数是 job id（[DESIGN-ARCH-183] §4）：投递方用它给会话打来源
+        // 标记，落盘后该会话自动归入「定时任务」组。旧回调只收一个参数也不受影响。
+        deliver(job.prompt, id);
       } catch {
         // Don't crash the scheduler thread on a delivery failure.
       }
@@ -506,11 +508,16 @@ function tick() {
  * so a job still actually runs. Best-effort: never throws into the tick.
  *
  * @param {string} prompt
+ * @param {string} [jobId] 定时任务 id —— 写进会话的来源标记（[DESIGN-ARCH-183] §4），
+ *   落盘后该会话自动归入「定时任务」分组，不用靠标题前缀辨认。
  */
-function _defaultEnqueue(prompt) {
+function _defaultEnqueue(prompt, jobId) {
   try {
     const ai = require('../cli/ai');
     if (ai && typeof ai.chat === 'function') {
+      if (typeof ai.setPendingSessionSource === 'function') {
+        ai.setPendingSessionSource({ type: 'automation', id: jobId || '' });
+      }
       Promise.resolve(ai.chat(`[Scheduled] ${prompt}`, { _isFollowUp: true })).catch(() => {
         /* delivery is best-effort */
       });

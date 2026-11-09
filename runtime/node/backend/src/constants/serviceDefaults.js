@@ -88,7 +88,14 @@ function getAiBackendUrl(env = process.env) {
   return env.AI_BACKEND_URL || _discoverAiBackendUrl(env) || AI_BACKEND_DEFAULT_URL;
 }
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
+// Ollama 的默认端口（Ollama 文档写明的 11434）。
+//
+// 为什么单独提一个常量：此前「端口」只以 URL 片段的形式藏在 OLLAMA_HOST 里，
+// 消费方要写「URL 没带端口时用哪个端口」只能把 11434 再抄一遍
+// （ai-backend 的 ollamaModelManager.js 就抄了两处）。端口与 host 同源，
+// 提出来之后 OLLAMA_HOST 由它派生 —— 改端口只改这一行。
+const DEFAULT_OLLAMA_PORT = 11434;
+const OLLAMA_HOST = process.env.OLLAMA_HOST || `http://localhost:${DEFAULT_OLLAMA_PORT}`;
 const INFERENCE_SERVER_PORT = parseInt(process.env.INFERENCE_SERVER_PORT || '8765', 10);
 const BACKEND_PORT = parseInt(process.env.PORT || '3000', 10);
 // 后端监听 host(Express bind address)。默认 '127.0.0.1'(仅本机), LAN 开放设 '0.0.0.0'。
@@ -106,6 +113,52 @@ const REMOTE_DEFAULT_PORT = parseInt(process.env.KHY_REMOTE_PORT || '9413', 10);
 // 刻意不提供 '0.0.0.0' 默认值：局域网是面板上的显式开关（lanEnabled），
 // 只有 KHY_REMOTE_BIND_HOST 被显式设置时才按环境值绑定。
 const REMOTE_BIND_HOST = process.env.KHY_REMOTE_BIND_HOST || '';
+
+// ── 手机桥接（khy-os → StepBridge on the phone）默认值 ───────────────────────
+// 单一真源：services/domain/network/phone/phoneBridgeConfig.js 从这里取，
+// 产品代码里不得再出现 8896 / 192.168.2.46:33743 这类字面量。
+// 端口与信箱目录按**实机测得**的 lite 版取值，README 宣称的 8898 与
+// /sdcard/bridge 属于未发布的完整版，不是本默认值的依据。
+const PHONE_BRIDGE_DEFAULT_PORT = parseInt(process.env.KHY_PHONE_BRIDGE_PORT || '8896', 10);
+// 无默认：未设 env 时强制走自动探测，命中才连，未命中报未发现手机。
+// 这里原先钉着一台开发机实测过的无线调试地址（192.168.2.46:33743）——那是**另一台
+// 机器**的地址，每一台新克隆第一跳必失败，而失败信息还把人引向「我的手机坏了」。
+// 改成空串后，IO 层（phoneBridgeClient / amooBridgeClient）在 serialSource==='default'
+// 时先跑 adb devices / adb mdns services 自动发现，命中即写回；全部落空则明确报
+// 「未发现手机」，而不是连一个拼出来的坏地址。env KHY_PHONE_BRIDGE_SERIAL 仍优先。
+const PHONE_BRIDGE_DEFAULT_SERIAL = process.env.KHY_PHONE_BRIDGE_SERIAL || '';
+// adb 可执行名。装好后放进 PATH 即可；不在 PATH 时用 KHY_PHONE_BRIDGE_ADB 指到绝对路径。
+const PHONE_BRIDGE_ADB_FALLBACK = process.platform === 'win32' ? 'adb.exe' : 'adb';
+// 手机侧信箱目录与 token 落点（BridgeService.BRIDGE_DIR）。
+const PHONE_BRIDGE_MAILBOX_DIR = process.env.KHY_PHONE_BRIDGE_MAILBOX_DIR || '/sdcard/bridge-amoobridge';
+const PHONE_BRIDGE_TOKEN_REMOTE_PATH = process.env.KHY_PHONE_BRIDGE_TOKEN_PATH
+  || `${PHONE_BRIDGE_MAILBOX_DIR}/token.txt`;
+// HTTP 单次请求超时（毫秒）。桥是「一连接一响应、Connection: close」，
+// 没有 keep-alive 可续，所以这是**单次**上限，不是可滑动的空闲超时。
+const PHONE_BRIDGE_HTTP_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_HTTP_TIMEOUT_MS || '10000', 10);
+// adb 子进程超时（毫秒）。connect 走这个值，forward 更短（本机回环，失败就该立刻报）。
+const PHONE_BRIDGE_ADB_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_ADB_TIMEOUT_MS || '15000', 10);
+// 单次传输（设备文件 ↔ 主机文件）的体积上限（字节）。传输是唯一会把大文件
+// 搬进/搬出主机的通道，视频动辄几百 MB，没有上限就等于允许一次调用吃满磁盘。
+const PHONE_BRIDGE_MAX_TRANSFER_BYTES = parseInt(
+  process.env.KHY_PHONE_BRIDGE_MAX_TRANSFER_BYTES || String(256 * 1024 * 1024),
+  10
+);
+// 单次批量采集的规模上限：文件数与总字节数各一道闸。单文件上限管不住「200 个大文件」。
+const PHONE_BRIDGE_MAX_COLLECT_FILES = parseInt(
+  process.env.KHY_PHONE_BRIDGE_MAX_COLLECT_FILES || '200',
+  10
+);
+const PHONE_BRIDGE_MAX_COLLECT_BYTES = parseInt(
+  process.env.KHY_PHONE_BRIDGE_MAX_COLLECT_BYTES || String(2 * 1024 * 1024 * 1024),
+  10
+);
+// HTTP 主通道失败后重试次数（不含首次）。信箱兜底另算，不计入这里。
+const PHONE_BRIDGE_RETRY_COUNT = parseInt(process.env.KHY_PHONE_BRIDGE_RETRY_COUNT || '1', 10);
+// 信箱兜底：轮询间隔与总 deadline。信箱 worker 是单线程顺序处理，
+// 一个卡死的 exec 会让后面的 cmd_ 全部排队，所以 deadline 必须明显短于 HTTP 路径。
+const PHONE_BRIDGE_MAILBOX_POLL_MS = parseInt(process.env.KHY_PHONE_BRIDGE_MAILBOX_POLL_MS || '500', 10);
+const PHONE_BRIDGE_MAILBOX_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_MAILBOX_TIMEOUT_MS || '30000', 10);
 
 // ── Cross-platform launcher (crossLauncher.js) local dev ports ───────────────
 // Web/mobile frontend dev-server ports. Env-overridable so a port conflict is a
@@ -640,8 +693,57 @@ const OBSERVABILITY = Object.freeze({
   EVENTLOOP_LAG_THRESHOLD_MS: parseInt(process.env.KHY_EVENTLOOP_LAG_THRESHOLD_MS || '200', 10),
 });
 
+// ── StepFun OpenClaw marketplace (public read-only catalog) ────────────────
+// 「水产市场」的 Connect RPC 根。SearchAssets / GetReversionDownloadUrl 在
+// /api/<service>/<Method> 下无需登录；env 覆盖留给自建镜像，默认值只在这里。
+const STEPFUN_OPENCLAW_MARKET_BASE_URL =
+  process.env.KHY_STEPFUN_MARKET_ENDPOINT || 'https://openclawmp.stepfun.com';
+
+// ── VS Code extensions: Open VSX (public documented registry) ──────────────
+// The official VS Marketplace API is not published for third-party use, so the
+// open registry is the one KhyOS can query without guessing at terms. env
+// override covers self-hosted Open VSX instances.
+const VSCODE_OPEN_VSX_BASE_URL =
+  process.env.KHY_OPEN_VSX_ENDPOINT || 'https://open-vsx.org';
+
+// Public Kimi Code marketplaces (marketplace JSON v2: {plugins:[{id,source}]}).
+// Listed as data, not hardcoded endpoints: env replaces the whole list.
+const KIMI_CODE_MARKETPLACE_URLS = String(
+  process.env.KHY_KIMI_MARKETPLACE_URLS ||
+    [
+      'https://opencharly.github.io/marketplace/kimi.json',
+      'https://raw.githubusercontent.com/shidesheng0218/kimi-boost/main/marketplace.json',
+    ].join(',')
+)
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+// Kimi plugin manifests live in the plugin repo; GitHub raw is the reader.
+const KIMI_CODE_RAW_BASE_URL =
+  process.env.KHY_KIMI_RAW_BASE_URL || 'https://raw.githubusercontent.com';
+
+// ── Official MCP Registry (public read-only API, v0) ───────────────────────
+// Publishers register launch specs here (npm/pypi/oci package or remote
+// endpoint), which is what lets the marketplace install an MCP server without
+// asking the user to rewrite a command. env override covers self-hosted
+// registries.
+const MCP_REGISTRY_BASE_URL =
+  process.env.KHY_MCP_REGISTRY_ENDPOINT || 'https://registry.modelcontextprotocol.io';
+
+// ── Token 预算金额维度默认天花板（services/tokenBudget.js 消费）────────────────
+// KHY_TOKEN_BUDGET 管 token 数，这里管「累计人民币花费」——[RESEARCH-028] P1-1
+// 金额预算门（MetaGPT cost_manager 的 khyos 等价物）。**默认 0 = 关**：阈值要由
+// S1 观察者记录的真实累计花费分布来定（PROCESS-008），不猜一个数；env
+// KHY_TOKEN_BUDGET_COST_CNY 可覆盖。计价走 tokenUsageService（人民币），该服务
+// 不可达时循环降级为仅 token 维度并在收尾文案里如实说明。
+const TOKEN_BUDGET_DEFAULT_COST_CEILING_CNY = (() => {
+  const n = Number(process.env.KHY_TOKEN_BUDGET_COST_CNY);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+})();
+
 const exported = {
   OLLAMA_HOST,
+  DEFAULT_OLLAMA_PORT,
   INFERENCE_SERVER_PORT,
   getAiBackendUrl,
   BACKEND_PORT,
@@ -661,10 +763,17 @@ const exported = {
   // Cloud endpoint single source of truth
   CLOUD_DEFAULT_ENDPOINT,
   CLOUD_FALLBACK_ENDPOINTS,
+  STEPFUN_OPENCLAW_MARKET_BASE_URL,
+  VSCODE_OPEN_VSX_BASE_URL,
+  KIMI_CODE_MARKETPLACE_URLS,
+  KIMI_CODE_RAW_BASE_URL,
+  MCP_REGISTRY_BASE_URL,
   TELEMETRY_DEFAULT_ENDPOINT,
   CLOUD_DEFAULT_HOST,
   HTTP_REFERER,
   FEEDBACK_URL,
+  // Token 预算金额维度默认天花板（0 = 关；services/tokenBudget.js）
+  TOKEN_BUDGET_DEFAULT_COST_CEILING_CNY,
   // Local AI backend default
   AI_BACKEND_DEFAULT_PORT,
   AI_BACKEND_DEFAULT_URL,
@@ -681,6 +790,20 @@ const exported = {
   BRIDGE_DEFAULT_PORT,
   REMOTE_DEFAULT_PORT,
   REMOTE_BIND_HOST,
+  // Phone bridge (khy-os -> StepBridge on the phone) defaults
+  PHONE_BRIDGE_DEFAULT_PORT,
+  PHONE_BRIDGE_DEFAULT_SERIAL,
+  PHONE_BRIDGE_ADB_FALLBACK,
+  PHONE_BRIDGE_MAILBOX_DIR,
+  PHONE_BRIDGE_TOKEN_REMOTE_PATH,
+  PHONE_BRIDGE_HTTP_TIMEOUT_MS,
+  PHONE_BRIDGE_ADB_TIMEOUT_MS,
+  PHONE_BRIDGE_MAX_TRANSFER_BYTES,
+  PHONE_BRIDGE_MAX_COLLECT_FILES,
+  PHONE_BRIDGE_MAX_COLLECT_BYTES,
+  PHONE_BRIDGE_RETRY_COUNT,
+  PHONE_BRIDGE_MAILBOX_POLL_MS,
+  PHONE_BRIDGE_MAILBOX_TIMEOUT_MS,
   // Portable copy root single source of truth (khy portable sync)
   PORTABLE_ROOT_DEFAULT,
   // Geolocation single source of truth (GetLocation tool)

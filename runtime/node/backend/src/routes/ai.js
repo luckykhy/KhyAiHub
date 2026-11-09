@@ -536,9 +536,23 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
         usage: result.tokenUsage || null,
       });
     } else {
-      // Gateway failed — fall back to stockAnalysisEngine
+      // Gateway failed — fall back to stockAnalysisEngine, but DISCLOSE the
+      // failure in-band: the user must know the answer did not come from the
+      // requested AI channel (dropping the failure envelope here used to make
+      // a silent downgrade look like a normal answer).
+      const failedAttempts = Array.isArray(result.attempts) ? result.attempts.length : 0;
+      const firstFailed = Array.isArray(result.attempts)
+        ? result.attempts.find((a) => a && a.error)
+        : null;
+      const failReason = String(
+        result.error ||
+          (firstFailed && firstFailed.error) ||
+          (result.errorType ? `错误类型 ${result.errorType}` : '网关未能完成请求')
+      ).slice(0, 300);
+      const disclosure = `⚠ 模型通道请求失败：${failReason}（已尝试 ${failedAttempts} 个通道），以下为本地行情引擎作答`;
+
       const engineResult = await stockAnalysisEngine.chat(stockCode, {}, safeQuestion);
-      const fallbackContent = engineResult.answer || 'No response available';
+      const fallbackContent = disclosure + '\n\n' + (engineResult.answer || 'No response available');
 
       const CHUNK_SIZE = 64;
       let chunkIndex = 0;
@@ -554,6 +568,10 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
         content: fallbackContent,
         model: 'XiaoK Local',
         usage: null,
+        gatewayFailure: {
+          errorType: result.errorType || 'unknown',
+          attempts: failedAttempts,
+        },
       });
     }
   } catch (err) {
