@@ -470,6 +470,31 @@ test('--changed：全仓状态项（D2）不报，但棘轮恒报', () => {
   assert.ok(findingsOf(changed, 'delivery-surface-ratchet-breach'), '--changed 下棘轮必须仍报');
 });
 
+test('--changed：D1 未测必须显式计档（SKIPPED 不得从汇总里消失）', () => {
+  const { root } = mkFixture();
+  const changed = run(root, ['--changed']).json;
+  assert.strictEqual(statusOf(changed, 'D1'), 'SKIPPED');
+  assert.strictEqual(changed.counts.SKIPPED, 1, '未测项必须有独立计数档');
+  // 防缺档回归：任何一种 status 从 counts 里消失，合计就小于 results 条数
+  const total = Object.values(changed.counts).reduce((a, b) => a + b, 0);
+  assert.strictEqual(total, changed.results.length, '各档合计必须等于 results 条数');
+  assert.strictEqual(
+    changed.counts.PASS,
+    changed.results.filter((r) => r.status === 'PASS').length,
+    'SKIPPED 不得计入 PASS（没量 ≠ 量了没问题）'
+  );
+
+  // 人读记分板：SKIPPED 必须出现在汇总行。这里只锁「档在不在」，不锁文案措辞 ——
+  // 「不计入通过」的语义由上面 counts.PASS 的断言负责（本文件不认人读文案）。
+  const plain = cp.spawnSync(process.execPath, [CHECKER, '--changed'], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, KHY_DELIVERY_ROOT: root },
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  assert.match(plain.stderr, /汇总: .*SKIPPED 1/, plain.stderr);
+});
+
 function findingsOf(json, id) {
   return (json.findings || []).some((f) => f.finding === id);
 }

@@ -151,6 +151,15 @@ describe('check-agent-rules scope — .ai/ is state/prose, not source', () => {
     const full = path.join(ROOT, relPath);
     const existed = fs.existsSync(full);
     const prior = existed ? fs.readFileSync(full, 'utf8') : null;
+    // Remember which ancestor directories this call brings into existence, so
+    // the cleanup below can take them away again. Removing only the probe
+    // directory leaves the `.khyos/` shell behind at the repo root -- and that
+    // empty shadow dir is exactly what CLAUDE.md §二 B8 and the layout guard's
+    // `root-shadow-dir` check flag. A red layout guard is worse than no probe.
+    const createdDirs = [];
+    for (let dir = path.dirname(full); dir !== ROOT && dir !== path.dirname(dir) && !fs.existsSync(dir); dir = path.dirname(dir)) {
+      createdDirs.push(dir);
+    }
     fs.mkdirSync(path.dirname(full), { recursive: true });
     // Assemble the URL at runtime: a contiguous host:port token here would make
     // the gate flag THIS test file when CI scans scripts/.
@@ -163,6 +172,11 @@ describe('check-agent-rules scope — .ai/ is state/prose, not source', () => {
       // scans and `git status` have to explain.
       if (existed) fs.writeFileSync(full, prior);
       else fs.rmSync(path.dirname(full), { recursive: true, force: true });
+      // Then take away the ancestor shells this call created, deepest first.
+      // A non-empty one is left alone: something else put content there.
+      for (const dir of createdDirs) {
+        try { fs.rmdirSync(dir); } catch { /* already gone or not empty */ }
+      }
     }
   }
 

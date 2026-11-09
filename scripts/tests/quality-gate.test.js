@@ -27,6 +27,7 @@ describe('quality gate orchestration', () => {
       'ops-health',
       'upload-safety',
       'frontend-design-tokens',
+      'aesthetics',
       'provider-contract',
       'workflow-regression',
       'backend-coverage',
