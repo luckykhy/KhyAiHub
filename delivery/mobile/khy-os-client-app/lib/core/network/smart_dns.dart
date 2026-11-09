@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+﻿// khy-canary: Khy-20261101-079-PJ8Z4S9T
+import 'dart:io';
 import '../services/app_logger.dart';
 
 /// 智能 DNS 解析器

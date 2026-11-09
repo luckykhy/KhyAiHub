@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-075-HMAN1HE8
 /// Pairing payload contract — the consumer half.
 ///
 /// Producer: `services/backend/src/cli/handlers/mobile.js` →

@@ -1,5 +1,6 @@
 // khy-canary: Khy-20261101-076-6PEXK67M
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../data/models/models.dart';
 import '../config/endpoint_defaults.dart';
@@ -88,6 +89,82 @@ String? reasoningTextOf(Map<String, dynamic> source) {
   return null;
 }
 
+/// 把一批 [ChatMessage] 翻译成 wire 上的 messages。
+///
+/// 为什么六个调用点（OpenAI / Anthropic / Ollama 各自的 chat 与 streamChat）
+/// 共用一个实现：多模态块的形状是与 `vision_tools` 那次视觉调用逐字节对齐的
+/// 契约，各处自己拼一份，就会出现「OpenAI 支发图、Anthropic 支不发」——没有
+/// 任何症状，只是某些模型永远收不到用户发的那张图。
+///
+/// 无附件的消息保持 `content` 是纯字符串的老形状：给不看图的消息也换成块
+/// 数组，改动的面是全量请求，而受益的只有带图那几条。
+Future<List<Map<String, dynamic>>> buildWireMessages(
+  List<ChatMessage> messages,
+) async {
+  final out = <Map<String, dynamic>>[];
+  for (final m in messages) {
+    out.add({
+      'role': m.role.name,
+      'content': await _wireContent(m),
+    });
+  }
+  return out;
+}
+
+// 要么是老形状的纯字符串，要么是块数组——没有第三种。
+Future<Object> _wireContent(ChatMessage m) async {
+  if (m.imageAttachments.isEmpty) return m.content;
+  // text 块在前、图块按附件顺序跟在后面：与 vision_tools._askVision 里那次
+  // 视觉调用的块序一致，换哪家后端都是同一个读法。
+  final blocks = <Map<String, dynamic>>[
+    {'type': 'text', 'text': m.content},
+  ];
+  for (final a in m.imageAttachments) {
+    final block = await _imageBlock(a);
+    if (block != null) blocks.add(block);
+  }
+  return blocks;
+}
+
+/// 一张图片附件 → OpenAI content block。读不到返回 null，由调用方少发这一个块。
+///
+/// 为什么是跳过而不是让整次请求失败：对话历史上传也要重建 content block，而
+/// 相册/相机挑出来的临时文件可能已被系统清掉。为一张旧图让整段对话再也发不
+/// 出去，比少发一张图糟得多。
+///
+/// try/catch 只出现在这一处系统边界（外部文件），其余路径都是内存里的值。
+Future<Map<String, dynamic>?> _imageBlock(MessageAttachment a) async {
+  try {
+    final bytes = await File(a.path).readAsBytes();
+    return {
+      'type': 'image_url',
+      'image_url': {
+        'url': 'data:${_imageMimeOf(a)};base64,${base64Encode(bytes)}',
+      },
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+/// data URI 的 mime：附件自带的值优先，否则按扩展名猜，再不行退回 jpeg。
+///
+/// 猜的原因：相册挑图不一定带 mimeType，而把 PNG 说成 jpeg 会让较严格的服务端
+/// 解不开这张图——症状是模型说"看不到图"，谁都看不出是 mime 写错了。
+String _imageMimeOf(MessageAttachment a) {
+  final mime = a.mimeType;
+  if (mime != null && mime.isNotEmpty) return mime;
+  final path = a.path.toLowerCase();
+  for (final (ext, m) in const [
+    ('.png', 'image/png'),
+    ('.webp', 'image/webp'),
+    ('.gif', 'image/gif'),
+  ]) {
+    if (path.endsWith(ext)) return m;
+  }
+  return 'image/jpeg';
+}
+
 /// Provider 适配器接口
 abstract class ProviderAdapter {
   String get id;
@@ -136,7 +213,7 @@ class OpenAIAdapter implements ProviderAdapter {
       '$baseUrl/chat/completions',
       data: {
         'model': request.model ?? model,
-        'messages': _buildMessages(request.messages),
+        'messages': await buildWireMessages(request.messages),
         'temperature': request.temperature,
         'max_tokens': request.maxTokens,
         'tools': request.tools,
@@ -175,7 +252,7 @@ class OpenAIAdapter implements ProviderAdapter {
       '$baseUrl/chat/completions',
       data: {
         'model': request.model ?? model,
-        'messages': _buildMessages(request.messages),
+        'messages': await buildWireMessages(request.messages),
         'temperature': request.temperature,
         'max_tokens': request.maxTokens,
         'stream': true,
@@ -223,13 +300,6 @@ class OpenAIAdapter implements ProviderAdapter {
         model: json['model'],
       );
     });
-  }
-
-  List<Map<String, dynamic>> _buildMessages(List<ChatMessage> messages) {
-    return messages.map((m) => {
-      'role': m.role == MessageRole.tool ? 'tool' : m.role.name,
-      'content': m.content,
-    }).toList();
   }
 }
 
@@ -281,10 +351,7 @@ class AnthropicAdapter implements ProviderAdapter {
       data: {
         'model': request.model ?? model,
         'max_tokens': request.maxTokens ?? 4096,
-        'messages': request.messages.map((m) => {
-          'role': m.role.name,
-          'content': m.content,
-        }).toList(),
+        'messages': await buildWireMessages(request.messages),
       },
       options: Options(headers: {
         'x-api-key': apiKey,
@@ -318,10 +385,7 @@ class AnthropicAdapter implements ProviderAdapter {
       data: {
         'model': request.model ?? model,
         'max_tokens': request.maxTokens ?? 4096,
-        'messages': request.messages.map((m) => {
-          'role': m.role.name,
-          'content': m.content,
-        }).toList(),
+        'messages': await buildWireMessages(request.messages),
         'stream': true,
       },
       options: Options(
@@ -409,10 +473,7 @@ class OllamaAdapter implements ProviderAdapter {
       '$baseUrl/api/chat',
       data: {
         'model': request.model ?? model,
-        'messages': request.messages.map((m) => {
-          'role': m.role.name,
-          'content': m.content,
-        }).toList(),
+        'messages': await buildWireMessages(request.messages),
         'stream': false,
         'options': {
           'temperature': request.temperature,
@@ -442,10 +503,7 @@ class OllamaAdapter implements ProviderAdapter {
       '$baseUrl/api/chat',
       data: {
         'model': request.model ?? model,
-        'messages': request.messages.map((m) => {
-          'role': m.role.name,
-          'content': m.content,
-        }).toList(),
+        'messages': await buildWireMessages(request.messages),
         'stream': true,
         'options': {
           'temperature': request.temperature,

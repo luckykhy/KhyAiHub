@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+﻿// khy-canary: Khy-20261101-078-3YSR0T6P
+import 'dart:io';
 import 'smart_dns.dart';
 import '../services/app_logger.dart';
 
