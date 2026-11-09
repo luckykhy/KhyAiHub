@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-339-R7ZWCS5P
 // Typed access to the __KHYOS__ preload surface (KeyManager extension,
 // DESIGN-ARCH-091 §6). The preload exposes plain invoke wrappers; this module
 // adds the result contracts so renderer code stays type-safe.

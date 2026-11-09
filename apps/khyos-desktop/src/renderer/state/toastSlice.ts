@@ -1,4 +1,5 @@
-﻿import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+﻿// khy-canary: Khy-20261102-347-VS6P4QYD
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error'
 

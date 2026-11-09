@@ -1,4 +1,5 @@
-﻿import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+﻿// khy-canary: Khy-20261102-345-VR9A0TF6
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 /**
  * Permission levels for agent actions.

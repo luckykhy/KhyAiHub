@@ -1,4 +1,5 @@
-﻿import { configureStore } from '@reduxjs/toolkit'
+﻿// khy-canary: Khy-20261102-346-ER2SFCEE
+import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux'
 import workspaceReducer from './workspaceSlice'
 import permissionReducer from './permissionSlice'

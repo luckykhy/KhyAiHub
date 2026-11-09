@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-337-8GGWT1XR
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { openWorkspace } from '../../utils/openWorkspace'
 
@@ -112,22 +113,22 @@ export function WorkspacePicker({ variant = 'card-header' }: { variant?: 'card-h
           <path
             d="M2 4h8M2 4a1 1 0 011-1h2l1 1h3a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"
             stroke="currentColor"
-            strokeWidth="1.2"
+            strokeWidth="0.8"
           />
         </svg>
         <span className="truncate">{displayName}</span>
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className="shrink-0">
-          <path d="M2 3.5l2.5 2.5L7 3.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          <path d="M2 3.5l2.5 2.5L7 3.5" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" />
         </svg>
         {isCardHeader && current && (
-          <span className="ml-auto text-xs text-foreground/40 truncate hidden md:inline">{current}</span>
+          <span className="ml-auto text-xs text-foreground-muted truncate hidden md:inline">{current}</span>
         )}
       </button>
 
       {open && (
         <div
           role="menu"
-          className={`absolute top-full mt-1 bg-popover border border-popover-border rounded-xl shadow-xl overflow-hidden z-50 ${
+          className={`absolute top-full mt-1 bg-popover border border-popover-border rounded-lg shadow-xl overflow-hidden z-50 ${
             isCardHeader ? 'left-0 w-[320px]' : 'left-0 w-[300px]'
           }`}
         >
@@ -138,7 +139,7 @@ export function WorkspacePicker({ variant = 'card-header' }: { variant?: 'card-h
               {/* 空候选集时不渲染分组标题，直接给兜底项（不补示例路径） */}
               {recents.length > 0 && (
                 <>
-                  <div className="px-3 py-2 text-xs font-semibold text-popover-header border-b border-popover-border">
+                  <div className="px-3 py-2 text-xs font-semibold text-foreground-muted border-b border-popover-border">
                     最近打开
                   </div>
                   <div className="max-h-56 overflow-auto py-1">
@@ -157,19 +158,19 @@ export function WorkspacePicker({ variant = 'card-header' }: { variant?: 'card-h
                             <path
                               d="M2 4h8M2 4a1 1 0 011-1h2l1 1h3a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"
                               stroke="currentColor"
-                              strokeWidth="1.2"
+                              strokeWidth="0.8"
                             />
                           </svg>
                           <span className="min-w-0 flex-1">
                             <span className="block text-sm text-popover-foreground truncate">{entry.name}</span>
-                            <span className="block text-xs text-foreground/50 truncate">{entry.path}</span>
+                            <span className="block text-xs text-foreground-muted truncate">{entry.path}</span>
                           </span>
                           {isCurrent && (
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 text-brand">
                               <path
                                 d="M2.5 6.2l2.4 2.4L9.5 3.6"
                                 stroke="currentColor"
-                                strokeWidth="1.4"
+                                strokeWidth="0.8"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
@@ -191,7 +192,7 @@ export function WorkspacePicker({ variant = 'card-header' }: { variant?: 'card-h
                   <path
                     d="M7 2.5v6M4 6l3 3 3-3M2.5 11.5h9"
                     stroke="currentColor"
-                    strokeWidth="1.2"
+                    strokeWidth="0.93"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />

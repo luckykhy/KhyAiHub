@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-340-4RMGVCJV
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
@@ -5,6 +6,7 @@ import { store } from './state/store'
 import App from './App'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import './i18n'
+import './monacoSetup'
 import './theme/globals.css'
 
 createRoot(document.getElementById('root')!).render(
