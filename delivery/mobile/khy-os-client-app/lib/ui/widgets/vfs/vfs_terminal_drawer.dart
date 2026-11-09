@@ -143,7 +143,11 @@ class _VfsTerminalDrawerState extends State<VfsTerminalDrawer> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Text(
-                                  '\$ $entry.command',
+                                  // 必须写 ${entry.command}：Dart 的插值只取标识符，
+                                  // `$entry.command` 会被解析成「$entry 的 toString()
+                                  // 后面接字面量 .command」——真机上回显成
+                                  // "Instance of '_TerminalEntry'.command"。
+                                  '\$ ${entry.command}',
                                   style: AppText.micro
                                       .copyWith(color: palette.primary),
                                 ),

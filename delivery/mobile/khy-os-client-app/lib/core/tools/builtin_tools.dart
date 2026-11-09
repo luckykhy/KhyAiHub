@@ -822,7 +822,9 @@ List<ToolDef> createBuiltinTools() => [
             ? content.substring(0, 5000)
             : content;
         final body = shown.length < content.length
-            ? '$shown\n... (本层截断，仅显示前 $shown.length 字符)'
+            // ${shown.length} 不能写成 $shown.length：Dart 的字符串插值只取标识符，
+            // 那样会把整个 5000 字符内容再插一遍，后面还跟一句字面量「.length 字符」。
+            ? '$shown\n... (本层截断，仅显示前 ${shown.length} 字符)'
             : shown;
         return ToolResult.ok(
           body,
