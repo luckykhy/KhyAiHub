@@ -50,6 +50,22 @@ test('call 缺工具名时报错并指路 tools', () => {
   assert.match(parsed.error, /khy phone tools/);
 });
 
+test('pull 子命令解析设备路径与主机路径；缺设备路径时明确报错', () => {
+  const parsed = leaf.parsePhoneArgv(['pull', '/sdcard/x.jpg', 'out/x.jpg'], {});
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.action, 'pull');
+  assert.equal(parsed.remotePath, '/sdcard/x.jpg');
+  assert.equal(parsed.localPath, 'out/x.jpg');
+
+  const noLocal = leaf.parsePhoneArgv(['pull', '/sdcard/x.jpg'], {});
+  assert.equal(noLocal.ok, true);
+  assert.equal(noLocal.localPath, '');
+
+  const missing = leaf.parsePhoneArgv(['pull'], {});
+  assert.equal(missing.ok, false);
+  assert.equal(missing.code, 'missing_args');
+});
+
 test('call 的参数必须是 JSON 对象', () => {
   const notJson = leaf.parsePhoneArgv(['call', 'ls', '/sdcard'], {});
   assert.equal(notJson.ok, false);
@@ -126,6 +142,26 @@ test('授权清单渲染出可复制的 adb 命令与 lite 不适用项', () => 
   assert.match(text, /可选/);
 });
 
+test('setup 在未探测到设备时标注占位地址并给出查法，探测到时不啰嗦', () => {
+  const stale = leaf.renderSetupText({
+    serial: '192.168.2.46:33743',
+    serialSource: 'default',
+    grants: [],
+  });
+  // 占位地址照抄会报 device not found，必须先说清楚。
+  assert.match(stale, /未探测到设备/);
+  assert.match(stale, /历史占位地址/);
+  assert.match(stale, /adb mdns services/);
+
+  const detected = leaf.renderSetupText({
+    serial: '192.168.1.117:34103',
+    serialSource: 'auto',
+    grants: [],
+  });
+  assert.doesNotMatch(detected, /未探测到设备/);
+  assert.doesNotMatch(detected, /历史占位地址/);
+});
+
 test('计划渲染不隐瞒危险工具告警', () => {
   const text = leaf.renderCallPlanText({
     plan: { bridgeName: 'rm', endpoint: 'http://127.0.0.1:8896/call', args: { path: '/sdcard/x' }, tier: 'critical', access: 'actuate' },
@@ -162,4 +198,20 @@ test('帮助文本说明 UI 工具依赖手机无障碍服务的边界', () => {
   assert.match(help, /--confirm/);
   assert.match(help, /ui_dump/);
   assert.match(help, /无障碍/);
+});
+
+test('工具清单把不可用的助手协同组单列，形态同 UI 工具', () => {
+  // relay 组被桥报为 withheld（assistantAvailable===false）时移入不可用段，
+  // 渲染形态与 UI 工具一致：不可用 N 个 + 原因。
+  const text = leaf.renderToolListText({
+    tools: [{ bridgeName: 'ping', risk: 'medium', description: '探活' }],
+    unavailableAssistantTools: ['amoo_ask', 'amoo_stop'],
+    unavailableAssistantReason: '这组需要手机上已安装并启用 Amoo。',
+  });
+  assert.match(text, /可调用工具 1 个/);
+  assert.match(text, /不可用 2 个：amoo_ask \/ amoo_stop/);
+  assert.match(text, /这组需要手机上已安装并启用 Amoo/);
+  // 没有 assistant 段（true / null）时不多渲染这一段。
+  const none = leaf.renderToolListText({ tools: [{ bridgeName: 'ping' }] });
+  assert.doesNotMatch(none, /不可用/);
 });

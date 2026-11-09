@@ -944,6 +944,71 @@ test('probe 透出令牌落盘状态：布尔照实、缺字段判未知不判�
   assert.equal((await legacy.probe()).tokenPersisted, null);
 });
 
+// ── probe 的助手协同（Amoo 反代）组可用性三态 ─────────────────────────────────
+
+test('probe 透出助手协同组可用性三态：判据只来自桥自报，未知不与缺席混淆', async () => {
+  const { ASSISTANT_RELAY_TOOL_NAMES } = require('./phoneBridgeCatalog');
+  const relay = ASSISTANT_RELAY_TOOL_NAMES;
+
+  // 桥把 relay 组报为 withheld（缺对应 App）→ 不可用（false），并透出 withheld 数组。
+  const withheld = makeClient({
+    adb: scriptedAdb([ok(JSON.stringify({ running: true, http_port: 8896, tools: ['ping', 'info'], withheld: relay }))]),
+  });
+  const w = await withheld.probe();
+  assert.equal(w.assistantAvailable, false);
+  assert.deepEqual(w.relayWithheld, relay);
+
+  // 桥在线、withheld 里没有 relay 名 → 可用（true）。
+  const available = makeClient({
+    adb: scriptedAdb([ok(JSON.stringify({ running: true, http_port: 8896, tools: ['ping', ...relay], withheld: [] }))]),
+  });
+  assert.equal((await available.probe()).assistantAvailable, true);
+
+  // 兜底：没有 withheld 字段，靠 tools 可用集判——全在 → true，全不在 → false。
+  const toolsAll = makeClient({
+    adb: scriptedAdb([ok(JSON.stringify({ running: true, http_port: 8896, tools: ['ping', ...relay] }))]),
+  });
+  assert.equal((await toolsAll.probe()).assistantAvailable, true);
+  const toolsNone = makeClient({
+    adb: scriptedAdb([ok(JSON.stringify({ running: true, http_port: 8896, tools: ['ping', 'info'] }))]),
+  });
+  assert.equal((await toolsNone.probe()).assistantAvailable, false);
+
+  // 旧版桥：withheld 与 tools 数组都没有 → 未知（null），不把「没报到」说成「缺 App」。
+  const legacy = makeClient({
+    adb: scriptedAdb([ok(JSON.stringify({ running: true, http_port: 8896 }))]),
+  });
+  const leg = await legacy.probe();
+  assert.equal(leg.assistantAvailable, null);
+  assert.equal(leg.relayWithheld, null);
+});
+
+test('probe 在 serial 仍为空（探测无命中）时报 device_not_found，不读 status.json', async () => {
+  // 空 serial 时 buildAdbArgv 不加 -s，多设备机器上 `adb shell cat` 会以 more than one
+  // device 失败，而返回的「读不到 status.json：桥服务可能没有在运行」会把设备歧义误指
+  // 成桥没起。所以探测无命中后提前拦一道，指名道姓说「未发现手机」。
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'), // devices: 空
+    ok('No services found.\n'),        // mdns: 空
+  ]);
+  const c = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serial: '', serialSource: 'default' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    createId: () => 'abc123',
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await c.probe();
+  assert.equal(res.ok, false);
+  assert.equal(res.code, 'device_not_found');
+  assert.match(res.error, /未发现手机/);
+  // 没有读 status.json。
+  assert.equal(adb.calls.some((call) => call.argv.includes(CONFIG.statusRemotePath)), false);
+});
+
 // ── adb 位置：IO 层把真实探针递进 resolve，SDK 位置候选才生效 ────────────────
 
 test('createPhoneBridgeClient 默认把 fs.existsSync 探针递进 resolve（ANDROID_HOME 命中）', () => {
@@ -1072,6 +1137,295 @@ test('自动档：env 显式指定 serial 时一步都不探测', async () => {
   // 只有 devices 与 connect 两次 adb，没有 mdns
   assert.equal(adb.calls.length, 2);
   assert.equal(adb.calls.filter((c) => c.argv[0] === 'mdns').length, 0);
+});
+
+// ── 拉取（设备文件 → 主机文件）──────────────────────────────────────────────
+
+test('pullFile：先问体积再拉，超限就拒并说清多大', async () => {
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('524288000 /sdcard/DCIM/large.mp4\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.pullFile({
+    remotePath: '/sdcard/DCIM/large.mp4',
+    localPath: 'out/large.mp4',
+    maxBytes: 1024 * 1024,
+  });
+  assert.equal(res.ok, false);
+  assert.equal(res.code, 'too_large');
+  assert.match(res.error, /500\.0 MB/);
+  assert.match(res.error, /1 MB/);
+  // 超限就不该真的去拉
+  assert.equal(adb.calls.filter((c) => c.argv.includes('pull')).length, 0);
+});
+
+test('pullFile：体积合格才拉，argv 带 -s 与两端路径', async () => {
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('2048 /sdcard/Download/a.json\n'),
+    ok('1 file pulled\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.pullFile({
+    remotePath: '/sdcard/Download/a.json',
+    localPath: 'out/a.json',
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.bytes, 2048);
+  const pull = adb.calls.find((c) => c.argv.includes('pull'));
+  assert.ok(pull, '应有 pull 调用');
+  assert.deepEqual(pull.argv.slice(-2), ['/sdcard/Download/a.json', 'out/a.json']);
+  assert.equal(pull.argv[0], '-s');
+});
+
+test('pullFile：设备路径不是绝对路径时直接拒，不碰 adb', async () => {
+  const adb = scriptedAdb([]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.pullFile({ remotePath: 'relative/a.jpg', localPath: 'out/a.jpg' });
+  assert.equal(res.ok, false);
+  assert.equal(res.code, 'invalid_path');
+  assert.equal(adb.calls.length, 0);
+});
+
+test('collectFiles：枚举 → 按类型筛 → 逐个拉 → 落清单，跳过的也写进清单', async () => {
+  const os = require('os');
+  const fs = require('fs');
+  const path = require('path');
+  const localDir = path.join(os.tmpdir(), `khy-collect-${process.pid}`);
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('/sdcard/DCIM/a.jpg\n/sdcard/DCIM/b.mp4\n/sdcard/DCIM/notes.txt\n'),
+    // stat -c '%s %Y'：大小 + 修改时间（秒）
+    ok('1024 1699999999\n'),
+    ok('1 file pulled\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.collectFiles({
+    remoteDir: '/sdcard/DCIM',
+    localDir,
+    types: ['image'],
+  });
+  assert.equal(res.ok, true);
+  // 只要了 image：mp4 与 txt 不该被拉
+  assert.deepEqual(res.manifest.files.map((f) => f.type), ['image']);
+  assert.equal(res.manifest.files[0].remotePath, '/sdcard/DCIM/a.jpg');
+  assert.equal(res.manifest.files[0].bytes, 1024);
+  assert.equal(res.manifest.files[0].mtimeMs, 1699999999000);
+  // 清单落盘，且带上跳过的条目
+  const manifestPath = path.join(localDir, 'manifest.json');
+  assert.ok(fs.existsSync(manifestPath), 'manifest.json 应落盘');
+  const onDisk = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  assert.equal(onDisk.schema, 'khy-phone-collect/1');
+  assert.deepEqual(onDisk.skipped.map((s) => s.reason), ['type-not-requested', 'type-not-requested']);
+  fs.rmSync(localDir, { recursive: true, force: true });
+});
+
+test('collectFiles：时间窗外的文件不进清单，并记明原因', async () => {
+  const os = require('os');
+  const fs = require('fs');
+  const path = require('path');
+  const localDir = path.join(os.tmpdir(), `khy-collect-since-${process.pid}`);
+  const now = 1700000000000;
+  const old = Math.floor((now - 30 * 86400000) / 1000);
+  const fresh = Math.floor((now - 3600000) / 1000);
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('/sdcard/DCIM/old.jpg\n/sdcard/DCIM/new.jpg\n'),
+    ok(`1024 ${old}\n`),
+    ok(`2048 ${fresh}\n`),
+    ok('1 file pulled\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => now,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.collectFiles({
+    remoteDir: '/sdcard/DCIM',
+    localDir,
+    types: ['image'],
+    sinceMs: now - 7 * 86400000,
+  });
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.manifest.files.map((f) => f.remotePath), ['/sdcard/DCIM/new.jpg']);
+  assert.deepEqual(res.manifest.skipped.map((s) => s.reason), ['older-than-window']);
+  assert.equal(res.manifest.sinceMs, now - 7 * 86400000);
+  fs.rmSync(localDir, { recursive: true, force: true });
+});
+
+test('scanFiles：只枚举不下载，并按类型与时间窗筛', async () => {
+  const now = 1700000000000;
+  const old = Math.floor((now - 30 * 86400000) / 1000);
+  const fresh = Math.floor((now - 3600000) / 1000);
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('/sdcard/DCIM/new.jpg\n/sdcard/DCIM/old.jpg\n/sdcard/DCIM/clip.mp4\n'),
+    ok(`2048 ${fresh}\n`),
+    ok(`4096 ${old}\n`),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => now,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.scanFiles({
+    remoteDir: '/sdcard/DCIM',
+    types: ['image'],
+    sinceMs: now - 7 * 86400000,
+  });
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.entries.map((e) => e.remotePath), ['/sdcard/DCIM/new.jpg']);
+  assert.equal(res.entries[0].bytes, 2048);
+  assert.deepEqual(res.counts, { image: 1 });
+  // 只列清单：不该发生任何 pull
+  assert.equal(adb.calls.filter((c) => c.argv.includes('pull')).length, 0);
+  // 没点名的时间窗丢弃项也要有说法
+  assert.deepEqual(res.skipped.map((s) => s.reason), ['type-not-requested', 'older-than-window']);
+});
+
+test('collectFiles：落盘保留相对路径，不同目录的同名文件不互相覆盖', async () => {
+  const os = require('os');
+  const fs = require('fs');
+  const path = require('path');
+  const localDir = path.join(os.tmpdir(), `khy-collect-rel-${process.pid}`);
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok('/sdcard/DCIM/Camera/a.jpg\n/sdcard/DCIM/Backup/a.jpg\n'),
+    ok('1024 1699999999\n'),
+    ok('2048 1699999999\n'),
+    ok('1 file pulled\n'),
+    ok('1 file pulled\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.collectFiles({
+    remoteDir: '/sdcard/DCIM',
+    localDir,
+    types: ['image'],
+  });
+  assert.equal(res.ok, true);
+  const locals = res.manifest.files.map((f) => f.localPath);
+  assert.equal(locals.length, 2);
+  assert.equal(new Set(locals).size, 2, '同名文件必须落到不同路径');
+  assert.ok(locals.some((p) => p.includes('Camera')), '应保留 Camera 子目录');
+  assert.ok(locals.some((p) => p.includes('Backup')), '应保留 Backup 子目录');
+  fs.rmSync(localDir, { recursive: true, force: true });
+});
+
+test('pushFile：先建设备侧目录再推，argv 带 -s 与两端路径', async () => {
+  const os = require('os');
+  const fs = require('fs');
+  const path = require('path');
+  const localPath = path.join(os.tmpdir(), `khy-push-${process.pid}.txt`);
+  fs.writeFileSync(localPath, 'hello', 'utf8');
+  const adb = scriptedAdb([
+    ok('List of devices attached\n'),
+    ok(`connected to ${SERIAL}`),
+    ok(''),
+    ok('1 file pushed\n'),
+  ]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const res = await instance.pushFile({
+    localPath,
+    remotePath: '/sdcard/Download/hello.txt',
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.bytes, 5);
+  const mkdir = adb.calls.find((c) => c.argv.includes('mkdir'));
+  assert.ok(mkdir, '应先建设备侧目录');
+  assert.equal(mkdir.argv[mkdir.argv.length - 1], '/sdcard/Download');
+  const push = adb.calls.find((c) => c.argv.includes('push'));
+  assert.ok(push, '应有 push 调用');
+  assert.deepEqual(push.argv.slice(-2), [localPath, '/sdcard/Download/hello.txt']);
+  fs.rmSync(localPath, { force: true });
+});
+
+test('pushFile：主机文件不存在或超限时直接拒，不碰设备', async () => {
+  const adb = scriptedAdb([]);
+  const instance = client.createPhoneBridgeClient({
+    env: {},
+    config: { ...CONFIG, serialSource: 'env' },
+    adbTransport: adb,
+    httpTransport: scriptedHttp([]),
+    sleep: () => Promise.resolve(),
+    now: () => 1700000000000,
+    signalFactory: () => new AbortController().signal,
+  });
+  const missing = await instance.pushFile({
+    localPath: 'no/such/file.txt',
+    remotePath: '/sdcard/Download/file.txt',
+  });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.code, 'local_file_missing');
+  const relative = await instance.pushFile({
+    localPath: 'x.txt',
+    remotePath: 'relative/path.txt',
+  });
+  assert.equal(relative.ok, false);
+  assert.equal(relative.code, 'invalid_path');
+  assert.equal(adb.calls.length, 0);
 });
 
 // 还原 spawn，避免污染同进程内的其它套件

@@ -277,6 +277,64 @@ const BRIDGE_TOOLS = Object.freeze([
     resultCapChars: 1024,
   },
   {
+    // 安卓侧 2026-10-26 加的三个，一直没同步到这边——所以 PC 侧此前根本调不到。
+    // 本机实测过：zip/unzip 走 java.util.zip，不依赖任何外部命令（Android 的
+    // shell 里没有 zip 二进制，这是 Amoo 误判「没装」的那两个）。
+    bridgeName: 'zip',
+    khyName: 'phone_zip',
+    aliases: [],
+    access: ACCESS_ACTUATE,
+    requiresAccessibility: false,
+    args: {
+      path: {
+        type: 'string',
+        required: true,
+        description: '要打包的文件或目录绝对路径（必填）。示例：/sdcard/khy/workspace',
+      },
+      out: {
+        type: 'string',
+        required: true,
+        description: '产出的 zip 绝对路径（必填）。示例：/sdcard/khy/out.zip',
+      },
+    },
+    summary: '把手机上的目录或文件打成 zip',
+    note: '用系统自带 zip 库实现，不需要外部命令。会计入本轮导出预算——它把「读 200 个小文件」换成「读 1 个 zip」，不记账就绕过了额度。缺 out 会直接报错，不会静默写到别处。',
+    resultCapChars: 512,
+  },
+  {
+    bridgeName: 'unzip',
+    khyName: 'phone_unzip',
+    aliases: [],
+    access: ACCESS_ACTUATE,
+    requiresAccessibility: false,
+    args: {
+      path: {
+        type: 'string',
+        required: true,
+        description: '要解开的 zip 绝对路径（必填）。示例：/sdcard/khy/out.zip',
+      },
+      dest: {
+        type: 'string',
+        required: true,
+        description: '解到哪个目录（必填）。示例：/sdcard/khy/restored',
+      },
+    },
+    summary: '把手机上的 zip 解开到指定目录',
+    note: '保留目录层级。会拒绝条目名越出目标目录的压缩包（Zip Slip）——压缩包可能来自别人，这个检查不是可选项。',
+    resultCapChars: 512,
+  },
+  {
+    bridgeName: 'tools',
+    khyName: 'phone_tools',
+    aliases: [],
+    access: ACCESS_READ,
+    requiresAccessibility: false,
+    args: {},
+    summary: '列出桥的全部工具，按组给出每个工具的一句话用途',
+    note: '能力目录。此前调用方只知道「有 N 个工具」而不知道有哪些、分别能干什么，只能猜——而猜的方向永远是低估。不确定某件事能不能做时先问这个。',
+    resultCapChars: 4096,
+  },
+  {
     bridgeName: 'start_app',
     khyName: 'phone_start_app',
     aliases: [],
@@ -492,6 +550,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_ACTUATE,
     requiresAccessibility: true,
+    optional: 'amoo',
     args: {
       mode: {
         type: 'string',
@@ -512,6 +571,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_ACTUATE,
     requiresAccessibility: true,
+    optional: 'amoo',
     args: {},
     summary: '停止 Amoo 本地拦截循环',
     note: '当前命令跑完后退出，不会打断半条命令。',
@@ -523,6 +583,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_READ,
     requiresAccessibility: false,
+    optional: 'amoo',
     args: {},
     summary: '读取 Amoo 本地拦截循环的状态',
     note: '返回 running / mode / 最近一条进展说明。',
@@ -534,6 +595,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_ACTUATE,
     requiresAccessibility: true,
+    optional: 'amoo',
     args: {
       prompt: {
         type: 'string',
@@ -557,6 +619,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_READ,
     requiresAccessibility: false,
+    optional: 'amoo',
     args: {},
     summary: '轮询 amoo_ask 的结果',
     note: 'state=running / done / failed。done 时 reply 是 Amoo 最新气泡的原文——未解析、未摘要、未校验。超过 20000 字会被截断（完整文本只在设备上），所以别用本工具拉长文。',
@@ -568,6 +631,7 @@ const BRIDGE_TOOLS = Object.freeze([
     aliases: [],
     access: ACCESS_READ,
     requiresAccessibility: false,
+    optional: 'amoo',
     accessDependsOnOp: true,
     args: {
       op: {
@@ -586,6 +650,22 @@ const BRIDGE_TOOLS = Object.freeze([
     summary: '读写 khy-os 与 Amoo 的共享记忆',
     note: 'Amoo 的执行环境在云端、/sdcard 对它不存在，所以共享介质是对话流本身：循环启动时注入，命令验证通过时自动写入 verified 条目。文件在 /sdcard/bridge-amoobridge/amoo_memory.json。json 与 injection 字段超过 20000 字会被截断。',
     resultCapChars: 20000,
+  },
+  {
+    // 与桥侧新工具 amoo_stop 对齐：唯一能清掉 askRunning 单飞锁的即时中止入口。
+    // 无线调试掉线留下的孤儿 ask 会把后续所有 ask 永久堵死（单飞锁不释放），
+    // amoo_result 轮询超过最大预算（1800s）会自愈回 orphaned_ask 并释放锁，
+    // 但那是被动等待；amoo_stop 是主动、即时的那一个。
+    bridgeName: 'amoo_stop',
+    khyName: 'phone_amoo_stop',
+    aliases: [],
+    access: ACCESS_ACTUATE,
+    requiresAccessibility: false,
+    optional: 'amoo',
+    args: {},
+    summary: '立即中止正在进行的 Amoo 反代任务（amoo_ask）',
+    note: '释放 amoo_ask 的单飞锁，让后续 ask 能重新开始。没有正在跑的任务时也返回成功（幂等）。掉线堵死锁时用这个，不用等 amoo_result 的 1800s 自愈。',
+    resultCapChars: 256,
   },
 ]);
 
@@ -628,6 +708,19 @@ const ACCESSIBILITY_GAP_REASON =
   + '在手机上打开 khy-os App 并启用其中的无障碍服务（KhyAccessibilityService），'
   + '然后用 khy phone status 确认 ui=true。';
 
+// 助手协同（Amoo 反代）工具组：optional==='amoo' 的那一批。它们是「整组可关」的
+// 能力——Amoo 没装时桥把它们报为 withheld，PC 侧据此判可用性（见 phoneBridgeClient
+// 的 assistantAvailable 三态），模型工具面也可整组不广告（STEPNEO_INCLUDE_ASSISTANT_RELAY
+// 默认关）。从 BRIDGE_TOOLS 派生而非另列一份，避免两处清单漂移。
+const ASSISTANT_RELAY_TOOL_NAMES = Object.freeze(
+  BRIDGE_TOOLS.filter((tool) => tool.optional === 'amoo').map((tool) => tool.bridgeName)
+);
+
+const ASSISTANT_GAP_REASON =
+  '这组助手协同工具（Amoo 反代）需要手机上已安装并启用 Amoo（com.stepos.ailauncher）。'
+  + '只有在桥把这些工具报为 withheld 时，PC 侧才判定「不可用」；桥没报到时判「未知」，'
+  + '不据此说 Amoo 装没装。装好 Amoo 后用 khy phone tools 复查这组是否回到可调列表。';
+
 const ALIAS_TARGETS = Object.freeze({
   shell_exec: 'exec',
   file_read: 'read',
@@ -646,6 +739,14 @@ function getPhoneBridgeTools() {
 
 function getPhoneBridgeUiTools() {
   return _asArray(UI_TOOLS);
+}
+
+/** 助手协同（Amoo 反代）工具组的副本；optional==='amoo' 的那一批。 */
+function getPhoneBridgeAssistantRelayTools() {
+  return BRIDGE_TOOLS.filter((tool) => tool.optional === 'amoo').map((tool) => ({
+    ...tool,
+    args: { ...tool.args },
+  }));
 }
 
 function isPhoneBridgeToolName(name) {
@@ -798,8 +899,11 @@ module.exports = {
   UI_TOOL_ACCESS,
   ALIAS_TARGETS,
   ACCESSIBILITY_GAP_REASON,
+  ASSISTANT_RELAY_TOOL_NAMES,
+  ASSISTANT_GAP_REASON,
   getPhoneBridgeTools,
   getPhoneBridgeUiTools,
+  getPhoneBridgeAssistantRelayTools,
   findPhoneBridgeTool,
   isPhoneBridgeToolName,
   isPhoneBridgeUiToolName,

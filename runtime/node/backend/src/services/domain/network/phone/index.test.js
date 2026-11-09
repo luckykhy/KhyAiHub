@@ -68,7 +68,8 @@ test('resetPhoneBridgeForTests 之后重新取到的是新实例', () => {
 test('单例的状态可查，且不含 token', () => {
   const c = facade.getPhoneBridgeClient({});
   const state = c.getState();
-  assert.equal(state.serial, '192.168.2.46:33743');
+  // 空默认：未设 env 时 serial 为空（不再钉一台开发机的过期地址），强制走自动探测。
+  assert.equal(state.serial, '');
   assert.equal(state.httpPort, 8896);
   assert.equal(state.tokenLoaded, false);
   assert.equal(state.enabled, true);
@@ -78,11 +79,11 @@ test('单例的状态可查，且不含 token', () => {
 test('facade 上的纯判定函数不依赖手机就能用', () => {
   assert.equal(facade.classifyBridgeCall('battery', {}).requiresConfirm, false);
   assert.equal(facade.classifyBridgeCall('exec', { cmd: 'id' }).requiresConfirm, true);
-  // 31 = 25 基础桥工具 + 3 个循环控制 + 3 个反代与共享记忆。
+  // 32 = 25 基础桥工具 + 3 个循环控制 + 3 个反代与共享记忆 + 1 个即时中止（amoo_stop）。
   // 25 里含 2026 新增的设备控制三件套 volume / brightness / vibrate——Android 侧
-  // Tools.java 已按同名 tool 分派实现，故 31 是真实基线，不是超前声明。
+  // Tools.java 已按同名 tool 分派实现，故 32 是真实基线，不是超前声明。
   // 这条是道闸：桥的工具面长胖了而目录没跟上，调用侧就会拿旧清单做准入判断。
-  assert.equal(facade.listKhyToolDefinitions().length, 31);
+  assert.equal(facade.listKhyToolDefinitions().length, 32);
   assert.equal(facade.resolvePhoneBridgeConfig({}).mailboxDir, '/sdcard/bridge-amoobridge');
 });
 

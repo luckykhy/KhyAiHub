@@ -23,6 +23,8 @@ test('an empty env resolves to the production gateway and the default cap', () =
   assert.equal(c.appId, 'ai-engine-prod');
   assert.equal(c.baseUrl, 'https://biz-gw.stepaos.com/stepfun-proxy');
   assert.equal(c.includeUi, true);
+  // 助手协同（Amoo 反代）工具组默认不广告：新克隆的 khyos 不带 Amoo。
+  assert.equal(c.includeAssistantRelay, false);
   assert.ok(c.maxRounds > 0);
   assert.equal(c.appSecret, '');
   assert.equal(c.token, '');
@@ -41,6 +43,13 @@ test('env overrides win, including the test-twin gateway', () => {
   assert.equal(c.appId, 'ai-engine-test');
   assert.equal(c.maxRounds, 7);
   assert.equal(c.includeUi, false);
+});
+
+test('the assistant relay group is opt-in, off by default', () => {
+  // 默认关：一份新克隆的 khyos 不把 amoo 工具交给模型。显式 opt-in 才开。
+  assert.equal(resolveStepneoConfig({}).includeAssistantRelay, false);
+  assert.equal(resolveStepneoConfig({ STEPNEO_INCLUDE_ASSISTANT_RELAY: '1' }).includeAssistantRelay, true);
+  assert.equal(resolveStepneoConfig({ STEPNEO_INCLUDE_ASSISTANT_RELAY: '0' }).includeAssistantRelay, false);
 });
 
 test('a nonsense STEPNEO_MAX_ROUNDS falls back instead of becoming NaN', () => {

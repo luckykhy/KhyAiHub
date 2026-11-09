@@ -15,6 +15,7 @@
 const phoneBridgeConfig = require('./phoneBridgeConfig');
 const phoneBridgePolicy = require('./phoneBridgePolicy');
 const phoneBridgeCatalog = require('./phoneBridgeCatalog');
+const phoneCollect = require('./phoneCollect');
 const { createPhoneBridgeMailbox } = require('./phoneBridgeMailbox');
 const { createPhoneBridgeClient } = require('./phoneBridgeClient');
 
@@ -42,6 +43,7 @@ module.exports = {
   ...phoneBridgeConfig,
   ...phoneBridgePolicy,
   ...phoneBridgeCatalog,
+  ...phoneCollect,
   createPhoneBridgeMailbox,
   createPhoneBridgeClient,
   getPhoneBridgeClient,

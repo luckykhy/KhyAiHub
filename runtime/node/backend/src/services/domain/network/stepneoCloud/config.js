@@ -68,6 +68,10 @@ function resolveStepneoConfig(env = process.env) {
     // accessibility service is up. Advertising them lets the model learn that
     // from a real refusal; hiding them makes it guess the capability is absent.
     includeUi: _bool(env.STEPNEO_INCLUDE_UI, true),
+    // 助手协同（Amoo 反代）工具组：默认**不**广告——一份新克隆的 khyos 交给模型的
+    // 工具里不许出现 amoo（独立性的机读定义）。显式 opt-in 才开；「不广告」不等于
+    // 「不可调」，createToolNameResolver 仍从全量建表，人显式 call 仍解析得到。
+    includeAssistantRelay: _bool(env.STEPNEO_INCLUDE_ASSISTANT_RELAY, false),
     adbExecutable: phone.adbExecutable || 'adb',
     serial: phone.serial || '',
     localPort: phone.localPort || phone.httpPort || 18896,
