@@ -13,11 +13,13 @@ const path = require('path');
 
 const { safeKill } = require('../tools/platformUtils');
 const { getDataDir, getDataHome, getLegacyDataHome } = require('../utils/dataHome');
+// 端口真源在 constants/serviceDefaults.js（LAYOUT-008）；此处不再另写一份字面量。
+const { AI_BACKEND_DEFAULT_PORT } = require('../constants/serviceDefaults');
 
 const PID_FILE = path.join(getDataDir(), 'daemon.pid');
 const LOG_FILE = path.join(getDataDir('logs'), 'daemon.log');
 const DAEMON_ENTRY = path.join(__dirname, 'daemonEntry.js');
-const DEFAULT_PORT = parseInt(process.env.KHY_DAEMON_PORT || '9090', 10);
+const DEFAULT_PORT = parseInt(process.env.KHY_DAEMON_PORT || AI_BACKEND_DEFAULT_PORT, 10);
 const RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
 const LEGACY_RUNTIME_FILE = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
 

@@ -207,12 +207,15 @@ function _discoverDatabases() {
   const databases = [];
 
   try {
-    const { getDataDir, getProjectDataDir } = require('../utils/dataHome');
+    const { getDataDir, getProjectDataPath } = require('../utils/dataHome');
 
     // Main databases
+    // 文件路径走 getProjectDataPath / getDataDir 之外的解析方式：getProjectDataDir
+    // 会把末级当目录建出来（拿文件路径当目录用）。这里保持与 sessionSearchIndex
+    // 同一条路径真源，避免健康检查报出的路径与实际打开的库不是一个。
     databases.push({
       name: 'sessions.db',
-      path: getProjectDataDir('sessions.db'),
+      path: getProjectDataPath('sessions.db'),
       critical: true,
     });
 

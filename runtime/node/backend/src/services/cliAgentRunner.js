@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-247-S6V90PS8
 /**
  * CLI Agent Runner — orchestrate parallel agent execution for complex tasks.
  *

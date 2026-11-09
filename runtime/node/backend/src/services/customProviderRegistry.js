@@ -48,6 +48,12 @@ const BUILTIN_POOL_KEYS = new Set([
   'codex',
   'sensenova',
   'agnes',
+  // 保留给「视觉识图端点」(services/visionEndpointStore.js)。它是内部池,不是
+  // 用户可注册的自定义 provider——登记在这里，用户就不能再用一个同名自定义
+  // provider 把它覆盖掉(saveProvider:132 会拒绝内置名)。名字含 'vision' 片段
+  // 纯属巧合,不是设计依赖:端点切换靠的是显式注入 KHY_VISION_MODELS,不靠名字
+  // 启发式(见 visionEndpointStore.visionRoutingEnvPatch)。
+  'khy-vision',
 ]);
 
 let _cache = null;

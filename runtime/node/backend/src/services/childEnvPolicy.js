@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-240-JYVJTQKH
 'use strict';
 
 // Child-process environment hygiene (borrowed conclusion, idea档):

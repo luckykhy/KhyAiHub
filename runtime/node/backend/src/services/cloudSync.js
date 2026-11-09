@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-253-7SP3MDG0
 /**
  * Cloud Sync & Telemetry Service.
  *
