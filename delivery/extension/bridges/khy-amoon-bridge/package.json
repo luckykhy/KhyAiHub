@@ -1,0 +1,20 @@
+{
+  "name": "khy-amoon-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KhyOS 与手机 amoon 之间的桥（Phase 1 垂直切片骨架，零第三方依赖）",
+  "type": "commonjs",
+  "main": "extension.js",
+  "bin": {
+    "khy-amoon-bridge": "bin/cli.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "help": "node bin/cli.js --help",
+    "doctor": "node bin/cli.js doctor"
+  },
+  "license": "UNLICENSED"
+}

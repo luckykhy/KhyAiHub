@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>amoon 手机侧说明（khy-amoon-bridge） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>bridges<span class="sep">›</span>khy-amoon-bridge<span class="sep">›</span>phone<span class="sep">›</span>amoon 手机侧说明（khy-amoon-bridge）</div>
+      <header class="hero reveal"><h1>amoon 手机侧说明（khy-amoon-bridge）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#amoon-手机侧说明-khy-amoon-bridge">amoon 手机侧说明（khy-amoon-bridge）</a></li><li class="lvl-2"><a href="#两条通道">两条通道</a></li><li class="lvl-3"><a href="#1-http-快-优先">1. HTTP（快，优先）</a></li><li class="lvl-3"><a href="#2-文件信箱-慢-兜底">2. 文件信箱（慢，兜底）</a></li><li class="lvl-2"><a href="#kb-用法">kb 用法</a></li><li class="lvl-2"><a href="#允许的工具-手机侧">允许的工具（手机侧）</a></li><li class="lvl-2"><a href="#phase-0-双向的前提">Phase 0：双向的前提</a></li><li class="lvl-2"><a href="#安全边界">安全边界</a></li><li class="lvl-2"><a href="#排障">排障</a></li><li class="lvl-2"><a href="#状态">状态</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="amoon-手机侧说明-khy-amoon-bridge">amoon 手机侧说明（khy-amoon-bridge）<a class="anchor" href="#amoon-手机侧说明-khy-amoon-bridge" aria-label="锚点">#</a></h1>
+<p>本目录是手机上的 <code>/sdcard/khy-amoon-bridge</code>，由 PC 侧 <code>lib/bootstrap.js</code> 推送：</p>
+<table><thead><tr><th>文件</th><th>作用</th></tr></thead><tbody><tr><td><code>README.md</code></td><td>本说明</td></tr><tr><td><code>tools.json</code></td><td>手机可调用的工具清单（低权限）</td></tr><tr><td><code>kb</code></td><td>POSIX sh 客户端（curl 优先，失败回退文件信箱）</td></tr><tr><td><code>port.txt</code></td><td>PC daemon 实际监听端口（adb reverse 的目标）；<code>kb</code> 优先读 <code>config.json</code> 的 <code>port</code>，没有再回退到这里</td></tr><tr><td><code>token.txt</code></td><td><strong>phone scope</strong> token（仅当 PC 侧显式提供时存在）；不含 operator token。<code>kb</code> 优先读契约路径 <code>token</code>，没有再回退到这里</td></tr><tr><td><code>inbox/</code></td><td>手机 → PC 的命令：<code>cmd_&lt;id&gt;.json</code></td></tr><tr><td><code>outbox/</code></td><td>PC → 手机的投递消息与命令结果：<code>msg_&lt;id&gt;.json</code> / <code>res_&lt;id&gt;.json</code></td></tr><tr><td><code>working/</code> <code>done/</code> <code>failed/</code></td><td>PC 侧轮询时使用的中间/归档目录</td></tr><tr><td><code>tmp/</code></td><td>原子写的临时文件（先写这里，再 <code>mv</code>）</td></tr><tr><td><code>blobs/</code></td><td>内容寻址附件（Phase 2 才用）</td></tr></tbody></table>
+<h2 id="两条通道">两条通道<a class="anchor" href="#两条通道" aria-label="锚点">#</a></h2>
+<h3 id="1-http-快-优先">1. HTTP（快，优先）<a class="anchor" href="#1-http-快-优先" aria-label="锚点">#</a></h3>
+<p>PC 建立 <code>adb reverse tcp:&lt;port&gt; tcp:&lt;port&gt;</code> 后，手机可访问：</p>
+<pre><code>http://127.0.0.1:&lt;port&gt;/health          （无需鉴权，只返回 {&quot;ok&quot;:true}）
+http://127.0.0.1:&lt;port&gt;/v1/call        （Bearer phone token）</code></pre>
+<pre><code class="language-sh">TOKEN=$(<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/token.txt)
+PORT=$(<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/port.txt)
+curl --noproxy <span class="hljs-string">&#x27;*&#x27;</span> -sS --max-time 60 \
+  -H <span class="hljs-string">&quot;Authorization: Bearer <span class="hljs-variable">$TOKEN</span>&quot;</span> \
+  -H <span class="hljs-string">&#x27;Content-Type: application/json&#x27;</span> \
+  --data-binary <span class="hljs-string">&#x27;{&quot;tool&quot;:&quot;ping&quot;,&quot;args&quot;:{}}&#x27;</span> \
+  <span class="hljs-string">&quot;http://127.0.0.1:<span class="hljs-variable">$PORT</span>/v1/call&quot;</span></code></pre>
+<h3 id="2-文件信箱-慢-兜底">2. 文件信箱（慢，兜底）<a class="anchor" href="#2-文件信箱-慢-兜底" aria-label="锚点">#</a></h3>
+<p>写命令与读结果是同一个 FUSE 卷上的 <code>rename</code>，必须原子写：</p>
+<pre><code class="language-sh"><span class="hljs-comment"># 写</span>
+<span class="hljs-built_in">printf</span> <span class="hljs-string">&#x27;%s\n&#x27;</span> <span class="hljs-string">&#x27;{&quot;v&quot;:1,&quot;id&quot;:&quot;demo0001&quot;,&quot;tool&quot;:&quot;ping&quot;,&quot;args&quot;:{}}&#x27;</span> \
+  &gt; /sdcard/khy-amoon-bridge/tmp/cmd_demo0001.json.tmp
+<span class="hljs-built_in">mv</span> /sdcard/khy-amoon-bridge/tmp/cmd_demo0001.json.tmp \
+   /sdcard/khy-amoon-bridge/inbox/cmd_demo0001.json
+
+<span class="hljs-comment"># 读</span>
+<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/outbox/res_demo0001.json</code></pre>
+<ul><li>命令字段：<code>v=1,id,tool,args,ts?,expires_at?,reply_to?,nonce?</code>。</li><li>结果字段：<code>v=1,id,tool,ok,ts,duration_ms,data?,error?,replayed?</code>。</li><li><code>id</code> 只能是 <code>[A-Za-z0-9_-]{8,64}</code>；文件名必须匹配 <code>cmd_&lt;id&gt;.json</code> / <code>res_&lt;id&gt;.json</code>。</li><li>半写文件会被 PC 侧按“大小稳定 + JSON 重试”处理；不要直接写 inbox，必须 tmp+mv。</li><li>文件投递是 at-least-once；结果可能重复，<code>id</code> 是幂等键。</li></ul>
+<h2 id="kb-用法">kb 用法<a class="anchor" href="#kb-用法" aria-label="锚点">#</a></h2>
+<pre><code class="language-sh">sh /sdcard/khy-amoon-bridge/kb health
+sh /sdcard/khy-amoon-bridge/kb tools
+sh /sdcard/khy-amoon-bridge/kb status
+sh /sdcard/khy-amoon-bridge/kb ping
+sh /sdcard/khy-amoon-bridge/kb bridge_status <span class="hljs-string">&#x27;{&quot;verbose&quot;:false}&#x27;</span>
+sh /sdcard/khy-amoon-bridge/kb mailbox_status
+sh /sdcard/khy-amoon-bridge/kb ask <span class="hljs-string">&#x27;帮我总结今天的计划&#x27;</span></code></pre>
+<ul><li><code>kb &lt;tool&gt; '&lt;json args&gt;'</code> 先试 HTTP；curl 失败/无 token 时自动回退文件信箱（stderr 会说明）。</li><li>等待结果默认 60 秒，可用 <code>KB_TIMEOUT</code> 覆盖。</li><li>stdout 只输出 JSON；错误也是 JSON。</li><li>不依赖 jq / openssl；兼容 Android toybox。</li></ul>
+<h2 id="允许的工具-手机侧">允许的工具（手机侧）<a class="anchor" href="#允许的工具-手机侧" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>工具</th><th>phone scope</th><th>file scope</th><th>说明</th></tr></thead><tbody><tr><td><code>ping</code></td><td>是</td><td>是</td><td>最小连通性</td></tr><tr><td><code>bridge_status</code></td><td>是</td><td>是</td><td>状态（裁剪 serial/路径）</td></tr><tr><td><code>mailbox_status</code></td><td>是</td><td>是</td><td>信箱计数</td></tr><tr><td><code>khy_ask</code></td><td><strong>默认关闭</strong></td><td>永不</td><td>需要 PC 侧 <code>KHY_AMOON_PHONE_ASK=1</code> 且 HTTP 能力已验证</td></tr><tr><td><code>phone_*</code> / <code>amoon_*</code></td><td>否</td><td>否</td><td>仅 operator</td></tr><tr><td><code>phone_shell</code></td><td>不存在</td><td>不存在</td><td>桥不提供任意 shell</td></tr></tbody></table>
+<p>文件信箱没有 Bearer：任何能写 <code>/sdcard</code> 的应用都能投递。因此 file scope 永远只有上面三个<br>低权限工具——不能触发模型、不能控制手机。</p>
+<h2 id="phase-0-双向的前提">Phase 0：双向的前提<a class="anchor" href="#phase-0-双向的前提" aria-label="锚点">#</a></h2>
+<p><code>amoon → PC</code> 是否可用，必须由 <strong>amoon 自己</strong>完成以下三项并留证，不能用 PC 侧 <code>adb shell</code><br>代跑冒充：</p>
+<ol><li>执行 <code>sh /sdcard/khy-amoon-bridge/kb health</code>（证明能执行 shell）；</li><li>写一个 <code>inbox/cmd_&lt;id&gt;.json</code>（证明能写文件信箱，且 PC 能回结果）；</li><li><code>curl http://127.0.0.1:&lt;port&gt;/health</code>（证明 adb reverse + HTTP 可用）。</li></ol>
+<p>三项全失败 → 只交付 <strong>KhyOS → 手机</strong> 单向 + 人工中转，本文件不得写“双向可用”。<br>证据由 PC 侧 <code>scripts/probe-amoon.js</code> / <code>cli probe</code> 写入 <code>capability.json</code>。</p>
+<h2 id="安全边界">安全边界<a class="anchor" href="#安全边界" aria-label="锚点">#</a></h2>
+<ul><li>token 放在 <code>/sdcard</code>，同机任何有存储权限的应用都可能读到；phone token 默认没有模型能力。</li><li>文件信箱没有 HMAC（手机缺 <code>openssl</code> / <code>sha256hmac</code>）；<code>res_</code>、<code>ack_</code>、<code>reply_</code> 都可能被伪造，</li></ul>
+<p>一律按 <code>unverified</code> 处理，不得据此执行命令。</p>
+<ul><li>不提供 <code>phone_shell</code>、无障碍服务、root；不修改 amoon 安装包。</li><li><code>adb reverse</code> 只映射 PC 的 <code>127.0.0.1</code>，不做 LAN 监听。</li></ul>
+<h2 id="排障">排障<a class="anchor" href="#排障" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>现象</th><th>处理</th></tr></thead><tbody><tr><td><code>kb health</code> 返回 <code>channel:file</code></td><td>HTTP/reverse 不通；检查 PC 侧 <code>bridge_status</code> 与 <code>adb reverse --list</code></td></tr><tr><td>HTTP 401</td><td><code>token.txt</code> 与 PC 侧 <code>tokens.json</code> 不匹配；让 PC 重新 rotate 并重新推送</td></tr><tr><td>HTTP 403 <code>forbidden_scope</code></td><td>该工具不在 phone/file scope；属预期</td></tr><tr><td><code>forbidden_scope</code> + <code>khy_ask</code></td><td>手机提问默认关闭；需要 PC 侧显式开启</td></tr><tr><td>文件信箱一直超时</td><td>检查 PC daemon 是否运行、<code>inbox</code> 是否可写、命令是否过期</td></tr><tr><td>结果 <code>abandoned</code></td><td>PC 在命令执行中重启；结果未知，按失败处理，不要盲目重试非幂等工具</td></tr><tr><td><code>curl: command not found</code></td><td>设备无 curl；只能用文件信箱</td></tr></tbody></table>
+<h2 id="状态">状态<a class="anchor" href="#状态" aria-label="锚点">#</a></h2>
+<ul><li>KhyOS → 手机：由 PC 侧 adb 主动推送/截图/读屏，不依赖本 App 前台（Phase 1）。</li><li>手机 → KhyOS：只有 Phase 0 三项通过后才宣称可用；否则为单向。</li><li><code>capability.json</code> 的 <code>amoonToPc</code> 是唯一判据，不要仅凭本文件推断双向可用。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../delivery/extension/bridges/khy-amoon-bridge/docs/PHASE0.html"><div class="dir">← 上一篇</div><div class="ttl">Phase 0 — amoon 能力门（双向的前提）</div></a><a class="next" href="../../../../../delivery/extension/bridges/khy-amoon-bridge/README.html"><div class="dir">下一篇 →</div><div class="ttl">khy-amoon-bridge</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="delivery/extension/bridges/khy-amoon-bridge/phone/README.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
