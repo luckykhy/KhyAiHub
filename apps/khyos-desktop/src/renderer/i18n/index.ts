@@ -1,4 +1,5 @@
-﻿import i18n from 'i18next'
+﻿// khy-canary: Khy-20261102-338-NY0PA951
+import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import zhCN from './zh-CN.json'
 

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-341-AS10456F
 // keymap.ts — pure leaf (zero IO, deterministic, never throws).
 //
 // 目的：把桌面端「按键 → 动作名」这条决策收敛成**单一真源**，供三处派生：
