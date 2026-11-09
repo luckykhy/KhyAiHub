@@ -34,8 +34,8 @@
       "~/.khyquant/capability_matrix.json：文件覆盖，优先级低于内联",
       "KHY_SELF_HEAL / KHY_SYSCALL_GATEWAY / KHY_METACONSTRAINT / KHY_EVO_ENGINE / KHY_DEP_HEALING：offDisables 方言（原始值 !== 'off'，不 trim 不 lowercase）",
       "KHY_STRUCTURED_FURNACE：zeroDisables 方言（String(v||'').trim() !== '0'）",
-      "KHY_PROACTIVE_COLLAB / KHY_VERIFY_GATE / KHY_VERIFY_NONEDIT / KHY_PROJECT_COHERENCE / KHY_DELIVERABLE_CLOSURE / KHY_SELF_KICKOFF / KHY_RALPH_LOOP / KHY_DELIVERY_GATE / KHY_AUDIT_FIX / KHY_UNIFIED_SEARCH：envFlagDefault 三态方言（默认为开）",
-      "KHY_COGNITIVE_SNAPSHOT / KHY_CONTEXT_SCOPE：onEnables 方言（默认关，显式 1/on 才开）",
+      "KHY_PROACTIVE_COLLAB / KHY_VERIFY_GATE / KHY_VERIFY_NONEDIT / KHY_PROJECT_COHERENCE / KHY_DELIVERABLE_CLOSURE / KHY_SELF_KICKOFF / KHY_RALPH_LOOP / KHY_DELIVERY_GATE / KHY_AUDIT_FIX / KHY_UNIFIED_SEARCH / KHY_CONTEXT_SCOPE：envFlagDefault 三态方言（默认为开）",
+      "KHY_COGNITIVE_SNAPSHOT：onEnables 方言（默认关，显式 1/on 才开）",
       "KHY_UNKNOWN_PROBLEM_HANDLER：module 方言，实为 unknownProblemHandler.isEnabled()，抛异常按 fail-closed 计为关"
     ],
     "byte_identity": "wired: true 的 13 条描述符是逐字节替换旧内联 process.env.KHY_* 检查而设计的：flag.kind 必须对每个 env 取值复现原表达式的布尔值，preconditions 必须是原内联守卫的子集。证明在单元级 predicates/composer 测试与仓级 tests/root-level/capabilityMatrixParity.test.js（jest 方言，须经 jest-lite 跑）。"

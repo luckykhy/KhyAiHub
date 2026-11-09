@@ -39,6 +39,10 @@ const { resolveAmooConfig, buildLoopbackUrl, DEFAULTS, AMOO_ACTIVITY } = require
 
 test('defaults match the measured device', () => {
   const config = resolveAmooConfig({});
+  // 空默认：未设 env 时 serial 为空、serialSource 为 default，强制 IO 层走自动探测。
+  assert.equal(config.adb.serial, '');
+  assert.equal(config.adb.serialSource, 'default');
+  assert.equal(config.adb.connectHost, '');
   assert.equal(config.adb.serial, DEFAULTS.DEVICE_SERIAL);
   assert.equal(config.adb.connectPort, DEFAULTS.CONNECT_PORT);
   assert.equal(config.bridge.port, DEFAULTS.BRIDGE_PORT);
@@ -112,6 +116,10 @@ test('lan transport targets the device host, forward targets loopback', () => {
   assert.equal(lan.bridge.baseUrl, 'http://192.168.2.46:8896');
   const fwd = resolveAmooConfig({ KHY_AMOO_BRIDGE_TRANSPORT: 'forward' });
   assert.equal(fwd.bridge.baseUrl, 'http://127.0.0.1:8896');
+  // lan 但 serial 为空（未探测到设备）：baseUrl 留空串，不拼出 `http://:8896`。
+  const lanNoSerial = resolveAmooConfig({ KHY_AMOO_BRIDGE_TRANSPORT: 'lan' });
+  assert.equal(lanNoSerial.bridge.baseUrl, '');
+  assert.equal(lanNoSerial.adb.connectHost, '');
 });
 
 test('gates default on and are readable by name', () => {
