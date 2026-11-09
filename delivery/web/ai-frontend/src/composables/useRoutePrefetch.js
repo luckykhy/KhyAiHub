@@ -40,8 +40,11 @@ export const viewLoaders = {
   '/workflows': () => import('@/views/Workflows.vue'),
   '/workflows/:id': () => import('@/views/WorkflowEditor.vue'),
   '/projects': () => import('@/views/Projects.vue'),
+  '/envs': () => import('@/views/DevEnvironment.vue'),
   '/marketplace': () => import('@/views/Marketplace.vue'),
+  '/eco-markets': () => import('@/views/EcoMarkets.vue'),
   '/proxies': () => import('@/views/ProxyManagement.vue'),
+  '/tasks': () => import('@/views/TaskMonitor.vue'),
   '/security': () => import('@/views/Security.vue'),
   '/markdown': () => import('@/views/Markdown.vue'),
   // 管理控制台

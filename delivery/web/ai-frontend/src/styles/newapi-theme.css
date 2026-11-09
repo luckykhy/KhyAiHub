@@ -9,11 +9,29 @@
  * src/composables/useTheme.js). Element Plus dark css-vars are imported in
  * main.js; the overrides below re-point both EP and our --khy-* tokens so the
  * whole surface reacts to a single class toggle.
+ *
+ * 美学标准落地载体：[DESIGN-FE-012] khy-os 软件美学标准
+ * （docs/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.md）。
+ * 本文件是 Web 端的美学语义令牌真源，对应机器可读清单
+ * docs/10_规范/registry/AESTHETICS-TOKENS.json 的 web 面（--khy-*）。canonical
+ * `accent` 的 Web 本地名是 --khy-primary（见标准 §3.1）。取值以本文件为准，
+ * 标准不固化 Web 取值。
  * ========================================================================= */
 
-:root {
+/* Element Plus 的样式是**按需注入**的（unplugin-vue-components）——组件的 CSS 在
+ * 运行时才插进 <head>，位置在本表之后；而且 EP 的暗色变量表用的是 `html.dark`
+ * 选择器（特异性 0,1,1），比本表的 `:root`（0,1,0）高。
+ * 两者叠加的结果是：EP 自带的 #409eff 蓝色总能把映射顶掉 —— 表现为
+ * 「令牌改成了琥珀，按钮还是蓝的」。
+ * 故本表的两处令牌块各加一层限定，把特异性抬到 EP 之上：
+ *   :root      → html:root      (0,1,1)  压过 EP 的 :root (0,1,0)
+ *   html.dark  → html.dark:root  (0,2,1)  压过 EP 的 html.dark (0,1,1)
+ * 这只改「谁来定值」，不改「定什么值」——取值仍全部在本表内。 */
+html:root {
   /* Structural whites — must be defined here, not assumed (FE-001 G1 fix) */
   --khy-white: #ffffff;
+  /* 语义色 dark 档的混色终点。没有它，--el-color-*-dark-2 无处可混。 */
+  --khy-black: #0b1220;
 
   /* Gray scale (FE-001 G4 fix — replaces scattered hardcoded grays) */
   --khy-gray-50: #f5f7fa;
@@ -76,20 +94,44 @@
   --khy-border: #d6e0ef;
   --khy-border-light: #e5ebf5;
 
-  /* Brand / semantic（低饱和度，ZCode 对齐） */
-  --khy-primary: #2563eb;
-  --khy-primary-strong: #1d4ed8;
-  --khy-primary-soft: #dbeafe;
+  /* Brand / semantic — Khy OS 品牌琥珀族。
+   * 真源：delivery/brand/khy-brand-geometry.js 的 PALETTE（khy-brand-tokens.json 同源）。
+   * 亮色端的 accent 取 amber700 #9c4116（对白底 6.60:1，纸底 5.92:1），
+   * 暗色端取 amber400 #f0a868（对 #171920 8.78:1）—— 两端都是**文本安全**的取值。
+   * 旧的工程蓝 #2563eb / #3b82f6 已退役：蓝→紫→品红是 2023 年后 AI 产品的通用色系。 */
+  --khy-primary: #9c4116;
+  --khy-primary-strong: #7a3310;
+  --khy-primary-soft: #f6e7dc;
+  /* canonical `on-accent`：accent 之上的前景色。亮色端是白字（对 #9c4116 = 6.60:1），
+   * 暗色端主色变成浅琥珀，前景必须换成墨黑（对 #f0a868 = 9.41:1）—— 仍用白字会掉到 1.9:1。 */
+  --khy-on-primary: var(--khy-white);
   --khy-success: #059669;
   --khy-warning: #d97706;
   --khy-danger: #dc2626;
+  /* 语义三色的 soft 位：给 EP 的 --el-color-*-light-9 重映射用。没有它们，EP
+     组件（el-tag / el-alert）与 khy 组件就会各用一组浅底，同屏两套色。 */
+  --khy-success-soft: #ecfdf5;
+  --khy-warning-soft: #fffbeb;
+  --khy-danger-soft: #fef2f2;
 
   /* Geometry（更精致的圆角） */
   --khy-radius: 8px;
   --khy-radius-sm: 6px;
+  /* 中间档:卡片内的图标胶囊 / 小面板此前各写 10/11/12px,收敛到这一档。 */
+  --khy-radius-md: 12px;
   --khy-radius-lg: 16px;
   --khy-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
   --khy-shadow-lift: 0 14px 36px rgba(15, 23, 42, 0.10);
+
+  /* Motion tokens (FE-004 §8.2). Declared here only — not yet bound to any
+   * transition, so existing animation literals stay untouched (zero visual
+   * change); consumers may opt in token by token. */
+  --khy-duration-fast: 150ms;
+  --khy-duration-normal: 200ms;
+  --khy-duration-slow: 300ms;
+  --khy-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --khy-easing-enter: cubic-bezier(0, 0, 0.2, 1);
+  --khy-easing-exit: cubic-bezier(0.4, 0, 1, 1);
 
   /* Spacing scale — proportional (1 : 1.6 : 2.4 jumps), not linear. Adopted by
    * the page skeleton (.khy-page gap), cards and section rows so the vertical
@@ -120,6 +162,8 @@
   --khy-text-lg: 17px;
   --khy-text-xl: 20px;
   --khy-text-2xl: 24px;
+  /* 指标数值专用字号:三个管理台的 KPI 大号数字共用它,不再各写 22/24/26。 */
+  --khy-text-metric: 26px;
   --khy-leading-tight: 1.3;
   --khy-leading-normal: 1.5;
   --khy-tracking-tight: -0.01em;
@@ -139,18 +183,19 @@
   --khy-skeleton-base: #e8eef7;
   --khy-skeleton-highlight: #f6f9ff;
 
-  /* Khy brand accent — the float ball's purple. Status aliases below reuse the
-   * --khy-* semantics so a theme change reaches every status dot at once. */
-  --khy-accent: #6d5efc;
-  --khy-accent-mid: #8b5cf6;
-  --khy-accent-end: #d946ef;
-  --khy-accent-soft: rgba(109, 94, 252, 0.18);
-  --khy-accent-soft-end: rgba(217, 70, 239, 0.16);
-  --khy-accent-tint: #c4b5fd;
-  --khy-accent-glow: rgba(109, 94, 252, 0.42);
-  --khy-accent-glow-strong: rgba(139, 92, 246, 0.6);
-  --khy-accent-glow-halo: rgba(139, 92, 246, 0.8);
-  --khy-accent-ring: rgba(139, 92, 246, 0.45);
+  /* Khy brand accent — 品牌琥珀族（原为紫→品红：AI 产品通用色系，已退役）。
+   * Status aliases below reuse the --khy-* semantics so a theme change reaches
+   * every status dot at once. */
+  --khy-accent: #c2551f;
+  --khy-accent-mid: #e2703a;
+  --khy-accent-end: #f0a868;
+  --khy-accent-soft: rgba(194, 85, 31, 0.18);
+  --khy-accent-soft-end: rgba(240, 168, 104, 0.16);
+  --khy-accent-tint: #f0a868;
+  --khy-accent-glow: rgba(226, 112, 58, 0.42);
+  --khy-accent-glow-strong: rgba(240, 168, 104, 0.6);
+  --khy-accent-glow-halo: rgba(255, 192, 120, 0.8);
+  --khy-accent-ring: rgba(226, 112, 58, 0.45);
 
   --khy-ok: #22c55e;
   --khy-ok-glow: rgba(34, 197, 94, 0.8);
@@ -163,6 +208,12 @@
   --khy-ink-dim: #9aa2b1;
   --khy-ink-mute: #8b93a3;
   --khy-panel: #1c2130;
+  /* 悬浮球菜单 / 任务面板是恒定深色(--khy-panel 亮暗同值),所以它内部的
+     hover/active 叠色也必须恒定 —— 用随主题反转的 --el-fill-color 会在亮色
+     主题下得到浅灰底 + 浅色文字。这两个令牌只在 :root 定义,暗色刻意不覆写。 */
+  --khy-panel-hover: color-mix(in srgb, var(--khy-white) 10%, transparent);
+  --khy-panel-active: color-mix(in srgb, var(--khy-white) 16%, transparent);
+  --khy-panel-track: color-mix(in srgb, var(--khy-white) 14%, transparent);
   --khy-cyan: #a5f3fc;
   --khy-cyan-soft: rgba(34, 211, 238, 0.18);
 
@@ -196,11 +247,34 @@
   --el-color-primary-light-7: #b7d4fd;
   --el-color-primary-light-9: var(--khy-primary-soft);
   --el-color-primary-dark-2: var(--khy-primary-strong);
+  /* 语义三色同权映射。此前只重映射了 primary 与 text/bg/border/fill，success /
+     warning / danger 仍是 EP 自带的 #67c23a / #e6a23c / #f56c6c —— 于是同一个
+     「成功」在 EP 组件里是一种绿、在 khy 组件里是另一种绿，同屏两套状态色。
+     light-3/5/7 由 color-mix 从语义基色现算，色相不会漂（EP 原值配的是它自己
+     那个绿，套到 #059669 上会发灰）。 */
+  --el-color-success: var(--khy-success);
+  --el-color-success-light-3: color-mix(in srgb, var(--khy-success) 32%, var(--khy-white));
+  --el-color-success-light-5: color-mix(in srgb, var(--khy-success) 22%, var(--khy-white));
+  --el-color-success-light-7: color-mix(in srgb, var(--khy-success) 12%, var(--khy-white));
+  --el-color-success-light-9: var(--khy-success-soft);
+  --el-color-success-dark-2: color-mix(in srgb, var(--khy-success) 82%, var(--khy-black));
+  --el-color-warning: var(--khy-warning);
+  --el-color-warning-light-3: color-mix(in srgb, var(--khy-warning) 32%, var(--khy-white));
+  --el-color-warning-light-5: color-mix(in srgb, var(--khy-warning) 22%, var(--khy-white));
+  --el-color-warning-light-7: color-mix(in srgb, var(--khy-warning) 12%, var(--khy-white));
+  --el-color-warning-light-9: var(--khy-warning-soft);
+  --el-color-warning-dark-2: color-mix(in srgb, var(--khy-warning) 82%, var(--khy-black));
+  --el-color-danger: var(--khy-danger);
+  --el-color-danger-light-3: color-mix(in srgb, var(--khy-danger) 32%, var(--khy-white));
+  --el-color-danger-light-5: color-mix(in srgb, var(--khy-danger) 22%, var(--khy-white));
+  --el-color-danger-light-7: color-mix(in srgb, var(--khy-danger) 12%, var(--khy-white));
+  --el-color-danger-light-9: var(--khy-danger-soft);
+  --el-color-danger-dark-2: color-mix(in srgb, var(--khy-danger) 82%, var(--khy-black));
   --el-mask-color: rgba(12, 16, 26, 0.45);
   --el-mask-color-extra-light: rgba(12, 16, 26, 0.2);
 }
 
-html.dark {
+html.dark:root {
   /* Gray scale — dark theme overrides (FE-001 G4 fix) */
   --khy-gray-50: #1e2533;
   --khy-gray-100: #283245;
@@ -262,34 +336,42 @@ html.dark {
   --khy-border: #313c4f;
   --khy-border-light: #2a3445;
 
-  /* Brand / semantic（低饱和度，ZCode 对齐） */
-  --khy-primary: #3b82f6;
-  --khy-primary-strong: #60a5fa;
-  --khy-primary-soft: #1e2d4a;
+  /* Brand / semantic — 暗色端的品牌琥珀族（真源同 :root）。
+   * accent 取 amber400 #f0a868（对 #171920 = 8.78:1），hover 更亮一档 #ffc078。 */
+  --khy-primary: #f0a868;
+  --khy-primary-strong: #ffc078;
+  --khy-primary-soft: #33241a;
+  /* canonical `on-accent`：暗色端主色是**浅琥珀**，前景必须换成墨黑
+   * （对 #f0a868 = 9.41:1）。沿用白字会掉到 1.9:1 —— 亮暗翻转的错位在这里出过一次。 */
+  --khy-on-primary: #14110e;
   --khy-success: #10b981;
   --khy-warning: #f59e0b;
   --khy-danger: #ef4444;
+  --khy-success-soft: #10241d;
+  --khy-warning-soft: #2a2113;
+  --khy-danger-soft: #2a1719;
 
   --khy-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   --khy-shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.45);
 
-  --khy-bg-glow-1: rgba(64, 110, 200, 0.16);
-  --khy-bg-glow-2: rgba(46, 120, 180, 0.12);
+  /* 环境辉光：与品牌同族的暖调（旧值是蓝色辉光，配琥珀主色会发浑）。 */
+  --khy-bg-glow-1: rgba(180, 96, 44, 0.14);
+  --khy-bg-glow-2: rgba(212, 126, 62, 0.10);
   --khy-bg-base: linear-gradient(180deg, #181e2a 0%, #141925 100%);
 
   --khy-skeleton-base: #283142;
   --khy-skeleton-highlight: #36425a;
 
-  --khy-accent: #8b7cff;
-  --khy-accent-mid: #a78bfa;
-  --khy-accent-end: #e879f9;
-  --khy-accent-soft: rgba(139, 124, 255, 0.22);
-  --khy-accent-soft-end: rgba(232, 121, 249, 0.18);
-  --khy-accent-tint: #c4b5fd;
-  --khy-accent-glow: rgba(139, 124, 255, 0.42);
-  --khy-accent-glow-strong: rgba(167, 139, 250, 0.55);
-  --khy-accent-glow-halo: rgba(167, 139, 250, 0.75);
-  --khy-accent-ring: rgba(167, 139, 250, 0.45);
+  --khy-accent: #e2703a;
+  --khy-accent-mid: #f0a868;
+  --khy-accent-end: #ffc078;
+  --khy-accent-soft: rgba(226, 112, 58, 0.22);
+  --khy-accent-soft-end: rgba(255, 192, 120, 0.18);
+  --khy-accent-tint: #ffc078;
+  --khy-accent-glow: rgba(240, 168, 104, 0.42);
+  --khy-accent-glow-strong: rgba(255, 192, 120, 0.55);
+  --khy-accent-glow-halo: rgba(255, 192, 120, 0.75);
+  --khy-accent-ring: rgba(240, 168, 104, 0.45);
 
   --khy-ok: #34d399;
   --khy-ok-glow: rgba(52, 211, 153, 0.8);
@@ -311,11 +393,27 @@ html.dark {
   --khy-ripple-fade: color-mix(in srgb, #fff 0%, transparent);
   --khy-overlay-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
 
-  /* Dark-side half of the Element Plus mapping (see the :root block above). */
-  --el-color-primary-light-3: #4f86e0;
-  --el-color-primary-light-5: #3f6cb8;
-  --el-color-primary-light-7: #2f4f86;
-  --el-color-primary-light-9: var(--khy-primary-soft);
+  /* Dark-side half of the Element Plus mapping (see the :root block above).
+     语义三色在暗色下同样映射到 --khy-*，浅档往 --khy-bg-main 里混 —— 暗色里的
+     "light-9" 必须是一块深底，混成白底会让 el-tag 在暗色下刺眼且文字发灰。 */
+  --el-color-success: var(--khy-success);
+  --el-color-success-light-3: color-mix(in srgb, var(--khy-success) 40%, var(--khy-bg-main));
+  --el-color-success-light-5: color-mix(in srgb, var(--khy-success) 28%, var(--khy-bg-main));
+  --el-color-success-light-7: color-mix(in srgb, var(--khy-success) 16%, var(--khy-bg-main));
+  --el-color-success-light-9: var(--khy-success-soft);
+  --el-color-success-dark-2: color-mix(in srgb, var(--khy-success) 78%, var(--khy-black));
+  --el-color-warning: var(--khy-warning);
+  --el-color-warning-light-3: color-mix(in srgb, var(--khy-warning) 40%, var(--khy-bg-main));
+  --el-color-warning-light-5: color-mix(in srgb, var(--khy-warning) 28%, var(--khy-bg-main));
+  --el-color-warning-light-7: color-mix(in srgb, var(--khy-warning) 16%, var(--khy-bg-main));
+  --el-color-warning-light-9: var(--khy-warning-soft);
+  --el-color-warning-dark-2: color-mix(in srgb, var(--khy-warning) 78%, var(--khy-black));
+  --el-color-danger: var(--khy-danger);
+  --el-color-danger-light-3: color-mix(in srgb, var(--khy-danger) 40%, var(--khy-bg-main));
+  --el-color-danger-light-5: color-mix(in srgb, var(--khy-danger) 28%, var(--khy-bg-main));
+  --el-color-danger-light-7: color-mix(in srgb, var(--khy-danger) 16%, var(--khy-bg-main));
+  --el-color-danger-light-9: var(--khy-danger-soft);
+  --el-color-danger-dark-2: color-mix(in srgb, var(--khy-danger) 78%, var(--khy-black));
   --el-mask-color: rgba(0, 0, 0, 0.6);
   --el-mask-color-extra-light: rgba(0, 0, 0, 0.35);
 }
@@ -466,6 +564,12 @@ body {
   min-height: 0;
 }
 
+/* 信息密度低的首页用更窄的内容栏。宽度档位只收在这里一个,不再每页自写一个
+   1120/1200/1280/1320 —— 否则两个控制台之间切换时内容栏一格一格跳。 */
+.khy-page--narrow {
+  max-width: 1120px;
+}
+
 /* Section rhythm inside a khy-page: a section that is itself a plain wrapper
    (not a card/row) gets the same gap without re-declaring it. */
 .khy-page .khy-section {
@@ -515,13 +619,28 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Metric card gradient variants ── */
-.metric-card--blue  { border-left: 3px solid var(--khy-primary); background: linear-gradient(135deg, var(--khy-primary-50) 0%, var(--khy-white) 60%); }
-.metric-card--green { border-left: 3px solid var(--khy-success); background: linear-gradient(135deg, #ecfdf5 0%, var(--khy-white) 60%); }
-.metric-card--amber { border-left: 3px solid var(--khy-warning); background: linear-gradient(135deg, #fffbeb 0%, var(--khy-white) 60%); }
-.metric-card--purple { border-left: 3px solid #8b5cf6; background: linear-gradient(135deg, #f5f3ff 0%, var(--khy-white) 60%); }
-.metric-card--rose  { border-left: 3px solid #f43f5e; background: linear-gradient(135deg, #fff1f2 0%, var(--khy-white) 60%); }
-.metric-card--cyan  { border-left: 3px solid #06b6d4; background: linear-gradient(135deg, #ecfeff 0%, var(--khy-white) 60%); }
+/* ── Metric card: one class system shared by every dashboard ──
+   base(边框/圆角/底) + kind 变体(渐变底 + 3px 左边框) + 图标胶囊只在这里定义一份,
+   各页只换 --blue/--green/... 后缀。此前 AIDashboard 裸写 .metric-icon(灰图标、无
+   底色)、UsageLogs 在本地重定义了同名 .metric-icon(42px 实色渐变 + 白图标)、
+   AIMonitor 另起一套 .metric-tile--* —— 同一个「指标」有三种长相。
+   base 与变体同层同文件,顺序即优先级(变体的 3px 左边框盖住 base 的 1px);
+   视图侧不可再声明 border/background —— scoped 规则带 data-v 特异度更高,
+   会把 3px 左边框压回 1px。视图只负责密度(padding/gap/display)。
+
+   历史上 --khy-primary-50 在全项目不存在(只在 themeParity.test.js 的
+   knownUndefined 里挂着),故一律换成已定义的 --khy-*-soft / --khy-* 成对取值。 */
+.metric-card {
+  border: 1px solid var(--khy-border);
+  border-radius: var(--khy-radius);
+  background: var(--khy-bg-card-grad);
+}
+.metric-card--blue   { border-left: 3px solid var(--khy-primary); background: linear-gradient(135deg, var(--khy-primary-soft) 0%, var(--khy-bg-card) 60%); }
+.metric-card--green  { border-left: 3px solid var(--khy-success); background: linear-gradient(135deg, var(--khy-success-soft) 0%, var(--khy-bg-card) 60%); }
+.metric-card--amber  { border-left: 3px solid var(--khy-warning); background: linear-gradient(135deg, var(--khy-warning-soft) 0%, var(--khy-bg-card) 60%); }
+.metric-card--purple { border-left: 3px solid var(--khy-violet);  background: linear-gradient(135deg, var(--khy-violet-soft) 0%, var(--khy-bg-card) 60%); }
+.metric-card--rose   { border-left: 3px solid var(--khy-rose);    background: linear-gradient(135deg, var(--khy-rose-soft) 0%, var(--khy-bg-card) 60%); }
+.metric-card--cyan   { border-left: 3px solid var(--khy-cyan-strong); background: linear-gradient(135deg, var(--khy-cyan-strong-soft) 0%, var(--khy-bg-card) 60%); }
 
 /* Dark variants: tint the left border, keep card surface from token */
 html.dark .metric-card--blue   { background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, var(--khy-bg-card) 60%); }
@@ -535,7 +654,7 @@ html.dark .metric-card--cyan   { background: linear-gradient(135deg, rgba(6,182,
 .metric-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--khy-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,12 +662,12 @@ html.dark .metric-card--cyan   { background: linear-gradient(135deg, rgba(6,182,
   flex-shrink: 0;
 }
 
-.metric-icon--blue   { background: #dbeafe; color: #2563eb; }
-.metric-icon--green  { background: #d1fae5; color: #059669; }
-.metric-icon--amber  { background: #fef3c7; color: #d97706; }
-.metric-icon--purple { background: #ede9fe; color: #7c3aed; }
-.metric-icon--rose   { background: #ffe4e6; color: #e11d48; }
-.metric-icon--cyan   { background: #cffafe; color: #0891b2; }
+.metric-icon--blue   { background: var(--khy-primary-soft); color: var(--khy-primary); }
+.metric-icon--green  { background: var(--khy-success-soft); color: var(--khy-success); }
+.metric-icon--amber  { background: var(--khy-warning-soft); color: var(--khy-warning); }
+.metric-icon--purple { background: var(--khy-violet-soft); color: var(--khy-violet); }
+.metric-icon--rose   { background: var(--khy-rose-soft); color: var(--khy-rose); }
+.metric-icon--cyan   { background: var(--khy-cyan-strong-soft); color: var(--khy-cyan-strong); }
 
 html.dark .metric-icon--blue   { background: rgba(37,99,235,0.22);  color: #7fb0ff; }
 html.dark .metric-icon--green  { background: rgba(5,150,105,0.22);  color: #5ee0ad; }
@@ -556,6 +675,16 @@ html.dark .metric-icon--amber  { background: rgba(217,119,6,0.22);  color: #fcc2
 html.dark .metric-icon--purple { background: rgba(124,58,237,0.22); color: #b69bff; }
 html.dark .metric-icon--rose   { background: rgba(225,29,72,0.22);  color: #ff8aa1; }
 html.dark .metric-icon--cyan   { background: rgba(8,145,178,0.22);  color: #56d3ec; }
+
+/* 指标数值:三台共用同一字号/字重,不再各写 22/24/26。
+   tabular-nums 让自动刷新时数字换位不引起整块宽度抖动。 */
+.metric-value {
+  font-size: var(--khy-text-metric);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--khy-text-strong);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Status dot indicator ── */
 .status-dot {
@@ -569,35 +698,38 @@ html.dark .metric-icon--cyan   { background: rgba(8,145,178,0.22);  color: #56d3
 .status-dot--green  { background: var(--khy-success); box-shadow: 0 0 6px rgba(16, 185, 129, 0.45); }
 .status-dot--yellow { background: var(--khy-warning); box-shadow: 0 0 6px rgba(245, 158, 11, 0.45); }
 .status-dot--red    { background: var(--khy-danger); box-shadow: 0 0 6px rgba(239, 68, 68, 0.45); }
-.status-dot--gray   { background: #9ca3af; }
-
-/* ── Tag improvements ── */
-.el-tag {
-  border-radius: 6px;
-}
+/* 灰点走 --khy-off(与悬浮球/任务面板同一只灰),不再写死 #9ca3af —— 那只灰不在
+   --khy-gray-* 阶梯里,暗色主题下也不会跟着微调。 */
+.status-dot--gray   { background: var(--khy-off); }
 
 /* ── Brand logo tile (single source of truth) ──
-   The gradient badge used in the sidebar, login, and landing hero. The glyph
-   inside is the KhyIcon "logo" mark (SVG-drawn monogram, KhyLogo.vue) — no
-   typed letters: the mark renders identically under every font/theme.
-   Use the size modifiers instead of re-declaring the gradient per view. */
+   The brand badge used in the sidebar, login, and landing hero. The glyph
+   inside is the Khy OS brand mark (KhyMark.vue) — the same geometry the
+   desktop app, the Android launcher, and the TUI boot screen use. No typed
+   letters: the mark renders identically under every font/theme.
+   Use the size modifiers instead of re-declaring the tile per view. */
 .khy-brand-logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: linear-gradient(135deg, var(--khy-primary), var(--khy-primary-strong));
+  /* Brand tile = 墨黑底（暖调近黑，不是纯黑）；主标是琥珀渐变。
+     品牌色真源：delivery/brand/khy-brand-geometry.js 的 PALETTE。 */
+  background: linear-gradient(135deg, #1c1815 0%, #14110e 100%);
   color: var(--khy-white);
   font-weight: 800;
   line-height: 1;
   flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px #ffffff14;
 }
 .khy-brand-logo--sm { width: 30px; height: 30px; border-radius: 9px;  font-size: 17px; }
-.khy-brand-logo--md { width: 46px; height: 46px; border-radius: 13px; font-size: 24px; box-shadow: 0 8px 20px rgba(47, 126, 247, 0.32); }
-.khy-brand-logo--lg { width: 52px; height: 52px; border-radius: 14px; font-size: 26px; }
-/* The SVG glyph scales with the tile (percentage of the box, not font px). */
-.khy-brand-logo .khy-icon {
-  --khy-icon-size: 62%;
+.khy-brand-logo--md { width: 46px; height: 46px; border-radius: 13px; font-size: 24px; box-shadow: 0 8px 20px rgba(20, 17, 14, 0.32); }
+/* md/lg 共用 13px:两档盒子只差 6px,给出 13/14 两个圆角肉眼分不出,反而多一个
+   要维护的数字 —— 品牌标只保留「小(9)/大(13)」两档圆角。 */
+.khy-brand-logo--lg { width: 52px; height: 52px; border-radius: 13px; font-size: 26px; }
+/* The brand mark scales with the tile (percentage of the box, not font px).
+   不用 .khy-mark 自身的尺寸档 —— 那会让本规则与组件 scoped 样式抢特异性。 */
+.khy-brand-logo .khy-mark {
   width: 62%;
   height: 62%;
 }
@@ -728,13 +860,23 @@ html.dark .el-button--primary:not(.is-text):not(.is-link) {
 .el-radio-button:first-child .el-radio-button__inner { border-radius: var(--khy-radius-sm) 0 0 var(--khy-radius-sm); }
 .el-radio-button:last-child .el-radio-button__inner { border-radius: 0 var(--khy-radius-sm) var(--khy-radius-sm) 0; }
 
-/* Tags: a touch more rounding for a softer, modern read. */
+/* Tags: a touch more rounding for a softer, modern read.
+   单一真源:此前文件前段还有一处 .el-tag { border-radius: 6px },被这条 7px 盖住,
+   属死规则,已删 —— 圆角取哪个值只看这里。 */
 .el-tag { border-radius: 7px; }
 
-/* Dialogs / message boxes: deeper elevation so modals clearly float. */
+/* Dialogs / message boxes: deeper elevation so modals clearly float, plus a
+   viewport cap — EP 的 el-dialog/el-drawer 不会自动收缩,各页写死的 640px 在
+   375px 手机上会横向溢出、按钮被裁。这一处兜底覆盖全部弹窗,各页仍可自定 width,
+   只是不许超出视口。 */
 .el-dialog,
 .el-message-box {
   box-shadow: var(--khy-shadow-lift);
+  max-width: calc(100vw - 32px);
+}
+
+.el-drawer {
+  max-width: calc(100vw - 32px);
 }
 
 @media (prefers-reduced-motion: reduce) {

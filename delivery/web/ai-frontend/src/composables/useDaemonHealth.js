@@ -13,7 +13,10 @@ import request from '@/api/request';
  *   - On health-check failure, POST /api/daemon/ensure to restart the daemon.
  *   - Exposes reactive `connectionStatus` for UI indicators.
  *
- * States: 'checking' → 'connected' | 'reconnecting' | 'disconnected'
+ * States: 'checking' → 'connected' | 'reconnecting' | 'disconnected' | 'failed'
+ * 'failed' is terminal for this round: the restart budget is spent, so nothing is
+ * being retried in the background any more and the UI must offer a manual retry
+ * instead of describing an action that no longer runs.
  */
 
 const KEEPALIVE_INTERVAL_MS = 30_000;
@@ -25,6 +28,9 @@ export function useDaemonHealth() {
   const daemonState = ref(null);
   const lastCheckedAt = ref(0);
   const reconnectAttempts = ref(0);
+  // True once the restart budget is spent — the UI needs it to swap the tooltip
+  // from "正在尝试自动重启" to "已停止自动重试，请点此重试".
+  const retriesExhausted = ref(false);
 
   let _keepaliveTimer = null;
   let _healthTimer = null;
@@ -40,6 +46,7 @@ export function useDaemonHealth() {
       if (connectionStatus.value === 'disconnected') {
         connectionStatus.value = 'connected';
         reconnectAttempts.value = 0;
+        retriesExhausted.value = false;
       }
     } catch {
       if (connectionStatus.value !== 'disconnected') {
@@ -51,7 +58,13 @@ export function useDaemonHealth() {
 
   async function _tryRestart() {
     if (_stopping) return;
-    if (reconnectAttempts.value >= MAX_RESTART_ATTEMPTS) return;
+    if (reconnectAttempts.value >= MAX_RESTART_ATTEMPTS) {
+      // 预算用尽：停止后台重试，把状态钉在终态。留在 'disconnected' 会让文案继续
+      // 宣称「正在尝试自动重启」，而实际上一次都不会再发生。
+      connectionStatus.value = 'failed';
+      retriesExhausted.value = true;
+      return;
+    }
     reconnectAttempts.value += 1;
     connectionStatus.value = 'reconnecting';
     try {
@@ -62,12 +75,23 @@ export function useDaemonHealth() {
         lastCheckedAt.value = Date.now();
         connectionStatus.value = 'connected';
         reconnectAttempts.value = 0;
+        retriesExhausted.value = false;
       } else {
         connectionStatus.value = 'disconnected';
       }
     } catch {
       connectionStatus.value = 'disconnected';
     }
+  }
+
+  // Manual retry from the failed chip: re-arm the budget and probe once, so the
+  // user is not forced through the 30s/60s timers to find out whether it recovered.
+  async function retryNow() {
+    if (_stopping) return;
+    reconnectAttempts.value = 0;
+    retriesExhausted.value = false;
+    connectionStatus.value = 'checking';
+    await _doKeepalive();
   }
 
   function _startTimers() {
@@ -103,5 +127,7 @@ export function useDaemonHealth() {
     daemonState,
     lastCheckedAt,
     reconnectAttempts,
+    retriesExhausted,
+    retryNow,
   };
 }

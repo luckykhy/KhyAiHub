@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import request from '@/api/request';
 import { unwrap } from '@/api/unwrap';
+import { useLoadError, loadInto } from '@/api/loadError';
 
 /**
  * Composable for AI Gateway admin state.
@@ -21,53 +22,49 @@ export function useGateway() {
   const loading = ref(false);
   const modelSlots = ref(null);
   const imageConfig = ref(null);
+  // 一次 fetchAll 并发十几个读取，共用一条错误位：后到的覆盖先到的。宁可只报
+  // 其中一条，也不要「半数接口失败」在页面上渲染成一份干净的空列表。
+  const loadError = useLoadError();
 
   async function fetchStatus() {
+    loading.value = true;
     try {
-      loading.value = true;
-      const res = await request.get('/api/ai-gateway/status');
-      status.value = unwrap(res);
-    } catch {
-      /* ignore */
+      const next = await loadInto('网关状态', loadError, async () =>
+        unwrap(await request.get('/api/ai-gateway/status'))
+      );
+      if (next) status.value = next;
     } finally {
       loading.value = false;
     }
   }
 
   async function fetchPool() {
-    try {
-      const res = await request.get('/api/ai-gateway/pool');
-      pool.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('密钥池', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/pool'))
+    );
+    if (next) pool.value = next;
   }
 
   async function fetchConfig() {
-    try {
-      const res = await request.get('/api/ai-gateway/config');
-      config.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('网关配置', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/config'))
+    );
+    if (next) config.value = next;
   }
 
   async function fetchSlots() {
-    try {
-      const res = await request.get('/api/ai-gateway/slots');
-      slots.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('槽位配置', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/slots'))
+    );
+    if (next) slots.value = next;
   }
 
   async function fetchModelCatalog() {
-    try {
-      const res = await request.get('/api/ai-gateway/models');
-      modelCatalog.value = unwrap(res) || [];
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('模型列表', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/models')) || []
+    );
+    // 读失败时保留上一次的好数据：写回 [] 就是把「读不到」说成「没有模型」。
+    if (next) modelCatalog.value = next;
   }
 
   /** Load models via SSE stream for progress feedback. Returns the full data array.
@@ -125,66 +122,52 @@ export function useGateway() {
   // env maps + image/video namespaces). Powers every "by-*" view; see
   // composables/useModelPivots.js for the client-side grouping.
   async function fetchCatalog() {
-    try {
-      const res = await request.get('/api/ai-gateway/catalog');
-      const payload = unwrap(res) || {};
-      catalogEdges.value = Array.isArray(payload.edges) ? payload.edges : [];
-      catalogSources.value = payload.sources || null;
-    } catch {
-      catalogEdges.value = [];
-      catalogSources.value = null;
-    }
+    const payload = await loadInto('模型目录', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/catalog')) || {}
+    );
+    if (!payload) return;
+    catalogEdges.value = Array.isArray(payload.edges) ? payload.edges : [];
+    catalogSources.value = payload.sources || null;
   }
 
   async function fetchProtocols() {
-    try {
-      const res = await request.get('/api/ai-gateway/protocols');
-      protocols.value = unwrap(res).protocols || [];
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('协议列表', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/protocols'))
+    );
+    if (next) protocols.value = next.protocols || [];
   }
 
   async function fetchPlugins() {
-    try {
-      const res = await request.get('/api/ai-gateway/plugins');
-      plugins.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('插件列表', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/plugins'))
+    );
+    if (next) plugins.value = next;
   }
 
   async function fetchOAuth() {
-    try {
-      const res = await request.get('/api/ai-gateway/oauth/status');
-      oauth.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('OAuth 状态', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/oauth/status'))
+    );
+    if (next) oauth.value = next;
   }
 
   async function fetchOAuthProviders() {
-    try {
-      const res = await request.get('/api/ai-gateway/oauth/providers');
-      const payload = unwrap(res) || {};
-      oauthProviders.value = Array.isArray(payload.providers) ? payload.providers : [];
-      if (payload.status && typeof payload.status === 'object') {
-        oauth.value = payload.status;
-      }
-      return payload;
-    } catch {
-      oauthProviders.value = [];
-      return null;
+    const payload = await loadInto('OAuth 提供商', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/oauth/providers')) || {}
+    );
+    if (!payload) return null;
+    oauthProviders.value = Array.isArray(payload.providers) ? payload.providers : [];
+    if (payload.status && typeof payload.status === 'object') {
+      oauth.value = payload.status;
     }
+    return payload;
   }
 
   async function fetchTls() {
-    try {
-      const res = await request.get('/api/ai-gateway/tls/status');
-      tls.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('TLS 状态', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/tls/status'))
+    );
+    if (next) tls.value = next;
   }
 
   async function togglePlugin(name, enabled) {
@@ -249,12 +232,10 @@ export function useGateway() {
   // ── Claude Code Model Slots ──
 
   async function fetchModelSlots() {
-    try {
-      const res = await request.get('/api/ai-gateway/model-slots');
-      modelSlots.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('Claude 槽位', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/model-slots'))
+    );
+    if (next) modelSlots.value = next;
   }
 
   async function updateModelSlots(payload) {
@@ -266,12 +247,10 @@ export function useGateway() {
   // ── Image-generation model selection ──
 
   async function fetchImageConfig() {
-    try {
-      const res = await request.get('/api/ai-gateway/image-config');
-      imageConfig.value = unwrap(res);
-    } catch {
-      /* ignore */
-    }
+    const next = await loadInto('图像模型配置', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/image-config'))
+    );
+    if (next) imageConfig.value = next;
   }
 
   async function updateImageConfig(payload) {
@@ -326,15 +305,12 @@ export function useGateway() {
   const customProviderPresets = ref([]);
 
   async function fetchCustomProviders() {
-    try {
-      const res = await request.get('/api/ai-gateway/custom-providers');
-      const payload = unwrap(res);
-      customProviders.value = payload?.providers || [];
-      customProviderPresets.value = payload?.presets || [];
-    } catch {
-      customProviders.value = [];
-      customProviderPresets.value = [];
-    }
+    const payload = await loadInto('自定义供应商', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/custom-providers'))
+    );
+    if (!payload) return;
+    customProviders.value = payload?.providers || [];
+    customProviderPresets.value = payload?.presets || [];
   }
 
   async function addCustomProvider(payload) {
@@ -360,12 +336,10 @@ export function useGateway() {
   const modelOverrides = ref({});
 
   async function fetchModelOverrides() {
-    try {
-      const res = await request.get('/api/ai-gateway/model-overrides');
-      modelOverrides.value = unwrap(res)?.overrides || {};
-    } catch {
-      modelOverrides.value = {};
-    }
+    const payload = await loadInto('模型覆盖配置', loadError, async () =>
+      unwrap(await request.get('/api/ai-gateway/model-overrides'))
+    );
+    if (payload) modelOverrides.value = payload?.overrides || {};
   }
 
   async function updateModelOverrides(adapter, patch) {
@@ -386,14 +360,12 @@ export function useGateway() {
   const accounts = ref([]);
 
   async function fetchAccounts(provider = '') {
-    try {
+    const payload = await loadInto('账号池', loadError, async () => {
       const params = provider ? `?provider=${encodeURIComponent(provider)}` : '';
-      const res = await request.get(`/api/ai-gateway/accounts${params}`);
-      const payload = unwrap(res);
-      accounts.value = payload?.accounts || payload || [];
-    } catch {
-      accounts.value = [];
-    }
+      return unwrap(await request.get(`/api/ai-gateway/accounts${params}`));
+    });
+    if (!payload) return;
+    accounts.value = payload?.accounts || payload || [];
   }
 
   async function usePoolAccount(provider, id) {
@@ -460,6 +432,7 @@ export function useGateway() {
     oauthProviders,
     tls,
     loading,
+    loadError,
     accounts,
     customProviders,
     customProviderPresets,

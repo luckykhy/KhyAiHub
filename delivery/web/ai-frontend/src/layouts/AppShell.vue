@@ -564,7 +564,9 @@ function handleLogout() {
 }
 
 .layout-main {
-  padding: 20px;
+  /* 外留白由主题的 .layout-main { padding: var(--khy-gap-page) } 决定。此前这里
+     再写一个字面量 20px,scoped 选择器带 data-v 特异度更高,把 --khy-gap-page 压成
+     死令牌 —— 改令牌不会生效。 */
   /* Let the routed content scroll inside the main area instead of the page.
      min-height:0 lets this flex child shrink so overflow can take effect. */
   overflow-y: auto;
@@ -580,10 +582,6 @@ function handleLogout() {
 
   .header-title {
     font-size: 15px;
-  }
-
-  .layout-main {
-    padding: 12px;
   }
 }
 </style>
