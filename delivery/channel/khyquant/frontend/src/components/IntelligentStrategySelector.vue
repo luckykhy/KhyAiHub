@@ -2214,7 +2214,7 @@ watch(parametersJsonStr, (newValue) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
   color: var(--khy-white);
 }
 
@@ -2223,8 +2223,8 @@ watch(parametersJsonStr, (newValue) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  border-bottom: 1px solid var(--khy-gray-700);
-  background: linear-gradient(to bottom, #2a2a2a, var(--khy-gray-900));
+  border-bottom: 1px solid var(--surface-trading-border);
+  background: linear-gradient(to bottom, #2a2a2a, var(--surface-trading-bg));
 }
 
 .header-left {
@@ -2348,12 +2348,12 @@ watch(parametersJsonStr, (newValue) => {
 
 .confidence {
   font-size: 12px;
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 .strategy-description {
   font-size: 12px;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   line-height: 1.4;
 }
 
@@ -2375,10 +2375,10 @@ watch(parametersJsonStr, (newValue) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  border-bottom: 1px solid var(--khy-gray-700);
-  background: var(--khy-gray-900);
+  border-bottom: 1px solid var(--surface-trading-border);
+  background: var(--surface-trading-bg);
   font-size: 13px;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 .loading-state {
@@ -2394,12 +2394,12 @@ watch(parametersJsonStr, (newValue) => {
 .view-all-btn {
   text-align: center;
   padding: 8px 0 4px;
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
 }
 
 .recommendation-item {
-  background: var(--khy-gray-900);
-  border: 1px solid var(--khy-gray-700);
+  background: var(--surface-trading-bg);
+  border: 1px solid var(--surface-trading-border);
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 8px;
@@ -2410,8 +2410,8 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .recommendation-item:hover {
-  border-color: var(--khy-gray-600);
-  background: var(--khy-gray-800);
+  border-color: var(--surface-trading-border-strong);
+  background: var(--surface-trading-bg-alt);
 }
 
 .recommendation-content {
@@ -2447,7 +2447,7 @@ watch(parametersJsonStr, (newValue) => {
 
 .recommendation-reason {
   font-size: 11px;
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   line-height: 1.3;
 }
 
@@ -2463,7 +2463,7 @@ watch(parametersJsonStr, (newValue) => {
   justify-content: flex-end;
   gap: 6px;
   padding-top: 4px;
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
 }
 
 .recommendation-actions .el-button {
@@ -2483,11 +2483,11 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .stat-item .label {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 .stat-item .value {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   font-weight: 600;
 }
 
@@ -2572,12 +2572,12 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .detail-row .label {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   min-width: 80px;
 }
 
 .confidence-text {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   font-size: 12px;
 }
 
@@ -2606,12 +2606,12 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .config-label {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   min-width: 80px;
 }
 
 .config-value {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   flex: 1;
 }
 
@@ -2653,7 +2653,7 @@ watch(parametersJsonStr, (newValue) => {
 
 /* 手动配置 */
 .manual-config {
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
   padding-top: 15px;
 }
 
@@ -2666,7 +2666,7 @@ watch(parametersJsonStr, (newValue) => {
 
 .config-title {
   font-weight: bold;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 /* 模板列表 */
@@ -2679,8 +2679,8 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .template-item {
-  background: var(--khy-gray-900);
-  border: 1px solid var(--khy-gray-700);
+  background: var(--surface-trading-bg);
+  border: 1px solid var(--surface-trading-border);
   border-radius: 6px;
   padding: 15px;
   cursor: pointer;
@@ -2688,8 +2688,8 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .template-item:hover {
-  border-color: var(--khy-gray-600);
-  background: var(--khy-gray-800);
+  border-color: var(--surface-trading-border-strong);
+  background: var(--surface-trading-bg-alt);
 }
 
 .template-name {
@@ -2701,7 +2701,7 @@ watch(parametersJsonStr, (newValue) => {
 
 .template-description {
   font-size: 12px;
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   line-height: 1.4;
   margin-bottom: 8px;
 }
@@ -2713,13 +2713,13 @@ watch(parametersJsonStr, (newValue) => {
 
 /* Element Plus 样式覆盖 */
 :deep(.el-dialog) {
-  background: var(--khy-gray-900);
-  border: 1px solid var(--khy-gray-700);
+  background: var(--surface-trading-bg);
+  border: 1px solid var(--surface-trading-border);
 }
 
 :deep(.el-dialog__header) {
-  background: var(--khy-gray-800);
-  border-bottom: 1px solid var(--khy-gray-700);
+  background: var(--surface-trading-bg-alt);
+  border-bottom: 1px solid var(--surface-trading-border);
 }
 
 :deep(.el-dialog__title) {
@@ -2727,17 +2727,17 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 :deep(.el-dialog__body) {
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
   color: var(--khy-white);
 }
 
 :deep(.el-form-item__label) {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 :deep(.el-input__wrapper) {
-  background: var(--khy-gray-800);
-  border-color: var(--khy-gray-600);
+  background: var(--surface-trading-bg-alt);
+  border-color: var(--surface-trading-border-strong);
 }
 
 :deep(.el-input__inner) {
@@ -2745,25 +2745,25 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 :deep(.el-textarea__inner) {
-  background: var(--khy-gray-800);
-  border-color: var(--khy-gray-600);
+  background: var(--surface-trading-bg-alt);
+  border-color: var(--surface-trading-border-strong);
   color: var(--khy-white);
 }
 
 :deep(.el-select .el-input__wrapper) {
-  background: var(--khy-gray-800);
-  border-color: var(--khy-gray-600);
+  background: var(--surface-trading-bg-alt);
+  border-color: var(--surface-trading-border-strong);
 }
 
 :deep(.el-button) {
-  background: var(--khy-gray-700);
-  border-color: var(--khy-gray-600);
-  color: var(--khy-gray-200);
+  background: var(--surface-trading-border);
+  border-color: var(--surface-trading-border-strong);
+  color: var(--surface-trading-text);
 }
 
 :deep(.el-button:hover) {
-  background: var(--khy-gray-600);
-  border-color: var(--khy-gray-500);
+  background: var(--surface-trading-border-strong);
+  border-color: var(--surface-trading-text-tertiary);
 }
 
 :deep(.el-button--primary) {
@@ -2783,7 +2783,7 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 :deep(.el-empty) {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 /* 滚动条样式 */
@@ -2792,28 +2792,28 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--khy-gray-600);
+  background: var(--surface-trading-border-strong);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--khy-gray-500);
+  background: var(--surface-trading-text-tertiary);
 }
 
 /* 🔥 新增：参数显示样式 */
 .strategy-parameters {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
 }
 
 .parameters-title {
   font-size: 11px;
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   margin-bottom: 5px;
 }
 
@@ -2839,7 +2839,7 @@ watch(parametersJsonStr, (newValue) => {
 
 .param-hint {
   font-size: 11px;
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
   margin-top: 4px;
   line-height: 1.3;
 }
@@ -2847,12 +2847,12 @@ watch(parametersJsonStr, (newValue) => {
 .parameters-json {
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid var(--khy-gray-700);
+  border-top: 1px solid var(--surface-trading-border);
 }
 
 .json-title {
   font-size: 12px;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   margin-bottom: 8px;
   font-weight: 600;
 }

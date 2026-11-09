@@ -39,7 +39,8 @@ describe('props 渲染', () => {
   it('初始收起状态：面板隐藏，触发按钮显示持仓数量', () => {
     const wrapper = mountBar()
     expect(wrapper.find('.position-panel').exists()).toBe(false)
-    expect(wrapper.find('.debug-info').text()).toContain('收起')
+    // 调试浮标已删除，不允许再常驻（回归锁）
+    expect(wrapper.find('.debug-info').exists()).toBe(false)
     expect(wrapper.find('.position-trigger-btn').classes()).not.toContain('active')
     wrapper.unmount()
   })
@@ -48,7 +49,7 @@ describe('props 渲染', () => {
     const wrapper = mountBar()
     await wrapper.find('.position-trigger-btn').trigger('click')
     expect(wrapper.find('.position-panel').exists()).toBe(true)
-    expect(wrapper.find('.debug-info').text()).toContain('展开')
+    expect(wrapper.find('.debug-info').exists()).toBe(false)
     expect(wrapper.find('.position-trigger-btn').classes()).toContain('active')
     wrapper.unmount()
   })
@@ -159,7 +160,7 @@ describe('委托单（pending orders）接线', () => {
     await wrapper.find('.cancel-btn').trigger('click')
     expect(ElMessageBox.confirm).toHaveBeenCalledTimes(1)
     await vi.waitFor(() => expect(request.post).toHaveBeenCalledWith('/trading/cancel/88'))
-    expect(ElMessage.success).toHaveBeenCalledWith('Order cancelled')
+    expect(ElMessage.success).toHaveBeenCalledWith('已撤单')
     wrapper.unmount()
   })
 

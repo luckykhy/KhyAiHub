@@ -253,7 +253,7 @@ function handleManage() {
 
 .source-text {
   font-weight: 500;
-  font-family: 'Microsoft YaHei', 'SimSun', serif;
+  font-family: var(--font-family);
   letter-spacing: 1px;
 }
 
@@ -264,7 +264,7 @@ function handleManage() {
   font-weight: 600;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  font-family: 'KaiTi', 'SimSun', serif;
+  font-family: var(--font-family);
 }
 
 .dropdown-icon {

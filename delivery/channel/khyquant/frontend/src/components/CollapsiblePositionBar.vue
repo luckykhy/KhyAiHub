@@ -1,13 +1,5 @@
 <template>
   <div class="collapsible-position-bar">
-    <!-- 调试信息 - 移动端显示 -->
-    <div
-      v-if="true"
-      class="debug-info"
-    >
-      状态: {{ isExpanded ? '展开' : '收起' }} | 持仓: {{ positions.length }}
-    </div>
-    
     <!-- 右侧触发按钮 -->
     <button
       class="position-trigger-btn"
@@ -402,12 +394,12 @@ const loadPendingOrders = async () => {
 const cancelPendingOrder = async (order) => {
   try {
     await ElMessageBox.confirm(
-      `Cancel pending ${order.side === 'buy' ? 'buy' : 'sell'} order for ${order.symbol}?`,
-      'Cancel Order',
-      { confirmButtonText: 'Confirm', cancelButtonText: 'Back', type: 'warning' }
+      `确定要撤销 ${order.symbol} 的${order.side === 'buy' ? '买入' : '卖出'}委托吗？`,
+      '撤单确认',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
     await request.post(`/trading/cancel/${order.id}`)
-    ElMessage.success('Order cancelled')
+    ElMessage.success('已撤单')
     loadPendingOrders()
   } catch {
     // user cancelled dialog
@@ -466,27 +458,6 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   position: relative;
 }
 
-/* 调试信息 */
-.debug-info {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  z-index: 999999;
-  pointer-events: none;
-  font-family: monospace;
-}
-
-@media (min-width: 769px) {
-  .debug-info {
-    display: none; /* PC端隐藏 */
-  }
-}
-
 /* 右侧触发按钮 */
 .position-trigger-btn {
   position: fixed;
@@ -538,9 +509,10 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   height: 200px !important; /* 增加高度 */
   background: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(10px);
-  border-top: 2px solid var(--khy-danger) !important; /* 红色边框，方便调试 */
+  border-top: 1px solid var(--border-light) !important;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
-  z-index: 999999 !important; /* 超高z-index */
+  /* Below MobileLayout's bottom nav (850) so the panel never covers it */
+  z-index: 840 !important;
   pointer-events: auto !important;
   display: flex !important;
   flex-direction: column;
@@ -552,8 +524,11 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 @media (max-width: 768px) {
   .position-panel {
     right: 0 !important;
+    /* Sit above the 62px bottom nav; env() covers the gesture bar under
+       viewport-fit=cover. */
+    bottom: calc(62px + env(safe-area-inset-bottom)) !important;
     height: 250px !important; /* 增加高度 */
-    border-top: 3px solid var(--khy-danger) !important; /* 加粗边框便于调试 */
+    border-top: 1px solid var(--border-light) !important;
   }
   
   .position-trigger-btn {
@@ -654,7 +629,7 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   gap: 6px;
   font-size: 28px;
   font-weight: 700;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .profit-value .arrow {
@@ -668,11 +643,11 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 }
 
 .profit-positive {
-  color: var(--khy-danger);
+  color: var(--khy-quote-up);
 }
 
 .profit-negative {
-  color: var(--khy-success);
+  color: var(--khy-quote-down);
 }
 
 .available-funds,
@@ -693,12 +668,12 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 .available-funds .value {
   color: #374151;
   font-weight: 600;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .risk-rate .value {
   font-weight: 600;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .risk-low {
@@ -773,8 +748,10 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   position: absolute;
   top: 4px;
   right: 4px;
-  padding: 2px 6px;
-  font-size: 10px;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: 12px;
   background: var(--khy-danger);
   color: white;
   border: none;
@@ -786,6 +763,13 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 
 .position-card:hover .close-btn {
   opacity: 1;
+}
+
+/* Touch devices have no reliable hover — destructive actions must stay visible */
+@media (hover: none) and (pointer: coarse) {
+  .close-btn {
+    opacity: 1;
+  }
 }
 
 .close-btn:hover {
@@ -814,7 +798,7 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   font-size: 14px;
   font-weight: 700;
   color: #1f2937;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .symbol-name {
@@ -831,12 +815,12 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 
 .direction-long {
   background: rgba(239, 68, 68, 0.1);
-  color: var(--khy-danger);
+  color: var(--khy-trade-buy);
 }
 
 .direction-short {
   background: rgba(16, 185, 129, 0.1);
-  color: var(--khy-success);
+  color: var(--khy-trade-sell);
 }
 
 .direction-hold {
@@ -868,7 +852,7 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 .quantity-info .value {
   color: #374151;
   font-weight: 600;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 /* 第三行：实时盈亏 */
@@ -886,13 +870,13 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 .profit-amount {
   font-size: 16px;
   font-weight: 700;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .profit-percent {
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 /* 无持仓提示 */
@@ -991,8 +975,10 @@ watch(() => props.positions, (newPositions, oldPositions) => {
   position: absolute;
   top: 4px;
   right: 4px;
-  padding: 2px 8px;
-  font-size: 10px;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: 12px;
   background: var(--khy-warning);
   color: white;
   border: none;
@@ -1014,18 +1000,30 @@ watch(() => props.positions, (newPositions, oldPositions) => {
 
 .tag-buy {
   background: rgba(239, 68, 68, 0.1);
-  color: var(--khy-danger);
+  color: var(--khy-trade-buy);
 }
 
 .tag-sell {
   background: rgba(16, 185, 129, 0.1);
-  color: var(--khy-success);
+  color: var(--khy-trade-sell);
 }
 
 .order-time {
   font-size: 11px;
   color: #9ca3af;
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-family-mono);
+}
+
+/* Quote/profit/quantity digits must not jitter while values tick */
+.profit-value,
+.profit-percent,
+.profit-amount,
+.available-funds .value,
+.risk-rate .value,
+.cost-info .value,
+.quantity-info .value,
+.order-time {
+  font-variant-numeric: tabular-nums;
 }
 
 .pending-status {
