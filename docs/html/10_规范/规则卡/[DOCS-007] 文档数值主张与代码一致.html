@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DOCS-007] 文档数值主张与代码一致.md -->
+<title>[DOCS-007] 文档数值主张与代码一致 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>规则卡<span class="sep">›</span>[DOCS-007] 文档数值主张与代码一致</div>
+      <header class="hero reveal"><h1>[DOCS-007] 文档数值主张与代码一致</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#docs-007-文档数值主张与代码一致">[DOCS-007] 文档数值主张与代码一致</a></li><li class="lvl-2"><a href="#约束">约束</a></li><li class="lvl-2"><a href="#授予权力">授予权力</a></li><li class="lvl-2"><a href="#提供福利">提供福利</a></li><li class="lvl-2"><a href="#反例">反例</a></li><li class="lvl-2"><a href="#校验方式">校验方式</a></li><li class="lvl-2"><a href="#例外">例外</a></li><li class="lvl-2"><a href="#版本记录">版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<hr>
+<p>name: 文档数值主张与代码一致<br>id: DOCS-007<br>domain: DOCS<br>nature: 约束为主，兼福利<br>scope: &quot;docs/03_DESIGN_设计/<strong> 与 docs/10_规范/</strong> 下非 00_INDEX_*、非规则卡的文档（与 DOCS-005/006 同范围，当前 330 份）；判据为文档写下的「常量名 = 数值」与代码里同名常量的值是否一致&quot;<br>priority: P1<br>trigger: &quot;新增或修改任一文档中的常量数值主张时；或运行 npm run check:doc-numbers 时&quot;<br>constraint: &quot;文档写下 &lt;常量名&gt; = &lt;值&gt; 即构成可逐字比对的承诺，代码里该常量的值必须相同；文档引用代码位置一律给符号名、不得给行号（DOCS-004 同款约束——行号是最易漂移的副本）；文档不得声称某读数为「当前实测」而不复核。&quot;<br>grants: &quot;授权在 S1 阶段据候选清单人工判断是否改动文档；授权对历史文档中已失效的读数加注「历史读数，采集于 &lt;日期&gt;」而不改写正文；同名多值（代码里该常量在两处定义不同值）时机器不判，由人工裁决。&quot;<br>benefit: &quot;补上文档漂移的最后一块——「数值型漂移此前被断言为不可机检」并不成立：文档写下 &lt;常量名&gt; = &lt;值&gt; 时，文档与代码说的是同一个名字，这就给了机器一个可逐字比对的锚点。实测首轮 83 处主张、43 处可判定、10 处不符，10/10 人工核实为真漂移——同一常量 MAX_GATES 在 8 份文档里被写成 220 或 227，而代码真值是 237，且 8 处连行号也失效（文档称 :32/:41，实为 :50）。这正是 ARCH-020 声称 R1=28 而实跑 R1=9 同类的漂移。&quot;<br>exception: &quot;与 DOCS-005/006 同范围：索引页、规则卡（生成物）、报告、叙事与科普类不参与；代码里同名常量有多个不同取值时判不出、不报；本条不执行文档里的任何命令——需重跑才能得到的读数（如 archDebtScan 的 R1/R3）不在射程，须由白名单注册表显式登记后才可跑；纯叙述性数字（「20 条红线」「6 个阶段」）无对应字面量、不判。&quot;<br>version: &quot;1.0.0 (2026-10-19)&quot;<br>status: active<br>ssot: &quot;docs/10_规范/DESIGN-DOC/[DESIGN-DOC-006] 文档数值主张校验规范.md&quot;<br>formerly: 无<br>owner: governance-team</p>
+<hr>
+<h1 id="docs-007-文档数值主张与代码一致">[DOCS-007] 文档数值主张与代码一致<a class="anchor" href="#docs-007-文档数值主张与代码一致" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: DOCS-007 -->
+<blockquote><p><strong>规则卡</strong> · 格式依据 [MGMT-STD-008] §1（frontmatter 14 字段 + 六小节）。</p>
+<p><strong>字段真源</strong>是 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（GOV-TOOL-006 校验），<br>本文件由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，<strong>禁止手改</strong>（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。<br>正文原文在 <code>ssot</code> 指向的位置：docs/10_规范/DESIGN-DOC/[DESIGN-DOC-006] 文档数值主张校验规范.md。</p></blockquote>
+<h2 id="约束">约束<a class="anchor" href="#约束" aria-label="锚点">#</a></h2>
+<p>文档写下 &lt;常量名&gt; = &lt;值&gt; 即构成可逐字比对的承诺，代码里该常量的值必须相同；文档引用代码位置一律给符号名、不得给行号（DOCS-004 同款约束——行号是最易漂移的副本）；文档不得声称某读数为「当前实测」而不复核。</p>
+<h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
+<p>授权在 S1 阶段据候选清单人工判断是否改动文档；授权对历史文档中已失效的读数加注「历史读数，采集于 &lt;日期&gt;」而不改写正文；同名多值（代码里该常量在两处定义不同值）时机器不判，由人工裁决。</p>
+<h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
+<p>补上文档漂移的最后一块——「数值型漂移此前被断言为不可机检」并不成立：文档写下 &lt;常量名&gt; = &lt;值&gt; 时，文档与代码说的是同一个名字，这就给了机器一个可逐字比对的锚点。实测首轮 83 处主张、43 处可判定、10 处不符，10/10 人工核实为真漂移——同一常量 MAX_GATES 在 8 份文档里被写成 220 或 227，而代码真值是 237，且 8 处连行号也失效（文档称 :32/:41，实为 :50）。这正是 ARCH-020 声称 R1=28 而实跑 R1=9 同类的漂移。</p>
+<h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
+<p>见 <code>ssot</code> 指向的真源原文；本卡不复制反例，以免与真源漂移。</p>
+<h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
+<p>人工评审（该规则暂无机械守卫）</p>
+<h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>
+<p>与 DOCS-005/006 同范围：索引页、规则卡（生成物）、报告、叙事与科普类不参与；代码里同名常量有多个不同取值时判不出、不报；本条不执行文档里的任何命令——需重跑才能得到的读数（如 archDebtScan 的 R1/R3）不在射程，须由白名单注册表显式登记后才可跑；纯叙述性数字（「20 条红线」「6 个阶段」）无对应字面量、不判。</p>
+<h2 id="版本记录">版本记录<a class="anchor" href="#版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-10-19) 初版 / 迁移自 无</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/规则卡/[DOCS-006] 文档可执行主张与代码一致.html"><div class="dir">← 上一篇</div><div class="ttl">[DOCS-006] 文档可执行主张与代码一致</div></a><a class="next" href="../../../../docs/html/10_规范/规则卡/[DR-001] 灾备规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DR-001] 灾备规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/规则卡/[DOCS-007] 文档数值主张与代码一致.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

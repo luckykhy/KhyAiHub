@@ -136,7 +136,10 @@
 <p>归档后实测<strong>召回面已清空</strong>（<code>buildSessionPrimingSection</code> / <code>buildProactiveMemoryResult</code><br>均返 <code>{text:null, filenames:[], types:[]}</code>）。<br>⚠ 这只是<strong>临时缓解</strong>：根因（见 §4.2）未修 ⇒ <strong>噪声会再生</strong>。<br>恢复手段：<code>npm run memory:restore -- --file &lt;filename&gt;</code>，或直接把归档文件 rename 回根目录。</p>
 <p>⚠⚠ <strong>不要用 <code>npm run memory:clear</code></strong>。实测（<code>clear-memory.js</code> dry-run）它的影响面远超目标：<br><strong>P0</strong> 归档全部根目录记忆 <strong>+ 重置 <code>MEMORY.md</code> + 重置 10 个成长数据文件</strong><br>（含 <code>user_preferences.json</code>、<code>habits.json</code>、<code>user_knowledge_base.json</code>）；<br><strong>P1</strong> 归档 <strong>75 个</strong>学习缓存。⇒ <strong>这是「全量清空」工具，不是「精准清理」工具</strong>。</p></blockquote>
 <p><strong>推荐做法（最小干预，可恢复）</strong>：</p>
-<pre><code class="language-bash"><span class="hljs-comment"># 1) 先把目标文件移入归档（等价于 clear-memory.js 的 safeDelete：renameSync 到 .archive/）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: <span class="hljs-keyword">done</span> --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：14 条根锚定路径全部可解析，且文中自述已实现；据 DOCS-005 §二 标 <span class="hljs-keyword">done</span>。
+<span class="hljs-comment"># 1) 先把目标文件移入归档（等价于 clear-memory.js 的 safeDelete：renameSync 到 .archive/）</span>
 <span class="hljs-comment">#    注意 feedback_tool-execution-results_a3d9521e.md 在 .archive/ 已有同名（Sep-3），</span>
 <span class="hljs-comment">#    需带时间戳后缀避免覆盖 —— clear-memory.js 已有该逻辑，可参照。</span>
 <span class="hljs-comment"># 2) 恢复手段（真实存在，已核）：</span>
