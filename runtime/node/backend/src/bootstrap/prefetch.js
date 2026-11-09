@@ -203,15 +203,17 @@ function deferredPrefetch(options = {}) {
     lowHeadroom = false;
   }
 
-  // 体积自检的提示发射:完整模式与轻量模式共用一份,免得两处文案漂移。
+  // 体积自检:完整模式与轻量模式共用一份,免得两处文案漂移。
   // 只报不删 —— .khy 下躺着会话存档与工作区快照,自动清理判错是不可逆的。
-  const emitFootprintStorageNotice = (cleanup) => {
+  // 结果**缓存不直接发射**(B5):自检跑在 +3s/+3.5s,驻留采样在 settleTimer(调度表
+  // 最大 delayMs+1s)——两条行各自打 transcript 会随 nowTick 心跳重绘常驻(实测被
+  // 探针读成「从 0% 爬到 15%」的伪进度),故缓存到这里,由 emitResidencyNotice
+  // 合并成一条一次性「资源」通知。
+  let _pendingFootprintNotice = null;
+  const cacheFootprintStorageNotice = (cleanup) => {
     try {
       const footprint = cleanup.assessRuntimeFootprint();
-      if (footprint.notice) {
-        const chalk = require('chalk').default || require('chalk');
-        emit(chalk.dim(`  存储  ${footprint.notice}`));
-      }
+      _pendingFootprintNotice = footprint.notice || null;
     } catch {
       /* 自检失败不该拦住启动 */
     }
@@ -229,10 +231,34 @@ function deferredPrefetch(options = {}) {
     try {
       const probe = require('../services/runtimeResourceProbe');
       const residency = probe.buildResidencyNotice(probe.collectRuntimeCensus({ phase: 'tui' }));
-      if (residency) {
-        const chalk = require('chalk').default || require('chalk');
-        emit(chalk.dim(`  资源  ${residency}`));
+      // B5:与缓存的体积自检行合并为**一条**一次性通知 —— settleTimer 是调度表唯一
+      // 的最晚时点,两条行在这里汇合;皆空则静默(silence is the normal state)。
+      const footprint = _pendingFootprintNotice;
+      _pendingFootprintNotice = null;
+      if (!residency && !footprint) {
+        return;
       }
+      const merged = [residency, footprint].filter(Boolean).join(' · ');
+      // TUI 会话走通知端口(真实 seam):notificationPort 按 type 相邻去重、侧栏槽
+      // 渲染时过期过滤 —— 不进 transcript、不随心跳重发。低档机的页脚单槽瞬显降级
+      // 在 App 通知接线区做(cli 层才读得动 ~/.khyquant/tui.json,本层不反向依赖)。
+      // 经典 REPL 无端口渲染器,保留原单行 emit;KHY_INK_TUI_ACTIVE 在 startInkApp
+      // 同步段置位(app.js:130),早于本模块被 App mount effect 调度。
+      if (process.env.KHY_INK_TUI_ACTIVE) {
+        try {
+          require('../services/notificationPort').emitNotification({
+            type: 'residency',
+            level: 'info',
+            title: '资源',
+            detail: merged,
+          });
+          return;
+        } catch {
+          /* 端口不可用 → 回退单行 emit */
+        }
+      }
+      const chalk = require('chalk').default || require('chalk');
+      emit(chalk.dim(`  资源  ${merged}`));
     } catch {
       /* 普查失败不该拦住启动 */
     }
@@ -262,35 +288,63 @@ function deferredPrefetch(options = {}) {
     // 那条缺口,但刻意只做两件有界的事(滚动 logs 与 audit、报一次体积),不起周期
     // timer、不做完整 runCleanup,轻量模式该轻的地方仍然轻。
     runtimeFootprintNotice: () => {
+      // 分片执行(B5):四个清理动作各自有界,片间 setImmediate 让出事件循环 ——
+      // +3.5s 恰是用户开始打字的窗口,连片同步跑(trimTrainingData 单片实测可达
+      // 数秒)会把输入调度冻住。只改「何时让出」,动作本体与先后顺序逐条不变;
+      // 体积自检挪到尾片,结果缓存(见 cacheFootprintStorageNotice),不直接 emit。
+      let cleanup = null;
       try {
-        const cleanup = require('../services/cleanupService');
-        try {
-          cleanup.cleanRuntimeLogs();
-        } catch {
-          /* 滚动失败不影响自检 */
-        }
-        try {
-          cleanup.cleanTraceAudit();
-        } catch {
-          /* 同上 */
-        }
+        cleanup = require('../services/cleanupService');
+      } catch {
+        /* non-critical */
+        return;
+      }
+      const steps = [
+        () => {
+          try {
+            cleanup.cleanRuntimeLogs();
+          } catch {
+            /* 滚动失败不影响自检 */
+          }
+        },
+        () => {
+          try {
+            cleanup.cleanTraceAudit();
+          } catch {
+            /* 同上 */
+          }
+        },
         // training 与训练隔离区同样只在完整模式的 runCleanup 里被裁,轻量入口从不碰它们。
         // 实测 .khy/training 550 MB,其中 interaction_quarantine.jsonl 547.8 MB(超自身上限
         // 20 MB 的 27 倍),占 .khy 总体积 56%。这是同一条缺口的第二批(2026-09-29)。
-        try {
-          cleanup.trimTrainingData();
-        } catch {
-          /* 裁剪失败不影响自检 */
+        () => {
+          try {
+            cleanup.trimTrainingData();
+          } catch {
+            /* 裁剪失败不影响自检 */
+          }
+        },
+        () => {
+          try {
+            cleanup.trimQuarantine();
+          } catch {
+            /* 同上 */
+          }
+        },
+        () => cacheFootprintStorageNotice(cleanup),
+      ];
+      const runStep = (i) => {
+        if (i >= steps.length) {
+          return;
         }
         try {
-          cleanup.trimQuarantine();
+          steps[i]();
         } catch {
-          /* 同上 */
+          /* non-critical */
         }
-        emitFootprintStorageNotice(cleanup);
-      } catch {
-        /* non-critical */
-      }
+        setImmediate(() => runStep(i + 1));
+      };
+      runStep(0);
     },
 
     // ── Full mode (khyquant): all deferred tasks ────────────────────────────
@@ -316,8 +370,9 @@ function deferredPrefetch(options = {}) {
       }
     },
 
-    // 3s: Data cleanup + periodic cleanup（实现在模块级 _runStartupCleanup）
-    cleanupService: () => _runStartupCleanup(lowHeadroom, emit, emitFootprintStorageNotice),
+    // 3s: Data cleanup + periodic cleanup（实现在模块级 _runStartupCleanup）。
+    // 第三参传的是**缓存版**体积自检（B5）——结果由驻留结算一并合并发射。
+    cleanupService: () => _runStartupCleanup(lowHeadroom, emit, cacheFootprintStorageNotice),
 
     // 4s: Resource guard memory monitor
     resourceGuard: () => {

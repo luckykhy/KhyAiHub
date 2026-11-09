@@ -18,6 +18,30 @@ const path = require('path');
 const { checkpoint } = require('./startupProfiler');
 const state = require('./state');
 
+// ── Deferred best-effort init steps ─────────────────────────────────────────
+// Measured 2026-10-12: these four steps cost ~218ms inside `await init()` on a
+// warm box (ensureProxyCoreEnv 83ms · proxyConfigService 53ms · appRegistry 63ms
+// · ensureAuthSecret 19ms) and nothing on the boot path consumes their result
+// synchronously — every consumer reads `process.env` / the owning service's
+// state lazily, inside a later request or command. So they are moved off the
+// boot path with the same `setTimeout(...).unref()`手法 already used by the
+// dbHealth step below: a macrotask only fires once the current run-to-completion
+// AND the microtask queue are done, i.e. after main() has resumed.
+//
+// Each step is memoized (one promise per key per process), so a later await
+// (shutdown / diagnostics) joins the same run instead of re-executing it.
+//
+// Escape hatches (every switch keeps a `=0` legacy path):
+//   KHY_INIT_DEFER_STEPS=0      → restore the legacy blocking `await` of all four
+//   KHY_INIT_DEFER_STEPS_MS=N   → how late to run them (default 0 = next macrotask)
+
+const INIT_STEPS_DEFER_ENV = 'KHY_INIT_DEFER_STEPS';
+const INIT_STEPS_DEFER_MS_ENV = 'KHY_INIT_DEFER_STEPS_MS';
+const _STEPS_OFF = new Set(['0', 'false', 'off', 'no']);
+
+const _deferredInitSteps = new Map();
+let _deferredInitStepsPromise = null;
+
 let _promise = null;
 let _dbHealthInitPromise = null;
 
@@ -29,6 +53,93 @@ let _dbHealthInitPromise = null;
  */
 function getDbHealthInitPromise() {
   return _dbHealthInitPromise;
+}
+
+/**
+ * Get the in-flight promise for the four deferred best-effort init steps (or
+ * null when they already settled / when deferral is disabled). Lets shutdown and
+ * diagnostics await a still-running background step instead of racing it.
+ * @returns {Promise<void>|null}
+ */
+function getDeferredInitStepsPromise() {
+  return _deferredInitStepsPromise;
+}
+
+/**
+ * Run one deferred init step at most once per process; every later caller for
+ * the same key joins the same promise.
+ * @param {string} key
+ * @param {() => void} run
+ * @returns {Promise<void>}
+ */
+function _runDeferredInitStepOnce(key, run) {
+  const existing = _deferredInitSteps.get(key);
+  if (existing) {
+    return existing;
+  }
+  const promise = Promise.resolve()
+    .then(run)
+    .catch(() => {
+      /* best-effort: a failed step must never reject the shared promise */
+    });
+  _deferredInitSteps.set(key, promise);
+  return promise;
+}
+
+/**
+ * The four best-effort steps that used to be awaited as one `Promise.allSettled`
+ * group before `main()`. `dynamicFreeModelService.warmUp()` is deliberately NOT
+ * here — it stays on the boot path (owned elsewhere).
+ * @returns {Array<{ key: string, run: () => void }>}
+ */
+function _buildDeferredInitSteps() {
+  return [
+    {
+      key: 'ensureProxyCoreEnv',
+      run: () => {
+        const { ensureProxyCoreEnv } = require('./ensureProxyCoreEnv');
+        ensureProxyCoreEnv({
+          log: (m) => {
+            try {
+              console.warn(`  ⚠ ${m}`);
+            } catch {
+              /* ignore */
+            }
+          },
+        });
+      },
+    },
+    {
+      key: 'ensureAuthSecret',
+      run: () => {
+        const { ensureJwtSecret } = require('./ensureAuthSecret');
+        ensureJwtSecret({
+          log: (m) => {
+            try {
+              console.warn(`  ⚠ ${m}`);
+            } catch {
+              /* ignore */
+            }
+          },
+        });
+      },
+    },
+    {
+      key: 'proxyConfigService',
+      run: () => {
+        const proxyConfig = require('../services/proxyConfigService');
+        proxyConfig.initFromConfig();
+      },
+    },
+    {
+      key: 'appRegistry',
+      run: () => {
+        const backendDir = process.env.KHYQUANT_ROOT || path.resolve(__dirname, '../..');
+        const appRegistry = require('../services/appRegistry');
+        appRegistry.autoRegisterDev(backendDir);
+      },
+    },
+  ];
 }
 
 /**
@@ -91,67 +202,52 @@ async function _doInit(options) {
     /* expansion is best-effort; raw values still flow through */
   }
 
-  // 1.3-1.7 并行执行 5 个非关键初始化步骤（原串行 .then() 链，改为 Promise.allSettled）
-  //          每个步骤独立 try/catch，互不阻塞，减少 ~200-500ms 串行等待。
-  await Promise.allSettled([
-    (async () => {
-      try {
-        const { ensureProxyCoreEnv } = require('./ensureProxyCoreEnv');
-        ensureProxyCoreEnv({
-          log: (m) => {
-            try {
-              console.warn(`  ⚠ ${m}`);
-            } catch {
-              /* ignore */
-            }
-          },
-        });
-      } catch {
-        /* ensureProxyCoreEnv not available */
+  // 1.3 warmUp is deliberately left exactly as it was: fire-and-forget inside
+  //     the old `Promise.allSettled` group, i.e. never awaited by `init()`.
+  //     dynamicFreeModelService.js is owned elsewhere, so this call site keeps
+  //     its original shape (including not awaiting the returned promise).
+  try {
+    const dynamicFreeModelService = require('../services/dynamicFreeModelService');
+    dynamicFreeModelService.warmUp();
+  } catch {
+    /* dynamicFreeModelService not available */
+  }
+
+  // 1.4-1.7 Four best-effort init steps, moved off the boot path.
+  //      They are memoized fire-and-forget: nothing between `await init()` and
+  //      the first user-visible action reads their result synchronously
+  //      (checked per call site 2026-10-12 — every consumer of JWT_SECRET,
+  //      KHY_PROXY_CORE, the active proxy and the dev app entry reads it lazily
+  //      inside a later request/command, never at module load).
+  const _steps = _buildDeferredInitSteps();
+  const _stepsDeferRaw = String(process.env[INIT_STEPS_DEFER_ENV] ?? '')
+    .trim()
+    .toLowerCase();
+  const _stepsDeferred = !_STEPS_OFF.has(_stepsDeferRaw);
+  const _stepsDelayRaw = Number.parseInt(String(process.env[INIT_STEPS_DEFER_MS_ENV] ?? ''), 10);
+  const _stepsDelayMs = Number.isFinite(_stepsDelayRaw) && _stepsDelayRaw >= 0 ? _stepsDelayRaw : 0;
+  const _runAllDeferredSteps = () =>
+    Promise.allSettled(_steps.map((step) => _runDeferredInitStepOnce(step.key, step.run)));
+  if (_stepsDeferred) {
+    // Truly off the boot path: a macrotask timer only fires once the current
+    // run-to-completion is done AND the microtask queue is empty, i.e. after
+    // main() has resumed. `Promise.resolve().then(...)` would look deferred but
+    // is not — a microtask still drains before the caller's continuation.
+    //
+    // unref'd so a one-shot command still exits immediately; shutdown paths can
+    // join the in-flight run via getDeferredInitStepsPromise().
+    _deferredInitStepsPromise = new Promise((resolve) => {
+      const _timer = setTimeout(() => {
+        _runAllDeferredSteps().finally(resolve);
+      }, _stepsDelayMs);
+      if (_timer.unref) {
+        _timer.unref();
       }
-    })(),
-    (async () => {
-      try {
-        const { ensureJwtSecret } = require('./ensureAuthSecret');
-        ensureJwtSecret({
-          log: (m) => {
-            try {
-              console.warn(`  ⚠ ${m}`);
-            } catch {
-              /* ignore */
-            }
-          },
-        });
-      } catch {
-        /* ensureAuthSecret not available */
-      }
-    })(),
-    (async () => {
-      try {
-        const proxyConfig = require('../services/proxyConfigService');
-        proxyConfig.initFromConfig();
-      } catch {
-        /* proxy config is optional */
-      }
-    })(),
-    (async () => {
-      try {
-        const backendDir = process.env.KHYQUANT_ROOT || path.resolve(__dirname, '../..');
-        const appRegistry = require('../services/appRegistry');
-        appRegistry.autoRegisterDev(backendDir);
-      } catch {
-        /* appRegistry not available */
-      }
-    })(),
-    (async () => {
-      try {
-        const dynamicFreeModelService = require('../services/dynamicFreeModelService');
-        dynamicFreeModelService.warmUp();
-      } catch {
-        /* dynamicFreeModelService not available */
-      }
-    })(),
-  ]);
+    });
+  } else {
+    // KHY_INIT_DEFER_STEPS=0 — legacy blocking behaviour, byte-for-byte.
+    await _runAllDeferredSteps();
+  }
 
   // 2. Database health service initialization.
   //    Deferred by default (KHY_DB_HEALTH_DEFER=0 restores the legacy blocking
@@ -230,4 +326,4 @@ function isComplete() {
   return state.get('initialized');
 }
 
-module.exports = { init, isComplete, getDbHealthInitPromise };
+module.exports = { init, isComplete, getDbHealthInitPromise, getDeferredInitStepsPromise };
