@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-SOURCING-001] 借鉴与实现统一规则
 
 <!-- RULES-REGISTRY: SOURCING-001, SOURCING-002, SOURCING-003, SOURCING-004, SOURCING-005, SOURCING-006 -->

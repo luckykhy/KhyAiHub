@@ -130,6 +130,9 @@ khy-os 有两条独立版本轨道（AGENTS.md 定义）：
 ### 6.2 发布脚本
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：5 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 同步主轨道
 node scripts/release/publish-dual.sh --version 1.2.0
 

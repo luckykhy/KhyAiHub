@@ -1,6 +1,11 @@
 {
-  "total": 38,
+  "total": 81,
   "items": [
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "dependabot.yml"
+    },
     {
       "from": ".github/SECURITY.html",
       "type": "a",
@@ -10,6 +15,201 @@
       "from": ".github/SECURITY.html",
       "type": "a",
       "href": "CHANGELOG.html"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L367-L388"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L254-L274"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L280-L295"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L176-L194"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L196-L200"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L202-L210"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L212-L217"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L301-L361"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat.cpp#L1280-L1310"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser-helpers.h#L68"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "common/chat-auto-parser.h#L28-L37"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "type": "a",
+      "href": "tests/test-chat.cpp#L947-L1043"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/OPENCL.html",
+      "type": "a",
+      "href": "../../../../../../../docs/backend/SYCL.html"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/SYCL.html",
+      "type": "a",
+      "href": "../../../../../../../docs/backend/OPENCL.html"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
+      "type": "a",
+      "href": "../../../ggml/src/ggml-hexagon/htp/act-ops.c"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
+      "type": "a",
+      "href": "../../../ggml/src/ggml-hexagon/htp/act-ops.c"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../tools/cli"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../tools/completion"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../tools/imatrix"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../tools/quantize"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../tools/server"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../convert_hf_to_gguf.py"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../examples/convert_legacy_llama.py"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../conversion"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../gguf-py/gguf/constants.py"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../gguf-py/gguf/tensor_mapping.py"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../examples/eval-callback"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "tools/mtmd/debug/mtmd-debug.cpp"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
+      "type": "a",
+      "href": "../../../../../../../tests/test-chat-peg-parser.cpp"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
+      "type": "a",
+      "href": "../../../../../../../common/chat-peg-parser.h"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/token_generation_performance_tips.html",
+      "type": "a",
+      "href": "../../../../../../../docs/build.html#cuda"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/release.html",
+      "type": "a",
+      "href": ".github/workflows/make-release.yml"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/grammars/README.html",
+      "type": "a",
+      "href": "../examples/gbnf-validator/gbnf-validator.cpp"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README-dev.html",
+      "type": "a",
+      "href": "../ui/docs"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "type": "a",
+      "href": "../embedding"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "type": "a",
+      "href": "chat.mjs"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "type": "a",
+      "href": "chat.sh"
+    },
+    {
+      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "type": "a",
+      "href": "../ui/src/lib/constants/settings-keys.ts"
     },
     {
       "from": "docs/html/00_INDEX_仓库根.html",
@@ -170,6 +370,21 @@
       "from": "docs/html/07_OPS_运维/runbooks/00_INDEX_灾备演练剧本-总目录.html",
       "type": "a",
       "href": "../../../07_OPS_%E8%BF%90%E7%BB%B4/runbooks/drill-schedule.html"
+    },
+    {
+      "from": "docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-007] 开发版文档地图与层间关系.html",
+      "type": "a",
+      "href": "../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E6%96%87%E6%A1%A3%E7%B4%A2%E5%BC%95.html"
+    },
+    {
+      "from": "docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-007] 开发版文档地图与层间关系.html",
+      "type": "a",
+      "href": "../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E4%BB%93%E5%BA%93%E6%A0%B9.html"
+    },
+    {
+      "from": "docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-007] 开发版文档地图与层间关系.html",
+      "type": "a",
+      "href": "../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E4%BB%93%E5%BA%93%E6%A0%B9.html"
     },
     {
       "from": "docs/html/10_规范/其它规范/FILE-FORMAT-PROTOCOL.html",
