@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-PROMPT-002 | 阶段: 规范 | 真源: services/backend/src/constants/promptSectionTaxonomy.js | 守卫: scripts/ci/check-prompt-taxonomy.js -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：7 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-PROMPT-002] 系统提示词分层规范：静态与动态分区
 
 > **用途**：给 khy-os 主系统提示词的**每一段**规定唯一的层级归属、唯一的落点、以及唯一的 cacheKey 纪律。

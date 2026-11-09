@@ -360,7 +360,7 @@
   ],
   "rollout": {
     "$note": "新机制落地阶段登记（单一真源 [DESIGN-PROCESS-002] §6 建议落点）。gate 成员资格仍以 RULES-REGISTRY.json 为准；本段只登记「处于哪一阶段」，供 scripts/ci/check-rollout-stage.js 校验 PP-1（禁止直进 S3）、PP-2（毕业看样本量）、PP-6（一次只升一阶）。stage 取值 S1|S2|S3|S4。",
-    "updated": "2026-10-13",
+    "updated": "2026-10-30",
     "mechanisms": [
       {
         "id": "agent-feedback-contract",
@@ -922,6 +922,12 @@
         "samples": {
           "observed": 58,
           "target": 200,
+          "source": {
+            "script": "scripts/ci/check-repo-layout.js",
+            "args": ["--json"],
+            "key": "counts.domain-direction",
+            "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
+          },
           "note": "2026-09-28 建档：domain-direction 规则首次全仓实测 58 处（d3-purity 46 + no-reach-into-archive 12），写入 scripts/ci/repo-layout-baseline.json 的 counts['domain-direction']。S1 语义 = 只记录 + 棘轮：默认 warning，不因存量违规阻断；只有**超出基线**（即新增违规）才升 error。毕业看样本量而非时间（PP-2）：S2 需 ≥50 次真实提示且误报 <10%（判据是解析后的 require 目标是否真属跨域——注释、动态 spec、拓展内自引用均已在排除逻辑内，需人复核首批提示）；S3 需 ≥20 次真实拦截且豁免率 <20%。"
         },
         "rollback": "纯配置回滚，PP-4 合规：把 id 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用；或删 DOMAIN-DEPS.json 的 enforced[] 条目收敛判据范围（守卫无判据时按「不 fail-open」亮 error，故停用走前一种）；基线只降不升，上调基线需人工显式改 json 并留原因。",
@@ -940,6 +946,12 @@
         "samples": {
           "observed": 653,
           "target": 200,
+          "source": {
+            "script": "scripts/ci/check-repo-layout.js",
+            "args": ["--json"],
+            "key": "counts.functional-unit",
+            "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
+          },
           "note": "2026-09-28 建档：首次全仓实测 653 = test-colocated 622 + readme-missing 31（D2 内 31 个上下文目录、622 个源文件、共置测试 0 份、单元 README 0 份），写入 scripts/ci/repo-layout-baseline.json 的 counts['functional-unit']。S1 语义 = 只记录 + 棘轮：默认 warning、存量不阻断，只有**超出基线**（新增无测试的源文件）才升 error。毕业看样本量而非时间（PP-2）：S2 需 ≥50 次真实提示且误报 <10%，而本机制的误报风险不在扫描器而在**口径**——「同名同目录」刻意不认 tests/ 下的既有同名测试（§2.3 原话「与源同目录」），也不判 README 内容是否空洞、测试是否有效（存在性判据），这两条须人复核后才谈升档；S3 需 ≥20 次真实拦截且豁免率 <20%。"
         },
         "rollback": "纯配置回滚，PP-4 合规：把 functional-unit 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用（不动 DOMAIN-DEPS.json，那里 D2 声明还服务于 domain-direction）；或删 DOMAIN-DEPS.json 的 domains.D2 让规则回到「无从判起」的静默档。基线只降不升，上调需人工显式改 json 并留原因。",
@@ -958,6 +970,12 @@
         "samples": {
           "observed": 2667,
           "target": 200,
+          "source": {
+            "script": "scripts/ci/check-repo-layout.js",
+            "args": ["--json"],
+            "key": "counts.entry-buffer",
+            "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
+          },
           "note": "2026-09-28 建档：首次全仓实测核心域（_entry_buffer.coreDomains = D1/D2/D3 的 roots，去重后）共 2669 个源文件，其中 2 个已有可用记录（runtime/node/backend/src/services/domain/onboarding/onboarding/{onboardingPlan,safetyNotice}.js，本批次首例补齐），其余 2667 个 manifest-missing，写入 scripts/ci/repo-layout-baseline.json 的 counts['entry-buffer']。S1 语义 = 只记录 + 棘轮：默认 warning，只有**超出基线**才升 error。毕业看样本量而非时间（PP-2），但本机制的口径风险比 functional-unit 更硬：计数单位是**源文件数**，删文件也会让计数下降——那种下降不是晋级，S2 前必须逐单元复核降幅来源，否则棘轮会把「拆除」误记为「改善」。缓冲区「不可被运行时代码 require」这一性质不在本机制内新造判据，由 DOMAIN-DEPS.json 已强制的 no-reach-into-archive 边免费保证（缓冲区的第二层轴向按 §2.2 就是生命周期阶段，故落在 scripts/ 下）。晋级动作（git mv 出缓冲区）在第 0 步 .git 重建闭合前不可执行。"
         },
         "rollback": "纯配置回滚，PP-4 合规：把 entry-buffer 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用；或删 DOMAIN-DEPS.json 的 _entry_buffer 块——守卫对「未采纳本机制的仓库」刻意静默，删块即逐字节回到今日行为。本批次新增的文件面（scripts/quarantine/README.md、onboarding 单元的 khy.module.json 与 README.md、两份共置测试）都是纯新增，删除即撤回，不动任何既有文件；唯一被改动的既有逻辑是 onboardingPlan.js 里两处 Symbol/BigInt 加固（那是契约测试查出的真实缺陷修复，不属本机制）。基线只降不升，上调需人工显式改 json 并留原因。",
@@ -1192,6 +1210,30 @@
         "blockedBy": []
       },
       {
+        "id": "tool-loop-drift",
+        "name": "执行漂移读数（轮首/收尾确定性观察；S1 只记录）",
+        "ssot": "runtime/node/backend/src/services/tool/executionDriftPolicy.js（语义真源在代码内 docblock）",
+        "rules": [],
+        "executor": "runtime/node/backend/src/services/tool/executionDriftPolicy.js",
+        "stage": "S1",
+        "stageSince": "2026-11-04",
+        "stageAuthority": "see executorStage",
+        "previousStage": "",
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/tool/executionDriftPolicy.js",
+          "constant": "STAGE",
+          "note": "阶段权威在本叶子的字面常量 STAGE（当前 S1）。S1 语义 = 只记录不阻断：轮首 observeRound 与收尾 observeConclusion 只写 toolLoopJournal（event 'exec-drift'，KHY_LOOP_JOURNAL 默认开），无 nudge / continue / 输出改写。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-11-04 接线。样本来自 toolUseLoopCore 轮首与零工具收尾两处观察，落 getDataDir('toolLoop')/loop-<runId>.jsonl（KHY_LOOP_JOURNAL 默认开；关则该 run 无样本）。累计 ≥200 条且无误报解释不了前不升阶。"
+        },
+        "sisterMechanisms": "doc-vs-measured（同一落盘通道、同为 S1 观察器；判据不重叠：引述路径 vs 动作锚点）；tool-loop-detector（判原地打转，本机制判脱离本轮请求锚点）；dev-course-monitor（看改动节奏并注入航向提示，本机制只看动作与原始请求锚点的关系且只记录）。",
+        "rollback": "删本条目 + 回退 toolUseLoopCore 的两处观察块 + 删 runtime/node/backend/src/services/tool/executionDriftPolicy.js 与 tests/services/executionDriftPolicy.test.js + 回退 flagRegistry 的 KHY_EXEC_DRIFT（git revert 本次提交）",
+        "blockedBy": []
+      },
+      {
         "id": "doc-drift-guard",
         "stage": "S1",
         "previousStage": null,
@@ -1241,6 +1283,40 @@
         "executorStage": {
           "constant": "STAGE",
           "file": "scripts/ci/check-doc-numbers.js"
+        }
+      },
+      {
+        "id": "core-layers-guard",
+        "stage": "S1",
+        "previousStage": null,
+        "owner": "architecture-team",
+        "script": "scripts/ci/check-core-layers.js",
+        "rule": "TOOLING-012",
+        "samples": {
+          "observed": 3,
+          "note": "首轮 3 条：2 条倒挂边（AgentTool→cli/ai.js、toolUseLoopCore→cli/toolPrefaceVoice.js，均为懒加载存量）+ 1 条皮渗入芯（8 个 cli/tui/ 文件）。首刀下沉 8 个纯叶子后皮渗入 8→0，剩余 2 条倒挂需架构决策（见 [DESIGN-ARCH-197] §七 P1/P2）。"
+        },
+        "rollback": "摘除 FEATURE-OWNERSHIP 的 core-layers-guard 条目 + 摘除 RULES-REGISTRY 的 TOOLING-012 条目 + 删除 package.json 的 check:core-layers* 别名 + 删除 scripts/ci/check-core-layers.js + 删除 docs/10_规范/registry/CORE-LAYERS.json + 删除 [DESIGN-ARCH-197]。第一刀的 8 个文件下沉需另行回滚（git mv 反向 + 恢复 4 处 require 路径）。",
+        "executorStage": {
+          "constant": "STAGE",
+          "file": "scripts/ci/check-core-layers.js"
+        }
+      },
+      {
+        "id": "ssot-data-guard",
+        "stage": "S1",
+        "previousStage": null,
+        "owner": "architecture-team",
+        "script": "scripts/ci/check-ssot-data.js",
+        "rule": "LAYOUT-008",
+        "samples": {
+          "observed": 22,
+          "note": "累计三轮命中 22 处同一事实的影子副本，全部已归并为「从真源取值」：① 标识符锚点轮 11 处（端口 9090 ×10 + 手机桥端口 8896 ×1）；② 值锚定补网轮 5 处（别名 DEFAULT_API_PORT + 4 处帮助文本/示例里的端口字面量）；③ 登记新事实（Ollama 端口 / 后端端口）后 6 处（两份 ollamaModelManager.js、诊断脚本正则、跨层工具、部署模板的 compose 文本）。另有 1 处真源自相矛盾（规则登记表 meta.ruleCount 声明 96 而实有 99）与 2 处守卫自身假阳性（数字字符串子串匹配、模板插值被当字面量），均已修正并加单测锁死。"
+        },
+        "rollback": "摘除 FEATURE-OWNERSHIP 的 ssot-data-guard 条目 + 摘除 RULES-REGISTRY 的 LAYOUT-008 条目 + 删除 package.json 的 check:ssot-data* 别名 + 删除 scripts/ci/check-ssot-data.js 与 scripts/lib/ssotDataGuard.js + 删除 docs/10_规范/registry/DATA-SSOT.json 与 [DESIGN-LAY-009] 规范文档。全部为删除，无数据损失；已归并的 15 个文件把常量改回写死字面量即可复原。",
+        "executorStage": {
+          "constant": "STAGE",
+          "file": "scripts/ci/check-ssot-data.js"
         }
       }
     ]

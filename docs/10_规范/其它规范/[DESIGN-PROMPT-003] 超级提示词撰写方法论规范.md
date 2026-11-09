@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-PROMPT-003 | 阶段: 规范 | 真源: 本文（方法学规范，无独立可执行真源） | 守卫: scripts/ci/check-ai-gateway.js（愿望词 finding，PROMPT-001 exec，LOW advisory）+ 人工评审兜底 -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-PROMPT-003] 超级提示词撰写方法论规范
 
 > **用途**：给 khy-os 的**提示词资产**规定「怎么设计」的方法学。适用对象：运行时系统

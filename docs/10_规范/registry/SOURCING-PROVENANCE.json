@@ -147,6 +147,66 @@
       "approvedBy": "仓库维护者（用户）2026-09-29 经 AskUserQuestion 选定「vendored 原样入库」并批准落点；B-P3 裁决人与实现者非同一人",
       "approvedAt": "2026-09-29",
       "notes": "逐字入库、一行未改：26 个上游文件（SKILL.md + agents/ + references/ + scripts/ + tests/）取自上游 git blob 原始字节（LF，未经任何 smudge），逐文件 sha256 与 aggregate 记于 scripts/copyright/upstream-manifest.json，漂移由 check-copyright-readiness.js 的 copyright-vendored-skill 判 error（S1 降级 WARN）。上游 LICENSE 同路径留存于 scripts/copyright/LICENSE。未随包入库：生成demo/（433 KB 示例产物）、docs/screenshots/（1.3 MB README 配图）、.claude-plugin/plugin.json（单智能体专属打包清单，其版本已记入 manifest）、skills/ 符号链接（目标记为 skillsSymlinkTarget）。本仓口径覆盖层在 scripts/copyright/repo-contract.md（对冲上游「优先抽取前端代码」与本件登记客体的运行时链选材原则）。落点刻意用含 vendor 路径段的目录名，使 [DESIGN-IP-001] C-X3 的既有排除规则天然命中，不另建第二份排除清单。"
+    },
+    {
+      "source": "本仓自有包 @khy/shared@1.6.5（真源 runtime/substrate/platform/packages/shared/package.json，G2 轨道成员）。**不是第三方上游**——它就是本仓自己的代码，只是被 vendored 进后端目录。",
+      "localPath": "runtime/node/backend/vendor/shared",
+      "relationship": "vendored",
+      "license": "本仓自有代码，与主仓同一许可（仓内无独立 LICENSE 文件）",
+      "versionPin": "@khy/shared 1.6.5（G2 轨道版本，见 docs/10_规范/registry/RULES-REGISTRY.json 的 G2 成员表）",
+      "deletableAsWhole": false,
+      "approvedBy": "仓库维护者（用户）2026-10-25 明示「这四项按照你的建议替我决定」，据此补登；B-P3 裁决人与实现者非同一人",
+      "approvedAt": "2026-10-25",
+      "notes": "用途（实测）：后端以 bare require `@khy/shared/*` 引用该包（src/bridge/bridgeServer.js:633、src/cli/handlers/khyos.js:22、src/bridge/deviceNameResolver.js:30 等），而 backend 的 package.json 把 @khy/shared 列为依赖并随 bundled pip install 走独立 npm store——src/bootstrap/aiBackendModuleResolve.js 的注释原文写着「standalone package.json + vendored `@khy/shared`」，即这份副本正是为了让**非 workspace 检出**（bundled 安装、ai-backend 旁挂树）也能解析 bare require。因此不可整删（deletableAsWhole=false）：删了裸 import 在 bundled 安装里即 Cannot find module。真源在 runtime/substrate/platform/packages/shared（同包同版本 1.6.5）；两份副本已漂移，见 knownGaps 的 gap-4。本仓无 LICENSE 文件，故 license 记「本仓自有代码，与主仓同一许可」而非第三方许可证名。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见各 catalogs/<eco>.json 的 entries[].upstreamUrl；本文件为六生态总索引与跨生态去重关系，自身无 entries 数组）",
+      "localPath": "delivery/market/index.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "总索引行：纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。逐条上游在其指向的六个 catalogs/*.json（均已各自登记台账行）。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/zcode.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/claude-code.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/opencode.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/mcode.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/deepseek-harness.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
+      "localPath": "delivery/market/catalogs/aggregators.json",
+      "relationship": "reference",
+      "license": null,
+      "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     }
   ],
 
@@ -156,12 +216,11 @@
   },
 
   "observedVendorDirs": {
-    "note": "以下为实测（2026-09-16，仓库根）。仅列实测存在的 vendor 目录，不推测其上游。末项为 2026-09-29 vendored 入库时新增（同批实测存在）。",
-    "measuredAt": "2026-09-16",
+    "note": "以下为实测（2026-10-25，仓库根）。仅列实测存在的 vendor 目录，不推测其上游。末项为 2026-09-29 vendored 入库时新增。2026-10-25 重测：delivery/extension/tools/khy-dsh-compat/vendor 已不存在（空占位目录被工具链建了又删，未被 git 跟踪），按「只列实测存在的」从清单移除。",
+    "measuredAt": "2026-10-25",
     "dirs": [
       { "path": "runtime/boot/kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
-      { "path": "runtime/node/backend/vendor/shared", "state": "unverified", "contents": ["config", "logs", "package.json", "src", "tests"] },
-      { "path": "delivery/extension/tools/khy-dsh-compat/vendor", "state": "empty" },
+      { "path": "runtime/node/backend/vendor/shared", "state": "ledgered", "contents": ["config/", "logs/", "package.json", "src/", "tests/"] },
       { "path": "delivery/extension/tools/khy-markdown/vendor", "state": "empty" },
       { "path": "delivery/web/ai-frontend/public/vendor", "state": "empty" },
       { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] }
@@ -171,8 +230,9 @@
   "knownGaps": [
     {
       "id": "gap-1",
-      "description": "runtime/node/backend/vendor/shared 含 package.json/src/tests，形态像第三方包但未在台账登记",
-      "needed": "确认其上游（包名+版本+许可证）并补一条 ledger 记录",
+      "path": "runtime/node/backend/vendor/shared",
+      "description": "2026-10-25 已补登：runtime/node/backend/vendor/shared 的上游不是第三方——它是本仓自有包 @khy/shared@1.6.5 被 vendored 进后端目录（ledger 已有对应记录）。原「形态像第三方包但未在台账登记」的缺口至此收口。",
+      "needed": "已收口（2026-10-25）。遗留的副本漂移另立 gap-4。",
       "severity": "unknown"
     },
     {
@@ -186,8 +246,57 @@
       "description": "无 fork 关系记录。B-P3 要求 fork 须维护者显式批准并写入同步策略",
       "needed": "若引入 fork 档实现，须在此登记 approvedBy/approvedAt 与同步策略",
       "severity": "low"
+    },
+    {
+      "id": "gap-4",
+      "path": "runtime/node/backend/vendor/shared",
+      "description": "2026-10-25 逐文件比对：后端 vendor 副本与真源 runtime/substrate/platform/packages/shared 已有 7 个文件漂移——src/config/database.js、src/config/env.js、src/models/Conversation.js、src/models/User.js、src/models/index.js、src/services/cacheService.js、src/utils/logger.js（其余 84 个归一化行尾后逐字节相同）。两份副本各自都在被使用：真源供 workspace 内解析，vendor 副本供 bundled pip install 的裸 require。",
+      "needed": "由人裁定哪边是准的，再给一条同步机制（vendored 副本随真源走，或反写真源）；在此之前两边的行为可能不一致。",
+      "severity": "medium"
     }
   ],
+
+  "knownGapsModel": {
+    "description": "knownGaps 每项必须带 path：check-provenance.js 按 path 与 observedVendorDirs.dirs 对齐，缺 path 的条目对守卫不可见——它描述的目录会被判成「既不在台账也不在 knownGaps」的登记缺口。",
+    "fields": [
+      {
+        "key": "path",
+        "required": true,
+        "type": "string",
+        "description": "待登记的本地路径（仓库相对路径），须与 observedVendorDirs.dirs[].path 完全一致",
+        "constraint": "非空；与 observedVendorDirs 的 path 字符串逐字相等，否则守卫匹配不上"
+      },
+      {
+        "key": "id",
+        "required": true,
+        "type": "string",
+        "description": "缺口编号（gap-N）",
+        "constraint": "唯一"
+      },
+      {
+        "key": "description",
+        "required": true,
+        "type": "string",
+        "description": "缺口的客观描述（实测事实）",
+        "constraint": "非空"
+      },
+      {
+        "key": "needed",
+        "required": true,
+        "type": "string",
+        "description": "补齐该缺口需要谁提供什么",
+        "constraint": "非空"
+      },
+      {
+        "key": "severity",
+        "required": false,
+        "type": "string",
+        "description": "缺口严重度",
+        "constraint": "unknown | low | medium | high"
+      }
+    ],
+    "note": "登记 knownGaps 不等于豁免该目录：gap-1 描述的 runtime/node/backend/vendor/shared 仍需补 ledger 记录（上游来源 + 许可证 + 版本钉子），补齐前保持该 gap 敞开。"
+  },
 
   "integrityChecks": [
     "每条 ledger 记录必须填齐 source / localPath / relationship 三项",

@@ -73,6 +73,9 @@ const HeavyComponent = defineAsyncComponent(() =>
 
 **HTTP 缓存**：
 ```nginx
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 静态资源缓存 1 年
 location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
   expires 1y;
