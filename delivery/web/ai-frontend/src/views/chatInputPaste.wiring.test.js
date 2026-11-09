@@ -85,6 +85,9 @@ describe('AIChat: pasted files reuse the existing /api/ai/upload pipeline', () =
     expect(picker).toMatch(/await uploadAttachmentFiles\(files\)/);
     expect(paste).toMatch(/await uploadAttachmentFiles\(list\)/);
     expect(loop).toMatch(/form\.append\('file', file\)/);
+    // Pasted screenshots are downscaled before the payload is built.
+    expect(loop).toMatch(/await resizeImageForUpload\(originalFile\)/);
+    expect(chatSrc).toMatch(/from '@\/utils\/imageAttachments'/);
     expect(loop).toMatch(/resolveApiUrl\('\/api\/ai\/upload'\)/);
     expect(loop).toMatch(/method:\s*'POST'/);
     // Success path still registers attachments by id, failures stay per-file.

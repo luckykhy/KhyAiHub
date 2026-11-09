@@ -28,7 +28,7 @@
             type="password"
           >
             <template v-if="caps.passwordReset.mode !== 'none'" #suffix>
-              <router-link class="login-forget" to="/forgot-password">忘记密码?</router-link>
+              <router-link class="login-forget" to="/forgot-password">忘记密码？</router-link>
             </template>
           </el-input>
         </el-form-item>

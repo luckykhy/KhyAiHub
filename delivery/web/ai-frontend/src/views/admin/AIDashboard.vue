@@ -2,23 +2,30 @@
   <div class="khy-page ai-dashboard-page">
     <KhyPageHeader subtitle="系统健康、关键指标、异常摘要与待处理事项" title="AI 管理总览">
       <template #actions>
-        <el-switch
-          v-model="autoRefresh"
-          active-text="自动刷新"
-          inactive-text="手动刷新"
-          inline-prompt
-          @change="handleAutoRefreshChange"
-        />
+        <!-- 四字中文标签塞不进 switch 的胶囊(inline-prompt 是给 1–2 字符的 是/否、ON/OFF),
+             改成标签外置在控件左侧;外包 <label> 顺带给 switch 一个可访问名。 -->
+        <label class="refresh-switch">
+          <span>自动刷新</span>
+          <el-switch v-model="autoRefresh" @change="handleAutoRefreshChange" />
+        </label>
         <el-button :loading="loading" type="primary" @click="refreshAll">刷新数据</el-button>
       </template>
     </KhyPageHeader>
 
+    <LoadErrorBanner :message="dashboardError">
+      <template #action>
+        <el-button size="small" @click="refreshAll">重试</el-button>
+      </template>
+    </LoadErrorBanner>
+
     <el-row class="stats-row" :gutter="16">
       <el-col v-for="card in keyMetrics" :key="card.label" :lg="4" :md="8" :sm="12" :xs="24">
-        <el-card class="metric-card" shadow="hover">
+        <el-card :class="['metric-card', `metric-card--${card.tone}`]" shadow="hover">
           <div class="metric-row">
-            <div class="metric-icon">
-              <KhyIcon :kind="card.icon" size="md" />
+            <div :class="['metric-icon', `metric-icon--${card.tone}`]">
+              <!-- KhyIcon 自带 --khy-icon-color(内联),不吃父级 color;要让字形跟着
+                   胶囊/左边框的色相走,必须在调用处显式传 color。 -->
+              <KhyIcon :kind="card.icon" size="md" :color="TONE_ICON_COLOR[card.tone]" />
             </div>
             <div class="metric-body">
               <div class="metric-title">{{ card.label }}</div>
@@ -59,7 +66,11 @@
               <template #default="{ row }">{{ row.latency }}</template>
             </el-table-column>
           </el-table>
-          <KhyEmpty v-else description="健康广播器尚未就绪" title="暂无通道健康数据" />
+          <KhyEmpty
+            v-else-if="!healthFailed"
+            description="健康广播器尚未就绪"
+            title="暂无通道健康数据"
+          />
         </el-card>
       </el-col>
 
@@ -158,21 +169,26 @@
           <template #header>
             <div class="card-header-row">
               <span>待处理</span>
-              <el-tag size="small" :type="pendingTotal ? 'warning' : 'success'">
-                {{ pendingTotal }} 项
+              <el-tag
+                size="small"
+                :type="pendingTotal === null ? 'info' : pendingTotal ? 'warning' : 'success'"
+              >
+                {{ pendingTotal === null ? '—' : pendingTotal }} 项
               </el-tag>
             </div>
           </template>
           <div class="kv-list">
             <div class="kv-row">
               <span class="kv-label">待审核用户</span>
-              <span class="kv-value">{{ pendingUserCount }}</span>
+              <span class="kv-value">{{
+                pendingUsersFailed ? '—' : pendingUserCount
+              }}</span>
             </div>
             <div class="kv-row">
               <span class="kv-label">待处理充值订单</span>
               <span class="kv-value">
                 <el-button link size="small" type="primary" @click="go('/admin/payments')">
-                  {{ pendingPaymentCount }} 单 →
+                  {{ pendingPaymentsFailed ? '—' : pendingPaymentCount }} 单 →
                 </el-button>
               </span>
             </div>
@@ -180,7 +196,7 @@
               <span class="kv-label">失效渠道凭证</span>
               <span class="kv-value">
                 <el-button link size="small" type="primary" @click="go('/admin/bridge')">
-                  {{ expiredKeyCount }} 个 →
+                  {{ poolUnknown ? '—' : expiredKeyCount }} 个 →
                 </el-button>
               </span>
             </div>
@@ -224,9 +240,11 @@ import { useAccountPool } from '@/composables/useAccountPool';
 import { useAssetCustomer } from '@/composables/useAssetCustomer';
 import { useAgentDashboard } from '@/composables/useAgentDashboard';
 import { showError } from '@/api/notify';
+import { useLoadError, loadInto } from '@/api/loadError';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
 import KhyIcon from '@/components/KhyIcon.vue';
 import KhyEmpty from '@/components/KhyEmpty.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 const router = useRouter();
 const gw = useGateway();
@@ -249,6 +267,20 @@ let refreshTimer = null;
 const health = ref(null);
 const pendingUsers = ref([]);
 const pendingPayments = ref([]);
+const loadError = useLoadError();
+// 「读到空」与「没读到」必须能被页面区分：这三个位各自标记一次读取是否失败，
+// 供 pendingTotal / 通道健康空态决定是显示 0 还是显示「—」。
+const healthFailed = ref(false);
+const pendingUsersFailed = ref(false);
+const pendingPaymentsFailed = ref(false);
+// 密钥池从未成功读到时 pool 仍是 null —— 用它当「未知」信号，避免把读取失败
+// 折成「失效凭证 0 个」。
+const poolUnknown = computed(() => gw.pool.value == null);
+// 本页一次刷新聚合 5 个来源，任何一个挂了都不该显示成「0」。横幅只显示最先
+// 命中的那条原因，点「重试」重跑 refreshAll 即可逐个复验。
+const dashboardError = computed(
+  () => loadError.value || gw.loadError.value || monitor.loadError.value
+);
 
 const adapters = computed(() => gw.status.value?.adapters || []);
 const adapterTotal = computed(() => adapters.value.length);
@@ -331,16 +363,30 @@ const expiredKeyCount = computed(() => {
     return sum + list.filter((key) => key.status && key.status !== 'active').length;
   }, 0);
 });
-const pendingTotal = computed(
-  () => pendingUserCount.value + pendingPaymentCount.value + expiredKeyCount.value
-);
+const pendingTotal = computed(() => {
+  // 任何一项没读到就不能报总数：0 会让「后端挂了」看起来像「今天没人待处理」。
+  if (pendingUsersFailed.value || pendingPaymentsFailed.value || poolUnknown.value) return null;
+  return pendingUserCount.value + pendingPaymentCount.value + expiredKeyCount.value;
+});
 
 const agentAgentsPreview = computed(() => (agent.agents || []).slice(0, 5));
+
+// tone 只喂给卡片的配色变体（.metric-card--* / .metric-icon--*），不影响取数。
+// KhyIcon 的字形色不吃父级 color，需按 tone 显式传给它的 color prop。
+const TONE_ICON_COLOR = {
+  blue: 'var(--khy-primary)',
+  green: 'var(--khy-success)',
+  amber: 'var(--khy-warning)',
+  purple: 'var(--khy-violet)',
+  rose: 'var(--khy-rose)',
+  cyan: 'var(--khy-cyan-strong)',
+};
 
 const keyMetrics = computed(() => [
   {
     label: '适配器状态',
     icon: 'connection',
+    tone: 'blue',
     value: adapterAvailableCount.value,
     unit: `/${adapterTotal.value}`,
     sub: '可用 / 总数',
@@ -348,12 +394,14 @@ const keyMetrics = computed(() => [
   {
     label: '密钥池',
     icon: 'key',
+    tone: 'green',
     value: keyPoolCount.value,
     sub: `${keyPoolProviderCount.value} 个供应商`,
   },
   {
     label: '账号池',
     icon: 'user',
+    tone: 'purple',
     value: activeAccountCount.value,
     unit: `/${totalAccountCount.value}`,
     sub: '可用 / 总账号',
@@ -361,18 +409,21 @@ const keyMetrics = computed(() => [
   {
     label: '客户与令牌',
     icon: 'coins',
+    tone: 'cyan',
     value: customerTotal.value,
     sub: `${customerTokenTotal.value} 个令牌`,
   },
   {
     label: '请求总数',
     icon: 'data',
+    tone: 'amber',
     value: requestTotal.value,
     sub: `成功率 ${successRate.value}`,
   },
   {
     label: '平均时延',
     icon: 'refresh',
+    tone: 'rose',
     value: avgLatency.value,
     sub: `监控缓冲 ${bufferSize.value}`,
   },
@@ -387,23 +438,31 @@ async function unwrap(res) {
 }
 
 async function fetchHealth() {
-  const res = await request.get('/api/ai-gateway-admin/health', { silent: true });
-  health.value = await unwrap(res);
+  const res = await loadInto('通道健康', loadError, () =>
+    request.get('/api/ai-gateway-admin/health', { silent: true })
+  );
+  healthFailed.value = !res;
+  if (res) health.value = await unwrap(res);
 }
 
 async function fetchPending() {
   // Two independent fetches: /api/users requires adminMiddleware and
   // /api/ai-gateway/payments is the local order registry. Both are silent so a
-  // 403/500 shows up as a zeroed count rather than a global toast.
+  // 403/500 shows up as a banner instead of a global toast — but neither may
+  // silently become a zero count.
   const [usersRes, paymentsRes] = await Promise.allSettled([
-    request.get('/api/users', { silent: true }),
-    request.get('/api/ai-gateway/payments', { silent: true }),
+    loadInto('待审核用户', loadError, () => request.get('/api/users', { silent: true })),
+    loadInto('待处理充值订单', loadError, () =>
+      request.get('/api/ai-gateway/payments', { silent: true })
+    ),
   ]);
-  if (usersRes.status === 'fulfilled') {
+  pendingUsersFailed.value = usersRes.status !== 'fulfilled' || usersRes.value == null;
+  if (!pendingUsersFailed.value) {
     const data = await unwrap(usersRes.value);
     pendingUsers.value = Array.isArray(data) ? data : [];
   }
-  if (paymentsRes.status === 'fulfilled') {
+  pendingPaymentsFailed.value = paymentsRes.status !== 'fulfilled' || paymentsRes.value == null;
+  if (!pendingPaymentsFailed.value) {
     const data = await unwrap(paymentsRes.value);
     pendingPayments.value = Array.isArray(data) ? data : data?.payments || [];
   }
@@ -460,9 +519,15 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.ai-dashboard-page {
-  max-width: 1320px;
-  margin: 0 auto;
+/* 页宽由 .khy-page 的 --khy-page-max 统一,不再本页自写 max-width。 */
+.refresh-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--khy-space-2);
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  user-select: none;
 }
 
 .stats-row {
@@ -479,11 +544,6 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.metric-icon {
-  flex: 0 0 auto;
-  color: var(--el-text-color-secondary);
-}
-
 .metric-body {
   flex: 1;
   min-width: 0;
@@ -495,12 +555,9 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* 字号/字重/色由主题的 .metric-value 统一;此处只留本页的上下间距。 */
 .metric-value {
   margin-top: 6px;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  line-height: 1.1;
 }
 
 .metric-unit {

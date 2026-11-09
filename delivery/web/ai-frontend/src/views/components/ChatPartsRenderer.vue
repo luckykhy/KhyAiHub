@@ -63,7 +63,10 @@
           class="chat-part-thinking-toggle"
           @click="part.expanded = !part.expanded"
         >
-          <span class="chat-part-thinking-icon">{{ part.expanded ? '▾' : '▸' }}</span>
+          <el-icon class="chat-part-thinking-icon">
+            <CaretBottom v-if="part.expanded" />
+            <CaretRight v-else />
+          </el-icon>
           <span class="chat-part-thinking-label">{{
             part.expanded ? '收起思考' : '查看思考过程'
           }}</span>
@@ -147,7 +150,7 @@
 </template>
 
 <script setup>
-import { Tools, CircleClose, Select, Document } from '@element-plus/icons-vue';
+import { Tools, CircleClose, Select, Document, CaretBottom, CaretRight } from '@element-plus/icons-vue';
 import ToolDiffView from './ToolDiffView.vue';
 
 /**
@@ -279,6 +282,7 @@ defineProps({
   width: 12px;
   text-align: center;
 }
+
 .chat-part-thinking-content {
   margin-top: 4px;
   padding: 6px 8px;

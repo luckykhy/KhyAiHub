@@ -2,13 +2,12 @@
   <div class="khy-page ai-monitor-page">
     <KhyPageHeader title="AI 请求监控">
       <template #actions>
-        <el-switch
-          v-model="autoRefresh"
-          inline-prompt
-          active-text="自动刷新"
-          inactive-text="手动刷新"
-          @change="handleAutoRefreshChange"
-        />
+        <!-- 四字中文标签塞不进 switch 的胶囊(inline-prompt 是给 1–2 字符的),
+             改成标签外置在控件左侧;外包 <label> 顺带给 switch 一个可访问名。 -->
+        <label class="refresh-switch">
+          <span>自动刷新</span>
+          <el-switch v-model="autoRefresh" @change="handleAutoRefreshChange" />
+        </label>
         <el-button
           size="small"
           type="primary"
@@ -69,27 +68,27 @@
 
     <el-row :gutter="16" class="stats-row">
       <el-col :span="6">
-        <div class="metric-tile metric-tile--blue">
+        <div class="metric-card metric-card--blue">
           <div class="metric-tile-label">总请求数</div>
-          <div class="metric-tile-value">{{ stats.total }}</div>
+          <div class="metric-value">{{ stats.total }}</div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="metric-tile metric-tile--green">
+        <div class="metric-card metric-card--green">
           <div class="metric-tile-label">成功率</div>
-          <div class="metric-tile-value">{{ stats.successRate }}</div>
+          <div class="metric-value">{{ stats.successRate }}</div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="metric-tile metric-tile--amber">
+        <div class="metric-card metric-card--amber">
           <div class="metric-tile-label">平均时延</div>
-          <div class="metric-tile-value">{{ stats.avgLatencyMs }}ms</div>
+          <div class="metric-value">{{ stats.avgLatencyMs }}ms</div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="metric-tile metric-tile--purple">
+        <div class="metric-card metric-card--purple">
           <div class="metric-tile-label">缓冲区大小</div>
-          <div class="metric-tile-value">{{ stats.bufferSize }}/{{ stats.maxBufferSize }}</div>
+          <div class="metric-value">{{ stats.bufferSize }}/{{ stats.maxBufferSize }}</div>
         </div>
       </el-col>
     </el-row>
@@ -334,42 +333,34 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.ai-monitor-page {
-  max-width: 1280px;
-  margin: 0 auto;
+/* 页宽由 .khy-page 的 --khy-page-max 统一,不再本页自写 max-width。 */
+.refresh-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--khy-space-2);
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  user-select: none;
 }
 
 .stats-row {
   margin-bottom: 20px;
 }
 
-.metric-tile {
+/* 底色 / 左边框 / 圆角由主题的 .metric-card 体系出;此处只保留本页的密度与浮起。
+   阴影走令牌,暗色下才会跟着主题加深(原先写死 rgba(15,23,42,...) 在深底上看不见)。 */
+.metric-card {
   padding: 16px 18px;
-  border: 1px solid var(--khy-border);
-  border-radius: 12px;
-  background: var(--khy-bg-card-grad);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--khy-shadow);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.metric-tile:hover {
+.metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-}
-
-.metric-tile--blue {
-  border-left: 3px solid var(--khy-primary);
-}
-.metric-tile--green {
-  border-left: 3px solid var(--khy-success);
-}
-.metric-tile--amber {
-  border-left: 3px solid var(--khy-warning);
-}
-.metric-tile--purple {
-  border-left: 3px solid var(--khy-violet);
+  box-shadow: var(--khy-shadow-lift);
 }
 
 .metric-tile-label {
@@ -377,12 +368,6 @@ onUnmounted(() => {
   font-weight: 600;
   color: var(--el-text-color-secondary);
   margin-bottom: 8px;
-}
-
-.metric-tile-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
 }
 
 .section-card {

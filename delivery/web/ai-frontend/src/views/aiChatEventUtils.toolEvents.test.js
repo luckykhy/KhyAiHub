@@ -13,6 +13,8 @@ import {
   formatToolParams,
   maskSecretsForDisplay,
   summarizeToolProgress,
+  toolResultOutcome,
+  settleOrphanSteps,
 } from './aiChatEventUtils.js';
 
 test('describeToolEvent maps a tool_use to a 工具调用 status log', () => {
@@ -180,10 +182,10 @@ test('formatToolParams caps output at maxChars with a truncation note', () => {
 test('formatToolParams masks credential-looking values (never leaks a full key)', () => {
   const out = formatToolParams({
     provider: 'openai',
-    apiKey: 'sk-abcdefghijklmnop1234',
+    apiKey: 'sk-examplekey12345',
     model: 'gpt',
   });
-  assert.doesNotMatch(out, /abcdefghijklmnop/);
+  assert.doesNotMatch(out, /examplekey12345/);
   assert.match(out, /\*\*\*/);
   // Non-secret fields survive intact.
   assert.match(out, /openai/);
@@ -219,15 +221,15 @@ test('summarizeToolProgress returns null when there are no steps', () => {
   assert.equal(summarizeToolProgress(undefined), null);
 });
 
-test('summarizeToolProgress counts a run in progress (done/total + running)', () => {
+test('summarizeToolProgress counts a run in progress (分段计数 + running)', () => {
   const p = summarizeToolProgress([{ status: 'ok' }, { status: 'ok' }, { status: 'running' }]);
   assert.equal(p.total, 3);
   assert.equal(p.done, 2);
   assert.equal(p.running, 1);
   assert.equal(p.failed, 0);
   assert.equal(p.active, true);
-  assert.match(p.label, /工具 2\/3/);
-  assert.match(p.label, /1 进行中/);
+  // 刻意不写 done/total：total 会随新步骤到达而变大，分数读数会倒退。
+  assert.equal(p.label, '已完成 2 个 · 1 个进行中');
 });
 
 test('summarizeToolProgress marks a fully settled run as inactive', () => {
@@ -235,17 +237,38 @@ test('summarizeToolProgress marks a fully settled run as inactive', () => {
   assert.equal(p.done, 2);
   assert.equal(p.running, 0);
   assert.equal(p.active, false);
-  assert.equal(p.label, '工具 2/2');
+  assert.equal(p.label, '已完成 2 个');
 });
 
-test('summarizeToolProgress surfaces failures in the label and counts them as settled', () => {
+test('summarizeToolProgress surfaces failures in the label and counts them apart from done', () => {
   const p = summarizeToolProgress([{ status: 'ok' }, { status: 'error' }, { status: 'running' }]);
   assert.equal(p.total, 3);
-  assert.equal(p.done, 2); // ok + error both settled
+  assert.equal(p.done, 1); // 「已完成」只数 ok，失败另计 —— 两者混在一起会虚报完成数
   assert.equal(p.failed, 1);
   assert.equal(p.running, 1);
-  assert.match(p.label, /1 失败/);
-  assert.match(p.label, /1 进行中/);
+  assert.match(p.label, /1 个失败/);
+  assert.match(p.label, /1 个进行中/);
+});
+
+test('summarizeToolProgress keeps the reading monotonic as steps arrive', () => {
+  // total 是「已到达步骤数」，会变大；分数读数会从 1/1 退回 1/2 再到 2/3。
+  const at = (n) => summarizeToolProgress(Array.from({ length: n }, (_, i) => ({ status: 'ok' })));
+  assert.equal(at(1).label, '已完成 1 个');
+  assert.equal(at(2).label, '已完成 2 个');
+  assert.equal(at(5).label, '已完成 5 个');
+});
+
+test('summarizeToolProgress counts unknown steps as their own bucket, not as done', () => {
+  const p = summarizeToolProgress([
+    { status: 'ok' },
+    { status: 'unknown' },
+    { status: 'error' },
+  ]);
+  assert.equal(p.done, 1);
+  assert.equal(p.unknown, 1);
+  assert.equal(p.failed, 1);
+  assert.equal(p.active, false);
+  assert.equal(p.label, '已完成 1 个 · 1 个失败 · 1 个结果未返回');
 });
 
 test('summarizeToolProgress ignores malformed entries without throwing', () => {
@@ -253,4 +276,61 @@ test('summarizeToolProgress ignores malformed entries without throwing', () => {
   const p = summarizeToolProgress([null, 42, { status: 'ok' }]);
   assert.equal(p.total, 1);
   assert.equal(p.done, 1);
+});
+
+// ── 结果三态：缺 success 就是「未返回」，不是「完成」 ─────────────────────────
+
+test('toolResultOutcome only trusts an explicit boolean', () => {
+  assert.equal(toolResultOutcome({ success: true }), 'ok');
+  assert.equal(toolResultOutcome({ success: false }), 'error');
+  // 旧写法 success !== false 会把这三种全判成成功。
+  assert.equal(toolResultOutcome({}), 'unknown');
+  assert.equal(toolResultOutcome({ success: undefined }), 'unknown');
+  assert.equal(toolResultOutcome({ success: 'true' }), 'unknown'); // 真值不是 true
+});
+
+test('describeToolEvent renders a result without success as unknown, never as 完成', () => {
+  const ev = describeToolEvent({ type: 'tool_result', tool: 'web_search', text: '' });
+  assert.equal(ev.type, 'status'); // 不是 error：没有被证伪过
+  assert.match(ev.text, /结果未返回/);
+  assert.doesNotMatch(ev.text, /完成/);
+});
+
+// ── 孤儿步骤收口 ────────────────────────────────────────────────────────────
+
+test('settleOrphanSteps settles only the still-running steps and stamps the duration', () => {
+  const steps = [
+    { tool: 'a', status: 'ok', startedAt: 1000 },
+    { tool: 'b', status: 'running', startedAt: 1000 },
+    { tool: 'c', status: 'running', startedAt: 4000 },
+  ];
+  const n = settleOrphanSteps(steps, '结果未返回（可能因中断/超时）', 6000);
+  assert.equal(n, 2);
+  assert.equal(steps[0].status, 'ok'); // 已定的步骤不碰
+  assert.equal(steps[1].status, 'unknown');
+  assert.equal(steps[1].endedAt, 6000);
+  assert.equal(steps[1].durationMs, 5000); // 从发出起算，不是从收到结果起算
+  assert.match(steps[1].note, /可能因中断\/超时/);
+  assert.equal(steps[2].durationMs, 2000);
+});
+
+test('settleOrphanSteps is idempotent — a second pass settles nothing', () => {
+  const steps = [{ status: 'running', startedAt: 0 }];
+  assert.equal(settleOrphanSteps(steps, undefined, 1000), 1);
+  assert.equal(settleOrphanSteps(steps, undefined, 2000), 0);
+  assert.equal(steps[0].durationMs, 1000); // 收口时间不会被第二次调用改写
+  assert.equal(steps[0].endedAt, 1000);
+});
+
+test('settleOrphanSteps leaves durationMs null when the step never started', () => {
+  const steps = [{ status: 'running' }];
+  settleOrphanSteps(steps, undefined, 5000);
+  assert.equal(steps[0].status, 'unknown');
+  assert.equal(steps[0].durationMs, null);
+});
+
+test('settleOrphanSteps does not throw on malformed input', () => {
+  assert.doesNotThrow(() => settleOrphanSteps([null, 42, 'x'], undefined, 1));
+  assert.equal(settleOrphanSteps(null), 0);
+  assert.equal(settleOrphanSteps(undefined), 0);
 });

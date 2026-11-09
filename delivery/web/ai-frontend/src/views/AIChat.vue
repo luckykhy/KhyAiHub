@@ -164,7 +164,9 @@
         <h2 class="khy-page-title">AI 对话</h2>
         <div class="chat-header-actions">
           <el-dropdown trigger="click" @command="handleExportCommand">
-            <el-button size="small" plain title="导出对话">
+            <!-- 页头动作区统一按 default 尺寸:此前「导出」是 small,紧邻的
+                 「可用模型」与两个 el-select 是 default,中等宽度下按钮高度不齐。 -->
+            <el-button plain title="导出对话">
               <el-icon><Download /></el-icon> 导出
             </el-button>
             <template #dropdown>
@@ -267,14 +269,30 @@
             :content="daemonStatusTooltip"
             placement="bottom"
           >
+            <button
+              v-if="connectionStatus === 'failed'"
+              type="button"
+              class="daemon-health-chip daemon-health-failed"
+              @click="onDaemonRetry"
+            >
+              <span class="daemon-health-dot" aria-hidden="true"></span>
+              已停止重试 · 点此重试
+            </button>
             <span
+              v-else
               class="daemon-health-chip"
               :class="`daemon-health-${connectionStatus}`"
               role="status"
               :aria-label="`守护进程状态: ${connectionStatus}`"
             >
               <span class="daemon-health-dot" aria-hidden="true"></span>
-              {{ connectionStatus === 'checking' ? '检测中' : connectionStatus === 'reconnecting' ? '重连中' : '已断开' }}
+              {{
+                connectionStatus === 'checking'
+                  ? '检测中'
+                  : connectionStatus === 'reconnecting'
+                    ? '重连中'
+                    : '已断开'
+              }}
             </span>
           </el-tooltip>
           <el-popover
@@ -435,7 +453,9 @@
                       class="chat-parts-toggle"
                       @click="togglePartsView(msg)"
                     >
-                      {{ msg.usePartsView ? '◨ 经典视图' : '◧ 结构化视图' }}
+                      <!-- ◨/◧ 在部分字体缺失会退化成方框;统一用 EP 的 caret 图形。 -->
+                      <el-icon class="chat-toggle-ico"><CaretRight /></el-icon>
+                      {{ msg.usePartsView ? '经典视图' : '结构化视图' }}
                     </button>
                   </div>
                   <ChatPartsRenderer v-if="msg.usePartsView" :parts="deriveParts(msg)" />
@@ -454,9 +474,10 @@
                     :aria-expanded="msg.thinkingExpanded ? 'true' : 'false'"
                     @click="toggleThinking(msg)"
                   >
-                    <span class="chat-thinking-icon">{{
-                      msg.thinkingExpanded ? '▾' : '▸'
-                    }}</span>
+                    <el-icon class="chat-thinking-icon">
+                      <CaretBottom v-if="msg.thinkingExpanded" />
+                      <CaretRight v-else />
+                    </el-icon>
                     <span class="chat-thinking-label">{{
                       msg.thinkingExpanded ? '收起思考过程' : '查看思考过程'
                     }}</span>
@@ -498,16 +519,30 @@
                   >
                     <div :class="['chat-tool-step', `is-${step.status}`]">
                       <span class="chat-tool-step-icon" aria-hidden="true">
+                        <!-- 三态图标：unknown 用中性问号，不再借用 CloseBold ——
+                             一个从没被证实的结果不该长成一次失败。 -->
                         <el-icon v-if="step.status === 'running'" class="is-spin"
                           ><Loading
                         /></el-icon>
                         <el-icon v-else-if="step.status === 'ok'"><Select /></el-icon>
+                        <el-icon v-else-if="step.status === 'unknown'"><QuestionFilled /></el-icon>
                         <el-icon v-else><CloseBold /></el-icon>
                       </span>
                       <span class="chat-tool-step-name">{{ step.tool }}</span>
+                      <span
+                        v-if="step.durationMs != null"
+                        class="chat-tool-step-duration"
+                        :title="`本步骤耗时 ${step.durationMs}ms`"
+                        >{{ formatStepDuration(step.durationMs) }}</span
+                      >
                       <span v-if="step.input" class="chat-tool-step-input" :title="step.input">{{
                         step.input
                       }}</span>
+                      <span
+                        v-if="step.status === 'unknown' && step.note"
+                        class="chat-tool-step-note"
+                        >{{ step.note }}</span
+                      >
                       <span
                         v-if="step.result && !step.sections"
                         class="chat-tool-step-result"
@@ -525,7 +560,11 @@
                         :title="step.expanded ? '收起参数与结果' : '展开完整参数与结果'"
                         @click="toggleStepExpand(step)"
                       >
-                        {{ step.expanded ? '收起 ▲' : '详情 ▼' }}
+                        {{ step.expanded ? '收起' : '详情' }}
+                        <el-icon class="chat-toggle-ico">
+                          <CaretBottom v-if="step.expanded" />
+                          <CaretRight v-else />
+                        </el-icon>
                       </button>
                     </div>
                     <ToolDiffView v-if="step.diff" :diff="step.diff" embedded />
@@ -660,7 +699,7 @@
                       rel="noopener noreferrer"
                       :title="att.name"
                     >
-                      <el-icon><component :is="attachmentIcon(att.kind)" /></el-icon>
+                      <FileTypeIcon :format="attachmentFormat(att)" :size="13" />
                       <span class="chat-attachment-name">{{ att.name }}</span>
                     </a>
                   </template>
@@ -701,7 +740,10 @@
               </div>
             </div>
             <div v-if="loading" class="chat-loading-row" role="status">
-              <el-tag type="info" size="small">{{ loadingStatusText }}</el-tag>
+              <el-tag type="info" size="small"
+                >等待回复 · {{ transportLabel }} · 已等待 {{ waitSeconds }}s · 最后事件
+                {{ lastEventAt || '（暂无）' }}</el-tag
+              >
             </div>
           </div>
 
@@ -745,7 +787,13 @@
                   alt=""
                   aria-hidden="true"
                 >
-                <el-icon v-if="!attachmentThumbs || !att.thumbUrl" class="chat-pending-ico"><component :is="attachmentIcon(att.kind)" /></el-icon>
+                <FileTypeIcon
+                  v-if="!attachmentThumbs || !att.thumbUrl"
+                  class="chat-pending-ico"
+                  :format="attachmentFormat(att)"
+                  :size="14"
+                  tone="semantic"
+                />
                 <span class="chat-pending-name" :title="att.name">{{ att.name }}</span>
                 <span
                   v-if="attachmentThumbs && attachmentBadge(att)"
@@ -757,7 +805,7 @@
               </button>
             <div v-if="uploadingCount" class="chat-pending-chip chat-pending-uploading">
               <el-icon class="is-loading"><Loading /></el-icon>
-              <span>上传中（{{ uploadingCount }}）…</span>
+              <span>{{ uploadStatusText }}</span>
             </div>
             <div
               v-for="(entry, fi) in failedUploads"
@@ -819,6 +867,9 @@
           class="chat-side-panel"
           :orb-state="orbState"
           :persona="persona"
+          :persona-error="personaLoadError"
+          :thinking-tail="thinkingTail"
+          :wait-seconds="waitSeconds"
           :memory-items="memoryItems"
           :tool-calls="toolCalls"
           :activity="activity"
@@ -834,12 +885,17 @@
       @closed="modelPanelFocus.restoreFocus()"
     >
       <div v-loading="modelsLoading || overridesBusy">
+        <LoadErrorBanner :message="modelsLoadError">
+          <template #action>
+            <el-button size="small" @click="reloadModels">重试</el-button>
+          </template>
+        </LoadErrorBanner>
         <KhyEmpty
-          v-if="!modelGroups.length"
+          v-if="!modelGroups.length && !modelsLoadError"
           compact
           icon-props="{ kind: 'coins' }"
           title="暂无可用模型"
-          description="确认对应适配器已本地安装并登录,模型会自动出现在这里。"
+          description="确认对应适配器已本地安装并登录，模型会自动出现在这里。"
         />
         <div v-else class="model-panel-list">
           <div v-for="group in modelGroups" :key="group.adapter" class="model-panel-group">
@@ -948,11 +1004,6 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   ChatDotRound,
   Loading,
-  Picture,
-  VideoCamera,
-  Headset,
-  Document,
-  Files,
   Folder,
   Plus,
   Fold,
@@ -971,6 +1022,7 @@ import {
   CaretRight,
   FolderOpened,
   MoreFilled,
+  QuestionFilled,
 } from '@element-plus/icons-vue';
 import request from '@/api/request';
 import { resolveWsUrl } from '@/utils/ws';
@@ -989,7 +1041,10 @@ import ChatInputBar from './components/ChatInputBar.vue';
 import MessageAttachment from './components/MessageAttachment.vue';
 import ToolDiffView from './components/ToolDiffView.vue';
 import ToolDiffSummary from './components/ToolDiffSummary.vue';
-import { readThumbsFlag, attachmentBadge } from '@/utils/attachmentView';
+import { readThumbsFlag, attachmentBadge, attachmentFormat } from '@/utils/attachmentView';
+// 粘贴图片上传前缩放（1568 长边 + JPEG 重编码），避免把原始截图体积直接推给
+// /api/ai/upload；服务端 imageNormalize 仍会兜底非 UI 上传入口。
+import { resizeImageForUpload } from '@/utils/imageAttachments';
 // Lazy-loaded: AgentStatePanel is a heavy side panel (orb animation, tool call
 // timeline, activity feed). Deferring its chunk reduces the initial chat page
 // bundle and lets the input + message area paint first.
@@ -998,11 +1053,16 @@ const AgentStatePanel = defineAsyncComponent(() => import('./AgentStatePanel.vue
 // 只读文本升级为可交互选项卡；答复走既有发送通道回传。
 import ClarifyCard from '../components/ClarifyCard.vue';
 import KhyEmpty from '@/components/KhyEmpty.vue';
+import FileTypeIcon from '@/components/FileTypeIcon.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
+import { useLoadError, loadInto } from '@/api/loadError';
 import {
   resolveAiChatThinkingEvent,
   mapEventToOrbState,
   formatToolParams,
   summarizeToolProgress,
+  toolResultOutcome,
+  settleOrphanSteps,
 } from './aiChatEventUtils';
 import {
   kindLabel,
@@ -1033,6 +1093,7 @@ import { useProjects } from '@/composables/useProjects';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { useDaemonHealth } from '@/composables/useDaemonHealth';
 import { useModalFocus } from '@/composables/useModalFocus';
+import { useBehaviorTracking } from '@/composables/useBehaviorTracking';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 // shallowRef 的消息列表：数组结构变更（push/splice）自动触发 v-for；
@@ -1115,6 +1176,13 @@ const {
   reorder,
   relativeTime,
 } = useChatConversations();
+
+// 行为埋点(A5):显性只挂消息操作三条(撤回/重做/存提示词),隐性挂输入节奏、
+// 停留与滚动深度。traceId 现取 activeId——会话会切换,不能钉在第一个对话上。
+const behavior = useBehaviorTracking({
+  source: 'web:ai-chat',
+  traceId: () => activeId.value,
+});
 const sidebarCollapsed = ref(false);
 
 // ── Coding project workspace filter (aligns to Hermes coding projects) ──────
@@ -1147,13 +1215,27 @@ const {
   daemonState,
   lastCheckedAt: daemonLastChecked,
   reconnectAttempts: daemonReconnectAttempts,
+  retriesExhausted: daemonRetriesExhausted,
+  retryNow: retryDaemon,
 } = useDaemonHealth();
 
+// 终态后的文案不许描述已经停掉的动作：预算用尽时后台一次都不会再重试，
+// 继续写「正在尝试自动重启」就是把一个不会发生的事说成正在发生。
 const daemonStatusTooltip = computed(() => {
-  if (connectionStatus.value === 'checking') return '正在检测守护进程状态…';
-  if (connectionStatus.value === 'reconnecting') return `守护进程已断开，正在自动重连（第 ${daemonReconnectAttempts.value} 次）`;
-  return '守护进程连接已断开，正在尝试自动重启';
+  if (connectionStatus.value === 'checking') return '正在检测守护进程状态，请稍候';
+  if (connectionStatus.value === 'reconnecting') {
+    return `守护进程已断开，正在自动重连（第 ${daemonReconnectAttempts.value} 次）`;
+  }
+  // 用 reconnectAttempts 自己报数，不在视图里另抄一份上限常量（规则 1 零硬编码）。
+  if (connectionStatus.value === 'failed' || daemonRetriesExhausted.value) {
+    return `已连续 ${daemonReconnectAttempts.value} 次自动重启未成功，已停止自动重试，请点此重试`;
+  }
+  return '守护进程连接已断开，等待下一轮健康检查';
 });
+
+function onDaemonRetry() {
+  retryDaemon();
+}
 
 const locationBtnTitle = computed(() => {
   if (locationPermission.value === 'denied') {
@@ -1766,27 +1848,39 @@ async function handleMoveToGroup(convId, groupId) {
 // request; the backend resolves them back to files (keeps the body tiny).
 const pendingAttachments = ref([]);
 const uploadingCount = ref(0);
+// 上传读数（RUNTIME-002）：第几个、共几个、哪个文件、多大、已用几秒。「上传中…」
+// 在一个 200MB 的文件上等两分钟时，用户看不出是在传还是已经死了。
+const uploadCurrent = ref(null);
+const uploadElapsed = ref(0);
+let _uploadClockTimer = null;
+function startUploadClock() {
+  stopUploadClock();
+  _uploadClockTimer = setInterval(() => {
+    uploadElapsed.value += 1;
+  }, 1000);
+}
+function stopUploadClock() {
+  if (_uploadClockTimer) {
+    clearInterval(_uploadClockTimer);
+    _uploadClockTimer = null;
+  }
+}
+const uploadStatusText = computed(() => {
+  const cur = uploadCurrent.value;
+  if (!cur) return '';
+  return `第 ${cur.index}/${cur.total} 个 · ${cur.name} · ${formatSize(cur.size)} / 已用 ${uploadElapsed.value}s`;
+});
 const fileInputRef = ref(null);
 
-const ATTACHMENT_ICONS = {
-  image: Picture,
-  video: VideoCamera,
-  audio: Headset,
-  document: Document,
-  text: Document,
-  code: Document,
-  archive: Folder,
-  other: Files,
-};
+// 附件图标改由 FileTypeIcon 按**格式**取字形（pdf / docx / xlsx / md / txt 各不同）。
+// 原先这里是一张 element-plus 粗分表（document / text / code 三个 kind 全用同一个
+// Document 图标），pdf 与 docx、md 与 txt 在 chip 上完全一样，认不出格式。
 
 // [DESIGN-ARCH-163] D9 门控：localStorage 'khy.attachmentThumbs' === '0' 时
 // 输入区缩略图/状态徽标/失败留痕与输出区 blob 回显全部不渲染，DOM 回到旧观感。
 const attachmentThumbs = readThumbsFlag(localStorage);
 // 上传失败留痕（门控开时才记录）：{ name, file }，可重试或忽略。
 const failedUploads = ref([]);
-function attachmentIcon(kind) {
-  return ATTACHMENT_ICONS[kind] || Files;
-}
 
 // NOTE: fixed-threshold ladder (B/KB/MB/GB) with per-unit precision (1dp for
 // KB/MB, 2dp for GB); NOT equivalent to ProxyManagement.vue formatBytes
@@ -1797,6 +1891,13 @@ function formatSize(bytes) {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
   return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+// 步骤耗时：sub 秒保留一位，秒以上不带小数——这行宽度有限，多余精度没有读者。
+function formatStepDuration(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n < 0) return '';
+  return n < 1000 ? `${Math.round(n)}ms` : `${(n / 1000).toFixed(1)}s`;
 }
 
 function triggerAttachPicker() {
@@ -1835,18 +1936,54 @@ async function onFilesSelected(event) {
   await uploadAttachmentFiles(files);
 }
 
+// 上传超时按体积自适应：30s 对几 MB 绰绰有余，对上百 MB 必然误杀；而一刀切
+// 放宽又会让一个卡死的大文件挂到天荒地老。所以「下限 + 按 MB 放宽 + 封顶」。
+const UPLOAD_BASE_TIMEOUT_MS = readTimeoutEnv('VITE_AI_UPLOAD_BASE_TIMEOUT_MS', 30000);
+const UPLOAD_MS_PER_MB = readTimeoutEnv('VITE_AI_UPLOAD_MS_PER_MB', 5000);
+const UPLOAD_MAX_TIMEOUT_MS = readTimeoutEnv('VITE_AI_UPLOAD_MAX_TIMEOUT_MS', 120000);
+function uploadTimeoutFor(file) {
+  const mb = Math.max(0.1, (Number(file?.size) || 0) / (1024 * 1024));
+  return Math.min(UPLOAD_MAX_TIMEOUT_MS, UPLOAD_BASE_TIMEOUT_MS + Math.ceil(mb) * UPLOAD_MS_PER_MB);
+}
+
+// createRequestSignal 超时是用 new DOMException('timeout', 'AbortError') 中止的
+// （@khy/ui-shared/http/createRequestSignal.js），它和用户主动取消长得一模一样。
+// 不翻译的话用户只会看到一句没有信息量的「signal is aborted without reason」。
+function isUploadTimeout(err) {
+  return err?.name === 'AbortError' && /timeout/i.test(String(err?.message || ''));
+}
+
+function uploadFailureReason(file, err) {
+  const size = formatSize(file?.size || 0);
+  if (isUploadTimeout(err)) {
+    return `超时（已用 ${Math.round(uploadTimeoutFor(file) / 1000)}s）：文件可能超过单次上传上限（${size}），请压缩后重试`;
+  }
+  return err?.message || '网络错误';
+}
 // 统一的逐文件上传循环：选择器与剪贴板粘贴（D8.1）共用同一条 /api/ai/upload 管线。
 async function uploadAttachmentFiles(files) {
-  for (const file of files) {
+  for (const [index, originalFile] of files.entries()) {
+    // 粘贴的截图常见 3000~6000 px：先在浏览器里等比缩到长边 1568 并重编码，
+    // 上传体积与视觉 token 一起下降；失败时 resizeImageForUpload 原样返回。
+    const file = await resizeImageForUpload(originalFile);
     const form = new FormData();
     form.append('file', file);
     uploadingCount.value += 1;
+    uploadCurrent.value = {
+      index: index + 1,
+      total: files.length,
+      name: file.name || '(未命名)',
+      size: file.size || 0,
+    };
+    uploadElapsed.value = 0;
+    startUploadClock();
     try {
-      // 上传走统一带认证入口:注入 token、30s 超时(卡死不再无限等待)、
+      // 上传走统一带认证入口:注入 token、按体积自适应的超时(卡死不再无限等待)、
       // 401 自动登出。失败提示仍由本地处理(逐文件反馈)。
       const res = await authedFetch(resolveApiUrl('/api/ai/upload'), {
         method: 'POST',
         body: form,
+        timeout: uploadTimeoutFor(file),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
@@ -1883,10 +2020,11 @@ async function uploadAttachmentFiles(files) {
         }
       }
     } catch (err) {
-      const reason = err?.message || '网络错误';
-      showError(`「${file.name}」上传失败：${reason}`);
+      const reason = uploadFailureReason(file, err);
+      showError(`「${file.name}」（${formatSize(file.size || 0)}）上传失败：${reason}`);
       if (attachmentThumbs) failedUploads.value.push({ name: file.name, file, reason });
     } finally {
+      stopUploadClock();
       uploadingCount.value = Math.max(0, uploadingCount.value - 1);
     }
   }
@@ -1934,6 +2072,10 @@ function normalizePastedFile(file, i) {
 // C2 — digital-human status panel state
 const orbState = ref('idle');
 const persona = ref({ present: false, sections: [] });
+// 人格档案没读到时，面板不能显示「未设置人格档案」——那是把一次 500 说成用户的配置。
+const personaLoadError = useLoadError();
+// orb thinking 态要显示的最后一条分析内容（thinking 文本或「工具调用：X」）。
+const thinkingTail = ref('');
 const memoryItems = ref([]);
 const toolCalls = ref([]);
 const activity = ref([]);
@@ -1964,7 +2106,7 @@ function pushBounded(listRef, value, cap = 40) {
 }
 
 async function loadPersonaCard() {
-  try {
+  await loadInto('AI 人格档案', personaLoadError, async () => {
     const { data } = await request.get('/api/ai/persona');
     const payload = data?.data || data;
     if (payload && typeof payload === 'object') {
@@ -1973,14 +2115,13 @@ async function loadPersonaCard() {
         sections: Array.isArray(payload.sections) ? payload.sections : [],
       };
     }
-  } catch {
-    /* persona endpoint unavailable — leave default empty state */
-  }
+  });
 }
 
 const selectedModel = ref('');
 const modelGroups = ref([]);
 const modelsLoading = ref(false);
+const modelsLoadError = useLoadError();
 const transportMode = ref('stream');
 const modelSelectRef = ref(null);
 const searchQuery = ref('');
@@ -2111,9 +2252,14 @@ async function loadModels() {
   try {
     // 模型列表是一次性读取，走普通 REST 即可；流式端点需要 SSE 解析与 gw 实例，
     // 本页刻意不引入 useGateway composable。
-    const { data } = await request.get('/api/ai-gateway/models');
-    const payload = data?.data || data || [];
-    modelGroups.value = (Array.isArray(payload) ? payload : [])
+    const data = await loadInto('可用模型', modelsLoadError, async () => {
+      const { data: body } = await request.get('/api/ai-gateway/models');
+      return body?.data || body || [];
+    });
+    // 读失败时保持 modelGroups 原样：清空再显示「暂无可用模型」等于告诉用户
+    // 去配置一台根本没坏的东西。
+    if (!data) return;
+    modelGroups.value = (Array.isArray(data) ? data : [])
       .filter((a) => a.available !== false)
       .map((a) => ({
         adapter: a.adapter || a.name,
@@ -2126,8 +2272,6 @@ async function loadModels() {
         ),
       }));
     modelsLoaded = true;
-  } catch {
-    /* no models available */
   } finally {
     modelsLoading.value = false;
   }
@@ -2379,6 +2523,11 @@ function readTimeoutEnv(key, fallback) {
 }
 const WS_AUTH_TIMEOUT_MS = readTimeoutEnv('VITE_AI_WS_AUTH_TIMEOUT_MS', 15000);
 const WS_IDLE_TIMEOUT_MS = readTimeoutEnv('VITE_AI_WS_IDLE_TIMEOUT_MS', 60000);
+// SSE 读循环的空闲看门狗，与 WS 同一口径（RUNTIME-003 活动式超时）。按入站
+// 字节重装：只要还在吐数据就一直不算挂住，只有「一个字节都不来」才判死。
+// 后端半开（进程还占着连接但不再写）时 reader.read() 会永远 pending，没有这个
+// 计时器 loading 永远转下去。
+const STREAM_IDLE_TIMEOUT_MS = readTimeoutEnv('VITE_AI_STREAM_IDLE_TIMEOUT_MS', 60000);
 const WS_STOP_FALLBACK_MS = readTimeoutEnv('VITE_AI_WS_STOP_FALLBACK_MS', 2500);
 // Heartbeat: ping every 20s; each ping expects a pong within 10s (short probe
 // timeout, activity-aware — a pong resets the failure streak immediately).
@@ -2478,6 +2627,9 @@ function clearThinkingLogs() {
 // rAF-batched activity push (used in WS/SSE event handlers).
 // Each event may call pushBounded(activity, text) — batch into one frame.
 function _enqueueActivity(text) {
+  // 两条传输链路的事件文案都从这里过一次，顺手留一份尾巴给 orb 的 thinking 态
+  // （规则 2.4：显示在分析什么，而不是停在「思考中」）。
+  thinkingTail.value = text;
   _activityQueue.push(text);
   if (!_activityRafId) {
     _activityRafId = requestAnimationFrame(() => _flushActivityQueue());
@@ -2540,6 +2692,7 @@ function appendToolStep(assistantMessage, payload) {
   const id = String(payload?.id || '').trim();
 
   if (type === 'tool_use') {
+    const now = Date.now();
     steps.push({
       key: `${id || tool}-${steps.length}`,
       id,
@@ -2550,6 +2703,11 @@ function appendToolStep(assistantMessage, payload) {
       expanded: false,
       status: 'running',
       result: '',
+      // 耗时从「发出」起算，不是从「收到结果」起算 —— 一个跑了两分钟才回话的
+      // 工具，它的价值就在这两分钟上。
+      startedAt: now,
+      endedAt: null,
+      durationMs: null,
     });
     // steps 数组被原地变异(push),而 _toolProgressCache 以数组引用为 key;
     // 必须使缓存失效,否则进度摘要会卡在首次计算值。
@@ -2559,7 +2717,7 @@ function appendToolStep(assistantMessage, payload) {
   }
 
   if (type === 'tool_result') {
-    const ok = payload?.success !== false;
+    const outcome = toolResultOutcome(payload);
     const detail = String(payload?.text || '').trim();
     // Pair with the most recent still-running step that shares the id (or, if no
     // id, the latest running step for the same tool).
@@ -2576,9 +2734,17 @@ function appendToolStep(assistantMessage, payload) {
         break;
       }
     }
+    const now = Date.now();
+    const stampDuration = (s) => {
+      s.endedAt = now;
+      s.durationMs = Number.isFinite(s.startedAt) && now >= s.startedAt ? now - s.startedAt : null;
+    };
     if (target) {
-      target.status = ok ? 'ok' : 'error';
+      // 三态：缺失 success 是「未返回」，不是「完成」。
+      target.status = outcome;
       target.result = detail;
+      if (outcome === 'unknown') target.note = '结果未返回（原因未标注）';
+      stampDuration(target);
       // `=== label ===` 分节表头 → 预解析成带标题的块供结构化渲染;无表头 → null(回退单行)。
       target.sections = parseToolOutputSections(detail);
     } else {
@@ -2589,8 +2755,12 @@ function appendToolStep(assistantMessage, payload) {
         input: '',
         inputFull: '',
         expanded: false,
-        status: ok ? 'ok' : 'error',
+        status: outcome,
         result: detail,
+        note: outcome === 'unknown' ? '结果未返回（原因未标注）' : '',
+        startedAt: null,
+        endedAt: now,
+        durationMs: null,
         sections: parseToolOutputSections(detail),
       });
     }
@@ -2665,8 +2835,7 @@ function collectRoundDiffs(msg) {
 }
 
 // #7 展开/收起某条工具步骤的完整参数与结果面板。
-function toggleStepExpand(step) {
-  if (!step) return;
+function toggleStepExpand(step) {  if (!step) return;
   step.expanded = !step.expanded;
   // shallowRef 消息列表:深层属性(step.expanded)变更需手动通知才能重渲染。
   _bumpMsgContentVersion();
@@ -2712,6 +2881,9 @@ function deriveParts(msg) {
 
   // 工具步骤 → tool-call + tool-result parts
   if (msg.steps && msg.steps.length) {
+    // 历史/外部来源带进来的 steps 可能整体停在 running（那一轮是在别处断的）。
+    // 收口一次再渲染，否则结构化视图里也会转圈。幂等：无孤儿时零改动。
+    settleOrphanSteps(msg.steps);
     for (const step of msg.steps) {
       parts.push({
         type: 'tool-call',
@@ -2905,6 +3077,8 @@ function handleStreamEvent(rawEvent, assistantMessage) {
 
   const type = String(payload?.type || 'chunk');
   setOrbState('stream', payload);
+  // 「最后事件」读数：等待标签与空闲超时的报错文案都靠它说明卡在了哪一步。
+  lastEventAt.value = type;
 
   // 响应防抖抗拼接：后端判定本轮已流出的文本是废稿（无理由套话拒绝重试），
   // 丢弃已累积的气泡内容，等待修正内容替换——而非把修正内容追加在废稿后面。
@@ -2933,7 +3107,9 @@ function handleStreamEvent(rawEvent, assistantMessage) {
 
   // 思考链内容：直接展示 AI 推理过程文本（通过 onChunk 从 gateway 透传的 thinking 增量）
   // 不走 resolveAiChatThinkingEvent 的通用映射，保留原始文本。
-  if (type === 'thinking_content') {
+  // /api/ai/chat/stream 走 aiManagementChatHttp 时发的是 `thinking`+text（不是
+  // `thinking_content`），只认后者会把推理正文降级成一条「状态」行、且不进折叠块。
+  if (type === 'thinking_content' || (type === 'thinking' && String(payload.text || '').trim())) {
     const text = String(payload.text || '').trim();
     if (text) {
       addThinkingLog('thinking', text);
@@ -3087,8 +3263,10 @@ function handleWsEvent(payload, assistantMessage, done) {
     if (appendToolDiff(assistantMessage, payload)) _bumpMsgContentVersion();
     return;
   }
-  // 思考链内容：WS 路径同样透传 thinking 增量文本
-  if (type === 'thinking_content') {
+  // 思考链内容：WS 路径同样透传 thinking 增量文本。
+  // 后端 WS 发的是 `thinking`+text，与 `thinking_content` 同义，别再让推理正文
+  // 落进「状态」行。
+  if (type === 'thinking_content' || (type === 'thinking' && String(payload.text || '').trim())) {
     const text = String(payload.text || '').trim();
     if (text) {
       addThinkingLog('thinking', text);
@@ -3341,6 +3519,7 @@ function _doConnectWs() {
     }
 
     const type = String(payloadData?.type || '');
+    if (type) lastEventAt.value = type;
 
     if (type === 'pong') {
       // Any pong proves the link is alive: clear the pending probe and the
@@ -3528,23 +3707,67 @@ async function sendMessageByStream(text, assistantMessage, attachmentIds = []) {
       let buffer = '';
       let receivedDone = false;
 
-      let streamDone = false;
-      while (!streamDone) {
-        const chunk = await reader.read();
-        streamDone = chunk.done;
-        if (streamDone) break;
-
-        buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r\n/g, '\n');
-        const events = buffer.split('\n\n');
-        buffer = events.pop() || '';
-
-        for (const rawEvent of events) {
-          handleStreamEvent(rawEvent, assistantMessage);
+      // 空闲看门狗：每次入站数据重装，超时带上「已 Ns 未收到数据（最后事件：X）」
+      // 直接 reject 到本轮外面。streamIdleTimer / streamIdleReject 必须成对清理 ——
+      // 取消与正常收尾两条路径都会漏掉计时器，让它去 reject 一个已结束的 Promise。
+      let streamIdleTimer = null;
+      let streamIdleReject = null;
+      const armStreamIdleWatchdog = () => {
+        if (streamIdleTimer) clearTimeout(streamIdleTimer);
+        streamIdleTimer = setTimeout(() => {
+          streamIdleTimer = null;
+          const idleSeconds = Math.round(STREAM_IDLE_TIMEOUT_MS / 1000);
+          const err = new Error(
+            `已 ${idleSeconds}s 未收到任何数据（最后事件：${lastEventAt.value || '（无）'}），已中断，可点重试`
+          );
+          // 标记出来：空闲超时不进静默重试循环——对同一个已经挂住的后端再等一轮
+          // 只是把同一个 60s 重新等一遍，用户期间拿不到任何反馈。
+          err.streamIdleTimeout = true;
+          // 判死后必须主动释放这条流：只 reject 等于把半开的 response body 挂在
+          // 连接池里，下一轮重试会再攒一条。
           try {
-            const parsed = JSON.parse(rawEvent.replace(/^data:\s*/m, ''));
-            if (parsed && parsed.type === 'done') receivedDone = true;
-          } catch { /* not JSON — skip */ }
+            void reader.cancel();
+          } catch {
+            /* already closed */
+          }
+          streamIdleReject?.(err);
+        }, STREAM_IDLE_TIMEOUT_MS);
+      };
+      const clearStreamIdleWatchdog = () => {
+        if (streamIdleTimer) {
+          clearTimeout(streamIdleTimer);
+          streamIdleTimer = null;
         }
+        streamIdleReject = null;
+      };
+
+      let streamDone = false;
+      try {
+        while (!streamDone) {
+          // race 一个永不 resolve 的拒答 promise：只有看门狗会 reject 它，读到数据
+          // 时胜出的是 reader.read()，那个 promise 随本轮作用域一起丢弃。
+          const idleRace = new Promise((_, reject) => {
+            streamIdleReject = reject;
+          });
+          armStreamIdleWatchdog();
+          const chunk = await Promise.race([reader.read(), idleRace]);
+          streamDone = chunk.done;
+          if (streamDone) break;
+
+          buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r\n/g, '\n');
+          const events = buffer.split('\n\n');
+          buffer = events.pop() || '';
+
+          for (const rawEvent of events) {
+            handleStreamEvent(rawEvent, assistantMessage);
+            try {
+              const parsed = JSON.parse(rawEvent.replace(/^data:\s*/m, ''));
+              if (parsed && parsed.type === 'done') receivedDone = true;
+            } catch { /* not JSON — skip */ }
+          }
+        }
+      } finally {
+        clearStreamIdleWatchdog();
       }
 
       const tail = buffer.trim();
@@ -3572,6 +3795,8 @@ async function sendMessageByStream(text, assistantMessage, attachmentIds = []) {
     } catch (err) {
       const aborted = manualAbortRequested || err?.name === 'AbortError';
       if (aborted) throw err;
+      // 空闲超时已是本轮终态：再自动重试只会让用户对着同一个挂住的后端再等一轮。
+      if (err?.streamIdleTimeout) throw err;
       if (attempt < SSE_MAX_RETRIES) {
         continue;
       }
@@ -3605,6 +3830,7 @@ async function sendMessageByFallback(text, attachmentIds = []) {
 async function runAssistantTurn(text, assistantMessage, attachmentIds = []) {
   manualAbortRequested = false;
   loading.value = true;
+  _startWaitClock();
   clearThinkingLogs();
   addThinkingLog('status', '请求已提交：等待 AI 网关建立处理链路');
   scrollToBottom();
@@ -3679,6 +3905,26 @@ async function runAssistantTurn(text, assistantMessage, attachmentIds = []) {
       return;
     }
 
+    // SSE 空闲看门狗判死：数据停在半路上，回退到普通端点大概率同样挂住。这里
+    // 直接落一张可重试的失败卡（retryable → 消息内出现「重试」按钮），并把
+    // 已收到的半截文本留着，不假装这一轮什么都没发生。
+    if (err?.streamIdleTimeout) {
+      assistantMessage.error = {
+        category: '响应中断',
+        code: 'STREAM_IDLE_TIMEOUT',
+        why: err.message,
+        how: '请检查后端服务是否仍在运行，然后点「重试」重新发送本次提问。',
+        retryable: true,
+        _trace: null,
+        _traceOpen: false,
+        _traceLoading: false,
+        sensitive: false,
+      };
+      _bumpMsgContentVersion();
+      addThinkingLog('error', err.message);
+      return;
+    }
+
     addThinkingLog('error', `流式模式失败，正在回退：${err?.message || '未知异常'}`);
     try {
       const fallback = await sendMessageByFallback(text, attachmentIds);
@@ -3703,8 +3949,16 @@ async function runAssistantTurn(text, assistantMessage, attachmentIds = []) {
     }
   } finally {
     loading.value = false;
+    _stopWaitClock();
     currentStreamAbortController = null;
     orbState.value = 'idle';
+    // 收口孤儿步骤：这一轮结束了，仍停在 running 的工具其结果永远不会来了
+    // （连接断了 / 超时了 / 用户停了）。不收口就会留一个永远转圈的图标，
+    // 而且用户永远等不到那个结果。收口后会失效一次进度缓存。
+    if (settleOrphanSteps(assistantMessage.steps)) {
+      _toolProgressCache.delete(assistantMessage.steps);
+      _bumpMsgContentVersion();
+    }
     scrollToBottom();
     // Persist this turn to backend history (create on first turn, else update).
     persistActive();
@@ -3798,6 +4052,7 @@ async function regenerate(msg) {
   const userMsg = messages.value[userIdx];
   const text = userMsg.content || '';
   const attachmentIds = (userMsg.attachments || []).map((a) => a.id);
+  behavior.track('correct', { messageId: msg.id }); // 重做 = 对回答不满,要求纠正重生成
   // Reset the reply in place (mirrors the SSE 'reset' event handling).
   msg.content = '';
   msg.steps = [];
@@ -3822,6 +4077,7 @@ async function savePromptToLibrary(msg) {
     showWarning('提问内容为空，无法保存');
     return;
   }
+  behavior.track('click', { messageId: msg.id, action: 'save-prompt' });
   let title;
   try {
     const r = await ElMessageBox.prompt('给这条提示词起个标题', '保存到提示词库', {
@@ -3938,6 +4194,7 @@ function retract(msg) {
   }
   const idx = messages.value.findIndex((m) => m.id === msg.id);
   if (idx < 0 || msg.role !== 'assistant') return;
+  behavior.track('reject', { messageId: msg.id }); // 撤回 = 拒绝这条回答
   const userIdx = findTriggeringUserIndex(idx);
   if (userIdx >= 0) {
     const userMsg = messages.value[userIdx];
@@ -4023,10 +4280,33 @@ function scrollToBottom() {
   });
 }
 
-const loadingStatusText = computed(() =>
-  transportMode.value === 'ws'
-    ? 'AI 输出通道已建立（WebSocket），正在接收增量内容'
-    : 'AI 输出通道已建立（HTTP 流式），正在接收增量内容'
+// 等待读数三要素（RUNTIME-002 动作+目标+进度）：哪条链路、等了多久、最后收到什么。
+// 编译期常量文案（「正在接收增量内容」）在流挂住时永远不变，用户只能靠猜。
+const loadingSince = ref(0);
+const clockTick = ref(0);
+const lastEventAt = ref('');
+let _waitClockTimer = null;
+function _startWaitClock() {
+  _stopWaitClock();
+  loadingSince.value = Date.now();
+  clockTick.value = loadingSince.value;
+  lastEventAt.value = '';
+  thinkingTail.value = '';
+  _waitClockTimer = setInterval(() => {
+    clockTick.value = Date.now();
+  }, 1000);
+}
+function _stopWaitClock() {
+  if (_waitClockTimer) {
+    clearInterval(_waitClockTimer);
+    _waitClockTimer = null;
+  }
+}
+const transportLabel = computed(() =>
+  transportMode.value === 'ws' ? 'WebSocket 通道' : 'HTTP 流式通道'
+);
+const waitSeconds = computed(() =>
+  loadingSince.value ? Math.max(0, Math.round((clockTick.value - loadingSince.value) / 1000)) : 0
 );
 
 onMounted(async () => {
@@ -4035,6 +4315,9 @@ onMounted(async () => {
   loadPromptTemplates();
   loadRecentModels();
   window.addEventListener('keydown', handleGlobalKeyDown);
+  behavior.observeDwell();
+  behavior.observeScroll(chatContainer.value);
+  behavior.observeInput(chatInputBarRef.value?.$el);
   // Restore location sharing without prompting: only refresh coordinates
   // silently when the browser permission is already granted.
   if (locationEnabled.value) {
@@ -4073,6 +4356,7 @@ function handleGlobalKeyDown(e) {
 }
 
 onBeforeUnmount(() => {
+  behavior.stop();
   window.removeEventListener('keydown', handleGlobalKeyDown);
   if (_scrollRafId) {
     cancelAnimationFrame(_scrollRafId);
@@ -4100,6 +4384,7 @@ onBeforeUnmount(() => {
     clearTimeout(_ctxStatsDebounceTimer);
     _ctxStatsDebounceTimer = null;
   }
+  _stopWaitClock();
   if (currentStreamAbortController) {
     try {
       currentStreamAbortController.abort();
@@ -4934,7 +5219,7 @@ onBeforeUnmount(() => {
   display: inline-block;
   max-width: 84%;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: var(--khy-radius-lg);
   text-align: left;
   line-height: 1.55;
   color: var(--khy-text-main);
@@ -4953,13 +5238,15 @@ onBeforeUnmount(() => {
 /* User bubble: a saturated brand gradient with white text — the modern chat
    read, and it's what the in-bubble attachment chips (translucent-white bg)
    were already designed for. Dark mode uses a deeper gradient so white text
-   keeps a comfortable contrast against the lighter dark-theme primary token. */
+   keeps a comfortable contrast against the lighter dark-theme primary token.
+   光晕由品牌色现算:原先写死的 rgba 蓝与 --khy-primary 色相不同,气泡偏紫;
+   改为跟着令牌取色,品牌色一换光晕跟着变。 */
 .chat-bubble-user {
   background: linear-gradient(135deg, var(--khy-primary), var(--khy-primary-strong));
   border-color: transparent;
   color: var(--khy-white);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 6px 18px rgba(47, 126, 247, 0.26);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--khy-primary) 26%, transparent);
 }
 
 html.dark .chat-bubble-user {
@@ -5028,6 +5315,30 @@ html.dark .chat-bubble-user {
 }
 .chat-tool-step.is-error .chat-tool-step-icon {
   color: var(--el-color-danger);
+}
+/* unknown：中性灰。它既没成功也没失败，穿绿色或红色都是替后端编一个结论。 */
+.chat-tool-step.is-unknown {
+  background: transparent;
+  border-style: dashed;
+}
+
+.chat-tool-step.is-unknown .chat-tool-step-icon {
+  color: var(--khy-text-muted);
+}
+
+.chat-tool-step-duration {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--khy-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chat-tool-step-note {
+  flex: 0 1 auto;
+  font-size: 11px;
+  color: var(--khy-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-tool-step-icon .is-spin {
@@ -5169,6 +5480,9 @@ html.dark .chat-bubble-user {
 .chat-tool-step-toggle {
   flex: 0 0 auto;
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 11px;
   font-weight: 600;
   color: var(--el-color-primary);
@@ -5359,6 +5673,9 @@ html.dark .chat-bubble-user {
   margin-bottom: 6px;
 }
 .chat-parts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   background: none;
   border: 1px solid var(--el-border-color-lighter, var(--khy-gray-100));
   border-radius: 4px;
@@ -5398,6 +5715,12 @@ html.dark .chat-bubble-user {
   font-size: 10px;
   width: 12px;
   text-align: center;
+}
+
+/* 展开/折叠统一用 EP 的 caret 图形(随字号与主题走),不再混用 ▾▸ / ▲▼ / ◨◧ ——
+   同一屏里字符宽度、基线与字体回退各不相同,折叠区的视觉语言会散掉。 */
+.chat-toggle-ico {
+  font-size: 10px;
 }
 .chat-thinking-label {
   font-weight: 500;
@@ -5657,6 +5980,25 @@ html.dark .chat-bubble-user {
   height: 8px;
   border-radius: 50%;
   background: currentColor;
+}
+
+/* 终态 chip 是真按钮（点了就手动重试），得自己把 button 的默认外观抹平并给
+   出 hover/焦点反馈 —— 否则它看起来跟只读 chip 一模一样，用户不知道能点。 */
+.daemon-health-failed {
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--khy-danger, #dc2626);
+  border-color: var(--khy-danger, #dc2626);
+  background: color-mix(in srgb, var(--khy-danger, #dc2626) 10%, transparent);
+}
+
+.daemon-health-failed:hover {
+  background: color-mix(in srgb, var(--khy-danger, #dc2626) 20%, transparent);
+}
+
+.daemon-health-failed:focus-visible {
+  outline: 2px solid var(--khy-danger, #dc2626);
+  outline-offset: 2px;
 }
 
 .daemon-health-reconnecting .daemon-health-dot,

@@ -774,7 +774,7 @@ onBeforeUnmount(() => {
 .md-files-err {
   padding: 6px 10px;
   font-size: 12px;
-  color: var(--el-color-danger, var(--khy-md-red));
+  color: var(--khy-danger);
 }
 .md-files-scroll {
   flex: 1 1 auto;
@@ -856,7 +856,7 @@ onBeforeUnmount(() => {
 
 /* ── 内联预览（回退渲染器）── */
 .md-preview {
-  --md-fg: var(--khy-gray-900);
+  --md-fg: var(--khy-text-main);
   --md-muted: var(--khy-gray-600);
   --md-border: var(--khy-gray-200);
   --md-accent: var(--khy-md-link);
@@ -872,7 +872,12 @@ onBeforeUnmount(() => {
   font-size: 15px;
 }
 :global(html.dark) .md-preview {
-  --md-fg: var(--khy-md-bg);
+  /* 正文必须绑语义文本令牌。原来绑的是 --khy-md-bg —— 那是代码块背景色，而承载面
+     是 --khy-bg-main，两者在暗色下几乎同色，实测相对亮度 1.00:1，整块预览不可读
+     （浅色侧同路径 14.7:1，所以只有暗色看得出问题）。改用 --khy-text-main 后
+     暗色实测 12.4:1。色值本身不写进注释：注释里的字面量会被 designTokenCompliance
+     的裸 hex 棘轮当成违规。 */
+  --md-fg: var(--khy-text-main);
   --md-muted: var(--khy-md-muted);
   --md-border: var(--khy-md-code-border);
   --md-accent: var(--khy-md-blue);
@@ -1004,13 +1009,16 @@ onBeforeUnmount(() => {
   gap: 16px;
   align-items: center;
 }
+/* 状态语义只用 --khy-* 三色。原来的回退值 --khy-md-green / --khy-md-red 是
+   GitHub 语法高亮色，拿它当「引擎就绪 / 失败」的语义色是错绑 —— 同屏会冒出
+   第二组绿和红，与 TaskCard / el-tag 的那组不是一套。 */
 .md-engine.ok {
-  color: var(--el-color-success, var(--khy-md-green));
+  color: var(--khy-success);
 }
 .md-stat.ok {
-  color: var(--el-color-success, var(--khy-md-green));
+  color: var(--khy-success);
 }
 .md-stat.err {
-  color: var(--el-color-danger, var(--khy-md-red));
+  color: var(--khy-danger);
 }
 </style>
