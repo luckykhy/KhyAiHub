@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { BaseTool } = require('../_baseTool');
+const isPathWithin = require('../../utils/isPathWithin');
 
 // ── Diff Parser ─────────────────────────────────────────────────────
 
@@ -29,8 +30,13 @@ const { BaseTool } = require('../_baseTool');
  */
 function parsePatch(patch) {
   const files = [];
-  // Split on file boundaries: "--- a/..." lines
-  const fileSections = patch.split(/^(?=--- )/m).filter(Boolean);
+  // Split on file boundaries. A file header is a "--- <path>" line that is
+  // IMMEDIATELY followed by a "+++ <path>" line — the lookahead is what keeps a
+  // hunk body line that merely starts with "--- " (a deleted source line
+  // "-- old comment" renders as "--- old comment") from being mistaken for a
+  // header. Splitting on every "--- " used to truncate such a hunk, so the patch
+  // "succeeded" while changing nothing.
+  const fileSections = patch.split(/^(?=--- [^\n]*\n\+\+\+ )/m).filter(Boolean);
 
   for (const section of fileSections) {
     const headerMatch = section.match(/^--- (?:a\/)?(.+)\n\+\+\+ (?:b\/)?(.+)\n/m);
@@ -52,10 +58,13 @@ function parsePatch(patch) {
     // The terminator uses `(?![\s\S])` (absolute end-of-input) rather than `$`:
     // under the `m` flag `$` matches at every line-end, so the lazy `[\s\S]*?`
     // body capture stopped after the FIRST body line — truncating every
-    // multi-line hunk to one line. `\n@@ ` / `\n--- ` still bound the body at
-    // the next hunk / file; `(?![\s\S])` bounds the final hunk at true EOF.
+    // multi-line hunk to one line. `\n@@ ` bounds the body at the next hunk;
+    // `(?![\s\S])` bounds the final hunk at true EOF. There is deliberately NO
+    // `\n--- ` terminator any more: file sections are already split at real file
+    // headers (see the split lookahead above), and a body line starting with
+    // "--- " must not end the hunk.
     const bodyHunkRegex =
-      /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)\n?([\s\S]*?)(?=\n@@ |\n--- |(?![\s\S]))/gm;
+      /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)\n?([\s\S]*?)(?=\n@@ |(?![\s\S]))/gm;
     while ((m = bodyHunkRegex.exec(body)) !== null) {
       const srcStart = parseInt(m[1], 10);
       const srcLen = m[2] != null ? parseInt(m[2], 10) : 1;
@@ -85,6 +94,11 @@ function parsePatch(patch) {
         // Skip "\ No newline at end of file"
       }
 
+      // A hunk that has body lines but no +/- content is not a valid diff hunk:
+      // it would "apply" while changing nothing (a silent no-op). Mark it so
+      // execute() reports it instead of writing an unchanged file.
+      const malformed = lines.length > 0 && removed.length === 0 && added.length === 0;
+
       hunks.push({
         srcStart,
         srcLen,
@@ -95,6 +109,7 @@ function parsePatch(patch) {
         removed,
         added,
         rawLines: lines,
+        malformed,
       });
     }
 
@@ -285,6 +300,29 @@ Example patch format:
       return { success: false, error: 'No valid file entries found in patch' };
     }
 
+    // ── Path fence ───────────────────────────────────────────────────
+    // The only argument of this tool is free text: every path comes out of a
+    // "--- a/" / "+++ b/" header. Without a fence, `../` traversal and absolute
+    // paths write outside the project (and Phase 3's recursive mkdir builds the
+    // escaping directory tree on the way). The fence runs before ANY fs access,
+    // so a refused patch never touches the disk.
+    const rootAbs = path.resolve(root);
+    for (const file of files) {
+      for (const candidate of [file.srcPath, file.dstPath]) {
+        if (!candidate || candidate === '/dev/null' || candidate === 'dev/null') {
+          continue;
+        }
+        const abs = path.resolve(rootAbs, candidate);
+        if (!isPathWithin(rootAbs, abs)) {
+          return {
+            success: false,
+            error: `Refused to patch: path is outside the project directory (${candidate})`,
+            files: [],
+          };
+        }
+      }
+    }
+
     // ── Phase 1: Read and backup all files ───────────────────────────
     const backups = new Map(); // absPath → original content (null if file didn't exist)
     const results = [];
@@ -368,6 +406,16 @@ Example patch format:
       // Apply hunks in reverse order (bottom-up) to preserve line numbers
       const sortedHunks = [...file.hunks].sort((a, b) => b.srcStart - a.srcStart);
       for (const hunk of sortedHunks) {
+        if (hunk.malformed) {
+          // A hunk with body lines but no +/- content is a broken diff — report
+          // it instead of "applying" a no-op. Nothing has been written yet
+          // (Phase 3 runs after this loop), so the files stay untouched.
+          return {
+            success: false,
+            error: `Malformed patch: hunk at line ${hunk.srcStart} has no +/- content`,
+            files: results,
+          };
+        }
         const { applied, fuzzLevel } = applyHunk(lines, hunk);
         if (!applied) {
           allApplied = false;
@@ -400,9 +448,15 @@ Example patch format:
     }
 
     // ── Phase 3: Atomic write ────────────────────────────────────────
+    // Write through a temp file + rename: fs.writeFileSync truncates the target
+    // BEFORE it can fail, so a failed write left a zero-length (or half-written)
+    // file behind while the tool reported "all changes rolled back".
     const written = [];
+    let attempted = null;
     try {
+      let tmpSeq = 0;
       for (const [abs, content] of modified) {
+        attempted = abs;
         if (content === null) {
           // Delete file
           if (fs.existsSync(abs)) {
@@ -414,13 +468,34 @@ Example patch format:
           if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
           }
-          fs.writeFileSync(abs, content, 'utf-8');
+          const tmp = path.join(dir, `.${path.basename(abs)}.tmp-${process.pid}-${tmpSeq++}`);
+          try {
+            fs.writeFileSync(tmp, content, 'utf-8');
+            fs.renameSync(tmp, abs);
+          } catch (writeErr) {
+            try {
+              if (fs.existsSync(tmp)) {
+                fs.unlinkSync(tmp);
+              }
+            } catch {
+              /* best-effort temp cleanup */
+            }
+            throw writeErr;
+          }
         }
         written.push(abs);
+        attempted = null;
       }
     } catch (err) {
-      // Rollback: restore all written files from backup
-      for (const abs of written) {
+      // Rollback: restore every file this patch touched — the ones already
+      // committed AND the one whose write threw. Phase 1's backups already hold
+      // that file's original content; leaving it out of the rollback set is what
+      // used to leave a damaged file on disk under a "rolled back" message.
+      const toRestore = new Set(written);
+      if (attempted) {
+        toRestore.add(attempted);
+      }
+      for (const abs of toRestore) {
         try {
           const backup = backups.get(abs);
           if (backup === null || backup === undefined) {

@@ -82,11 +82,16 @@ function _checkReadBeforeEdit(absPath) {
       error: `文件未读取：请先用 readFile 读取 ${path.basename(absPath)} 后再编辑（防盲改）`,
     };
   }
-  if (typeof _readTracker.isStale === 'function' && _readTracker.isStale(absPath)) {
-    return {
-      ok: false,
-      error: `文件已过期：${path.basename(absPath)} 自上次读取后已被修改，请重新读取后再编辑`,
-    };
+  if (typeof _readTracker.isStale === 'function') {
+    // isStale() 返回 { stale, reason } 对象，不是布尔值；直接当条件用则永远为真，
+    // 于是每个文件都被判成「已过期」（S2 档下每次编辑都被拒）。
+    const stale = _readTracker.isStale(absPath);
+    if (stale && stale.stale) {
+      return {
+        ok: false,
+        error: `文件已过期：${path.basename(absPath)} 自上次读取后已被修改，请重新读取后再编辑`,
+      };
+    }
   }
   return { ok: true };
 }

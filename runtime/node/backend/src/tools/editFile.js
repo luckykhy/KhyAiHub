@@ -47,11 +47,17 @@ function _checkReadBeforeEdit(absPath) {
       error: `文件未读取：请先用 readFile 读取 ${path.basename(absPath)} 后再编辑（防盲改）`,
     };
   }
-  if (typeof _readTracker.isStale === 'function' && _readTracker.isStale(absPath)) {
-    return {
-      ok: false,
-      error: `文件已过期：${path.basename(absPath)} 自上次读取后已被修改，请重新读取后再编辑`,
-    };
+  if (typeof _readTracker.isStale === 'function') {
+    // isStale() 返回的是 { stale, reason } **对象**，不是布尔值。直接把它当条件用，
+    // 对象永远为真 → 每个文件都被判成「已过期」：S1 档下每次编辑都刷一条假告警，
+    // S2 档下每次编辑都被拒（连刚 Read 完、没动过的文件也拒）。
+    const stale = _readTracker.isStale(absPath);
+    if (stale && stale.stale) {
+      return {
+        ok: false,
+        error: `文件已过期：${path.basename(absPath)} 自上次读取后已被修改，请重新读取后再编辑`,
+      };
+    }
   }
   return { ok: true };
 }
@@ -106,8 +112,9 @@ module.exports = defineTool({
     old_string: {
       type: 'string',
       required: true,
+      minLength: 1,
       description:
-        'The exact text to find, matched byte-for-byte including whitespace/indentation. Must be unique in the file unless replace_all is true.',
+        'The exact text to find, matched byte-for-byte including whitespace/indentation. Must be unique in the file unless replace_all is true; must not be empty.',
     },
     new_string: {
       type: 'string',
@@ -143,6 +150,20 @@ module.exports = defineTool({
       return {
         success: false,
         error: 'old_string and new_string are identical — nothing to change.',
+      };
+    }
+
+    // 空 old_string 必须在这里挡掉，不能让它进计数循环。
+    //
+    // `original.indexOf('', idx + 1)` 每次都命中（i+1 处），永不返回 -1 ⇒ 那个 while
+    // 是**死循环**：进程占满一个 CPU 核、工具永不返回（不是「报错」，是整个进程卡住）。
+    // 紧接着的 split('').join(new_string) 更会把替换串插进每一个字符之间。
+    if (typeof old_string !== 'string' || old_string.length === 0) {
+      return {
+        success: false,
+        error:
+          'old_string must not be empty — provide the exact text to replace ' +
+          '(copy it verbatim from the Read tool output).',
       };
     }
 
@@ -228,13 +249,16 @@ module.exports = defineTool({
       }
       _recordTurnMutation(context, absPath, original, 'editFile');
 
-      // Count occurrences
+      // Count occurrences — 必须数**非重叠**的出现次数，与下面的 split().join() 替换一致。
+      // 原来每次前进 1 字符，数的是重叠出现：自重叠 needle（"--" 在 "------" 里）会数出
+      // 比实际替换次数多的值，于是「其实唯一」的 needle 被误判成歧义而拒绝，
+      // 而报告的 occurrences 也与真正替换的次数对不上。
       let count = 0;
-      let idx = -1;
-      while ((idx = original.indexOf(old_string, idx + 1)) !== -1) {
+      let idx = original.indexOf(old_string);
+      while (idx !== -1) {
         count++;
+        idx = original.indexOf(old_string, idx + old_string.length);
       }
-
       if (count === 0) {
         // Provide helpful context: show first 5 lines around where they might be looking
         const preview = original.split('\n').slice(0, 10).join('\n');

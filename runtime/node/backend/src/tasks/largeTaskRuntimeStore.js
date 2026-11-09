@@ -124,6 +124,11 @@ const DEFAULT_RETRY_POLICY_APPROVAL_RETENTION = Object.freeze({
   event_max_age_ms: 90 * 24 * 60 * 60_000,
 });
 
+// Read-only compatibility candidate: a runtime store written by an older build
+// that resolved `.khy-runtime` from cwd. Only ever consulted as a fallback in
+// _candidateStorePaths(); the primary path comes from getDataDir('tasks'), so
+// this cannot fork a new tree — it just lets an existing one still be found.
+// `.khy-runtime` measured absent on this box, i.e. nothing was ever forked here.
 function _fallbackStorePathFromCwd() {
   return path.join(process.cwd(), '.khy-runtime', 'tasks', 'large_task_runtime.json');
 }
