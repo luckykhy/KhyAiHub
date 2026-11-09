@@ -1,4 +1,5 @@
-﻿import 'package:dio/dio.dart';
+﻿// khy-canary: Khy-20261101-077-P9ERGSGT
+import 'package:dio/dio.dart';
 
 /// DNS-over-HTTPS 解析器
 /// 绕过运营商 DNS，使用 DoH 解析域名
