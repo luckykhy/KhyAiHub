@@ -18,11 +18,9 @@
   <div
     class="global-progress"
     :class="{ 'is-visible': visible }"
-    role="progressbar"
-    aria-label="加载进度"
-    :aria-valuenow="Math.round(width)"
-    aria-valuemin="0"
-    aria-valuemax="100"
+    role="status"
+    aria-live="polite"
+    :aria-label="progressLabel"
   >
     <div class="global-progress__bar" :style="{ width: `${width}%` }"></div>
   </div>
@@ -43,7 +41,7 @@ const START_PERCENT = 3;
 // 「卡在一个地方很久，然后突然加载完成」。）
 const SETTLE_MS = 600;
 
-const { isLoading } = useGlobalLoading();
+const { isLoading, httpPending, routeLoading } = useGlobalLoading();
 
 const visible = ref(false);
 const settling = ref(false);
@@ -59,6 +57,17 @@ const paced = usePacedProgress({
 
 // 条与读数同源：都由节拍器出（它 1% 1% 地走，收尾那几格也不跳）。
 const width = computed(() => (isLoading.value || settling.value ? paced.percent.value : 0));
+
+// role="status" 而不是 "progressbar"：这条不是真进度，aria-valuenow 报的那个
+// 数字是节拍器编出来的，拿它当百分比读给屏幕阅读器等于报假数。改成 status 后
+// 只讲「在等后端」，并把是哪条链路（请求 / 路由）说清楚。
+const progressLabel = computed(() => {
+  if (!isLoading.value && !settling.value) return '';
+  const parts = [];
+  if (httpPending.value > 0) parts.push(`正在等待后端响应（${httpPending.value} 个请求在飞）`);
+  if (routeLoading.value) parts.push('正在加载页面资源');
+  return parts.length ? `${parts.join(' · ')}，进度未知` : '正在等待后端响应';
+});
 
 function clearDoneTimer() {
   if (doneTimer) {

@@ -90,7 +90,7 @@
           class="khy-fb__tasks-hint is-error khy-fb__retry-btn"
           @click="startPanelSync"
         >
-          同步失败,点此重试
+          同步失败，点此重试
         </button>
         <div v-else-if="!tasks.length" class="khy-fb__tasks-hint">暂无任务记录</div>
 
@@ -173,25 +173,10 @@
         <span v-if="pressPulse" class="khy-fb__ripple" :key="pressPulse" aria-hidden="true" />
         <span class="khy-fb__ring" aria-hidden="true" />
         <span v-if="busy" class="khy-fb__spinner" aria-hidden="true" />
-        <svg
-          v-else
-          class="khy-fb__glyph"
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <!-- Brand monogram: same SVG strokes as KhyIcon kind="logo" — a drawn
-               geometric K (not typed text) so the ball reads identically under
-               every font/theme. -->
-          <path
-            d="M8 5.2v13.6M16.8 5.4L9.1 12l7.7 6.6M19.3 3.8a1.2 1.2 0 1 1-.02 2.4 1.2 1.2 0 0 1 .02-2.4"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <!-- Brand mark: the same Khy OS 主标 the rest of the product uses
+             (KhyMark.vue). 旧版此处内联了一枚手画的字母 K —— 与登录页/侧栏
+             的品牌块各画各的，是「三枚品牌标记并存」病灶的一部分。 -->
+        <KhyMark v-else class="khy-fb__glyph" tone="ink" aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -200,11 +185,12 @@
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
 import { resolveWsUrl } from '@/utils/ws';
 import { safeSet } from '@/utils/safeStorage';
 import { useUserStore } from '@/stores/user';
 import { usePacedProgress } from '@khy/ui-shared/progress';
+
+import KhyMark from './KhyMark.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 const route = useRoute();
@@ -994,10 +980,10 @@ onBeforeUnmount(() => {
   }
 }
 .khy-fb__item:hover:not(:disabled) {
-  background: var(--el-fill-color);
+  background: var(--khy-panel-hover);
 }
 .khy-fb__item:active:not(:disabled) {
-  background: var(--el-fill-color-dark);
+  background: var(--khy-panel-active);
 }
 .khy-fb__item:disabled {
   opacity: 0.5;
@@ -1152,7 +1138,7 @@ onBeforeUnmount(() => {
     color 0.14s ease;
 }
 .khy-fb__tasks-close:hover {
-  background: var(--el-fill-color);
+  background: var(--khy-panel-hover);
   color: var(--khy-ink);
 }
 .khy-fb__tasks-hint {
@@ -1204,7 +1190,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 5px 8px;
   border-radius: 7px;
-  background: var(--el-fill-color);
+  background: var(--khy-panel-hover);
 }
 .khy-fb__task-progress-text {
   font-size: 11px;
@@ -1216,7 +1202,7 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: var(--el-border-color, rgba(255, 255, 255, 0.1));
+  background: var(--khy-panel-track, rgba(255, 255, 255, 0.1));
   overflow: hidden;
 }
 .khy-fb__task-progress-fill {
@@ -1235,7 +1221,7 @@ onBeforeUnmount(() => {
   transition: background 0.14s ease;
 }
 .khy-fb__task:hover {
-  background: var(--el-fill-color);
+  background: var(--khy-panel-hover);
 }
 .khy-fb__task-ico {
   flex: none;
@@ -1282,7 +1268,7 @@ onBeforeUnmount(() => {
   padding: 0 6px;
   border-radius: 6px;
   color: var(--khy-ink-mute);
-  background: var(--el-fill-color-light);
+  background: var(--khy-panel-hover);
 }
 
 .khy-fb__mcp {
@@ -1347,7 +1333,7 @@ onBeforeUnmount(() => {
   transition: background 0.14s ease;
 }
 .khy-fb__mcp-item:hover {
-  background: var(--el-fill-color);
+  background: var(--khy-panel-hover);
 }
 .khy-fb__mcp-status {
   width: 7px;

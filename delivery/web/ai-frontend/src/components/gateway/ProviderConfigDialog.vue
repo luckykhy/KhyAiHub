@@ -8,7 +8,13 @@
     @update:model-value="(v) => emit('update:visible', v)"
     @open="syncFromProps"
   >
-    <el-form label-position="top" class="pcd-form">
+    <!-- aria-busy 挂在 el-form 上:el-dialog 的 $attrs 落点是弹窗壳,而这里会变的
+         内容是表单区域(保存 / 测试连接),读屏要读到的是它。 -->
+    <el-form
+      class="pcd-form"
+      label-position="top"
+      :aria-busy="busy || testing ? 'true' : 'false'"
+    >
       <!-- Preset picker (add mode only): auto-fills provider/baseUrl/apiFormat so
            a common provider is one click away; everything stays editable. -->
       <el-form-item
@@ -129,7 +135,7 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import ProviderLinks from './ProviderLinks.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
@@ -290,10 +296,33 @@ function importAllDiscovered() {
   }
 }
 
-function onSubmit() {
+// 新增中转站前必须测绿。地址少写 /v1、密钥没开通这类问题，在这里花 2 秒查出来，
+// 好过存进去之后等到真实对话才报错（2026-10-20 事故）。edit 是改已存在的供应商，
+// 密钥还可能是留空复用，探不到原始密钥，不适用这道闸门 —— 要验证用页面上的「测试连接」。
+async function confirmGreenBeforeSave() {
+  if (props.mode !== 'add') return true;
+  if (testState.value === 'ok' || testState.value === 'empty') return true;
+  const why =
+    testState.value === 'fail'
+      ? `上次测试失败：${testError.value}`
+      : '还没有测试过连接';
+  try {
+    await ElMessageBox.confirm(
+      `${why}。仍要保存吗？未经验证的中转要等到真实对话时才会报错。`,
+      '中转站未经连通性自检',
+      { type: 'warning', confirmButtonText: '仍要保存', cancelButtonText: '回去测试' }
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function onSubmit() {
   const provider = form.provider.trim().toLowerCase();
   if (!provider) return showWarning('请填写 Provider');
   if (props.mode === 'add' && !form.key.trim()) return showWarning('请填写 API Key');
+  if (!(await confirmGreenBeforeSave())) return;
 
   // Emit the full desired state; the parent diffs against the current entry/models
   // (add → create + seed; edit → updateProvider + sync models by new provider name).

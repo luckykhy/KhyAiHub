@@ -1,11 +1,9 @@
 <template>
-  <el-alert
-    v-if="text"
-    class="load-error-banner"
-    :closable="false"
-    :title="text"
-    type="error"
-  />
+  <div v-if="text" class="load-error-banner">
+    <el-alert class="load-error-text" :closable="false" :title="text" type="error" />
+    <!-- 失败横幅必须自带一个出口：只报错不给动作，用户除了刷新整页无处可去。 -->
+    <slot name="action" />
+  </div>
 </template>
 
 <script setup>
@@ -28,6 +26,14 @@ const text = computed(() => String(props.message?.value ?? props.message ?? ''))
 
 <style scoped>
 .load-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 14px;
+}
+
+.load-error-text {
+  flex: 1;
+  min-width: 0;
 }
 </style>

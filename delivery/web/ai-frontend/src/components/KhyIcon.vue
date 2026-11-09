@@ -75,10 +75,9 @@ const ICONS = {
   help: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-4c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm0-4.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
   settings:
     'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
-  // Brand monogram: geometric "K" drawn as strokes (never typed text) + a
-  // detached node dot top-right — the mark reads as "K emitting a signal",
-  // matching the single-stroke round-cap design language above.
-  logo: 'M8 5.2v13.6M16.8 5.4L9.1 12l7.7 6.6M19.3 3.8a1.2 1.2 0 1 1-.02 2.4 1.2 1.2 0 0 1 .02-2.4',
+  // Brand monogram lives in KhyMark.vue (the 内核环 mark) — the old hand-drawn
+  // "K" stroke that used to live here is retired: it was a letter, not a mark,
+  // and the platform now has one brand symbol across five ends.
 };
 
 // 归一化成数组:ICONS 的值是单条 path 字符串,而 v-for 遇到字符串会逐字符迭代
@@ -89,14 +88,26 @@ const paths = computed(() => {
   return Array.isArray(d) ? d : [d];
 });
 
+// 语义 kind 的默认色：success/warning/error 必须有别于品牌蓝 —— 扫码成功与扫码
+// 失败长得一模一样，比没有图标更糟。其余 kind 保持品牌蓝（视觉上无变化）。
+const SEMANTIC_COLORS = {
+  success: 'var(--khy-success)',
+  warning: 'var(--khy-warning)',
+  warningAlt: 'var(--khy-warning)',
+  error: 'var(--khy-danger)',
+};
+
 const cssVars = computed(() => {
   const s = SIZES[props.size] ?? SIZES.md;
-  const c = props.color || 'var(--khy-primary, var(--khy-primary))';
+  const c = props.color || SEMANTIC_COLORS[props.kind] || 'var(--khy-primary)';
   return { '--khy-icon-size': `${s}px`, '--khy-icon-color': c };
 });
 
 const pathAttrs = computed(() => ({
-  stroke: props.color || 'var(--khy-primary, var(--khy-primary))',
+  // stroke 走 currentColor，由 .khy-icon 的 color（即 --khy-icon-color）驱动。
+  // 原先在这里写字面量 stroke，SVG 的表现属性不吃祖先的 CSS color —— 于是外部
+  // 无论怎么设 color 都改不动图标颜色，语义 kind 也只能一派品牌蓝。
+  stroke: 'currentColor',
   'stroke-width': 1.8,
   'stroke-linecap': 'round',
   'stroke-linejoin': 'round',
@@ -113,6 +124,9 @@ const pathAttrs = computed(() => ({
   height: var(--khy-icon-size, 22px);
   flex-shrink: 0;
   vertical-align: -0.125em;
+  /* stroke: currentColor 的取色处。语义 kind 的默认色见 SEMANTIC_COLORS，
+     调用方传 color prop 时同样落到这里。 */
+  color: var(--khy-icon-color, var(--khy-primary));
 }
 .khy-icon svg {
   width: 100%;

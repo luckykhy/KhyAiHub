@@ -234,9 +234,14 @@ function submitAll() {
   background: var(--el-bg-color, #fff);
   color: var(--el-text-color-primary, #303133);
 }
+/* 不再关掉全局的键盘焦点环(:focus-visible 2px outline)。原先的 outline: none
+   只留 1px 边框变色,键盘用户在澄清卡里看不到焦点位置;这里补上和主题输入框
+   同款的柔光晕,鼠标点焦仍只变色。 */
 .clarify-free-input:focus {
-  outline: none;
   border-color: var(--el-color-primary, #409eff);
+}
+.clarify-free-input:focus-visible {
+  box-shadow: 0 0 0 3px var(--khy-primary-soft);
 }
 .clarify-actions {
   display: flex;

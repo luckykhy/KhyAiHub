@@ -3,17 +3,22 @@
     class="khy-brand-logo"
     :class="`khy-brand-logo--${props.size}`"
     role="img"
-    :aria-label="props.ariaLabel || 'KHY'"
+    :aria-label="props.ariaLabel || 'Khy OS'"
   >
-    <KhyIcon kind="logo" color="var(--khy-white, #fff)" :glow="false" />
+    <KhyMark aria-hidden="true" />
   </span>
 </template>
 
 <script setup>
-// KhyLogo — 品牌标志。渐变圆角底 + SVG 绘制的 K 单标(KhyIcon kind="logo"),
-// 取代此前直接排版的字母 "K":字形是画出来的几何笔画,不随字体渲染变化,
-// 亮暗主题下都由 CSS 变量取白。尺寸沿用 .khy-brand-logo--{sm,md,lg} 既有刻度。
-import KhyIcon from './KhyIcon.vue';
+// KhyLogo — 品牌标志。墨黑圆角底 + 内核环主标(KhyMark)。
+//
+// 为什么换成主标而不是字母 K：旧的品牌块里排版的是一个字母「K」，
+// 五端各画各的（Web 画 K、APK 排版 Text('K')、桌面端一个 ico），
+// 是 [DESIGN-ARCH-134] §1.1 B3 登记的「三枚品牌标记并存」病灶。
+// 现在五端共用同一枚主标 —— 几何真源 delivery/brand/khy-brand-geometry.js。
+//
+// 尺寸沿用 .khy-brand-logo--{sm,md,lg} 既有刻度。
+import KhyMark from './KhyMark.vue';
 
 const props = defineProps({
   size: { type: String, default: 'sm' },
