@@ -19,6 +19,17 @@ const fs = require('fs');
 
 // On-disk SQLite bound BEFORE any @khy/shared model is required.
 const TMP_DB = path.join(os.tmpdir(), `khy-dataplane-routing-${process.pid}.db`);
+// The JSON stores are NOT in SQLite: aiAssetCustomerService reads them through
+// getAppHome(). Without this the suite inherits the developer's real ~/.khy
+// customers + proxy auth, so a token the machine happens to have registered
+// flips test 4's verdict — the same build passed or failed depending on what
+// was configured locally. KHY_APP_HOME also short-circuits getAppHome()'s
+// legacy-established probe, so the temp root wins outright.
+const TMP_HOME = fs.mkdtempSync(path.join(os.tmpdir(), `khy-dataplane-home-${process.pid}-`));
+process.env.KHY_APP_HOME = TMP_HOME;
+process.env.AI_GATEWAY_CUSTOMERS_FILE = path.join(TMP_HOME, 'ai_gateway_customers.json');
+process.env.PROXY_AUTH_FILE = path.join(TMP_HOME, 'proxy_server_auth.json');
+
 process.env.DB_TYPE = 'sqlite';
 process.env.SQLITE_DB_PATH = TMP_DB;
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-dataplane';
@@ -109,6 +120,11 @@ afterAll(async () => {
   } catch {
     /* ignore */
   }
+  try {
+    fs.rmSync(TMP_HOME, { recursive: true, force: true });
+  } catch {
+    /* ignore */
+  }
 });
 
 describe('data plane — per-user upstream routing', () => {
@@ -164,7 +180,7 @@ describe('data plane — recognized-but-unconfigured token', () => {
       const v = await enforce(keyC);
       expect(v.ok).toBe(false);
       expect(v.httpStatus).toBe(403);
-      expect(v.code).toBe('gateway_unconfigured');
+      expect(v.code).toBe('FORBIDDEN');
     } finally {
       delete process.env.GATEWAY_USER_ISOLATION_STRICT;
     }
