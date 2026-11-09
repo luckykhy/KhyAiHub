@@ -126,7 +126,11 @@ function sendEnforcementRejection(res, verdict) {
     res,
     verdict.httpStatus || 403,
     {
-      error: { message: verdict.message || 'Forbidden', code: verdict.code || 'forbidden' },
+      error: {
+        message: verdict.message || 'Forbidden',
+        code: verdict.code || 'FORBIDDEN',
+        ...(verdict.details ? { details: verdict.details } : {}),
+      },
     },
     extra
   );
