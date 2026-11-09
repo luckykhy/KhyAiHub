@@ -1,0 +1,31 @@
+{
+  "takenAt": "2026-10-26T02:14:57.539Z",
+  "note": "由 scripts/project-profile/record-guard-snapshot.js 生成。check-change-safety 未包含：它按改动集扫描，本仓无提交时会恒定报 blast radius。",
+  "results": [
+    {
+      "id": "gov-rules",
+      "status": "pass",
+      "detail": "治理规则检查通过：GOV-MOD-004（10 板块）、GOV-TOOL-004、GOV-TOOL-005、GOV-TOOL-006（规则登记表）均满足。"
+    },
+    {
+      "id": "version-sync",
+      "status": "pass",
+      "detail": "All version sync checks passed."
+    },
+    {
+      "id": "repo-layout",
+      "status": "fail",
+      "detail": "修掉新增违规，或在确有正当理由时用 --update-baseline 显式下调/记录。"
+    },
+    {
+      "id": "copyright-readiness",
+      "status": "pass",
+      "detail": "Summary: 0 error(s), 7 warning(s)."
+    },
+    {
+      "id": "agent-rules",
+      "status": "pass",
+      "detail": "Agent rule check passed: no violations found (595 file(s) scanned)."
+    }
+  ]
+}

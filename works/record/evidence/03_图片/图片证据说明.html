@@ -46,13 +46,15 @@
 <blockquote><p>⚠ <strong><code>06_trajectory_list.png</code> 递交前需人工过目</strong>：「在做什么」列是<strong>用户真实输入原文</strong><br>（含第三方品牌名与私人事务性提问），非演示数据。采集器按「不改写任何字符」的纪律<br>不做脱敏——脱敏即改图，与「截图不得有剪切/PS 痕迹」冲突。若要作登记材料，<br>正确做法是<strong>在干净数据目录下跑同一命令重拍</strong>，而不是编辑本图。</p></blockquote>
 <hr>
 <h2 id="三-界面截图为什么-暂不可-作登记材料-两条硬伤-如实写">三、界面截图为什么<strong>暂不可</strong>作登记材料（两条硬伤，如实写）<a class="anchor" href="#三-界面截图为什么-暂不可-作登记材料-两条硬伤-如实写" aria-label="锚点">#</a></h2>
+<blockquote><p><strong>2026-10-25 更新</strong>：品牌标记换版（蓝紫品红 → 墨黑 + 琥珀橙，字母 K → 内核环）后，<br>两张界面截图已在同一采集器（<code>node scripts/evidence/capture-runtime.js --only=界面截图</code>）下<br><strong>重拍</strong>，图面已是新外观。<strong>但下面两条硬伤依旧成立</strong> —— 重拍只解决「图面与当前版本不一致」，<br>不解决「图面本身不足以证明功能闭环」。</p></blockquote>
 <ol><li><strong>界面标题与登记全称不一致。</strong> 登记全称现行值（D-名2，真源 <code>[MGMT-OTHER-006]</code> §一）为</li></ol>
-<p>《基于执行轨迹记录与链路校验技术的AI助手平台》，版本号另栏填 <code>V1.2.0</code>（沿用仓库 G1 现值），<br>   而实测浏览器内标题仍是：</p>
-<ul><li><code>apps/ai-frontend</code> → <code>登录 · KHY AI 管理平台</code></li><li><code>apps/khyos-desktop</code> → <code>KhyOS Desktop</code></li></ul>
-<p>「界面名称与申请表软件全称不一致」是实务高频补正点，改名（阶段 2）后必须重拍。</p>
+<p>《基于执行轨迹记录与链路校验技术的AI助手平台》。本轮实测（采集器读回的浏览器内标题）：</p>
+<table><thead><tr><th>截图</th><th>浏览器内标题</th><th>与登记全称</th></tr></thead><tbody><tr><td><code>界面截图/02_桌面端.png</code></td><td>《基于执行轨迹记录与链路校验技术的AI助手平台》</td><td><strong>一致</strong></td></tr><tr><td><code>界面截图/01_ai管理台.png</code></td><td>《登录 · KHY AI 管理平台》</td><td>不一致（登录页标题沿用旧称）</td></tr></tbody></table>
+<p>「界面名称与申请表软件全称不一致」是实务高频补正点，<code>01_ai管理台</code> 所属的前端标题<br>   仍需按阶段 2 改名后再重拍。</p>
 <ol><li><strong>未连接后端。</strong> 本组截图是本地静态托管构建产物渲染的结果：</li></ol>
 <p>ai-frontend 停在登录页（无凭据），桌面端显示的是前端内置演示会话、状态栏为「未连接」。<br>   这类画面能证明「界面存在且能渲染」，不能证明功能闭环。</p>
 <p><strong>非空白保证</strong>：界面截图走 CDP 渲染，采集器轮询 <code>document.body.innerText</code> 长度与元素数，<br>实测到 ≥20 字符且 &gt;30 个元素才截图；不满足则<strong>该条不会生成</strong>（宁可缺，不交空白图）。<br>每张的实测读数记在 <code>运行截图清单.json</code> 的 <code>渲染后元素数</code> / <code>渲染后可见文本长度</code> / <code>可见文本抽样</code>。</p>
+<blockquote><p>采集器本轮同时修掉了两处<strong>路径漂移</strong>（不改会默默拍到旧构建产物）：<br>底档根从仓库根 <code>evidence/</code> 迁到 <code>works/record/evidence/</code>；<br>管理前端从 <code>apps/ai-frontend</code> 迁到 <code>delivery/web/ai-frontend</code>；<br>桌面端渲染层产物从 <code>dist/</code> 迁到 <code>out/renderer/</code>。</p></blockquote>
 <hr>
 <h2 id="四-重拍清单-阶段-2-改名完成后执行">四、重拍清单（阶段 2 改名完成后执行）<a class="anchor" href="#四-重拍清单-阶段-2-改名完成后执行" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>#</th><th>要做的事</th><th>命令 / 位置</th></tr></thead><tbody><tr><td>1</td><td>全局改名：本件范围内为 <strong>5 处界面标题</strong>（<code>apps/ai-frontend</code>、<code>apps/khyos-desktop</code>×2、<code>apps/provider-hub</code>、<code>extensions/tools/khy-markdown</code>）；仓外 09-21 的「13 处显示名」清单成文于旧口径，含 <code>software/khyquant/frontend/</code> 的 3 处，<strong>那 3 处已移出本件</strong>（khyquant 为独立项目，另案申报）</td><td>见 <code>05_待办/人工待办清单.md</code>（软著交付目录）；实测以 <code>node scripts/ci/check-copyright-readiness.js</code> 输出为准</td></tr><tr><td>2</td><td>起后端并登录，拍<strong>功能闭环</strong>界面（AI 管理台首页 / 会话、Provider Hub、桌面端）。<strong>不拍量化终端</strong>——khyquant 是独立项目（人 2026-09-28 明示），不在本件客体里，它的界面图归它自己的申报</td><td>人工或后续脚本化</td></tr><tr><td>3</td><td>补拍 <code>apps/provider-hub</code>（当前无 <code>dist/index.html</code>，采集器已如实跳过）</td><td>先构建该前端</td></tr><tr><td>4</td><td>重跑采集并核对</td><td><code>npm run evidence:runtime &amp;&amp; npm run check:copyright</code></td></tr></tbody></table>
