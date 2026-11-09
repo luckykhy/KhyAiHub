@@ -120,7 +120,7 @@ git diff --cached --stat                    2012ms</code></pre>
 <ol><li>❌ <strong>给 <code>initRedis</code> 加 <code>setImmediate</code> / <code>process.nextTick</code> 包装</strong>。</li></ol>
 <p>§1.5 已证：预热挪到下一轮事件循环 ≠ 不抢首帧（Node 单线程）。<br>   唯一正确的解是<strong>不 require</strong>。</p>
 <ol><li>❌ <strong>加 <code>KHY_REDIS_LAZY</code> 之类的 env 门</strong>。</li></ol>
-<p>门预算 <code>check-tui-gates.js:41</code> <code>MAX_GATES = 227</code>，当前实测<strong>恰好 227</strong>（顶格，只降不升）。<br>   且本仓已有先例判据（<code>[DESIGN-ARCH-124]</code>）：<strong>「让功能变正确」不构成权衡，不值得加门</strong>。<br>   redis 懒加载是修缺陷，不是给用户一个开关。</p>
+<p>门预算 <code>check-tui-gates.js</code> <code>MAX_GATES = 237</code>，当前实测<strong>242</strong>（超基线 5 项，只降不升）。<br>   且本仓已有先例判据（<code>[DESIGN-ARCH-124]</code>）：<strong>「让功能变正确」不构成权衡，不值得加门</strong>。<br>   redis 懒加载是修缺陷，不是给用户一个开关。</p>
 <ol><li>❌ <strong>把 <code>require('redis')</code> 从顶层挪到 <code>getRedisClient()</code> 里就算完</strong>。</li></ol>
 <p>必须同时确认<strong>所有</strong>出口（<code>get</code>/<code>set</code>/<code>del</code>/<code>clearByPrefix</code>/<code>getStats</code>）都先触发初始化，<br>   否则会出现「第一次 get 返回 undefined」的静默降级 —— 比慢更糟。<br>   写一条测试钉住「模块被 require 后 <code>useRedis===false</code>，首次调用后才变」。</p>
 <ol><li>❌ <strong>把三个重 require 删掉</strong>。它们有真实用途（预检告警、toolUseLoop 热路径、git 上下文）。</li></ol>

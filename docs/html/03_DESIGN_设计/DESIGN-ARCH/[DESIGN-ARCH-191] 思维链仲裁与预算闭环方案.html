@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-191] 思维链仲裁与预算闭环方案.md -->
+<title>[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-191-思维链仲裁与预算闭环方案">[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）</a></li><li class="lvl-3"><a href="#1-1-思维链已经打通了哪四层">1.1 思维链已经打通了哪四层</a></li><li class="lvl-3"><a href="#1-2-已经存在一个-token-预算调控器">1.2 已经存在一个 token 预算调控器</a></li><li class="lvl-2"><a href="#2-缺口诊断">2. 缺口诊断</a></li><li class="lvl-2"><a href="#3-方案总纲">3. 方案总纲</a></li><li class="lvl-3"><a href="#3-1-能力矩阵-设计的硬约束">3.1 能力矩阵（设计的硬约束）</a></li><li class="lvl-3"><a href="#3-2-为什么禁止-静默分叉">3.2 为什么禁止「静默分叉」</a></li><li class="lvl-2"><a href="#4-l1-规格-本轮实现">4. L1 规格（本轮实现）</a></li><li class="lvl-3"><a href="#4-1-一句话">4.1 一句话</a></li><li class="lvl-3"><a href="#4-2-契约-照-tokenbudget-js-同构">4.2 契约（照 `tokenBudget.js` 同构）</a></li><li class="lvl-3"><a href="#4-3-判据-v1-只有两条-都可从上面直接读出">4.3 判据（v1 只有两条，都可从上面直接读出）</a></li><li class="lvl-3"><a href="#4-4-挂载点">4.4 挂载点</a></li><li class="lvl-3"><a href="#4-5-零回归论证">4.5 零回归论证</a></li><li class="lvl-2"><a href="#5-l2-规格-已实现">5. L2 规格（已实现）</a></li><li class="lvl-2"><a href="#6-l3-规格-已实现-含一处载体约束">6. L3 规格（已实现，含一处载体约束）</a></li><li class="lvl-3"><a href="#6-1-载体约束-实测得出-非简化">6.1 载体约束（实测得出，非简化）</a></li><li class="lvl-2"><a href="#7-l4-远期">7. L4（远期）</a></li><li class="lvl-2"><a href="#8-验收标准">8. 验收标准</a></li><li class="lvl-2"><a href="#9-明确不做的事">9. 明确不做的事</a></li><li class="lvl-2"><a href="#10-依据来源-b6-决策可解释">10. 依据来源（B6：决策可解释）</a></li><li class="lvl-3"><a href="#10-1-外部研究-用于-l2-l3-规格的可行性判断与护栏设计">10.1 外部研究（用于 L2/L3 规格的可行性判断与护栏设计）</a></li><li class="lvl-3"><a href="#10-2-本仓依据">10.2 本仓依据</a></li><li class="lvl-3"><a href="#10-3-为什么这套东西人能接住-b6-第-3-条">10.3 为什么这套东西人能接住（B6 第 3 条）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
+<h1 id="design-arch-191-思维链仲裁与预算闭环方案">[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案<a class="anchor" href="#design-arch-191-思维链仲裁与预算闭环方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：L1 / L2 / L3 三档均已实现并通过验收（2026-10-15）。三档各自独立 env 门控，<strong>缺省全部关闭</strong>，关闭时行为与改动前逐字节一致。<br><strong>范围</strong>：新增 <code>runtime/node/backend/src/services/reasoning/cotArbiter.js</code>（纯叶子、零 IO）；<code>runtime/node/backend/src/services/tool/toolUseLoopCore.js</code>（<strong>纯追加，0 删除</strong>）；新增测试 <code>runtime/node/backend/tests/services/cotArbiter.test.js</code>（49 例）<br><strong>上游依赖</strong>：<code>services/autoReasoning.js</code>（档位解析，L1 的输入）；<code>services/tokenBudget.js</code>（本方案的<strong>house pattern 模板</strong>，非功能依赖）<br><strong>调研指针</strong>：[DESIGN-ARCH-151] TUI 思维链折叠存储与显示减负方案；[DESIGN-ARCH-152] 聊天气泡布局与思考过程渲染方案；[DESIGN-ARCH-161] 任务执行时延与质量优化方案；[DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案<br><strong>模板合规</strong>：按 [DESIGN-SOURCING-001] §3 B-P2 体例逐字段填写。本方案的 L1 判据来自本仓既有信号与公开研究成果两项，<strong>§10 据实列出</strong>（不适用项：无）</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>Khy OS 里的思维链<strong>已经是完整的一等公民，但全程只读</strong>——解析、跨轮回传、展示三样齐全，唯独没有任何一个点对它做过决策。本方案补上决策层，分三档交付：</p>
+<table><thead><tr><th>档</th><th>手段</th><th>本轮</th></tr></thead><tbody><tr><td><strong>L1</strong></td><td>每轮闭环调节思考预算</td><td>✅ <strong>已实现</strong></td></tr><tr><td><strong>L2</strong></td><td>带判据的截断续写（Anthropic 唯一合法的改向路径）</td><td>规格已定，未实现</td></tr><tr><td><strong>L3</strong></td><td>注入 / 删改 / 前缀强制（仅无签名 provider）</td><td>规格已定，未实现</td></tr></tbody></table>
+<p>L1 不改模型行为之外的任何东西，缺省关闭，关闭时逐字节不变。</p>
+<hr>
+<h2 id="1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）<a class="anchor" href="#1-现状实证-file-line-可复核" aria-label="锚点">#</a></h2>
+<h3 id="1-1-思维链已经打通了哪四层">1.1 思维链已经打通了哪四层<a class="anchor" href="#1-1-思维链已经打通了哪四层" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>层</th><th>能力</th><th>位置</th></tr></thead><tbody><tr><td>请求前·预算</td><td><code>resolveEffort()</code> 关键词判 low/high/max；<code>effortToParams()</code> 映射各家参数</td><td><code>services/autoReasoning.js:48,90</code></td></tr><tr><td>请求前·兜底</td><td><code>thinkingFloor</code> 防止跌破最低档</td><td><code>services/tool/toolUseLoopCore.js:2480-2487</code></td></tr><tr><td>协议</td><td><code>reasoning_content</code> / <code>thinking</code> / <code>reasoningParts</code> 三家归一，JSON 与流式双路一致</td><td><code>services/gateway/adapters/_protocolPipeline.js:280,411,683</code></td></tr><tr><td>跨轮回传</td><td><code>thinkingBlocks</code> 原样回传为 assistant 轮首块，注释明写&quot;保持 extended thinking 连续&quot;</td><td><code>services/contentBlockUtils.js:95,109</code>；<code>services/tool/toolUseLoopCore.js:9228-9233</code></td></tr><tr><td>展示</td><td>TUI 折叠存储与渲染减负</td><td>[DESIGN-ARCH-151]、[DESIGN-ARCH-152]</td></tr></tbody></table>
+<h3 id="1-2-已经存在一个-token-预算调控器">1.2 已经存在一个 token 预算调控器<a class="anchor" href="#1-2-已经存在一个-token-预算调控器" aria-label="锚点">#</a></h3>
+<p><code>services/tokenBudget.js</code> 是<strong>硬预算 governor</strong>，且它确立了这个仓做&quot;决策类叶子&quot;的 house pattern：</p>
+<ul><li>纯叶子 · 零 IO · 确定性 · fail-soft · env 门控（文件头 <code>:1-22</code> 自述）</li><li><strong>壳层在 <code>onCost</code> 处累积花费，在每轮顶部、下一次 <code>chat()</code> 之前调 <code>assessBudget()</code> 决定是否硬停</strong>（<code>:11-14</code> 自述；接线见 <code>toolUseLoopCore.js:1957,2068</code>）</li><li>门控即配置：<code>KHY_TOKEN_BUDGET</code> 同时是上限和开关，未设/0 ⇒ 完全禁用、逐字节回退</li><li>防呆：每个函数都是全函数，最坏情况退化为「禁用」，<strong>绝不退化为误动作</strong>（<code>:21-22</code> 自述）</li></ul>
+<p>L1 照此同构，不发明新范式。</p>
+<hr>
+<h2 id="2-缺口诊断">2. 缺口诊断<a class="anchor" href="#2-缺口诊断" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>缺口</th><th>实证</th></tr></thead><tbody><tr><td><strong>D1</strong></td><td>预算是一次性决策，<strong>无反馈闭环</strong></td><td><code>toolUseLoopCore.js:2472-2474</code> 注释明写&quot;Only on first iteration; follow-ups keep same tier&quot;。模型思考 32k 绕五轮才收敛，与深思 1k 直接拿到答案，走同一条路</td></tr><tr><td><strong>D2</strong></td><td><strong>无 provider 能力区分</strong></td><td><code>contentBlockUtils.js:109</code> 以 <code>tb.signature</code> 作为<strong>有效性前提</strong>过滤，而非<strong>不可篡改标记</strong>。签名块内容一改即回传 400</td></tr><tr><td><strong>D3</strong></td><td>只读不用</td><td>循环内唯一读思维处是 400 字符长度门（<code>:5161-5177</code>），且该门测的是 <code>strippedReply</code>；注释明确原生思维模型走独立 <code>thinkingBlocks</code> 通道、不并入 <code>reply</code></td></tr><tr><td><strong>D4</strong></td><td>69% 的 CoT token 生成于答案定型之后，这个事实完全未被利用</td><td>无任何代码引用该结论</td></tr></tbody></table>
+<hr>
+<h2 id="3-方案总纲">3. 方案总纲<a class="anchor" href="#3-方案总纲" aria-label="锚点">#</a></h2>
+<h3 id="3-1-能力矩阵-设计的硬约束">3.1 能力矩阵（设计的硬约束）<a class="anchor" href="#3-1-能力矩阵-设计的硬约束" aria-label="锚点">#</a></h3>
+<p>思维链能否被改，<strong>先由 provider 形态决定，不由我们想不想决定</strong>：</p>
+<table><thead><tr><th>Provider</th><th>thinking 形态</th><th>改内容</th><th>截断续写</th><th>steering</th></tr></thead><tbody><tr><td>Anthropic</td><td>签名块</td><td>✗</td><td>✓（<code>max_tokens</code> 未闭合时）</td><td>✗</td></tr><tr><td>DeepSeek / GLM</td><td>纯文本 <code>reasoning_content</code></td><td>✓</td><td>✓</td><td>✗</td></tr><tr><td>OpenAI 兼容</td><td>纯文本</td><td>✓</td><td>✓</td><td>自部署 ✓</td></tr><tr><td>本地 vLLM</td><td>纯文本</td><td>✓</td><td>✓</td><td>✓</td></tr></tbody></table>
+<p>这张表是 <code>autoReasoning.effortToParams</code>（<code>:90-118</code>）既有 provider 分支的自然延伸——那处在回答「预算怎么表达」，本方案回答「这个 provider 允许改到什么程度」。</p>
+<h3 id="3-2-为什么禁止-静默分叉">3.2 为什么禁止「静默分叉」<a class="anchor" href="#3-2-为什么禁止-静默分叉" aria-label="锚点">#</a></h3>
+<p>同一套注入策略在 GLM 上默默生效、在 Claude 上被静默丢弃，会产生极难排查的行为不一致。因此能力探测必须<strong>显式查表、随决策一起返回</strong>，不允许用 try/catch 兜底掩盖。<code>resolveCapabilities()</code> 是唯一真源。</p>
+<hr>
+<h2 id="4-l1-规格-本轮实现">4. L1 规格（本轮实现）<a class="anchor" href="#4-l1-规格-本轮实现" aria-label="锚点">#</a></h2>
+<h3 id="4-1-一句话">4.1 一句话<a class="anchor" href="#4-1-一句话" aria-label="锚点">#</a></h3>
+<p>把「第一轮定死档位」变成「每轮根据上一轮实际表现重新定档」，<strong>只调预算，不动内容</strong>。</p>
+<h3 id="4-2-契约-照-tokenbudget-js-同构">4.2 契约（照 <code>tokenBudget.js</code> 同构）<a class="anchor" href="#4-2-契约-照-tokenbudget-js-同构" aria-label="锚点">#</a></h3>
+<pre><code>resolveGate(env)        -&gt; { enabled, floor, ceiling, maxAdjust }
+observeRound(input)     -&gt; signal        // 壳层每轮累积，纯提取不决策
+nextTier({...})         -&gt; { tier, action, reason }   // 纯函数决策</code></pre>
+<p><strong>信号源</strong>（全部取自循环里已存在的数据，<strong>不新增 IO</strong>）：</p>
+<table><thead><tr><th>信号</th><th>来源</th><th>含义</th></tr></thead><tbody><tr><td><code>thinkingChars</code></td><td><code>aiResult.thinking</code></td><td>本轮思维文本长度</td></tr><tr><td><code>thinkingTokens</code></td><td><code>aiResult.thinkingBlocks</code> 文本长度估算</td><td>跨轮可比的结构化量</td></tr><tr><td><code>stopReason</code></td><td><code>aiResult.stopReason</code></td><td><code>'length'</code> 表示<strong>思维被截断、没想完</strong></td></tr><tr><td><code>toolCount</code></td><td>本轮工具调用数</td><td>是否在推进</td></tr></tbody></table>
+<h3 id="4-3-判据-v1-只有两条-都可从上面直接读出">4.3 判据（v1 只有两条，都可从上面直接读出）<a class="anchor" href="#4-3-判据-v1-只有两条-都可从上面直接读出" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>动作</th><th>判据</th><th>依据</th></tr></thead><tbody><tr><td><strong>升档</strong></td><td><code>stopReason === 'length'</code></td><td>思维没想完就被砍，降档只会更糟</td></tr><tr><td><strong>降档</strong></td><td>连续 <code>stagnationRounds</code>（缺省 2）轮 <code>toolCount</code> 不变 <strong>且</strong> <code>thinkingTokens</code> 未下降</td><td>反复想、反复不动 —— 正是 D4 那 69% 的形态</td></tr><tr><td><strong>不动</strong></td><td>其余全部</td><td>缺省即不动</td></tr></tbody></table>
+<p><strong>不做</strong>的事：不按&quot;任务复杂度&quot;调（那由 <code>autoReasoning</code> 的关键词档负责，重复判断）；不做跨轮振荡（每次尝试最多调 1 档，且受 <code>floor</code>/<code>ceiling</code> 夹紧）。</p>
+<h3 id="4-4-挂载点">4.4 挂载点<a class="anchor" href="#4-4-挂载点" aria-label="锚点">#</a></h3>
+<p><code>toolUseLoopCore.js:2494</code> 之后<strong>追加</strong>一个块，处理 <code>iteration &gt; 1</code>。<code>:2474</code> 的首轮块<strong>一字不动</strong>——首轮仍是关键词定档，L1 只管后续轮。</p>
+<pre><code class="language-js"><span class="hljs-comment">// 门 KHY_COT_L1（缺省关）。关 → 整个块跳过，effectiveChatOpts 逐字节不变。</span>
+<span class="hljs-keyword">if</span> (iteration &gt; <span class="hljs-number">1</span>) { <span class="hljs-comment">/* observeRound → nextTier → Object.assign */</span> }</code></pre>
+<h3 id="4-5-零回归论证">4.5 零回归论证<a class="anchor" href="#4-5-零回归论证" aria-label="锚点">#</a></h3>
+<ol><li>缺省 <code>KHY_COT_L1</code> 未设 ⇒ <code>resolveGate().enabled === false</code> ⇒ 新块整体跳过；</li><li>新块是<strong>纯追加</strong>，不修改 <code>:2474</code> 既有块的任何语句；</li><li>门内全部 <code>try/catch</code> fail-soft，异常回退为「不调整」；</li><li><code>floor</code> 默认取 <code>null</code>（不覆盖 <code>thinkingFloor</code> 的既有兜底）。</li></ol>
+<p>合起来：关闭时 <code>effectiveChatOpts</code> 与改动前逐字节相同。</p>
+<hr>
+<h2 id="5-l2-规格-已实现">5. L2 规格（已实现）<a class="anchor" href="#5-l2-规格-已实现" aria-label="锚点">#</a></h2>
+<p><strong>Anthropic 上唯一合法的改向路径</strong>。签名块内容不可碰，但 <code>stop_reason: max_tokens</code> 时<strong>未闭合的 thinking 可以带原样前缀合法续写</strong>。</p>
+<p>现状：<code>toolUseLoopCore.js</code> 的 length-truncation auto-continue 已是这个动作，但它是<strong>盲续一次</strong>，注入固定文案。</p>
+<p>改进：读上一段 thinking 的<strong>尾部</strong>（默认窗口 400 字），判断是「没想完」还是「想岔了」——前者照旧续写，后者把 <code>derailed</code> 标记写进该轮信号，让 L1 在下一轮<strong>降档</strong>而非按截断升档。</p>
+<p>判定顺序（确定性、无模型调用、无 IO）：<strong>回撤标记 → 未闭合代码块 → 悬空小句 → 句子边界兜底为「没想完」</strong>（延续现状是两种默认里更安全的那个）。只看尾部是有意的：模型中途质疑自己后又恢复的轨迹，不该被误判为跑偏。</p>
+<blockquote><p><strong>实现期修掉的一个真 bug</strong>：中文回撤词表把「实际上」写成了「其实」——同音不同字，导致 <code>实际上哈希表在这里行不通</code> 这类典型跑偏句<strong>判不出来</strong>。由单测用例暴露。另把裸 <code>no</code> 从词表移除（&quot;there is no other option&quot; 会误判）。</p></blockquote>
+<h2 id="6-l3-规格-已实现-含一处载体约束">6. L3 规格（已实现，含一处载体约束）<a class="anchor" href="#6-l3-规格-已实现-含一处载体约束" aria-label="锚点">#</a></h2>
+<p>仅对无签名 provider 开放。<strong>硬护栏</strong>：只允许从冻结的 <code>NUDGE_WHITELIST</code>（<code>narrow</code> / <code>verify</code> / <code>replan</code> / <code>finish</code>）按键取词，<strong>代码里不存在任何调用方自带文本的通路</strong>——这正是 §10 那条实测（模型几乎察觉不到思维链被改）所要求的。</p>
+<h3 id="6-1-载体约束-实测得出-非简化">6.1 载体约束（实测得出，非简化）<a class="anchor" href="#6-1-载体约束-实测得出-非简化" aria-label="锚点">#</a></h3>
+<p>无签名的 <code>reasoning_content</code> <strong>当前根本不会回传给模型</strong>：<code>contentBlockUtils.buildAssistantContent</code> 只转发<strong>带 signature</strong> 的 thinking 块，其余一律丢弃。所以循环真正控制、且确实会发出去的载体只有<strong>续写消息</strong>。L3 因此作用在续写消息上，三种操作落为「续写前缀拼什么」：</p>
+<table><thead><tr><th>原操作</th><th>在现架构下的落法</th></tr></thead><tbody><tr><td>注入</td><td>白名单键追加到续写消息尾部</td></tr><tr><td>前缀强制</td><td>同上，且续写消息整体作为前缀</td></tr><tr><td>删改</td><td>对<strong>已回传</strong>的 thinking 生效；unsigned 通道当前无载体，故不可达</td></tr></tbody></table>
+<p><strong>未知 provider 一律按签名契约处理</strong>（<code>canRewrite=false</code>），宁可不做也不冒静默分叉的风险——见 §3.2。单测对此有专门断言。</p>
+<h2 id="7-l4-远期">7. L4（远期）<a class="anchor" href="#7-l4-远期" aria-label="锚点">#</a></h2>
+<p>logit bias / activation steering，仅自部署模型可行。已知结论：思考长度是一个可分离的线性方向，单个 steering vector 即可显著压缩（§10）。工程量大，列为 Phase 3，不在当前两轮承诺内。</p>
+<hr>
+<h2 id="8-验收标准">8. 验收标准<a class="anchor" href="#8-验收标准" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>标准</th><th>判据</th></tr></thead><tbody><tr><td>A1</td><td>零回归</td><td>门关闭时 <code>nextTier</code> 恒返 <code>{tier: baseTier, action:'hold'}</code>；<code>effectiveChatOpts</code> 逐字节不变</td></tr><tr><td>A2</td><td>升档判据</td><td><code>stopReason==='length'</code> → 升一档，且受 <code>ceiling</code> 夹紧</td></tr><tr><td>A3</td><td>降档判据</td><td>连续 N 轮 <code>toolCount</code> 不变且 thinking 未降 → 降一档，受 <code>floor</code> 夹紧</td></tr><tr><td>A4</td><td>不振荡</td><td>单轮尝试最多调 1 档；每轮最多调整 <code>maxAdjust</code> 次</td></tr><tr><td>A5</td><td>fail-soft</td><td>任意非法入参不抛异常，退化为 hold</td></tr><tr><td>A6</td><td>门控阶梯</td><td>未设/0/false/off/no ⇒ 禁用</td></tr><tr><td>A7</td><td>守卫</td><td>三守卫 + <code>check-gov-rules.js</code> 全绿；<code>arch:god</code> 无新增超限</td></tr><tr><td><strong>A8</strong></td><td><strong>L2 判定</strong></td><td>回撤标记 → <code>derailed</code>；标记在尾部窗口<strong>之外</strong>则<strong>不得</strong>误判；未闭合代码块/悬空小句 → <code>unfinished</code>；无文本 → <code>unknown</code>（退回现状盲续）</td></tr><tr><td><strong>A9</strong></td><td><strong>L2 与 L1 的耦合</strong></td><td><code>derailed</code> 信号<strong>压过</strong>截断升档规则 ⇒ 跑偏轨迹走降档，不是升档</td></tr><tr><td><strong>A10</strong></td><td><strong>L3 白名单闭合</strong></td><td>垃圾键、<code>bogus</code> 的 <code>defaultNudge</code>、未知 provider 一律<strong>不产生任何注入文本</strong>；<code>NUDGE_WHITELIST</code> 被 <code>Object.freeze</code></td></tr><tr><td><strong>A11</strong></td><td><strong>L3 签名拒绝</strong></td><td><code>anthropic</code> / <code>claude</code> / 未知 vendor 在<strong>门开启</strong>时消息仍逐字节不变、<code>applied=false</code></td></tr></tbody></table>
+<p><strong>效果类指标（需 A/B 对照集，非本轮硬门）</strong>：L1 全程开启后，同任务集 thinking token 总量下降 ≥40% 且任务成功率不降。</p>
+<p><strong>实测（2026-10-15）</strong>：单测 49/49 全绿；<code>node --check</code> 三文件通过；<code>check-change-safety</code> / <code>check-agent-rules</code> / <code>check-gov-rules</code> / <code>arch:god</code> 均 EXIT 0；主干改动为 <strong>纯新增、0 删除</strong>，三档门缺省全关时 <code>effectiveChatOpts</code> 与 <code>currentMessage</code> 均不变。</p>
+<hr>
+<h2 id="9-明确不做的事">9. 明确不做的事<a class="anchor" href="#9-明确不做的事" aria-label="锚点">#</a></h2>
+<ol><li><strong>不改签名块内容</strong> —— 会导致 400，且无正当收益；</li><li><strong>不在 L1 里改内容</strong> —— 调预算与改内容是两个风险等级，混在一起不可回滚；</li><li><strong>不用 try/catch 兜底掩盖能力差异</strong> —— 见 §3.2；</li><li><strong>不自动 bump 版本</strong> —— 按 B7，功能新增属 T1，MINOR 递增须人明示（<code>version-mode.js bump --minor --approved-by &lt;批准人&gt;</code>）。</li></ol>
+<hr>
+<h2 id="10-依据来源-b6-决策可解释">10. 依据来源（B6：决策可解释）<a class="anchor" href="#10-依据来源-b6-决策可解释" aria-label="锚点">#</a></h2>
+<h3 id="10-1-外部研究-用于-l2-l3-规格的可行性判断与护栏设计">10.1 外部研究（用于 L2/L3 规格的可行性判断与护栏设计）<a class="anchor" href="#10-1-外部研究-用于-l2-l3-规格的可行性判断与护栏设计" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>结论</th><th>来源</th></tr></thead><tbody><tr><td>CoT 篡改实测：对思维链做删词/插词/换句后，模型<strong>很少察觉</strong>；即使大幅改动，检出率仍不足 50%；显眼的对照注入（把某句换成&quot;我是个海盗！&quot;）下 R1 仅 42.2% 察觉、GPT-OSS 仅 1.4%</td><td><a href="http://baserates.org/posts/Ywzk9vwMhAAPxMqSW/current-llms-seem-to-rarely-detect-cot-tampering" target="_blank" rel="noopener">Current LLMs seem to rarely detect CoT tampering</a></td></tr><tr><td>多数 CoT token 生成于<strong>答案定型之后</strong>（Qwen3-32B-Think 上 69% 的 CoT token 在 commitment boundary 之后，PSC 阈值下 75%）</td><td><a href="https://arxiv.org/html/2604.06613v1" target="_blank" rel="noopener">The Detection–Extraction Gap: Models Know the Answer Before They Can Say It</a></td></tr><tr><td>截断 CoT 后从前缀重生成、比较答案可复现性，是无需 logprob 的质量信号</td><td><a href="https://lacuna.tiptreesystems.com/work/reliable-chain-of-thought-via-prefix-consistency/wrk_c74a1421ec0d1da07f7ab1d1e8c334bd" target="_blank" rel="noopener">Reliable Chain-of-Thought via Prefix Consistency</a></td></tr><tr><td>思考长度是激活空间中可分离的线性方向，steering 可压缩（<strong>L4 依据</strong>，本次未实现）</td><td><em>Activation Steering for Chain-of-Thought Compression</em>, arXiv:2507.04742（编号来自二手聚合页，落地前须核对原文）</td></tr></tbody></table>
+<p><strong>D4 的处置即基于第二行</strong>：既然多数思维 token 生成于定型之后，对&quot;反复想但不动&quot;的轮次降档不会损害答案质量——这是 L1 降档判据敢成立的原因。</p>
+<h3 id="10-2-本仓依据">10.2 本仓依据<a class="anchor" href="#10-2-本仓依据" aria-label="锚点">#</a></h3>
+<ul><li><code>services/tokenBudget.js:1-22</code> —— house pattern（纯叶子 / fail-soft / 门控即配置 / 最坏退化为禁用）的真源</li><li><code>services/tool/toolUseLoopCore.js:2472-2474</code> —— D1 的原文出处，也是 L1 挂载点选择的依据</li><li><code>services/contentBlockUtils.js:86-88,109</code> —— Anthropic 首块规则与签名前提，D2 的依据</li><li><code>services/gateway/adapters/_protocolPipeline.js:280,411,683</code> —— 三家思维链字段归一，L3 能力矩阵的依据</li></ul>
+<h3 id="10-3-为什么这套东西人能接住-b6-第-3-条">10.3 为什么这套东西人能接住（B6 第 3 条）<a class="anchor" href="#10-3-为什么这套东西人能接住-b6-第-3-条" aria-label="锚点">#</a></h3>
+<p>L1 的每条判据都只读循环里<strong>已经存在</strong>的变量，没有新增 IO、没有新增模型调用、没有新的外部依赖；关掉它等于什么都没发生。它能改变的是「同一任务花多少 token 思考」，不是「模型答什么」——判据与影响面都可在一轮 A/B 内验证完。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-190] SaaS 化对外 API 服务目标形态与落地路径.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-190] SaaS 化对外 API 服务目标形态与落地路径</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-192] 四端统一 OAuth2 登录与统一路由管理平面.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-192] 四端统一 OAuth2 登录与统一路由管理平面</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

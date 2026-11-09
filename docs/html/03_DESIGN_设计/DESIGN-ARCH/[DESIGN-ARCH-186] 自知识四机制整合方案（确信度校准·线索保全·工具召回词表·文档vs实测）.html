@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准·线索保全·工具召回词表·文档vs实测）.md -->
+<title>[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准 · 线索保全 · 工具召回词表 · 文档 vs 实测） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准 · 线索保全 · 工具召回词表 · 文档 vs 实测）</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准 · 线索保全 · 工具召回词表 · 文档 vs 实测）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-186-自知识四机制整合方案-确信度校准-线索保全-工具召回词表-文档-vs-实测">[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准 · 线索保全 · 工具召回词表 · 文档 vs 实测）</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-四个缺陷-四个机制">1. 四个缺陷 → 四个机制</a></li><li class="lvl-2"><a href="#2-机制详解">2. 机制详解</a></li><li class="lvl-3"><a href="#2-1-确信度校准-confidencecalibration">2.1 确信度校准（confidenceCalibration）</a></li><li class="lvl-3"><a href="#2-2-线索保全-cluevault">2.2 线索保全（clueVault）</a></li><li class="lvl-3"><a href="#2-3-延迟工具召回词表-deferredrecallindex">2.3 延迟工具召回词表（deferredRecallIndex）</a></li><li class="lvl-3"><a href="#2-4-文档-vs-实测-docvsmeasuredpolicy">2.4 文档 vs 实测（docVsMeasuredPolicy）</a></li><li class="lvl-2"><a href="#3-门控与回退语义">3. 门控与回退语义</a></li><li class="lvl-2"><a href="#4-共享登记落点-整合后的单一改动">4. 共享登记落点（整合后的单一改动）</a></li><li class="lvl-2"><a href="#5-阶段-process-008-规则-8">5. 阶段（PROCESS-008 / 规则 8）</a></li><li class="lvl-2"><a href="#6-验证-2026-10-13-实跑">6. 验证（2026-10-13 实跑）</a></li><li class="lvl-2"><a href="#7-边界与未覆盖-如实登记">7. 边界与未覆盖（如实登记）</a></li><li class="lvl-2"><a href="#8-棘轮合规">8. 棘轮合规</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：10 条根锚定路径全部可解析，且文中自述已实现；据 DOCS-005 §二 标 done。</p></blockquote>
+<h1 id="design-arch-186-自知识四机制整合方案-确信度校准-线索保全-工具召回词表-文档-vs-实测">[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准 · 线索保全 · 工具召回词表 · 文档 vs 实测）<a class="anchor" href="#design-arch-186-自知识四机制整合方案-确信度校准-线索保全-工具召回词表-文档-vs-实测" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：已落地（2026-10-13），四个机制全部 <strong>S1 观察者档</strong>（只记录/只注入，不阻断），<br>登记于 <code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms</code>。<br><strong>范围</strong>：<code>runtime/node/backend/src/services/</code> 的四个纯叶子 + 五个既有接缝 +<br>三处共享登记文件（<code>utils/flagRegistry/index.js</code>、<code>services/selfProfile.js</code>、<br><code>services/selfAuditRegistry.js</code>）+ <code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code>。<br><strong>不改</strong>：任何路由命令 / 别名 / handler / 规则 ID（命令面棘轮已超:246/245 · 591/591 ·<br>158/155 · 96/94）——四个机制全部挂进既有的 selfProfile A 层、既有 env 门控、<br>既有收尾观察接缝与既有自审登记，零新增入口。<br><strong>验证</strong>：<code>runtime/node/backend/scripts/selfKnowledgeProbe.js</code>（19/19 绿）+<br>四套机制测试（24+21+11+15 全绿）+ <code>check:flag-registry</code> / <code>check-rollout-stage</code> /<br><code>check:feature-ownership</code> 全绿；逐项读数见 §6。</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>四个「自知识」缺陷（说话不校准 / 长任务丢线索 / 延迟工具召不回 / 把文档当事实），<br>各自补一个<strong>纯叶子 + 一处既有接缝 + 一条既合规的 env 门控</strong>：提示侧把纪律注入系统提示，<br>运行侧在既有收尾接缝做确定性观察（S1 只记账），门控关时<strong>四处接缝逐字节回退</strong>。<br>四条机制零新增命令、零新增别名、零新增 handler、零新增规则 ID。</p>
+<hr>
+<h2 id="1-四个缺陷-四个机制">1. 四个缺陷 → 四个机制<a class="anchor" href="#1-四个缺陷-四个机制" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>缺陷（问题陈述）</th><th>机制</th><th>叶子</th><th>门控（默认开）</th></tr></thead><tbody><tr><td>1</td><td>生成机制天然倾向「接上一个通顺的回答」，一知半解时说得和真确定时一样笃定</td><td>确信度校准</td><td><code>services/confidenceCalibration.js</code></td><td><code>KHY_CONFIDENCE_CALIBRATION</code></td></tr><tr><td>2</td><td>长任务跑到第几十步，早期决策与约束被压缩稀释/丢失，最初定的规矩被忘掉</td><td>线索保全（CLUE-LEDGER）</td><td><code>services/clueVault.js</code></td><td><code>KHY_CLUE_VAULT</code></td></tr><tr><td>3</td><td>36 个延迟工具主聊天流只注入裸名，toolSearch 按词命中（别名 +8 / searchHint +4）——看得见名字、看不见可搜的词</td><td>延迟工具召回词表</td><td><code>services/tool/deferredRecallIndex.js</code></td><td><code>KHY_TOOL_RECALL_INDEX</code></td></tr><tr><td>4</td><td>回答过分相信文档/注释（二手声明），不跑一遍/读一遍源码核实</td><td>文档 vs 实测</td><td><code>services/docVsMeasuredPolicy.js</code></td><td><code>KHY_DOC_VS_MEASURED</code></td></tr></tbody></table>
+<p>四叶子的共同契约（照 <code>selfAuditRegistry.js</code> 先例）：<strong>零 IO、确定性、绝不抛、可单测、<br>数组与条目全 <code>Object.freeze</code></strong>；门控判定统一走 <code>utils/flagRegistry</code>（CANON 词表<br><code>0/false/off/no</code> 关），注册表不可用时回退本地 CANON——两处语义完全一致。</p>
+<hr>
+<h2 id="2-机制详解">2. 机制详解<a class="anchor" href="#2-机制详解" aria-label="锚点">#</a></h2>
+<h3 id="2-1-确信度校准-confidencecalibration">2.1 确信度校准（confidenceCalibration）<a class="anchor" href="#2-1-确信度校准-confidencecalibration" aria-label="锚点">#</a></h3>
+<p><strong>提示侧（A 层）</strong>：<code>selfProfile.formatForSystemPrompt</code> 注入「确信度自检」协议——<br>事实性断言先分三档（本轮已验证 / 训练知识 / 未验证），未验证必须明说并给验证路径，<br>禁用笃定措辞包装猜测，零工具调用的纯问答同样适用（<code>selfProfile.js:937</code> 起，<br>插入点在自审块与 20 倍模式块之间）。</p>
+<p><strong>运行侧（收尾 S1 观察器）</strong>：<code>agenticHarnessService.js:1210-1236</code> 对最终回复做<br>确定性扫描，两个 finding 类：</p>
+<ul><li><code>unbacked_certainty</code>：零工具调用的轮次里出现<strong>强笃定措辞</strong>（一定/绝对/definitely…）。</li></ul>
+<p>启发式——只落样待人复核，不作「模型错了」的断言。实质长度下限：中文主导回复 40<br>  非空白字符、其余 120（<code>MIN_SUBSTANTIVE_CHARS_CJK</code> / <code>MIN_SUBSTANTIVE_CHARS</code>）。</p>
+<ul><li><code>unbacked_verification_claim</code>：零工具调用<strong>且会话历史无工具活动痕迹</strong></li></ul>
+<p>（<code>loopResult.conversationMessages</code> 无 role:'tool' / tool_calls / tool_result|tool_use 块）<br>  的轮次里自称「我查了/读了/跑了/I verified」。两条同时成立时该自称必为假（确定性）。</p>
+<p><strong>与既有机制的分工（不重复计量）</strong>：<code>claimReconciler</code> 六族（delete/write/edit/test/commit/deploy）<br>的动作声称对账已由 <code>answerVerifier</code> 在同一收尾接缝用户可见地纠错；其词库不含 read/check<br>系自称，工具循环的两道证据门又都以「已发生过工具调用」为前提<br>（<code>toolUseLoopCore.js</code> 编辑门 <code>_allModifiedFiles.size&gt;0</code>、非编辑证据门 <code>substantiveCalls&gt;=threshold</code>）<br>——零工具轮的 read/check 系自称正是既有机制覆盖不到的盲区。本观察器按 ±40 字窗口跳过<br>已落在既有族对账范围内的命中；否定判定复用 <code>claimNegation._isNegatedClaim</code>（单一真源）。</p>
+<p><strong>台账</strong>：样本经 <code>confidenceCalibrationLedger</code> 旁路落 <code>&lt;dataHome&gt;/ruleguard/confidence-observations.jsonl</code><br>（<code>KHY_CONFIDENCE_LEDGER_FILE</code> 可覆盖路径；只落有 finding 的行、绝不落回复正文）。</p>
+<h3 id="2-2-线索保全-cluevault">2.2 线索保全（clueVault）<a class="anchor" href="#2-2-线索保全-cluevault" aria-label="锚点">#</a></h3>
+<p>把对话里四类「丢了会出错」的线索（约束 / 决策 / 锚 / 未决）确定性抽成可回流的<br><code>[CLUE-LEDGER v1]</code> 台账，在四处<strong>只增不改</strong>地注入（S1 铁律：不调 splitIndex、不接<br><code>adjustSplitForPins</code>、不改任何既有字段）：</p>
+<table><thead><tr><th>接缝</th><th>落点</th></tr></thead><tbody><tr><td>压缩摘要提示（全量）</td><td><code>contextCompressor.js:867/875</code>（台账段并入同级）</td></tr><tr><td>增量摘要路径</td><td><code>contextCompressor.js:1181/1203</code>（承接上一轮台账 + 回流）</td></tr><tr><td>cycle boundary briefing</td><td><code>contextCompressor.js:1450</code>（兜底追加）</td></tr><tr><td>断点 <code>contextSummary</code></td><td><code>agenticHarnessService.js:433/444</code>（中断）与 <code>:610/621</code>（续跑轮，此前全仓无写入者、恒为空）</td></tr></tbody></table>
+<p>A 层注入（<code>selfProfile.js:950</code> 附近）告诉模型 CLUE-LEDGER 块的语义与线索书写纪律<br>（压缩后仍有效、抵触要显式说明、自己的持久决策/未决写成可抽取的一行）。<br>门控关 → 四个接缝全部逐字节回退；字节对照由 <code>clueVault.test.js</code> 以<strong>不可变基线<br>commit 889920fe</strong> 版 <code>contextCompressor</code> 锁死（gate off 与基线逐字节一致）。</p>
+<h3 id="2-3-延迟工具召回词表-deferredrecallindex">2.3 延迟工具召回词表（deferredRecallIndex）<a class="anchor" href="#2-3-延迟工具召回词表-deferredrecallindex" aria-label="锚点">#</a></h3>
+<p>36 个 <code>shouldDefer</code> 工具在主聊天流只注入裸名清单（<code># Additional Tools</code>），而<br><code>toolRecommend.scoreTool</code> 是按词命中的（别名 +8 / searchHint +4 / 描述 +2）。<br>本叶子从 <code>tool.aliases + tool.searchHint</code> <strong>现场派生</strong>每个未揭示延迟工具的词表<br>（小写归一、丢英文虚词、丢与名字同形的词、ASCII 子串去重、每工具 ≤6 词 / 单词 ≤16 字符 /<br>≤60 行），生成 <code>- &lt;Name&gt;: &lt;词表&gt;</code> 索引块，替换 <code>khyUpgradeRuntime.js</code> 两处既有接缝的裸名拼接<br>（<code>:2151-2152</code> 统一路径、<code>:2320-2322</code> legacy 路径）。词表不是第二份手搓映射：元数据变则<br>索引变，且词表与打分器同源由测试实跑真 <code>scoreTool</code> 逐词断言命中 &gt;0。<br>门控关 → 叶子返<strong>历史裸名清单</strong>（逐字节回退，接缝不留第二份模板）。</p>
+<h3 id="2-4-文档-vs-实测-docvsmeasuredpolicy">2.4 文档 vs 实测（docVsMeasuredPolicy）<a class="anchor" href="#2-4-文档-vs-实测-docvsmeasuredpolicy" aria-label="锚点">#</a></h3>
+<p><strong>提示侧（A 层）</strong>：注入「引述前先自证」三档纪律（实测 ＞ 读到 ＞ 引述）+ 三个最便宜的<br>既有取证入口（<code>khy docs check</code> / KhySelf 自审核验动作 / location+Read/Grep）；只引述不核实<br>必须标注「文档陈述·未实测」。插入点在 self-location 块与 Skill protocol 块之间。</p>
+<p><strong>运行侧（S1 观察器）</strong>：<code>toolUseLoopCore.js:4871-4887</code> 在零工具调用收尾时观察<br>「引述了本回合未取证的仓内路径」（白名单顶层目录 + 常见扩展名），记入既有<br><code>toolLoopJournal</code>（<code>event: 'doc-grounding'</code>，默认开，样本主通道）并叠 breadcrumb<br>（<code>KHY_LOOP_DEBUG</code> 开时才落文件）——无 nudge、无 continue、不改写输出。</p>
+<p><strong>自审登记</strong>：新增 <code>selfAuditRegistry</code> #8 条目（2026-10-13 新增追踪项，非原报告编号），<br>其 <code>evidenceAnchors</code> 与叶子<strong>共用同一份冻结声明</strong>（单一真源）——叶子删除/模块搬家,<br><code>selfAuditVerifier</code> 现场核验即翻红。</p>
+<hr>
+<h2 id="3-门控与回退语义">3. 门控与回退语义<a class="anchor" href="#3-门控与回退语义" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>门控</th><th>登记</th><th>默认</th><th>关（CANON 4 词）</th><th>关时回退语义</th></tr></thead><tbody><tr><td><code>KHY_CONFIDENCE_CALIBRATION</code></td><td><code>utils/flagRegistry</code></td><td>开</td><td>0/false/off/no</td><td>提示词不注入、harness 不扫描不落账</td></tr><tr><td><code>KHY_CLUE_VAULT</code></td><td>同上</td><td>开</td><td>同上</td><td>四处接缝逐字节回退（基线 commit 对照锁死）</td></tr><tr><td><code>KHY_DOC_VS_MEASURED</code></td><td>同上</td><td>开</td><td>同上</td><td>注入块返 <code>''</code>、观察器返 <code>observed:false</code></td></tr><tr><td><code>KHY_TOOL_RECALL_INDEX</code></td><td>同上</td><td>开</td><td>同上</td><td>叶子返历史裸名清单（逐字节）</td></tr></tbody></table>
+<p><strong>阶段选择器不入表</strong>（字符串常量，非布尔门控，与 <code>KHY_STEP_ANCHOR_STAGE</code> 先例一致）：<br><code>KHY_CONFIDENCE_CALIBRATION_STAGE</code> / <code>KHY_CLUE_VAULT_STAGE</code> / <code>KHY_TOOL_RECALL_INDEX_STAGE</code><br>（叶子字面常量）与 <code>docVsMeasuredPolicy.STAGE</code>。四个叶子当前一律 <code>'S1'</code>，非法值回落 S1<br>（绝不 fail-open 到更高阶段）；登记表 <code>executorStage.constant</code> 与源码常量由<br><code>check-rollout-stage.js</code> 比对，漂移即报。</p>
+<p><strong>路径覆盖</strong>：<code>KHY_CONFIDENCE_LEDGER_FILE</code>（台账落点，无默认；缺省走<br><code>dataHome/ruleguard/confidence-observations.jsonl</code>，dataHome 不可用回退 cwd 相对<br><code>works/data/khy/ruleguard/</code>）。其余三个机制无路径开关。</p>
+<hr>
+<h2 id="4-共享登记落点-整合后的单一改动">4. 共享登记落点（整合后的单一改动）<a class="anchor" href="#4-共享登记落点-整合后的单一改动" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>落什么</th></tr></thead><tbody><tr><td><code>runtime/node/backend/src/utils/flagRegistry/index.js</code></td><td>四条门控登记（default-on / CANON），各带中文注释说明缺陷与回退语义</td></tr><tr><td><code>runtime/node/backend/src/services/selfProfile.js</code></td><td>三处 A 层注入（确信度自检 / CLUE-LEDGER / 文档 vs 实测），全部 fail-soft、门控关返 <code>''</code></td></tr><tr><td><code>runtime/node/backend/src/services/selfAuditRegistry.js</code></td><td>#4 的 mitigation/锚点补 <code>deferredRecallIndex</code> + <code>KHY_TOOL_RECALL_INDEX</code>；新增 #8（文档 vs 实测）；<code>meta.note</code> 如实标注 #8 来源</td></tr><tr><td><code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code></td><td>四条 mechanism（S1 / stageSince 2026-10-13 / samples.observed 0 / target 200 / rollback / executorStage）；<code>updated</code> 与 <code>rollout.updated</code> → 2026-10-13</td></tr><tr><td><code>runtime/node/backend/tests/services/selfAuditRegistry.test.js</code></td><td>#4 期望锚点表更新（严格 deepStrictEqual，未放宽）</td></tr><tr><td><code>runtime/node/backend/tests/tools/khySelfAlignment.test.js</code></td><td>自审面计数 5 → 6（仍是<strong>严格计数</strong>逐项 verified；#8 起随 #1..#7 一并核验）</td></tr></tbody></table>
+<blockquote><p><strong>整合适配（有意的小改，非放宽）</strong>：补丁原文把 #8 的 mitigation 写作<br><code>KhySelf self_audit_verify</code>，与该文件既有测试 ⑪「无核验输入时输出不得含该串<br>（代理断言 = 无核验协议措辞）」冲突。整合时该处改为 <code>KhySelf 自审核验动作</code><br>——三条取证入口不变、语义不变、既有断言一字未动；精确动作名仍由同轮注入的<br>docVsMeasured 纪律块给出。</p></blockquote>
+<hr>
+<h2 id="5-阶段-process-008-规则-8">5. 阶段（PROCESS-008 / 规则 8）<a class="anchor" href="#5-阶段-process-008-规则-8" aria-label="锚点">#</a></h2>
+<p>四条机制全部 <strong>S1 观察者</strong>：只注入提示、只记录样本，<strong>不阻断、不改写、不 nudge</strong>。<br>登记字段齐备：<code>stage</code> / <code>stageSince</code> / <code>previousStage</code> / <code>samples</code> / <code>rollback</code> / <code>executorStage</code>。</p>
+<ul><li>样本口径：确信度校准 = 台账事件行（每组 finding 一行，带 <code>replyChars</code> / <code>priorToolActivity</code>）；</li></ul>
+<p>线索保全 = compress 与增量两条审计行的 <code>clueCount&gt;0</code>；文档 vs 实测 = doc-grounding 观察记录<br>  （落既有 toolLoopJournal）；工具召回词表 = 观察期「据词表命中并真正调用」的实例（非拦截型）。</p>
+<ul><li>毕业口径：≥200 条且无解释不了的样本（PP-2，以样本量计不以时间计）；升阶一次一阶（PP-6），</li></ul>
+<p>是人的决定——<strong>当前代码里刻意不存在任何按阶段改变行为的路径</strong>。</p>
+<ul><li>升档动作已预写：S2/S3 对确信度校准=开始提示/拦截；对线索保全=接 split 调整 / pin 强制；</li></ul>
+<p>对工具召回=接进 toolSearch 零命中回退（会改工具结果，故必须后置）。</p>
+<hr>
+<h2 id="6-验证-2026-10-13-实跑">6. 验证（2026-10-13 实跑）<a class="anchor" href="#6-验证-2026-10-13-实跑" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>检查</th><th>命令</th><th>结果</th></tr></thead><tbody><tr><td>门控登记表结构</td><td><code>npm run check:flag-registry</code></td><td><code>Flag-registry check passed</code></td></tr><tr><td>阶段守卫</td><td><code>node scripts/ci/check-rollout-stage.js</code></td><td>mechanisms: 32 · <strong>0 error</strong> · 3 warning（存量:read-before-edit / cross-model-verify / trajectory-routing）</td></tr><tr><td>归属登记守卫</td><td><code>node scripts/ci/check-feature-ownership.js</code></td><td>0 error · 3 warning（存量:ai-gateway / token-usage / software-copyright-materials）</td></tr><tr><td>确信度校准测试</td><td><code>node --test runtime/node/backend/tests/services/confidenceCalibration.test.js</code></td><td>24/24，exit 0</td></tr><tr><td>线索保全测试</td><td><code>node --test runtime/node/backend/tests/services/clueVault.test.js</code></td><td>21/21，exit 0</td></tr><tr><td>工具召回词表测试</td><td><code>node --test runtime/node/backend/tests/services/deferredRecallIndex.test.js</code></td><td>11/11，exit 0</td></tr><tr><td>文档 vs 实测测试</td><td><code>node --test runtime/node/backend/tests/services/docVsMeasuredPolicy.test.js</code></td><td>15/15，exit 0</td></tr><tr><td>自审登记回归</td><td><code>node --test runtime/node/backend/tests/services/selfAuditRegistry.test.js</code></td><td>13/13，exit 0</td></tr><tr><td>四机制门控探针</td><td><code>node runtime/node/backend/scripts/selfKnowledgeProbe.js</code></td><td>19/19，exit 0（<strong>负路径实测</strong>：桩坏一条叶子即 16/19、exit 1 并点名 FAILED 三条）</td></tr></tbody></table>
+<p>探针（<code>runtime/node/backend/scripts/selfKnowledgeProbe.js</code>，只读、不写盘）对每个机制断言<br>四件事：叶子门控开→块出现；叶子门控关→逐字节为空；接缝门控开→系统提示含对应块；<br>接缝门控关→<strong>逐字节回退</strong>（前三个 = 输出 === 开态去掉该块；第四个 = 该段回退为历史裸名<br>清单且首字节起逐字节相等）。另附登记面检查：四门控已登记 default-on/CANON、四叶子阶段<br>常量均 S1、四机制均在 <code>rollout.mechanisms</code> 登记齐备。</p>
+<blockquote><p>已知既有失败（<strong>非本批引入</strong>）：<code>tests/tools/khySelfAlignment.test.js</code> 的<br>「既有 action 行为不回归」条断言 <code>selfSourceDir</code> 匹配 <code>/services[\/\\]backend[\/\\]src$/</code>，<br>实际值为 <code>D:\Portable\khy-os\runtime\node\backend\src</code>——仓库层级迁移后的测试侧路径漂移，<br>与四个机制的文件无交集（复核记录同款）。</p></blockquote>
+<hr>
+<h2 id="7-边界与未覆盖-如实登记">7. 边界与未覆盖（如实登记）<a class="anchor" href="#7-边界与未覆盖-如实登记" aria-label="锚点">#</a></h2>
+<ol><li><strong>运行侧只覆盖默认收尾路径</strong>：确信度校准挂在 <code>agenticHarnessService</code> 收尾；</li></ol>
+<p><code>KHY_QUERY_ENGINE_HARNESS=off</code> 或 harness 抛错走 <code>queryEngine._submitMessageViaToolLoop</code><br>   回退的轮次不扫描（那一轮只有提示词侧生效）。文档 vs 实测同理只挂 toolUseLoopCore 收尾。</p>
+<ol><li><strong>启发式与假阳/假阴</strong>：<code>unbacked_certainty</code> 是启发式（强措辞词表外的过度自信识别不出；</li></ol>
+<p>表内措辞也会有误报）；doc-grounding 抽取限白名单顶层目录 + 常见扩展名，未加反引号的<br>   含空格文档名会漏抽。S1 靠人工复核样本，升 S2 前不做任何提示、不阻断任何交付。</p>
+<ol><li><strong>提示协议的行为改变不可保证</strong>：本批保证的是「注入发生 + 零工具轮次的笃定断言/自称核验</li></ol>
+<p>被确定性计量」，不是「模型行为必然改变」。</p>
+<ol><li><strong>有工具调用的轮次不叠报</strong>：证据薄的轮次仍归既有证据门管，本批刻意不叠加。</li><li><strong>台账无容量上限/轮转</strong>（与 <code>authzFailureLedger</code> 同型）；工具召回的样本需使用方在观察期汇总</li></ol>
+<p>（叶子零 IO，不埋采样写入）。</p>
+<ol><li><strong>跨轮引用残余</strong>：<code>conversationMessages</code> 缺失的调用路径下，前几轮真实查过而本轮引用的</li></ol>
+<p>轮次仍可能被记 <code>unbacked_verification_claim</code>（台账不存正文，复核需按轮次回捞）。</p>
+<ol><li><strong>中文召回到 hint 自带中文词为止</strong>（36 个延迟工具约 25 个 searchHint 纯英文）；</li></ol>
+<p>未扩 TOOL_CLUSTERS（预激活是另一条机制）；未覆盖 Claude Direct 服务端 tool_search。</p>
+<ol><li><strong>只读面</strong>：工具召回词表未新增命令面读取入口（命令面棘轮已满），样本经文件/审计行复核。</li></ol>
+<hr>
+<h2 id="8-棘轮合规">8. 棘轮合规<a class="anchor" href="#8-棘轮合规" aria-label="锚点">#</a></h2>
+<p>本批 <strong>0 新增</strong>：路由命令、别名、handler 文件、规则 ID。<br>四机制挂进的既有入口：selfProfile A 层（既有）、<code>/self</code> 自审面（#8 经既有分面暴露）、<br>既有 env 门控体系（flagRegistry）、既有收尾观察接缝（agenticHarnessService / toolUseLoopCore）、<br>既有 toolLoopJournal 与既有审计台账。<br><code>npm run check:delivery</code> 读数（本批前后一致）：routerCommands=246/245 · aliasEntries=591/591 ·<br>handlerFiles=158/155 · ruleCount=96/94。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-185] 四档模式与智能路由方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-185] 四档模式与智能路由方案（auto / 极致 / 性能 / 经济）</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-187] 数据与逻辑解耦重构方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-187] 数据（内容）与项目（代码/逻辑）彻底解耦重构方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准·线索保全·工具召回词表·文档vs实测）.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
