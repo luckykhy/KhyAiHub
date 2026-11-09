@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-141-A91127VJ
 /**
  * Token Usage Tracking Service
  *

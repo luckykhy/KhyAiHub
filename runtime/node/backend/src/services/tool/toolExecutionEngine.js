@@ -316,7 +316,7 @@ class ToolExecutionEngine {
    */
   async executeOne(call, context = {}) {
     if (this._onToolCall) {
-      const callCtx = this._onToolCall(call.name, call.params, this._iteration);
+      const callCtx = this._onToolCall(call.name, call.params, this._iteration, call._toolUseId || null);
       if (callCtx && typeof callCtx === 'object') {
         call._traceContext = { ...(call._traceContext || {}), ...callCtx };
       }
@@ -362,7 +362,9 @@ class ToolExecutionEngine {
 
     // Phase 7: Check streaming executor cache (tool may have been pre-executed)
     if (this._streamingExecutor) {
-      const cached = this._streamingExecutor.getResultByHash(call.name, call.params);
+      const cached =
+        this._streamingExecutor.getResultById(call._toolUseId) ||
+        this._streamingExecutor.getResultByHash(call.name, call.params);
       if (cached) {
         const elapsed = cached.elapsed || 0;
         const result = cached.output || cached;
