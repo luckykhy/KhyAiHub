@@ -26,10 +26,17 @@
 #
 # Notes (single-maintainer cheat sheet):
 #   Local:    .\scripts\release\build-android.ps1
-#   Artifacts: dist/android/app-release.apk + app-release.aab + SHA256SUMS.txt
+#   Artifacts: dist/android/app-release.apk + app-release.aab + mapping.txt
+#     + SHA256SUMS.txt
 #   If the script WARNS "DEBUG-signed": no release credentials were found;
 #     the output is NOT Play-store-ready. Check android/key.properties or set
 #     the KHY_ANDROID_* env vars, then re-run.
+#   If the script WARNS that R8 mapping.txt was not found: no minification
+#     output exists in the build tree (minify disabled or outputs cleaned), so
+#     obfuscated stack traces cannot be symbolized; WARN-only by design.
+#   Assets budget: android/app/src/main/assets over KHY_ASSETS_BUDGET_MB
+#     (default 10) prints its top-5 largest files and WARNS;
+#     KHY_ASSETS_STRICT=1 escalates the overrun to a hard FAIL.
 
 [CmdletBinding()]
 param(
@@ -272,20 +279,31 @@ if ($apkPath -and -not $SkipVerify) {
   if (-not $apksigner) {
     Say-Warn "apksigner not found in $sdk\build-tools — skipping signature check."
   } else {
-    $certOut = & $apksigner verify --print-certs $apkPath 2>$null
-    # apksigner's "Verifies" line only appears when v1 (JAR) scheme is also
-    # used; a v2/v3-only APK still verifies (exit 0) but omits that word.
-    # Treat "either Verifies OR a valid signer cert digest" as success.
+    # --verbose is what makes apksigner print the "Verified using vN scheme" lines;
+    # without it every scheme reads as unknown even when the APK is signed.
+    $certOut = & $apksigner verify --verbose --print-certs $apkPath 2>$null
+    # "Verifies" appears only when v1 (JAR) is in play; a v2/v3-only APK still
+    # verifies (exit 0) but omits that word. Treat "either Verifies OR a valid
+    # signer cert digest" as success.
     $verifies = ($certOut -match 'Verifies') -or ($certOut -match 'Signer #1 certificate SHA-256 digest')
     if (-not $verifies) {
       Say-Fail "APK signature verification failed (apksigner reported no valid signer):`n$certOut"
     }
     $sha256Line = ($certOut | Select-String 'Signer #1 certificate SHA-256 digest' | Select-Object -First 1).Line
-    $scheme = if ($certOut -match 'Verified using v2') { 'v2' } elseif ($certOut -match 'Verified using v1') { 'v1' } else { 'unknown' }
-    Say-Ok "signature valid ($scheme scheme). ${sha256Line.Trim()}"
+    # Report every scheme that actually verified, not just the first one found:
+    # v2 alone (minSdk 24+) and v2+v3 both ship in the wild.
+    $schemes = @()
+    foreach ($s in @('v1', 'v2', 'v3', 'v3.1', 'v4')) {
+      if ($certOut -match ("Verified using " + [regex]::Escape($s) + " scheme.*: true")) { $schemes += $s }
+    }
+    $schemeText = if ($schemes.Count -gt 0) { $schemes -join '+' } else { 'unknown' }
+    Say-Ok "signature valid ($schemeText scheme). $(if ($sha256Line) { $sha256Line.Trim() } else { 'digest line not reported' })"
 
     if ($expectSigning -eq 'release' -and $relStoreFile -and (Test-Path $relStoreFile)) {
-      $keytool = Join-Path $env:JAVA_HOME 'bin\keytool'
+      # JAVA_HOME's bin holds keytool.exe on Windows; Test-Path needs the
+      # extension or the whole cross-check silently disappears.
+      $keytool = Join-Path $env:JAVA_HOME 'bin\keytool.exe'
+      if (-not (Test-Path $keytool)) { $keytool = Join-Path $env:JAVA_HOME 'bin\keytool' }
       if (Test-Path $keytool) {
         # keytool prints a blank separator line before "SHA256: ..."; Select-String
         # will grab the first SHA256 match which belongs to the keystore's key.
@@ -337,6 +355,27 @@ if ($aabPath) {
   $artifacts += $dest
   Say-Ok "AAB -> $dest"
 }
+# R8 mapping must ship with the release: without it a minified stack trace is
+# unretrievable and Play deobfuscation has nothing to upload. The variant
+# writes it under the AGP output dir, which the buildDir redirect in
+# android/build.gradle.kts moves into the Flutter build tree — hence two
+# candidate roots, mirroring the APK/AAB lookup above. WARN-only: a build with
+# minify disabled legitimately has no mapping and must not block the release.
+$mappingCandidates = @(
+  (Join-Path $appDir 'build\app\outputs\mapping\release\mapping.txt'),
+  (Join-Path $androidDir 'app\build\outputs\mapping\release\mapping.txt')
+)
+$mappingPath = Find-First $mappingCandidates
+if ($mappingPath) {
+  $dest = Join-Path $OutputDir 'mapping.txt'
+  Copy-Item -Force $mappingPath $dest
+  $h = (Get-FileHash -Algorithm SHA256 $dest).Hash
+  Add-Content -Path $manifest -Value ("{0}  mapping.txt" -f $h)
+  $artifacts += $dest
+  Say-Ok "mapping.txt -> $dest"
+} else {
+  Say-Warn ("未找到 R8 mapping.txt（查过: {0}）——混淆堆栈将无法符号化、Play 反混淆无文件可传；确认 app 模块 minify 未被关闭后重跑可消除本条。" -f ($mappingCandidates -join ', '))
+}
 # Canary faces in the receipt: the stamp line inside SHA256SUMS.txt witnesses
 # which delivery the hashes belong to; ledger.jsonl (gitignored, works/data) is
 # the per-delivery map and never enters the repo. Ledger write is fail-soft —
@@ -356,6 +395,48 @@ if ($khyCanary) {
   }
 }
 Say-Ok "SHA-256 manifest: $manifest"
+
+# ── Assets budget gate ───────────────────────────────────────────────────────
+# Budgets the native assets gradle packs verbatim into the APK
+# (android/app/src/main/assets; the Flutter asset tree is a separate payload
+# and out of scope here). Default 10MB is ~4x the current contents (the
+# bundled shizuku runner dominates) — headroom for real growth, tight enough
+# to catch a stray media/debug dump dropped into assets. WARN-only by default
+# so a bulky-but-intended addition can still ship; KHY_ASSETS_STRICT=1 turns
+# the overrun into a hard FAIL (non-zero exit; already-collected artifacts
+# stay in dist for inspection).
+Write-Host ""
+Write-Host "=== Assets budget check ==="
+$assetsDir = Join-Path $androidDir 'app\src\main\assets'
+if (-not (Test-Path $assetsDir)) {
+  Say-Info "android/app/src/main/assets 不存在——无进包 native assets，跳过体积预算检查。"
+} else {
+  $budgetMb = 10
+  if ($env:KHY_ASSETS_BUDGET_MB) {
+    $parsed = 0
+    if (-not [int]::TryParse($env:KHY_ASSETS_BUDGET_MB, [ref]$parsed) -or $parsed -lt 0) {
+      Say-Fail "KHY_ASSETS_BUDGET_MB='$($env:KHY_ASSETS_BUDGET_MB)' 不是非负整数（单位 MB）——改成如 10 后重跑。"
+    }
+    $budgetMb = $parsed
+  }
+  $assetFiles = @(Get-ChildItem $assetsDir -Recurse -File)
+  $assetBytes = 0
+  if ($assetFiles.Count -gt 0) { $assetBytes = ($assetFiles | Measure-Object Length -Sum).Sum }
+  $assetMb = [math]::Round($assetBytes / 1MB, 2)
+  if ($assetBytes -gt ($budgetMb * 1MB)) {
+    $assetFiles | Sort-Object Length -Descending | Select-Object -First 5 | ForEach-Object {
+      Write-Host ("  {0,10:N1} KB  {1}" -f ($_.Length / 1KB), $_.FullName.Substring($assetsDir.Length + 1))
+    }
+    $over = "assets 体积 {0} MB 超过预算 {1} MB（android/app/src/main/assets，共 {2} 个文件）" -f $assetMb, $budgetMb, $assetFiles.Count
+    if ($env:KHY_ASSETS_STRICT -eq '1') {
+      Say-Fail "$over —— KHY_ASSETS_STRICT=1 生效为硬门；清理或移出上面的大文件（或用 KHY_ASSETS_BUDGET_MB 调阈值）后重跑，已收集产物保留在 $OutputDir 供排查。"
+    } else {
+      Say-Warn "$over —— 默认仅提醒不阻断；设 KHY_ASSETS_STRICT=1 升为硬门，设 KHY_ASSETS_BUDGET_MB 调阈值。"
+    }
+  } else {
+    Say-Ok ("assets 体积 {0} MB / 预算 {1} MB（android/app/src/main/assets，共 {2} 个文件），预算内" -f $assetMb, $budgetMb, $assetFiles.Count)
+  }
+}
 
 # ── Summary ─────────────────────────────────────────────────────────────────
 Write-Host ""

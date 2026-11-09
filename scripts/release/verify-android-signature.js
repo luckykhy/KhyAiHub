@@ -28,7 +28,7 @@ const path = require('path');
 const { verifyAndroidSignature } = require('./lib/verifyAndroidSignature');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const APP_DIR = path.join(REPO_ROOT, 'apps', 'khy-os-client-app');
+const APP_DIR = path.join(REPO_ROOT, 'delivery', 'mobile', 'khy-os-client-app');
 const ANDROID_DIR = path.join(APP_DIR, 'android');
 const KEY_PROPS = path.join(ANDROID_DIR, 'key.properties');
 const DEFAULT_APK = path.join(REPO_ROOT, 'dist', 'android', 'app-release.apk');
@@ -57,8 +57,15 @@ function findApksigner() {
     process.env.ANDROID_SDK_ROOT,
     process.env.ANDROID_HOME,
   ];
+  // 便携布局兜底：Windows 上从常见安装位探测，**不写死本机盘符**——
+  // 写死的 'D:\Portable\Tools\android-sdk' 会让本仓自己的 no-hardcoded-abs-path 守卫
+  // （scripts/ci/check-agent-rules.js）对本文件报红，提交即 CI 红。
   if (IS_WIN) {
-    bases.push('D:\\Portable\\Tools\\android-sdk'); // 便携布局兜底,与 build-android.ps1 对齐
+    for (const env of ['LOCALAPPDATA', 'PROGRAMFILES']) {
+      const root = process.env[env];
+      if (!root) continue;
+      bases.push(path.join(root, 'Android', 'Sdk'));
+    }
   }
   for (const bt of BT_LIST) {
     for (const base of bases) {

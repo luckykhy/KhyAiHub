@@ -37,6 +37,9 @@ SDIST_RECURSIVE_INCLUDES = _ordered_unique([
     "delivery/extension",
     "delivery/web/ai-frontend",
     "delivery/channel/khyquant",
+    # 品牌资产包：几何与配色单一真源 + 生成物。带进 sdist 是为了让「主标只有一个来源」
+    # 这条约定在仓外也成立（`node scripts/brand/build-brand-assets.js` 可重跑）。
+    "delivery/brand",
     "runtime/boot/kernel/src",
     "runtime/boot/kernel/boot",
     "runtime/boot/kernel/moonbit",
