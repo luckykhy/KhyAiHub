@@ -69,20 +69,13 @@ class ShellExecutor {
       final result = await _channel.invokeMethod('shell', {
         'command': command,
         'timeout': timeoutSeconds,
-        if (env != null) 'env': env,
+        'env': ?env,
       }).timeout(Duration(seconds: timeoutSeconds + 5));
 
       final duration = DateTime.now().difference(startTime).inMilliseconds;
       final map = Map<String, dynamic>.from(result as Map);
 
-      return ShellResult(
-        success: map['success'] == true,
-        stdout: map['stdout']?.toString() ?? '',
-        stderr: map['stderr']?.toString() ?? '',
-        exitCode: map['exitCode'] as int? ?? -1,
-        durationMs: duration,
-        command: command,
-      );
+      return _toResult(map, command, duration);
     } on TimeoutException {
       final duration = DateTime.now().difference(startTime).inMilliseconds;
       _logger.w(LogCategory.system, 'Shell 超时: $command');
@@ -105,6 +98,68 @@ class ShellExecutor {
         command: command,
       );
     }
+  }
+
+  /// 执行一条**人工终端**命令。
+  ///
+  /// 与 [exec] 的区别有两处，且都是刻意分开的：
+  ///   1. 走独立的 `terminalShell` 通道——那条通道用人工命令区自己的准入策略，
+  ///      AI 与设备控制的严白名单原样保留，两者互不影响。
+  ///   2. cwd 作为**独立参数**传，不拼成 `cd <dir> && cmd`。拼法会让命令体里出现
+  ///      `&&`，而命令体里的 shell 控制符是硬禁的——真机上终端因此一条命令都发不出去。
+  static Future<ShellResult> execTerminal(
+    String command, {
+    String? cwd,
+    int timeoutSeconds = 30,
+  }) async {
+    final startTime = DateTime.now();
+    try {
+      final result = await _channel.invokeMethod('terminalShell', {
+        'command': command,
+        'timeout': timeoutSeconds,
+        'cwd': ?cwd,
+      }).timeout(Duration(seconds: timeoutSeconds + 5));
+
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      return _toResult(Map<String, dynamic>.from(result as Map), command, duration);
+    } on TimeoutException {
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      return ShellResult(
+        success: false,
+        stdout: '',
+        stderr: '命令执行超时 (${timeoutSeconds}s)',
+        exitCode: -1,
+        durationMs: duration,
+        command: command,
+      );
+    } catch (e) {
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      return ShellResult(
+        success: false,
+        stdout: '',
+        stderr: e.toString(),
+        exitCode: -1,
+        durationMs: duration,
+        command: command,
+      );
+    }
+  }
+
+  /// 把原生返回的 map 归一成 [ShellResult]。两条通道共用一份解析，免得
+  /// 一边改了字段名另一边还按老名字读。
+  static ShellResult _toResult(
+    Map<String, dynamic> map,
+    String command,
+    int durationMs,
+  ) {
+    return ShellResult(
+      success: map['success'] == true,
+      stdout: map['stdout']?.toString() ?? '',
+      stderr: map['stderr']?.toString() ?? '',
+      exitCode: map['exitCode'] as int? ?? -1,
+      durationMs: durationMs,
+      command: command,
+    );
   }
 
   /// 执行多条命令（串行）

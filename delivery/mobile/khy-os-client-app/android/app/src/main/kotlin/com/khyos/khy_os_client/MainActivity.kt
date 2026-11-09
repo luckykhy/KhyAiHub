@@ -23,11 +23,11 @@ import com.khyos.khy_os_client.bridge.BridgeService
 import com.khyos.khy_os_client.bridge.HttpBridge
 import com.khyos.khy_os_client.bridge.Tools
 import com.khyos.khy_os_client.engine.LocalVisionServer
+import com.khyos.khy_os_client.terminal.ShellRunner
+import com.khyos.khy_os_client.terminal.TerminalShell
 import com.khyos.khy_os_client.vfs.VfsBridge
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.io.File
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.khyos.khy_os_client/device"
@@ -234,6 +234,19 @@ class MainActivity : FlutterActivity() {
                 // --- Shell ---
                 "shell" -> shell(
                     call.argument<String>("command") ?: "",
+                    call.argument<Int>("timeout") ?: 30,
+                    result
+                )
+
+                // --- 终端（人工命令区）---
+                //
+                // 单独一个入口，不复用上面的 shell：上面那条是 AI 与设备控制用的，
+                // 白名单收得紧才安全；终端是人手动敲的，需要能敲 df -h、find . -name *.apk。
+                // 共用一份白名单只有两种结局——终端像摆设（真机上 ls 都发不出去），
+                // 或者把 AI 通道一起放宽。两边都不接受，所以拆开，策略各归各。
+                "terminalShell" -> terminalShell(
+                    call.argument<String>("command") ?: "",
+                    call.argument<String>("cwd"),
                     call.argument<Int>("timeout") ?: 30,
                     result
                 )
@@ -1014,56 +1027,53 @@ class MainActivity : FlutterActivity() {
             return
         }
         exec.execute {
-            try {
-                val p = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
-                val out = StringBuilder()
-                val err = StringBuilder()
-                // stdout 与 stderr 必须**并发**抽干：先读 stdout 再读 stderr 时，
-                // 子进程若先把 stderr 写满管道（Linux 管道缓冲 64KB）就会阻塞在自己的
-                // stderr 写上，stdout 于是永远不到 EOF —— 父进程卡在读 stdout 上，
-                // 而 destroyForcibly() 排在两次读之后，永远执行不到。
-                // 这正是同批 ShizukuServiceManager.execViaShizuku 已经修好的那处死锁。
-                val outThread = Thread {
-                    BufferedReader(InputStreamReader(p.inputStream)).use { br ->
-                        var line: String?
-                        while (br.readLine().also { line = it } != null) {
-                            synchronized(out) { out.append(line).append("\n") }
-                        }
-                    }
-                }
-                val errThread = Thread {
-                    BufferedReader(InputStreamReader(p.errorStream)).use { br ->
-                        var line: String?
-                        while (br.readLine().also { line = it } != null) {
-                            synchronized(err) { err.append(line).append("\n") }
-                        }
-                    }
-                }
-                outThread.isDaemon = true
-                errThread.isDaemon = true
-                outThread.start()
-                errThread.start()
-                val finished = p.waitFor(timeoutSec.toLong(), TimeUnit.SECONDS)
-                if (!finished) {
-                    p.destroyForcibly()
-                }
-                outThread.join(500)
-                errThread.join(500)
-                val code = try { p.exitValue() } catch (_: Exception) { -1 }
-                runOnUiThread {
-                    result.success(mapOf(
-                        "success" to (finished && code == 0),
-                        "stdout" to out.toString(),
-                        "stderr" to err.toString(),
-                        "exitCode" to code,
-                        "timeout" to !finished
-                    ))
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    result.success(mapOf("success" to false, "stdout" to "", "stderr" to (e.message ?: "unknown error"), "exitCode" to -1))
-                }
-            }
+            val r = ShellRunner.run(command, null, timeoutSec)
+            runOnUiThread { result.success(r) }
+        }
+    }
+
+    /**
+     * 终端（人工命令区）执行一条命令。
+     *
+     * 与 [shell] 的区别在两处，且都是刻意分开的：
+     *   1. 准入策略走 [TerminalShell]（人工命令区自己的清单），[shell] 那条严白名单
+     *      原样留给 AI 与设备控制。
+     *   2. cwd 单独作为参数传，**不**拼成 `cd <dir> && cmd`：命令体里出现 `&&`
+     *      会被控制符禁令整体拒绝——真机实测，终端因此一条命令都发不出去。
+     */
+    private fun terminalShell(command: String, cwd: String?, timeoutSec: Int, result: MethodChannel.Result) {
+        if (command.isEmpty()) {
+            result.success(mapOf("success" to false, "stdout" to "", "stderr" to "空命令", "exitCode" to -1))
+            return
+        }
+        if (!TerminalShell.isAllowed(command)) {
+            // 拒绝要说清边界，否则用户只能挨个猜命令名。
+            val allowed = TerminalShell.allowedSummary()
+            result.success(mapOf(
+                "success" to false,
+                "stdout" to "",
+                "stderr" to "命令不在终端允许清单内。允许的命令：$allowed。"
+                    + "另外：一条命令里不允许出现 shell 控制符（; & | ` > < 换行）与命令替换"
+                    + "（`…` / $(…)），也不允许 find -exec、解释器（sh/python/awk/sed…）"
+                    + "与提权命令（su/chmod/chown/setprop）。",
+                "exitCode" to -1
+            ))
+            return
+        }
+        // 工作目录不存在就明说，不要静默回落到 /——那会让用户以为在目录 A 里执行，
+        // 实际命令跑在了别处，排查起来极难。
+        if (!cwd.isNullOrBlank() && !File(cwd).isDirectory) {
+            result.success(mapOf(
+                "success" to false,
+                "stdout" to "",
+                "stderr" to "工作目录不存在或不可访问：$cwd",
+                "exitCode" to -1
+            ))
+            return
+        }
+        exec.execute {
+            val r = ShellRunner.run(command, cwd, timeoutSec)
+            runOnUiThread { result.success(r) }
         }
     }
 
