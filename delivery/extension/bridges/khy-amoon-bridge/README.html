@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>khy-amoon-bridge · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>bridges<span class="sep">›</span>khy-amoon-bridge<span class="sep">›</span>khy-amoon-bridge</div>
+      <header class="hero reveal"><h1>khy-amoon-bridge</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-amoon-bridge">khy-amoon-bridge</a></li><li class="lvl-2"><a href="#1-它能做什么-以及不做什么">1. 它能做什么（以及不做什么）</a></li><li class="lvl-3"><a href="#phase-1-的-12-个工具-8-核心-4-受限只读">Phase 1 的 12 个工具（8 核心 + 4 受限只读）</a></li><li class="lvl-3"><a href="#restricted-与-prohibited-的边界">restricted 与 prohibited 的边界</a></li><li class="lvl-3"><a href="#明确不做">明确不做</a></li><li class="lvl-2"><a href="#2-架构">2. 架构</a></li><li class="lvl-2"><a href="#3-文件与模块归属">3. 文件与模块归属</a></li><li class="lvl-2"><a href="#4-前置条件">4. 前置条件</a></li><li class="lvl-2"><a href="#5-一次性安装">5. 一次性安装</a></li><li class="lvl-3"><a href="#手工注册-等价命令">手工注册（等价命令）</a></li><li class="lvl-2"><a href="#6-无线调试配对">6. 无线调试配对</a></li><li class="lvl-2"><a href="#7-启动与停止">7. 启动与停止</a></li><li class="lvl-2"><a href="#8-在-khyos-里使用">8. 在 KhyOS 里使用</a></li><li class="lvl-3"><a href="#工具调用失败时">工具调用失败时</a></li><li class="lvl-2"><a href="#9-手机-amoon-侧">9. 手机 amoon 侧</a></li><li class="lvl-3"><a href="#9-1-phase-0-门-双向的前提">9.1 Phase 0 门（双向的前提）</a></li><li class="lvl-3"><a href="#9-2-http-快通道-amoon-能联网时">9.2 HTTP 快通道（amoon 能联网时）</a></li><li class="lvl-3"><a href="#9-3-文件慢通道-amoon-只能读写-sdcard-时">9.3 文件慢通道（amoon 只能读写 /sdcard 时）</a></li><li class="lvl-3"><a href="#9-4-khyos-amoon-的可靠性边界">9.4 KhyOS → amoon 的可靠性边界</a></li><li class="lvl-2"><a href="#10-安全模型">10. 安全模型</a></li><li class="lvl-2"><a href="#11-故障排查">11. 故障排查</a></li><li class="lvl-2"><a href="#12-卸载与回滚">12. 卸载与回滚</a></li><li class="lvl-2"><a href="#13-未验证清单-不要当成结论">13. 未验证清单（不要当成结论）</a></li><li class="lvl-3"><a href="#13-1-集成后的实际运行记录-可复核">13.1 集成后的实际运行记录（可复核）</a></li><li class="lvl-2"><a href="#14-测试">14. 测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-amoon-bridge">khy-amoon-bridge<a class="anchor" href="#khy-amoon-bridge" aria-label="锚点">#</a></h1>
+<p>KhyOS 与手机 amoon 之间的桥。Phase 1 交付 8 个核心工具 + 4 个受限只读手机工具：<br><code>ping</code>、<code>bridge_status</code>、<code>khy_ask</code>、<code>phone_screenshot</code>、<code>phone_ui_dump</code>、<code>phone_info</code>、<br><code>phone_app_list</code>、<code>phone_ls</code>、<code>phone_exec</code>、<code>amoon_send</code>、<code>amoon_inbox</code>、<code>mailbox_status</code>。</p>
+<blockquote><p><strong>先读这一段：当前状态。</strong></p>
+<ul><li><strong>四个模块已经接起来</strong>：<code>lib/daemon.js</code> 负责单例装配，启动 HTTP server、ADB 无线生命周期、</li></ul>
+<p>文件信箱 poller 和任务队列；<code>lib/registry.js</code> 只注册 12 个 wire 工具（本地 PC 工具不暴露，<br>  仅作为 khy_ask 的内部 runner）；<br>  <code>lib/bridge-tools.js</code> 实现 ping / bridge_status / khy_ask / amoon_send / amoon_inbox / mailbox_status。</p>
+<ul><li>MCP stdio 前端（<code>lib/mcp.js</code>）、KhyOS 发现与注册助手（<code>lib/khy-tools.js</code>）、manifest、</li></ul>
+<p>安装/启动/诊断脚本、测试与本文档均已落地。</p>
+<ul><li><strong>仍未验证的是真机行为</strong>：screencap/uiautomator/input 的实际输出、adb reverse 往返、</li></ul>
+<p>Doze/锁屏、amoon 的 Phase 0 三项能力。没有这些证据时，<code>amoon → PC</code> 一律是 <code>unverified</code>。</p>
+<ul><li><code>start</code> 只启动本机 daemon；没有设备时只降级（<code>DEGRADED_ADB</code>），HTTP <code>/health</code> 仍可用，</li></ul>
+<p>不会假装手机工具成功。</p></blockquote>
+<hr>
+<h2 id="1-它能做什么-以及不做什么">1. 它能做什么（以及不做什么）<a class="anchor" href="#1-它能做什么-以及不做什么" aria-label="锚点">#</a></h2>
+<h3 id="phase-1-的-12-个工具-8-核心-4-受限只读">Phase 1 的 12 个工具（8 核心 + 4 受限只读）<a class="anchor" href="#phase-1-的-12-个工具-8-核心-4-受限只读" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>工具</th><th>side</th><th>risk</th><th>scope</th><th>说明</th></tr></thead><tbody><tr><td><code>ping</code></td><td>pc</td><td>low</td><td>operator / phone / file</td><td>最小连通性检查，不访问手机、不触发模型</td></tr><tr><td><code>bridge_status</code></td><td>pc</td><td>low</td><td>operator / phone / file</td><td>状态机、ADB、reverse、信箱、能力矩阵；phone/file 会裁剪敏感字段</td></tr><tr><td><code>khy_ask</code></td><td>khyos</td><td>medium</td><td>operator（phone 默认关闭）</td><td>一次性提问 KhyOS；phone 开启后强制 <code>max_turns=1</code>、空 cwd、哨兵 allowlist</td></tr><tr><td><code>phone_screenshot</code></td><td>phone</td><td>medium</td><td>operator</td><td><code>adb exec-out screencap -p</code>，默认落盘 24h，<code>inline</code> 受 8MB 上限约束</td></tr><tr><td><code>phone_ui_dump</code></td><td>phone</td><td>medium</td><td>operator</td><td><code>uiautomator dump</code>，最多 500 节点/1MB，不区分聊天角色</td></tr><tr><td><code>phone_info</code></td><td>phone</td><td>low</td><td>operator</td><td>只读设备信息：serial/model/brand/sdk/release/屏幕/电量/亮屏/锁屏/唤醒</td></tr><tr><td><code>phone_app_list</code></td><td>phone</td><td>low</td><td>operator</td><td>只读 <code>pm list packages</code> + 前台 activity；不能启停应用</td></tr><tr><td><code>phone_ls</code></td><td>phone</td><td>medium</td><td>operator</td><td>受限目录列表：仅 <code>/sdcard/khy-amoon-bridge</code>、Download、Documents、Pictures、DCIM 及 <code>/sdcard</code> 顶层；realpath 复检，拒绝 <code>..</code> 与符号链接逃逸</td></tr><tr><td><code>phone_exec</code></td><td>phone</td><td>medium</td><td>operator</td><td>固定诊断 op：<code>echo</code> / <code>getprop &lt;白名单 key&gt;</code> / <code>wm_size</code> / <code>pm_list</code> / <code>dumpsys_battery</code>；<strong>不是手机 shell</strong>，拒绝管道/重定向/<code>;</code>/<code>$()</code>/反引号/换行/未知 op</td></tr><tr><td><code>amoon_send</code></td><td>amoon</td><td>medium</td><td>operator</td><td>先写本地 spool，再 push 到手机 outbox（tmp+mv）；任一通道成功后把 spool 移入 <code>outbox/sent/</code>（失败则删除），返回 <code>spool_retired</code>，后续 flush 不会重发；intent 只报告启动成功</td></tr><tr><td><code>amoon_inbox</code></td><td>amoon</td><td>low</td><td>operator</td><td>读取本地 replies/ack 索引；文件来源一律 <code>unverified</code></td></tr><tr><td><code>mailbox_status</code></td><td>mailbox</td><td>low</td><td>operator / phone / file</td><td>信箱状态、当前 inbox/working 深度、累计扫描数、上次轮询、adb 可用性、能力状态</td></tr></tbody></table>
+<p>Phase 2 名称（<code>phone_ui_tap</code>、<code>phone_ui_swipe</code>、<code>phone_key</code>、<code>phone_text</code>、<br><code>phone_file_push</code>、<code>phone_file_pull</code>、<code>amoon_ui_send</code>、<code>amoon_read_chat</code>）<strong>不在 Phase 1 注册</strong>，<br><code>tools/list</code> 不会出现。</p>
+<p>文档里的 <code>phone.info</code>、<code>phone.app.list</code>、<code>phone.exec</code>、<code>phone.ls</code> 是注册名<br><code>phone_info</code>、<code>phone_app_list</code>、<code>phone_exec</code>、<code>phone_ls</code> 的点号简写；HTTP、CLI、MCP 调用都会<br>归一化为下划线名。<code>phone.shot</code> 是 <code>phone_screenshot</code> 的显式别名。<code>khy.ask</code> 这类本地工具名<br><strong>不会</strong>被别名化成已注册工具。</p>
+<h3 id="restricted-与-prohibited-的边界">restricted 与 prohibited 的边界<a class="anchor" href="#restricted-与-prohibited-的边界" aria-label="锚点">#</a></h3>
+<p>这是对参考项目 StepBridge 的<strong>故意收窄</strong>：保留只读状态/应用/目录/诊断能力，拒绝任意命令执行。</p>
+<ul><li><strong>restricted（已注册，operator only）</strong>：<code>phone_info</code>、<code>phone_app_list</code>、<code>phone_ls</code>、<code>phone_exec</code>。<ul><li><code>phone_exec</code> 只接受结构化 <code>{op,...}</code>，命令模板固定；用户值经 <code>shQuote</code> 且先过元字符拒绝。</li><li><code>phone_ls</code> 只列白名单根；设备侧 <code>realpath -e</code> 后再做前缀校验。</li><li><code>phone_app_list</code> 只读包列表/前台 activity，不能 start/stop。</li></ul></li><li><strong>prohibited（永不注册）</strong>：<code>phone_shell</code>、<code>phone_su</code>、<code>phone_read</code>、<code>phone_write</code>、</li></ul>
+<p><code>phone_app_start</code>、<code>phone_app_stop</code>、通知、task/agent 控制。任何“任意手机 shell”都不提供。</p>
+<h3 id="明确不做">明确不做<a class="anchor" href="#明确不做" aria-label="锚点">#</a></h3>
+<ul><li>不新建/修改手机 App，不使用无障碍服务，不 root，不执行 <code>adb root/remount</code>。</li><li>不提供 <code>phone_shell</code> 或任意手机/PC shell。</li><li>不把 KhyOS 的任意 MCP/内置工具透传给手机；file scope 不包含 <code>khy_ask</code>。</li><li>不做 LAN 监听、TLS、多用户/OAuth；只绑 <code>127.0.0.1</code> + <code>adb reverse</code>。</li><li>不做开机自启/Windows 服务；daemon 按需启动。</li><li>Phase 1 不做文件信箱 HMAC（手机缺 <code>openssl</code>/<code>sha256hmac</code>），ack/reply 一律不可信。</li><li>不把审计哈希链说成防篡改；它只让本机管理员篡改可见。</li></ul>
+<hr>
+<h2 id="2-架构">2. 架构<a class="anchor" href="#2-架构" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">KhyOS CLI / TUI
+  │  MCP stdio（换行 JSON-RPC 2.0；stdout 只出协议）
+  ▼
+bin/mcp-server.js ──► lib/mcp.js（本目录）
+  │  HTTP 127.0.0.1:&lt;port&gt;，Bearer operator
+  ▼
+amoon-bridge daemon（模块 A；单例，per Windows user）
+  ├─ HTTP server：Host/Origin、auth、限流、per-tool cap、202/jobs
+  ├─ registry：schema → scope/risk → 幂等 → 审计 → handler（模块 C）
+  ├─ mailbox poller：adb exec-out ls/cat/mv，worker pool=2（模块 C）
+  ├─ adb lifecycle：resolve → connect → 校验 serial → reverse → keepalive（模块 B）
+  └─ khy runner：spawn node khy.js -p（sentinel/system-prompt/depth guard）（模块 C）
+        │ adb.exe（永远 -s &lt;serial&gt;）
+        ▼
+Android adbd（无线 TLS）
+  ├─ adb reverse tcp:&lt;port&gt; → PC 127.0.0.1:&lt;port&gt;
+  ├─ shell：curl / uiautomator / screencap / am / dumpsys（无 phone_shell 工具）
+  ├─ amoon com.stepos.ailauncher（ChatMainActivity / ShareActivity）
+  └─ /sdcard/khy-amoon-bridge/{inbox,outbox,working,done,failed,tmp,blobs}</code></pre>
+<p>两条通道：</p>
+<ol><li><strong>HTTP 快通道</strong>：手机 <code>127.0.0.1:&lt;port&gt;</code> → <code>adb reverse</code> → PC loopback。</li></ol>
+<p>Bearer phone token 默认只有 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>；<code>khy_ask</code> 默认关闭。</p>
+<ol><li><strong>文件慢通道</strong>：<code>/sdcard/khy-amoon-bridge</code> 文件信箱。没有 Bearer，投递者一律映射为独立</li></ol>
+<p><code>file</code> scope，只允许 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>；不触发模型、不控制手机。</p>
+<p>HTTP 端点（<code>/v1/*</code> 与 <code>/health</code> 等价短路径）：</p>
+<table><thead><tr><th>端点</th><th>鉴权</th><th>说明</th></tr></thead><tbody><tr><td><code>GET /health</code></td><td>无</td><td>只返回 <code>{ok:true}</code>，不暴露 pid/版本/serial</td></tr><tr><td><code>GET /v1/status</code></td><td>任意 scope</td><td>状态；phone/file 只看到本 scope 的工具名，<code>tasks.state_dir</code> 被裁掉</td></tr><tr><td><code>GET /v1/tools</code></td><td>任意 scope</td><td>当前 scope 可见的工具描述</td></tr><tr><td><code>POST /v1/call</code></td><td>任意 scope</td><td>工具调用；<code>body.id</code>（8..64）是幂等键：同 id 同参数重放（<code>replayed:true</code>），同 id 不同参数 409 <code>id_conflict</code>；<code>khy_ask</code> 等长任务可 <code>wait_ms</code>，否则 202 + job id</td></tr><tr><td><code>GET /v1/jobs/:id</code></td><td>operator</td><td>202 job 的查询；<code>/v1/jobs/&lt;id&gt;</code>（短路径 <code>/jobs/&lt;id&gt;</code>）</td></tr><tr><td><code>POST /v1/rotate</code></td><td>operator</td><td>两阶段轮换第 1 步：返回新 phone token，<strong>旧 token 仍有效</strong></td></tr><tr><td><code>POST /v1/rotate/commit</code></td><td>operator</td><td>第 2 步：<code>{record_id}</code>，推送成功后使旧 phone token 失效</td></tr><tr><td><code>GET /v1/audit/tail?n=100</code></td><td>operator</td><td>审计尾部（脱敏，带 seq/prev）</td></tr></tbody></table>
+<p><code>KHY_AMOON_ENABLED=0</code> 时 registry 只放行 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>，其它工具返回<br><code>bridge_disabled</code>；HTTP 诊断端点仍可用于排障。</p>
+<hr>
+<h2 id="3-文件与模块归属">3. 文件与模块归属<a class="anchor" href="#3-文件与模块归属" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>作用</th><th>归属</th></tr></thead><tbody><tr><td><code>lib/contracts.js</code></td><td><strong>冻结契约</strong>：12 个工具、错误码、路径、限制、模块接口</td><td>A（只增不改）</td></tr><tr><td><code>lib/config.js</code> / <code>lib/logger.js</code></td><td>per-user 配置、fail-closed token 读取、JSON 日志</td><td>A</td></tr><tr><td><code>lib/mcp.js</code></td><td><strong>MCP stdio 前端 + daemon HTTP 客户端</strong>（initialize/tools/list/tools/call/ping）</td><td>D（本模块）</td></tr><tr><td><code>lib/khy-tools.js</code></td><td>KhyOS 发现、<code>getMcpServerEntry</code>、<code>khy mcp add/remove</code> argv、mcp.json 只读检查</td><td>D（本模块）</td></tr><tr><td><code>bin/mcp-server.js</code></td><td>极薄入口：argv + 启动 <code>lib/mcp.js</code></td><td>D（本模块）</td></tr><tr><td><code>bin/cli.js</code></td><td>命令分发（start/stop/status/doctor/call/phone/install/uninstall）</td><td>A</td></tr><tr><td><code>lib/daemon.js</code> / <code>bin/daemon.js</code></td><td>单例锁、装配 HTTP+wireless+mailbox+tasks、runtime.json、PID 身份停止</td><td>A（集成）</td></tr><tr><td><code>lib/registry.js</code> / <code>lib/bridge-tools.js</code></td><td>12 个 wire 工具、scope 门禁、phone/amoon/mailbox 适配</td><td>A/C（集成）</td></tr><tr><td><code>lib/server.js</code> / <code>lib/local-tools.js</code></td><td>loopback HTTP 前端、鉴权/审计/限流；本地工具仅供 khy_ask 内部使用，<strong>不注册到 registry</strong></td><td>A</td></tr><tr><td><code>lib/auth.js</code>、<code>lib/audit.js</code></td><td>鉴权、审计哈希链、日志</td><td>A</td></tr><tr><td><code>lib/errors.js</code> / <code>lib/ids.js</code></td><td>错误码表/BridgeError 再导出；id 生成与校验</td><td>A</td></tr><tr><td><code>lib/ratelimit.js</code> / <code>lib/idempotency.js</code></td><td>固定窗口限流；<code>body.id</code> 幂等/重放/冲突存储</td><td>A</td></tr><tr><td><code>lib/adb.js</code>、<code>lib/wireless.js</code>、<code>lib/phone-tools.js</code></td><td>ADB 传输、无线生命周期/reverse、phone_* 处理器</td><td>B</td></tr><tr><td><code>lib/mailbox.js</code>、<code>lib/tasks.js</code></td><td>文件信箱 poller、持久任务队列</td><td>C</td></tr><tr><td><code>lib/adb/*</code>、<code>lib/tools/*</code>、<code>lib/mailbox/*</code>、<code>lib/mcp/*</code>、<code>lib/http/*</code></td><td>契约路径的薄 re-export shim（见 <code>contracts.SHIMS</code>）</td><td>集成</td></tr><tr><td><code>lib/bootstrap.js</code>、<code>phone/**</code>（<code>README.md</code>/<code>tools.json</code>/<code>kb</code>）、<code>scripts/deploy-phone.js</code>、<code>docs/PHASE0.md</code></td><td>手机侧资产与部署（bootstrap 额外写 <code>port.txt</code>，提供 token 时写 <code>token.txt</code>）</td><td>D（其它任务）</td></tr><tr><td><code>scripts/install.ps1</code> / <code>start.ps1</code> / <code>doctor.ps1</code></td><td>安装、启动、只读诊断</td><td>D（本模块）</td></tr><tr><td><code>test/mcp.test.js</code> / <code>test/manifest.test.js</code> / <code>test/registry.test.js</code></td><td>MCP 握手、工具表、manifest、scope/kill-switch 校验（不需要真机）</td><td>D（本模块）</td></tr></tbody></table>
+<p>跨模块只通过 <code>lib/contracts.js</code> 的 <code>MODULES[*].exports</code> 调用。<code>lib/mcp.js</code> 不碰 ADB、信箱或<br>工具处理器；<code>tools/call</code> 只走 HTTP。</p>
+<hr>
+<h2 id="4-前置条件">4. 前置条件<a class="anchor" href="#4-前置条件" aria-label="锚点">#</a></h2>
+<ul><li>Windows 10/11，PowerShell 5.1+。</li><li>Node <strong>&gt;= 22</strong>（本机实测 <code>v22.18.0</code>，位置 <code>D:\Portable\Tools\commandcode\npm-global\node.exe</code>）。</li><li>Android platform-tools 的 <code>adb</code>。本机不在 PATH，位于</li></ul>
+<p><code>D:\Portable\Tools\platform-tools\adb.exe</code>；脚本会自动找到它。</p>
+<ul><li>KhyOS 便携版（本机 <code>D:\Portable\khy-os</code>，后端版本 <code>1.2.1</code>）。</li><li>手机已开启开发者选项与无线调试，并已授权本机（见第 6 节）。</li></ul>
+<hr>
+<h2 id="5-一次性安装">5. 一次性安装<a class="anchor" href="#5-一次性安装" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 在仓库根目录（khy-amoon-bridge）</span>
+powershell <span class="hljs-literal">-NoProfile</span> <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> scripts\install.ps1</code></pre>
+<p>等价的 CLI 路径（只做 token + MCP 注册；手机侧资产由 install.ps1/bootstrap 负责）：</p>
+<pre><code class="language-powershell">node bin\cli.js install <span class="hljs-literal">--scope</span> user <span class="hljs-literal">--dry-run</span>   <span class="hljs-comment"># 只打印将执行的 khy mcp add 命令</span>
+node bin\cli.js install <span class="hljs-literal">--scope</span> user             <span class="hljs-comment"># 现有 amoon 注册不会被覆盖，除非加 --force</span>
+node bin\cli.js uninstall <span class="hljs-literal">--scope</span> user <span class="hljs-literal">--dry-run</span> <span class="hljs-comment"># 打印 khy mcp remove 命令</span></code></pre>
+<p>常用参数：</p>
+<table><thead><tr><th>参数</th><th>作用</th></tr></thead><tbody><tr><td>`-Scope user\</td><td>project`</td></tr><tr><td><code>-Serial &lt;adb serial&gt;</code></td><td>显式指定设备，避免双 transport 误操作</td></tr><tr><td><code>-StateDir &lt;dir&gt;</code></td><td>覆盖状态目录（默认 <code>%LOCALAPPDATA%\khy-amoon-bridge</code>）</td></tr><tr><td><code>-KhyJs &lt;path&gt;</code></td><td>显式指定 KhyOS 的 <code>khy.js</code></td></tr><tr><td><code>-SkipMcp</code> / <code>-SkipPhone</code></td><td>只做其中一半</td></tr><tr><td><code>-RotatePhoneToken</code></td><td>强制轮换 phone token（bootstrap 分支会重新生成并推送 <code>token.txt</code>）</td></tr><tr><td><code>-OpenChat</code></td><td>仅透传给 <code>scripts/deploy-phone.js</code>；bootstrap 分支不打开聊天</td></tr><tr><td><code>-Force</code></td><td>允许覆盖已存在的 <code>amoon</code> 注册（默认不覆盖）</td></tr><tr><td><code>-DryRun</code></td><td>只打印计划，不落盘、不执行 <code>khy mcp add</code></td></tr><tr><td><code>-Json</code></td><td>机器可读输出</td></tr></tbody></table>
+<p><code>install.ps1</code> 实际做的事：</p>
+<ol><li>检查 Node &gt;= 22；解析 ADB（缺失只警告，不阻止 MCP 注册）。</li><li>创建 <code>%LOCALAPPDATA%\khy-amoon-bridge</code> 及其子目录，生成 <code>operator.token</code></li></ol>
+<p>（32 字节随机，<code>khy_</code> 前缀；用 <code>icacls /inheritance:r /grant:r</code> 限定当前用户；<br>   ACL 失败会删除 token 并以退出码 1 中止）。</p>
+<ol><li>若有设备 serial：优先调用 <code>scripts/deploy-phone.js</code>；否则调用 <code>lib/bootstrap.js</code>：</li></ol>
+<p>创建 <code>/sdcard/khy-amoon-bridge/{inbox,outbox,working,done,failed,tmp,blobs,examples}</code>，<br>   推送 <code>phone/README.md</code>、<code>phone/tools.json</code>、<code>phone/kb</code>（LF 归一、tmp+mv），写 <code>port.txt</code>；<br>   若手机上没有 <code>token.txt</code>（或显式 <code>-RotatePhoneToken</code>），先 <code>TokenStore.issuePhone()</code><br>   生成 <strong>phone scope</strong> token 并推送 <code>token.txt</code>；只有 bootstrap 确认推送成功后才<br>   <code>commitPhoneRotation(record_id)</code> 使旧 token 失效（operator token 永不下发）。<br>   推送失败时旧 phone token 仍有效。<br>   两者都不存在时明确打印「已跳过」，不影响 MCP 注册。</p>
+<ol><li>自动发现 <code>khy.js</code>（<code>KHY_JS</code> → <code>KHY_HOME</code> → 祖先目录 → <code>D:\Portable\khy-os</code>），</li></ol>
+<p>生成<strong>绝对路径</strong>的 MCP 入口，执行：</p>
+<pre><code class="language-text">   &amp; &lt;node.exe&gt; &lt;khy.js&gt; mcp add amoon --scope user -- &lt;node.exe&gt; &lt;...\bin\mcp-server.js&gt; \
+       --root &lt;...\khy-amoon-bridge&gt; --state-dir &lt;...\khy-amoon-bridge&gt; --khy-js &lt;khy.js&gt;</code></pre>
+<ol><li>回读 <code>mcp.json</code> 校验入口一致，并打印回滚命令。</li></ol>
+<blockquote><p>为什么必须是绝对路径：KhyOS 启动 MCP server 时不传 cwd（勘察 <code>services/domain/messaging/mcp/index.js</code>），<br>相对路径的 <code>bin/mcp-server.js</code> 会解析到错误目录。</p></blockquote>
+<h3 id="手工注册-等价命令">手工注册（等价命令）<a class="anchor" href="#手工注册-等价命令" aria-label="锚点">#</a></h3>
+<pre><code class="language-powershell">&amp; <span class="hljs-string">&#x27;D:\Portable\Tools\commandcode\npm-global\node.exe&#x27;</span> `
+  <span class="hljs-string">&#x27;D:\Portable\khy-os\runtime\node\backend\bin\khy.js&#x27;</span> `
+  mcp add amoon <span class="hljs-literal">--scope</span> user <span class="hljs-literal">--</span> `
+  <span class="hljs-string">&#x27;D:\Portable\Tools\commandcode\npm-global\node.exe&#x27;</span> `
+  <span class="hljs-string">&#x27;D:\Portable\khy-os\delivery\extension\bridges\khy-amoon-bridge\bin\mcp-server.js&#x27;</span> `
+  <span class="hljs-literal">--root</span> <span class="hljs-string">&#x27;D:\Portable\khy-os\delivery\extension\bridges\khy-amoon-bridge&#x27;</span> `
+  <span class="hljs-literal">--state-dir</span> <span class="hljs-string">&quot;<span class="hljs-variable">$env:LOCALAPPDATA</span>\khy-amoon-bridge&quot;</span> `
+  <span class="hljs-literal">--khy-js</span> <span class="hljs-string">&#x27;D:\Portable\khy-os\runtime\node\backend\bin\khy.js&#x27;</span></code></pre>
+<p>落盘位置（按 KhyOS 当前实现）：</p>
+<ul><li><code>user</code> scope：<code>KHY_DATA_HOME/mcp.json</code>，本机即 <code>D:\Portable\khy-os\works\data\khy\mcp.json</code>；</li><li><code>project</code> scope：<code>&lt;当前目录&gt;/works/data/khy/mcp.json</code>（不是 <code>.khy/mcp.json</code>）。</li></ul>
+<p><code>khy.extension.json</code> 里的 <code>mcp</code> 块只是<strong>声明</strong>：核里没有 <code>manifest.mcp</code> 消费者，不会自动注册。</p>
+<hr>
+<h2 id="6-无线调试配对">6. 无线调试配对<a class="anchor" href="#6-无线调试配对" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 1. 手机：开发者选项 → 无线调试 → 使用配对码配对</span>
+adb pair <span class="hljs-number">192.168</span>.<span class="hljs-number">2.46</span>:&lt;pair_port&gt; &lt;<span class="hljs-number">6</span>位配对码&gt;
+
+<span class="hljs-comment"># 2. 配对成功后，用「无线调试」页面显示的 IP:端口连接（不是配对端口）</span>
+adb connect <span class="hljs-number">192.168</span>.<span class="hljs-number">2.46</span>:&lt;connect_port&gt;
+
+<span class="hljs-comment"># 3. 确认状态与 serial</span>
+adb devices <span class="hljs-literal">-l</span>
+adb <span class="hljs-literal">-s</span> <span class="hljs-number">192.168</span>.<span class="hljs-number">2.46</span>:&lt;connect_port&gt; getprop ro.serialno</code></pre>
+<p>注意事项（来自本机勘察）：</p>
+<ul><li>同一台设备可能同时出现两个 <code>_adb-tls-connect._tcp</code> 端口（实测 <code>33743</code> 与 <code>37925</code>）。</li></ul>
+<p><strong>所有命令都必须带 <code>-s &lt;serial&gt;</code></strong>；不带 <code>-s</code> 的 <code>adb reverse --list</code> 会直接报<br>  <code>more than one device/emulator</code>。</p>
+<ul><li>连接后必须校验 <code>ro.serialno</code>（本机 <code>ZYPZ261A01M6870010L</code>），防止操作到另一台设备。</li><li>配对码不要写进日志/审计/脚本；<code>install.ps1</code> 也不处理配对。</li><li><code>unauthorized</code>：在手机上允许 USB 调试并勾选「始终允许」；<code>offline</code>：先</li></ul>
+<p><code>adb disconnect &lt;serial&gt;</code> 再重连。</p>
+<p><code>install.ps1</code> 不会替你配对，只会使用已经 <code>device</code> 状态的设备；没有设备时跳过手机部署。</p>
+<hr>
+<h2 id="7-启动与停止">7. 启动与停止<a class="anchor" href="#7-启动与停止" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 启动 daemon（后台单例）并等待 /health</span>
+node bin\cli.js <span class="hljs-built_in">start</span>
+<span class="hljs-comment"># 或</span>
+powershell <span class="hljs-literal">-NoProfile</span> <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> scripts\start.ps1
+
+<span class="hljs-comment"># 只读状态（配置 + runtime + /health + bridge_status）</span>
+node bin\cli.js status <span class="hljs-literal">--json</span>
+
+<span class="hljs-comment"># 停止（核对 PID 身份；拒绝误杀，清理本端口 reverse）</span>
+node bin\cli.js stop</code></pre>
+<p><code>start</code> 的实际行为：</p>
+<ol><li>已存在 <code>runtime.json</code> 且 <code>/health</code> 可达 → 直接报告「已在运行」，不重复启动；</li><li>创建状态目录与 <code>operator.token</code>（缺失时），然后后台 spawn <code>bin/daemon.js</code>；</li><li>daemon 先绑定 <code>127.0.0.1</code>（端口被占会在 18765..18774 内换端口），写 <code>runtime.json</code>，</li></ol>
+<p>再异步启动 wireless 与 mailbox；ADB 不可用只降级为 <code>DEGRADED_ADB</code>，HTTP 仍可用；</p>
+<ol><li>CLI 轮询 <code>runtime.json</code> 与 <code>/health</code>（最多 15s），失败时打印 <code>daemon.log</code> 尾部并以退出码 3 结束。</li></ol>
+<p>调试时可前台运行（不要与后台实例同时启动）：</p>
+<pre><code class="language-powershell">node bin\cli.js <span class="hljs-built_in">start</span> <span class="hljs-literal">--foreground</span> <span class="hljs-literal">--state-dir</span> <span class="hljs-string">&quot;<span class="hljs-variable">$env:TEMP</span>\amoon-debug&quot;</span></code></pre>
+<p><code>stop</code> 会先用 <code>Get-CimInstance Win32_Process</code> 核对 <code>runtime.json</code> 里的 pid 确实是<br><code>bin/daemon.js</code>；身份不符时拒绝停止（<code>--force</code> 才跳过）。daemon 正常退出时会<br><code>adb reverse --remove tcp:&lt;port&gt;</code>，只管理自己的端口，绝不使用 <code>--remove-all</code>。</p>
+<hr>
+<h2 id="8-在-khyos-里使用">8. 在 KhyOS 里使用<a class="anchor" href="#8-在-khyos-里使用" aria-label="锚点">#</a></h2>
+<p>注册成功后，KhyOS 把工具暴露为 <code>mcp__amoon__&lt;tool&gt;</code>（例如 <code>mcp__amoon__ping</code>）。</p>
+<pre><code class="language-powershell"><span class="hljs-comment"># 查看注册</span>
+node D:\Portable\khy<span class="hljs-literal">-os</span>\runtime\node\backend\bin\khy.js mcp show amoon
+
+<span class="hljs-comment"># 实际调用（会消耗模型 token；这才是验收）</span>
+node D:\Portable\khy<span class="hljs-literal">-os</span>\runtime\node\backend\bin\khy.js <span class="hljs-literal">-p</span> <span class="hljs-string">&quot;调用 mcp__amoon__ping 并只返回 pong&quot;</span> `
+  <span class="hljs-literal">--allowedTools</span> mcp__amoon__ping <span class="hljs-literal">--output-format</span> json <span class="hljs-literal">--max-turns</span> <span class="hljs-number">2</span></code></pre>
+<blockquote><p><strong><code>khy mcp test</code> 不是验收。</strong> 它只做 connect + <code>tools/list</code>（<code>handlers/mcp.js</code> 的 test 分支），<br>不执行 <code>tools/call</code>；daemon/adb/reverse/信箱坏了它也可能「成功」。</p></blockquote>
+<blockquote><p><strong>路由兼容</strong>：<code>lib/mcp.js</code> 优先 <code>POST /v1/call</code>，若收到 404（说明 daemon 只实现了 <code>/call</code>，<br>当前 <code>lib/server.js</code> 就是这种形态）会自动回退到 <code>/call</code> 一次；<code>/v1/status</code> → <code>/status</code> 同理。<br>工具域失败始终是 HTTP 200 + <code>ok:false</code>，不会被误判成 404。</p></blockquote>
+<p>在 KhyOS 会话中直接说「用 amoon 截图」「问 KhyOS 一个问题」即可；模型会按工具描述选择<br><code>mcp__amoon__phone_screenshot</code> / <code>mcp__amoon__khy_ask</code> 等。</p>
+<h3 id="工具调用失败时">工具调用失败时<a class="anchor" href="#工具调用失败时" aria-label="锚点">#</a></h3>
+<p><code>tools/call</code> 的错误以 MCP <code>isError:true</code> 返回，文本以 <code>[错误码]</code> 开头：</p>
+<table><thead><tr><th>错误码</th><th>含义</th><th>处理</th></tr></thead><tbody><tr><td><code>daemon_unavailable</code></td><td>daemon 未启动/不可达</td><td><code>scripts\start.ps1</code>，再 <code>doctor.ps1</code></td></tr><tr><td><code>auth_unavailable</code></td><td>operator.token 缺失/过短</td><td>重跑 <code>install.ps1</code></td></tr><tr><td><code>adb_unavailable</code></td><td>设备不可用</td><td>检查 <code>adb devices -l</code>、重新 <code>adb connect</code></td></tr><tr><td><code>device_ambiguous</code></td><td>多台设备</td><td>设置 <code>KHY_AMOON_SERIAL</code> 或用 <code>-Serial</code></td></tr><tr><td><code>forbidden_scope</code></td><td>token scope 不允许</td><td>别用 phone/file token 调 operator 工具</td></tr><tr><td><code>phone_ask_disabled</code></td><td>手机侧 <code>khy_ask</code> 默认关闭</td><td>需要 <code>KHY_AMOON_PHONE_ASK=1</code> 且 <code>capability.http=true</code></td></tr><tr><td><code>rate_limited</code></td><td>触发限流</td><td>稍后重试；phone ask 为 3/min、20/day</td></tr><tr><td><code>timeout</code></td><td>工具超时</td><td>见第 11 节</td></tr><tr><td><code>not_implemented</code></td><td>该功能未接线（Phase 2 工具、单独调用 routes shim 等）</td><td>看错误文本；Phase 1 的 12 个工具不应出现此码</td></tr></tbody></table>
+<hr>
+<h2 id="9-手机-amoon-侧">9. 手机 amoon 侧<a class="anchor" href="#9-手机-amoon-侧" aria-label="锚点">#</a></h2>
+<h3 id="9-1-phase-0-门-双向的前提">9.1 Phase 0 门（双向的前提）<a class="anchor" href="#9-1-phase-0-门-双向的前提" aria-label="锚点">#</a></h3>
+<p><code>amoon → PC</code> 只有在 <strong>amoon 自己</strong>完成下面三项并留下证据后，才允许宣称可用：</p>
+<ol><li>执行 <code>sh /sdcard/khy-amoon-bridge/kb health</code>；</li><li>写 <code>/sdcard/khy-amoon-bridge/inbox/cmd_&lt;id&gt;.json</code>；</li><li>对 <code>127.0.0.1:&lt;port&gt;/health</code> 发一次 HTTP 请求。</li></ol>
+<p>证据写入 <code>%LOCALAPPDATA%\khy-amoon-bridge\capability.json</code><br>（<code>status</code> = <code>unverified|partial|verified|unavailable</code>）。<strong>不能用 PC 侧 <code>adb shell</code> 代跑冒充</strong>：<br>那只能证明 adb 能用，不能证明 amoon 有 shell/文件/HTTP 能力。</p>
+<p>三项全失败 → 只交付 <code>KhyOS → 手机</code> + 人工中转；README 和 <code>bridge_status</code> 都必须显示单向。<br>完整标准、证据格式与判定规则见 <code>docs/PHASE0.md</code>；生成探测指令用<br><code>node scripts\probe-amoon.js instructions</code>，人工记录用<br><code>node scripts\probe-amoon.js record --shell --http --file-write --by &lt;name&gt;</code>。<br><code>doctor.ps1</code> 在缺少 <code>capability.json</code> 时按 <code>unverified</code> 处理。</p>
+<h3 id="9-2-http-快通道-amoon-能联网时">9.2 HTTP 快通道（amoon 能联网时）<a class="anchor" href="#9-2-http-快通道-amoon-能联网时" aria-label="锚点">#</a></h3>
+<pre><code class="language-sh"><span class="hljs-comment"># bootstrap 的默认布局：token.txt + port.txt</span>
+<span class="hljs-comment"># phone/kb 会优先读契约路径 token / config.json（若存在），否则回退到这两个文件。</span>
+TOKEN=$(<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/token.txt)
+PORT=$(<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/port.txt)
+
+curl --noproxy <span class="hljs-string">&#x27;*&#x27;</span> -sS --max-time 60 \
+  -H <span class="hljs-string">&quot;Authorization: Bearer <span class="hljs-variable">$TOKEN</span>&quot;</span> \
+  -H <span class="hljs-string">&#x27;Content-Type: application/json&#x27;</span> \
+  --data-binary <span class="hljs-string">&#x27;{&quot;tool&quot;:&quot;ping&quot;,&quot;args&quot;:{}}&#x27;</span> \
+  <span class="hljs-string">&quot;http://127.0.0.1:<span class="hljs-variable">$PORT</span>/v1/call&quot;</span></code></pre>
+<ul><li>phone token 默认只有 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>；</li><li><code>khy_ask</code> 默认关闭；开启需要 <code>KHY_AMOON_PHONE_ASK=1</code> 且 <code>capability.http=true</code>；</li><li>token 位于 <code>/sdcard/khy-amoon-bridge/token.txt</code>，任何有存储权限的 App 都可能读取；7 天 TTL + rotate。</li></ul>
+<h3 id="9-3-文件慢通道-amoon-只能读写-sdcard-时">9.3 文件慢通道（amoon 只能读写 /sdcard 时）<a class="anchor" href="#9-3-文件慢通道-amoon-只能读写-sdcard-时" aria-label="锚点">#</a></h3>
+<pre><code class="language-sh"><span class="hljs-comment"># 写命令：先 tmp，再 mv（同一 FUSE 卷 rename 原子）</span>
+<span class="hljs-built_in">cat</span> &gt; /sdcard/khy-amoon-bridge/tmp/cmd_demo01.json.tmp &lt;&lt;<span class="hljs-string">&#x27;EOF&#x27;</span>
+{<span class="hljs-string">&quot;v&quot;</span>:1,<span class="hljs-string">&quot;id&quot;</span>:<span class="hljs-string">&quot;demo01&quot;</span>,<span class="hljs-string">&quot;tool&quot;</span>:<span class="hljs-string">&quot;ping&quot;</span>,<span class="hljs-string">&quot;args&quot;</span>:{}}
+EOF
+<span class="hljs-built_in">mv</span> /sdcard/khy-amoon-bridge/tmp/cmd_demo01.json.tmp \
+   /sdcard/khy-amoon-bridge/inbox/cmd_demo01.json
+
+<span class="hljs-comment"># 读结果</span>
+<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/outbox/res_demo01.json</code></pre>
+<ul><li>文件 scope 只允许三个只读工具；<code>khy_ask</code>/<code>amoon_send</code>/<code>phone_*</code> 一律 <code>forbidden_scope</code>；</li><li>结果先写再删命令；结果带 <code>args_digest</code>：同 id 同参数重放会标 <code>replayed</code>，同 id 不同参数写 <code>id_conflict</code> 并把原结果归档为 <code>res_&lt;id&gt;.conflict_*.json</code>；</li><li>daemon 崩溃恢复把 <code>working/</code> 里的幂等命令放回 <code>inbox/</code> 重试，只有放回失败才写 <code>abandoned</code>；</li><li><code>ack_</code>/<code>reply_</code> 文件可以被任何能写 <code>/sdcard</code> 的 App 伪造，KhyOS 只当投递提示，不当可信回执；</li><li>Doze 下只承诺「PC 排队/轮询，amoon 运行时投递」；amoon 在 Doze 能否读写需要 Phase 0 证据。</li></ul>
+<p><code>kb</code> 用法（部署后）：</p>
+<pre><code class="language-sh">sh /sdcard/khy-amoon-bridge/kb health
+sh /sdcard/khy-amoon-bridge/kb tools
+sh /sdcard/khy-amoon-bridge/kb call /sdcard/khy-amoon-bridge/examples/ping.json
+sh /sdcard/khy-amoon-bridge/kb status</code></pre>
+<h3 id="9-4-khyos-amoon-的可靠性边界">9.4 KhyOS → amoon 的可靠性边界<a class="anchor" href="#9-4-khyos-amoon-的可靠性边界" aria-label="锚点">#</a></h3>
+<ul><li><code>amoon_send(mode=file)</code>：只保证「PC 已把文件放到手机 outbox」，<strong>不保证 amoon 读取</strong>；</li></ul>
+<p><code>ack</code> 之前状态最多 <code>pushed</code>。</p>
+<ul><li><code>mode=intent</code>：只报告 <code>am start</code> 启动成功，不保证直接发送；ShareActivity 的语义未验证。</li><li>中文不要走 <code>input text</code>（实测非 ASCII 会 NPE）；中文走文件或 Intent。</li><li>Phase 1 读回复：<code>amoon_inbox</code>（unverified）或 <code>phone_ui_dump</code>（只读可见节点，不能区分角色）。</li></ul>
+<hr>
+<h2 id="10-安全模型">10. 安全模型<a class="anchor" href="#10-安全模型" aria-label="锚点">#</a></h2>
+<ul><li><strong>监听面</strong>：HTTP 只 <code>listen(port, '127.0.0.1')</code>；手机只经 <code>adb reverse</code> 访问；不绑 <code>0.0.0.0</code>。</li><li><strong>Host/Origin</strong>：拒绝任何 <code>Origin</code>；<code>Host</code> 只接受 <code>127.0.0.1:&lt;port&gt;</code> / <code>localhost:&lt;port&gt;</code>；无 CORS。</li><li><strong>token</strong>：<code>crypto.randomBytes(32)</code> → <code>khy_+base64url</code>；<code>tokens.json</code> 只存 sha256/scope/expires/last_used；</li></ul>
+<p>比较用 sha256 后 <code>crypto.timingSafeEqual</code>；缺失/损坏/过短 → <code>auth_unavailable</code>（fail-closed）。</p>
+<ul><li><strong>scope</strong>：<ul><li><code>operator</code>：Phase 1 全部工具；</li><li><code>phone</code>：<code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>，<code>khy_ask</code> 默认关闭；</li><li><code>file</code>：只有 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>，永不 <code>khy_ask</code>。</li></ul></li><li><strong>khy_ask 无工具隔离</strong>：<code>--allowedTools __khy_amoon_no_tools__</code>（哨兵使网关非空但过滤所有真实工具）、</li></ul>
+<p>固定 <code>--system-prompt</code>、<code>KHY_MCP_AUTOCONNECT=false</code>、<code>KHY_AMOON_DEPTH=1</code>、phone 固定空 cwd。<br>  这仍不是绝对隔离（全局 skills 是否被完全覆盖未验证），所以 phone 默认关闭。</p>
+<ul><li><strong>Windows 权限</strong>：NTFS 上 <code>fs.chmod(0600)</code> 无效（实测 <code>stat.mode</code> 仍为 666），必须用 <code>icacls</code>；</li></ul>
+<p><code>ensureTokenFile</code> 在 ACL 无法收紧时 <strong>fail-closed</strong>。daemon 启动时只对<strong>空目录</strong>执行<br>  <code>icacls /inheritance:r /grant:r 当前用户</code>；对已有内容的目录改用非破坏性的<br>  <code>/grant:r 当前用户:(OI)(CI)F</code>，避免清掉既有文件继承的 ACE（否则 <code>capability.json</code> 会变成不可读）。<br>  目录 ACL 收紧失败仍拒绝启动；单个 token/状态文件仍按文件级 <code>icacls</code> 收紧。</p>
+<ul><li><strong>PID 身份</strong>：停止 daemon 前用 <code>Get-CimInstance Win32_Process</code> 核对 exe/cmdline/创建时间，</li></ul>
+<p>拒绝误杀（模块 A 实现）。</p>
+<ul><li><strong>危险工具</strong>：Phase 1 无 <code>phone_shell</code>/<code>phone_su</code>；<code>phone_exec</code> 是固定诊断 op 白名单，</li></ul>
+<p><code>phone_ls</code> 只列白名单目录，<code>phone_app_list</code> 只读；Phase 2 的 tap/swipe/ui_send 默认<br>  <code>KHY_AMOON_ALLOW_HIGH_RISK=0</code>。restricted 与 prohibited 的完整边界见第 1 节。</p>
+<ul><li><strong>截图/聊天</strong>：可能含验证码/聊天内容；默认落盘 24h、截图目录启动时 icacls 收紧到当前用户、</li></ul>
+<p>审计只记摘要。</p>
+<ul><li><strong>adbd 本身是特权通道</strong>：能连 adb 的攻击者已可控制手机；本设计不解决 adbd 被攻陷。</li><li><strong>无 TLS</strong>：token 明文只出现在 loopback 与 ADB TLS 隧道内；不做 LAN fallback。</li></ul>
+<hr>
+<h2 id="11-故障排查">11. 故障排查<a class="anchor" href="#11-故障排查" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>现象</th><th>可能原因</th><th>处理</th></tr></thead><tbody><tr><td><code>khy</code> 里看不到 <code>mcp__amoon__*</code></td><td>mcp.json 未注册 / 未重启 KhyOS</td><td><code>khy mcp show amoon</code>；重开会话或 <code>khy mcp</code> 查看连接</td></tr><tr><td><code>khy mcp test</code> 成功但调用失败</td><td>test 只 listTools</td><td>用第 8 节的 <code>khy -p</code> 做真实 tools/call</td></tr><tr><td><code>daemon_unavailable</code></td><td>daemon 未启动/崩溃</td><td><code>scripts\start.ps1</code>；<code>doctor.ps1</code>；看 <code>daemon.log</code></td></tr><tr><td><code>auth_unavailable</code></td><td>token 缺失/过短/损坏</td><td>重跑 <code>install.ps1</code>；<code>doctor.ps1</code> 看 ACL</td></tr><tr><td><code>adb_unavailable</code></td><td>未连接/未授权/无线调试关闭</td><td><code>adb devices -l</code>；<code>adb connect</code>；重新配对</td></tr><tr><td><code>device_ambiguous</code></td><td>双 transport（33743/37925）或多设备</td><td>设置 <code>KHY_AMOON_SERIAL</code>，所有命令带 <code>-s</code></td></tr><tr><td><code>reverse</code> 为空</td><td>daemon 未启动/reverse 丢失</td><td><code>doctor.ps1</code>；重启 daemon；不要用 <code>--remove-all</code></td></tr><tr><td>手机 <code>/sdcard/khy-amoon-bridge</code> 不存在</td><td>未部署 / 无存储权限</td><td><code>install.ps1</code>；确认 <code>MANAGE_EXTERNAL_STORAGE: granted=true</code></td></tr><tr><td><code>phone_ask_disabled</code></td><td>phone <code>khy_ask</code> 默认关闭</td><td>需要 <code>KHY_AMOON_PHONE_ASK=1</code> 且 capability.http=true</td></tr><tr><td><code>timeout</code></td><td>KhyOS MCP 请求 60s，<code>khy_ask</code> 默认 45s</td><td>降低问题复杂度；长任务走 HTTP <code>/v1/jobs</code>（MCP 无 job 工具）</td></tr><tr><td><code>not_implemented</code></td><td>功能未接线（Phase 2 工具或内部 shim）</td><td>看错误文本；Phase 1 工具已全部注册</td></tr><tr><td>中文字符串在脚本里乱码</td><td>PowerShell 5.1 读无 BOM UTF-8</td><td>三个 <code>.ps1</code> 已写 UTF-8 BOM；手工改文件时保留 BOM</td></tr></tbody></table>
+<p>诊断命令：</p>
+<pre><code class="language-powershell">powershell <span class="hljs-literal">-NoProfile</span> <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> scripts\doctor.ps1
+powershell <span class="hljs-literal">-NoProfile</span> <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> scripts\doctor.ps1 <span class="hljs-literal">-Json</span></code></pre>
+<p><code>doctor.ps1</code> 只读：node / 状态目录 / token+ACL / daemon <code>/health</code> / Phase 0 状态 /<br>adb / 设备与 serial / reverse / 手机关键文件 / KhyOS mcp.json 注册一致性。<br>存在 <code>fail</code> 时退出码 1；只有 <code>warn</code> 时退出码 0。</p>
+<hr>
+<h2 id="12-卸载与回滚">12. 卸载与回滚<a class="anchor" href="#12-卸载与回滚" aria-label="锚点">#</a></h2>
+<p>按顺序执行，避免留下后台进程或残留映射：</p>
+<pre><code class="language-powershell"><span class="hljs-comment"># 1. 停止 daemon（模块 A；会先核对 PID 身份）</span>
+node bin\cli.js stop
+
+<span class="hljs-comment"># 2. 移除 MCP 注册（回滚命令；scope 与安装时一致）</span>
+&amp; <span class="hljs-string">&#x27;D:\Portable\Tools\commandcode\npm-global\node.exe&#x27;</span> `
+  <span class="hljs-string">&#x27;D:\Portable\khy-os\runtime\node\backend\bin\khy.js&#x27;</span> `
+  mcp remove amoon <span class="hljs-literal">--scope</span> user
+
+<span class="hljs-comment"># 3. 只移除本桥的 reverse（不要用 --remove-all）</span>
+adb <span class="hljs-literal">-s</span> &lt;serial&gt; reverse <span class="hljs-literal">--remove</span> tcp:<span class="hljs-number">18765</span>
+
+<span class="hljs-comment"># 4. 删除本地状态（token、审计、截图、jobs）</span>
+<span class="hljs-built_in">Remove-Item</span> <span class="hljs-literal">-Recurse</span> <span class="hljs-literal">-Force</span> <span class="hljs-string">&quot;<span class="hljs-variable">$env:LOCALAPPDATA</span>\khy-amoon-bridge&quot;</span>
+
+<span class="hljs-comment"># 5. （经确认后）删除手机侧目录</span>
+adb <span class="hljs-literal">-s</span> &lt;serial&gt; shell <span class="hljs-string">&quot;rm -rf /sdcard/khy-amoon-bridge&quot;</span></code></pre>
+<p>不要 <code>adb kill-server</code>，不要改无线调试配置，不要删除 <code>mcp.json</code> 里的其它 server。</p>
+<hr>
+<h2 id="13-未验证清单-不要当成结论">13. 未验证清单（不要当成结论）<a class="anchor" href="#13-未验证清单-不要当成结论" aria-label="锚点">#</a></h2>
+<p>以下动态行为仍未在真机验证（部分真机检查见 13.1；其余为尚未覆盖的场景）：</p>
+<ul><li>真机 <code>screencap</code>/<code>uiautomator</code>/<code>input</code> 的实际输出、锁屏/Doze 边界。</li><li><code>adb reverse</code> 在真机上的实际往返（fake adb 只验证了命令序列）。</li><li>amoon 的 shell/文件/HTTP 能力（Phase 0 才能回答）。</li><li>ShareActivity 的 Intent 语义（直接发送还是打开编辑页）。</li><li><strong>真实用户 <code>mcp.json</code> 的写入</strong>：本次只跑了 <code>install --dry-run</code>；模块 D 之前用临时</li></ul>
+<p><code>KHY_DATA_HOME</code> 验证过 <code>khy mcp add/remove</code>，没有改动<br>  <code>D:\Portable\khy-os\works\data\khy\mcp.json</code>（回读仍只有 <code>deepseek-eyes</code>）。</p>
+<ul><li><code>khy -p</code> 真实 tools/call 验收（会消耗模型 token）。</li><li><code>README.html</code> 孪生与仓库门（<code>npm run check:layout</code>、<code>docs:build/verify</code>）。</li></ul>
+<p><strong>集成阶段已修复的缺口</strong>：</p>
+<ol><li><code>lib/daemon.js</code> 已落地：单例锁 + PID 身份、runtime.json、端口扫描、`server + wireless +</li></ol>
+<p>mailbox + tasks<code> 装配、优雅停止（清理 reverse 与全部定时器）。</code>bin/cli.js start/stop/status<code><br>   不再返回 </code>not_implemented`。</p>
+<ol><li><code>lib/registry.js</code> 只注册 12 个 wire 工具；<code>/v1/call</code> 与 <code>/call</code></li></ol>
+<p>都可路由；<code>bridge_status</code>/<code>khy_ask</code>/<code>phone_*</code>/<code>amoon_*</code>/<code>mailbox_status</code> 已注册。</p>
+<ol><li><code>lib/server.js</code> 增加 <code>/v1/*</code> 别名，并把认证得到的 principal（operator/phone）传入</li></ol>
+<p><code>tools.call</code>；phone token 现在能按 <code>phone</code> scope 被校验。</p>
+<ol><li>契约路径与单文件交付的差异用薄 shim 收敛，清单见 <code>lib/contracts.js</code> 的 <code>SHIMS</code>。</li></ol>
+<h3 id="13-1-集成后的实际运行记录-可复核">13.1 集成后的实际运行记录（可复核）<a class="anchor" href="#13-1-集成后的实际运行记录-可复核" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>命令</th><th>结果</th></tr></thead><tbody><tr><td><code>node --test &quot;D:\Portable\khy-os\delivery\extension\bridges\khy-amoon-bridge\test\*.test.js&quot;</code></td><td><strong>186 passed / 0 failed</strong>（2026-10-22，含 restricted 工具、registry scope/kill-switch、ack/reply、rotate/audit/jobs、Phase 0 capability、HTTP idempotency、ids/ratelimit 用例）</td></tr><tr><td><code>node --test test\integration.test.js</code></td><td>2 passed：fake adb 下 daemon 装配、<code>/health</code>、<code>/v1/call</code>、MCP→daemon、<code>HEALTHY</code>、mailbox 启动、file scope 拒绝、shutdown 清理 reverse/runtime/lock；<code>sameIdentity</code> 只认 daemon.js + 同 exe</td></tr><tr><td><code>node bin\cli.js --help</code></td><td>退出码 0，列出 8 个命令</td></tr><tr><td><code>node bin\cli.js status --json --state-dir &lt;temp&gt;</code></td><td>退出码 0；<code>daemon.running=false</code>；不创建状态目录</td></tr><tr><td><code>node bin\cli.js install --dry-run --json --state-dir &lt;temp&gt;</code></td><td>退出码 0；打印绝对路径的 <code>khy mcp add</code>；<strong>不创建</strong>状态目录/token</td></tr><tr><td><code>test/registry.test.js</code></td><td>6 passed：registry 只有 12 个 wire 工具（无 exec/read/write）、缺 principal 直接 403、<code>KHY_AMOON_ENABLED=0</code> 阻断非诊断工具、file scope 拒绝 khy_ask、phone ask 需 env+capability.http</td></tr><tr><td><code>test/server.test.js</code> 新增端点</td><td>21 passed：<code>/v1/tools</code>（12/4）、<code>/v1/jobs/:id</code>、<code>/v1/rotate</code> 两阶段（旧 token 在 commit 前仍有效）、<code>/v1/audit/tail</code>、phone token 403</td></tr><tr><td><code>test/mailbox.test.js</code></td><td>17 passed：ack_/reply_ 写入本地 replies 并移入 done/；坏 JSON 进 failed/；counts.inbox 与 scanned 分离</td></tr><tr><td><code>test/capability.test.js</code></td><td>2 passed：Phase 0 指令；<code>capability.json</code> 的 unavailable/partial/verified 与 raw <code>http</code> 字段</td></tr><tr><td>真机最终冒烟（port 18913/18914）</td><td>start 200/health、ping 200、phone_info 200、phone_exec <code>{op:&quot;echo&quot;,text:&quot;final-ok&quot;}</code> 200 <code>stdout=final-ok</code>；stop <code>forced=false</code>、<code>reverse_removed=true</code>、reverse 列表为空、无残留 daemon</td></tr><tr><td>MCP stdio：initialize/tools/list/tools/call（<code>--no-autostart</code>）</td><td>3 帧 stdout；12 个工具；<code>tools/call</code> 为 <code>[daemon_unavailable]</code>，不假装成功</td></tr><tr><td>真机（serial <code>192.168.2.46:33743</code>，port 18910，临时 state）</td><td><code>start</code> 退出码 0，<code>state=HEALTHY</code>、<code>reverse_mapped=True</code>、<code>mailbox_running=True</code>；<code>stop</code> 后 <code>forced=false</code>、reverse 列表为空、无残留 daemon</td></tr><tr><td>真机复测（mDNS serial，port 18898，2026-10-22）</td><td><strong>21/21</strong>：HEALTHY、reverse、capability ACL 存活、<code>device.json=ZYPZ261A01M6870010L</code>、点号 <code>phone.info</code>/<code>phone.exec</code>、<code>phone_ls</code>、<code>phone_screenshot</code> 1200×2670、HTTP <code>body.id</code> replay/409、手机 <code>curl</code>→PC <code>/health</code>、<code>kb ping</code>、信箱 <code>args_digest</code>/<code>replayed</code>/<code>id_conflict</code>+archive、MCP 12 工具</td></tr><tr><td>真机 <code>phone_info</code></td><td>200；<code>serial=ZYPZ261A01M6870010L</code>、<code>model=PZ261A</code>、<code>brand=StepX</code>、<code>sdk=36</code></td></tr><tr><td>真机 <code>phone_app_list {filter:&quot;stepos&quot;,limit:20}</code></td><td>200；<code>total=66</code>、<code>count=20</code>；<code>foreground=com.android.launcher3/.uioverrides.QuickstepLauncher</code></td></tr><tr><td>真机 <code>phone_ls {path:&quot;/sdcard/Download&quot;}</code></td><td>200；解析为 <code>/storage/emulated/0/Download</code>，<code>total=9</code>，条目含 <code>.csj</code>/<code>Bluetooth</code>/<code>FMessage</code></td></tr><tr><td>真机 <code>phone_ui_dump</code></td><td>200；<code>package=com.stepos.ailauncher</code>，<code>activity=com.stepos.ailauncher/.chat.activity.ChatMainActivity</code>（与 package 一致；已修复“取第一条 ACTIVITY”导致的错配）</td></tr><tr><td>真机 <code>phone_exec echo/getprop/wm_size/dumpsys_battery</code></td><td>200；<code>echo -&gt; ok</code>、<code>ro.product.model -&gt; PZ261A</code>、<code>battery level=100/已充满</code></td></tr><tr><td>真机拒绝用例</td><td><code>op=shell</code> → 400 <code>invalid_args</code>；<code>echo &quot;a; id&quot;</code> → 400 <code>invalid_args</code>；<code>getprop persist.sys.timezone</code> → 403 <code>forbidden_scope</code>；<code>phone_ls /sdcard/Android</code> → 403 <code>forbidden_scope</code>；<code>phone_ls /sdcard/Download/../Android</code> → 400 <code>invalid_args</code></td></tr></tbody></table>
+<p>真机检查的边界：检查 13 只调用了 <code>phone_info</code>/<code>phone_app_list</code>/<code>phone_ls</code>/<code>phone_exec</code> 与拒绝用例；<br>另做了一次只读 <code>phone_ui_dump</code> 校验 activity 字段。没有打开 amoon、没有向 amoon 发送消息、<br>没有安装/卸载应用、没有改系统设置。</p>
+<p>模块 D 之前记录并保留的证据（本次未复跑）：<code>install.ps1 -DryRun</code>、临时 <code>KHY_DATA_HOME</code> 下的<br><code>khy mcp add/remove</code>、<code>doctor.ps1</code> 的真机只读探测（双 transport 歧义、reverse 为空、<br><code>/sdcard/khy-amoon-bridge</code> 不存在）。</p>
+<hr>
+<h2 id="14-测试">14. 测试<a class="anchor" href="#14-测试" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-built_in">cd</span> D:\Portable\khy<span class="hljs-literal">-os</span>\delivery\extension\bridges\khy<span class="hljs-literal">-amoon-bridge</span>
+
+<span class="hljs-comment"># 全量（显式 glob；本仓基线文档警告 node --test &lt;目录&gt; 会只报 1 例假读数）</span>
+node <span class="hljs-literal">--test</span> <span class="hljs-string">&quot;test\*.test.js&quot;</span>
+
+<span class="hljs-comment"># 等价于 package.json 的 npm test（node --test）</span>
+npm test</code></pre>
+<p><code>test/mcp.test.js</code> 覆盖：initialize 协议版本协商、tools/list 的 12 个工具与顺序、<br>tools/call 成功/失败/未知工具/无执行器、JSON-RPC 错误码、通知不响应、stdout 纯净、<br>参数透传、异步调用与取消、慢调用在 stdin 关闭后仍响应、响应截断、token 脱敏、<br>daemon 客户端 <code>/v1/call</code>→<code>/call</code> 回退、KhyOS 入口/argv/mcp.json 助手。</p>
+<p><code>test/manifest.test.js</code> 覆盖：id=目录名、namespace 唯一、kind=runtime、main 可加载且无副作用、<br>engines.khy 匹配、capabilities/provides/permissions、mcp.tools 与契约一致、无 schemaVersion 2.0、<br>package.json 零依赖与 bin 存在。</p>
+<p>这些测试<strong>不需要真机、不会写 mcp.json</strong>；<code>test/integration.test.js</code> 会用 fake adb 在进程内<br>启动一次 daemon（临时 state、port 0），结束后 shutdown。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../delivery/extension/bridges/khy-amoon-bridge/phone/README.html"><div class="dir">← 上一篇</div><div class="ttl">amoon 手机侧说明（khy-amoon-bridge）</div></a><a class="next" href="../../../../delivery/extension/bridges/khy-trae-bridge/README.html"><div class="dir">下一篇 →</div><div class="ttl">KHY Trae Bridge</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="delivery/extension/bridges/khy-amoon-bridge/README.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
