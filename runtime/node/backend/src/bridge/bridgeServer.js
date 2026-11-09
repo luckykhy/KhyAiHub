@@ -10,6 +10,24 @@
  */
 'use strict';
 
+// ── V8 compile cache: reuse bytecode across launches (Node >= 22.8) ──
+// Mirrors the block at the top of bin/khy.js so that entry points which do NOT
+// go through bin/khy.js (this bridge server, server.js, start-daemon.js, the
+// tray app) share the same on-disk compile cache instead of recompiling the
+// require graph from scratch on every launch.
+//
+// Benefit is UNVERIFIED and must not be assumed: it needs a controlled A/B to
+// settle. Local measurements so far are neutral-to-slightly-negative, and an
+// earlier measurement in the repo already concluded "no stable gain, do not
+// enable" — hence this is structural parity only, and no millisecond figure
+// should be quoted from it. Rollback is three-layered: this call is fail-soft
+// (try/catch, no-op when the API is missing), NODE_DISABLE_COMPILE_CACHE=1 opts
+// out at the Node level, and deleting the cache directory resets everything.
+try {
+  const nodeModule = require('module');
+  if (typeof nodeModule.enableCompileCache === 'function') nodeModule.enableCompileCache();
+} catch { /* compile cache is a best-effort accelerator */ }
+
 const crypto = require('crypto');
 const http = require('http');
 const os = require('os');
