@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-260-N6R8BRGW
 // indexStore — file-backed code index registry for the 设置→索引库 page
 // (ZC-ALIGN-001 P13). Registers workspace index snapshots with real stats
 // read from disk at creation time (file count + total bytes via a single

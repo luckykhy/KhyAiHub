@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-271-CQN8DEJD
 import type { IPty } from '@lydell/node-pty'
 import type { WebContents } from 'electron'
 

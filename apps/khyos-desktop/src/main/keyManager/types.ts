@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-267-AWGME5N9
 // keyManager types & constants — shared contracts for the Key/Endpoint Manager.
 //
 // P1 (DESIGN-ARCH-091): types only. The runtime lives in keyStore.ts /

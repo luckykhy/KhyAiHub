@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-268-D4R7AWQG
 // keyManagerWindow — the standalone Key/Endpoint Manager window
 // (DESIGN-ARCH-091 §5.1 入口③: `--key-manager` 独立启动 + 菜单入口).
 //

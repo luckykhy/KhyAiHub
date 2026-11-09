@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-261-2JX3QN22
 // agentWriters — apply KeyManager cards to external agent live-configs
 // (DESIGN-ARCH-091 §4.3/§8/§8b.3).
 //

@@ -12,7 +12,7 @@ import { createRemoteHub, type RemoteHub } from './remote/index'
 import { createAmoonHub, resolveBridgeRoot, type AmoonHub } from './amoon/index'
 import { handleAmooSecretaryHostMessage, installAmooSecretaryBridge, releaseAmooSecretary } from './amooSecretaryBridge'
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore'
-import { getDataHome, baseHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
+import { getDataHome, baseHomeFile, dataHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
 import {
   getAutomations,
   createAutomation,
@@ -50,6 +50,11 @@ import {
   importMigration,
   migrationDataHome,
 } from './agentItemStore'
+import {
+  listSlashCommands,
+  runSlashCommand,
+  warmSlashCommandSources,
+} from './slashCommandSources'
 import {
   listIndexes,
   createIndex,
@@ -265,6 +270,60 @@ const MODELS_LIST_TIMEOUT_MS = 45000
 const pendingDesktopGate = new Map<string, { resolve: (v: unknown) => void }>()
 // Pending background.status requests: id → resolver.
 const pendingBackgroundStatus = new Map<string, { resolve: (v: unknown) => void }>()
+// Pending taskMonitor.snapshot requests: id → resolver.
+const pendingTaskMonitor = new Map<string, { resolve: (v: unknown) => void }>()
+// Pending env.* requests（开发环境页）：id → resolver。catalog/scan/install/
+// importPreview/importApply/export 六组经 host（结果以 env.*Result settle）；
+// env:lastScan 由 main 直读数据家快照文件，不经 host。
+const pendingEnvCatalog = new Map<string, { resolve: (v: unknown) => void }>()
+const pendingEnvScan = new Map<string, { resolve: (v: unknown) => void }>()
+const pendingEnvInstall = new Map<string, { resolve: (v: unknown) => void }>()
+const pendingEnvImportPreview = new Map<string, { resolve: (v: unknown) => void }>()
+const pendingEnvImportApply = new Map<string, { resolve: (v: unknown) => void }>()
+const pendingEnvExport = new Map<string, { resolve: (v: unknown) => void }>()
+// env.* 的回包类型 → pending 表。认领与超时兜底共用这一张查找表。
+const ENV_PENDING_BY_RESULT_TYPE: Record<string, Map<string, { resolve: (v: unknown) => void }>> = {
+  'env.catalogResult': pendingEnvCatalog,
+  'env.scanResult': pendingEnvScan,
+  'env.installResult': pendingEnvInstall,
+  'env.importPreviewResult': pendingEnvImportPreview,
+  'env.importApplyResult': pendingEnvImportApply,
+  'env.exportResult': pendingEnvExport,
+}
+// env.* 往返超时只**放弃等待**（诚实超时兜底），绝不 kill host 侧任务（Rule 3）：
+// 盘点/安装由子进程退出与结果事件 settle，超时后任务继续跑完，进度仍会经
+// env.progress / env.jobDone 广播。安装/导入可能逐项 winget，给宽到 15 分钟。
+const ENV_CATALOG_TIMEOUT_MS = 20_000
+const ENV_SCAN_TIMEOUT_MS = 120_000
+const ENV_LONG_TIMEOUT_MS = 900_000
+
+// env.* host 往返封装（token:usage 同款）：pending 登记 + 诚实超时兜底，回包整条
+// 原样透传 —— 字段级 typeof 兜底在 host 侧做，main 不重复校验。
+function askEnvHost(
+  payload: Record<string, unknown>,
+  timeoutMs: number,
+  timeoutError: string,
+): Promise<{ ok?: boolean; error?: string; [k: string]: unknown }> {
+  if (!hostProcess || !hostProcess.connected) {
+    return Promise.resolve({ ok: false, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' })
+  }
+  const resultMap = ENV_PENDING_BY_RESULT_TYPE[`${payload.type}Result`]
+  if (!resultMap) {
+    // 六组消息都有表；缺表说明新增消息忘了登记 —— 如实报错而不是静默悬空。
+    return Promise.resolve({ ok: false, error: `未登记的消息类型 ${String(payload.type)}：请查看导出日志排查` })
+  }
+  const id = `env_${Date.now()}_${++aiSeq}`
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resultMap.delete(id)
+      resolve({ ok: false, error: timeoutError })
+    }, timeoutMs)
+    resultMap.set(id, {
+      resolve: (v: unknown) => { clearTimeout(timer); resolve(v as { ok?: boolean; error?: string }) },
+    })
+    hostProcess!.send({ ...payload, id })
+  })
+}
 // In-flight automation runs: host request id → { automationId, startedAt }.
 // A run settles only on ai.result or host process exit — no wall-clock kill
 // (Rule 3: the gateway owns its own HTTP timeouts).
@@ -284,6 +343,9 @@ const HOST_EVENT_TO_RENDERER_CHANNEL: Record<string, string> = {
   'ai.toolResult': 'ai:toolResult',
   'ai.controlRequest': 'ai:controlRequest',
   'ai.result': 'ai:result',
+  // 开发环境任务流（盘点/安装/导入的进度与收尾，无 id 广播）
+  'env.progress': 'env:progress',
+  'env.jobDone': 'env:jobDone',
   // amooSecretary.event 不在此表：秘书接线（含它的无主事件广播）整体在
   // ./amooSecretaryBridge，通道映射随接线走。
 }
@@ -454,6 +516,25 @@ function handleHostMessage(msg: unknown): void {
     }
     return
   }
+  if (m.type === 'taskMonitor.snapshotResult' && m.id) {
+    const entry = pendingTaskMonitor.get(m.id)
+    if (entry) {
+      pendingTaskMonitor.delete(m.id)
+      entry.resolve(m)
+    }
+    return
+  }
+  // env.*Result 认领（开发环境页六组共用一张查找表）：超时已放弃等待的迟到回包
+  // 认领不到就落到日志 —— host 侧任务照常继续，结果经 env.jobDone 广播兜底。
+  if (m.type && m.id && ENV_PENDING_BY_RESULT_TYPE[m.type]) {
+    const resultMap = ENV_PENDING_BY_RESULT_TYPE[m.type]
+    const entry = resultMap.get(m.id)
+    if (entry) {
+      resultMap.delete(m.id)
+      entry.resolve(m)
+    }
+    return
+  }
   // amooSecretary 的 result 认领与 event 广播都在 ./amooSecretaryBridge，这里只留挂钩。
   if (handleAmooSecretaryHostMessage(m)) return
   // Automation runs ride the same host ai.generate channel; results settle the
@@ -493,6 +574,21 @@ function handleHostMessage(msg: unknown): void {
         entry?.resolve(m)
       } catch (err) {
         console.log('[host] resolve failed:', String(err))
+      }
+    }
+    return
+  }
+  // 开发环境任务流事件（无 id 广播）：盘点/安装/导入的进度与收尾。广播给所有
+  // 窗口 —— 页面不在前台时事件自然丢失，重进页面以 env:lastScan 快照兜底，
+  // 无须排队补发。
+  if (m.type === 'env.progress' || m.type === 'env.jobDone') {
+    const rendererChannel = HOST_EVENT_TO_RENDERER_CHANNEL[m.type]
+    for (const w of BrowserWindow.getAllWindows()) {
+      if (w.isDestroyed()) continue
+      try {
+        w.webContents.send(rendererChannel, m)
+      } catch (err) {
+        console.log('[host] env 事件推送失败:', String(err))
       }
     }
     return
@@ -809,6 +905,16 @@ async function createWindow() {
     win.show()
     // Re-maximize if the last session closed while maximized
     if (size.maximized === true) win.maximize()
+    // 预热 khy 斜杠命令注册表：首次 require commandRegistry 会触发
+    // commandAutoRegistry 全量 prescan（自记 100-290ms）。拖到窗口出现之后再付，
+    // 用户第一次敲 / 不吃这笔卡顿；失败静默（列表路径自己会再试）。
+    setTimeout(() => {
+      try {
+        warmSlashCommandSources()
+      } catch {
+        /* fail-soft */
+      }
+    }, 2000)
   })
 
   // 窗口控制（minimize/maximize/close）不在此注册：见 whenReady 里「窗口级键位」一节。
@@ -1093,7 +1199,10 @@ async function createWindow() {
   // 落点：系统临时目录下的 KhyOS-Desktop/clipboard（与 GPUCache 同族目录，
   // 见文件头「缓存目录」注释：放系统临时目录，避免锁与权限问题）。
   // 文件名做净化（只保留 [A-Za-z0-9._-]），防路径穿越。
+  // 32MB 上限：渲染层已把图片压到 1568 长边，走到这里还超限的多半是误粘贴的
+  // 大文件；先在 base64 长度上拦（约 4/3 膨胀），避免先解码出一份大 Buffer。
   ipcMain.handle('fs:saveClipboardFile', async (_e, fileName: string, base64: string) => {
+    const CLIPBOARD_MAX_BYTES = 32 * 1024 * 1024
     try {
       if (typeof fileName !== 'string' || !fileName.trim()) {
         return { ok: false, error: '缺少文件名' }
@@ -1101,11 +1210,23 @@ async function createWindow() {
       if (typeof base64 !== 'string' || !base64.length) {
         return { ok: false, error: '内容为空' }
       }
+      if (base64.length > Math.ceil((CLIPBOARD_MAX_BYTES * 4) / 3) + 4) {
+        return {
+          ok: false,
+          error: `粘贴内容超过 32 MB 上限：请改用「添加上下文 → 添加附件」按文件选择`,
+        }
+      }
       const dir = path.join(os.tmpdir(), 'KhyOS-Desktop', 'clipboard')
       await fs.promises.mkdir(dir, { recursive: true })
       const safe = path.basename(fileName).replace(/[^\w.\-]+/g, '_').slice(0, 80) || 'pasted'
       const target = path.join(dir, `${Date.now()}-${safe}`)
       const bytes = Buffer.from(base64, 'base64')
+      if (bytes.length > CLIPBOARD_MAX_BYTES) {
+        return {
+          ok: false,
+          error: `粘贴内容 ${(bytes.length / (1024 * 1024)).toFixed(1)} MB，超过 32 MB 上限：请改用「添加上下文 → 添加附件」按文件选择`,
+        }
+      }
       await fs.promises.writeFile(target, bytes)
       // size 直接取写入的字节数，不用再 stat 一次。
       return { ok: true, path: target, size: bytes.length }
@@ -1527,6 +1648,24 @@ async function createWindow() {
     })
   })
 
+  // 任务监控快照（窗口菜单 → 任务监控）：host 进程内登记 + 文件真源队列。
+  ipcMain.handle('taskMonitor:snapshot', async () => {
+    if (!hostProcess || !hostProcess.connected) {
+      return { ok: false, snapshot: null, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
+    }
+    const id = `task_monitor_${Date.now()}_${++aiSeq}`
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        pendingTaskMonitor.delete(id)
+        resolve({ ok: false, snapshot: null, error: '任务监控快照读取超时：请查看导出日志排查 host 状态' })
+      }, 10000)
+      pendingTaskMonitor.set(id, {
+        resolve: (v: unknown) => { clearTimeout(timer); resolve(v) },
+      })
+      hostProcess!.send({ type: 'taskMonitor.snapshot', id })
+    })
+  })
+
   // 电脑控制安全闸生效状态 — 从 host 读回当前真实 env（设置页展示后端
   // 实际生效的 mode/预算/白名单，而非渲染进程自报的写入值）。
   ipcMain.handle('desktopGate:get', async () => {
@@ -1544,6 +1683,72 @@ async function createWindow() {
       })
       hostProcess!.send({ type: 'desktopGate.get', id })
     })
+  })
+
+  // ── 开发环境（khy devenv 同一条后端链）：六组经 host 桥（CH-2），lastScan 直读快照 ──
+  // handle 字面量留在本文件（desktopUiContract D6 扫描面）；实现委派 askEnvHost / host。
+  ipcMain.handle('env:catalog', () =>
+    askEnvHost({ type: 'env.catalog' }, ENV_CATALOG_TIMEOUT_MS, '开发环境目录读取超时：请重试'))
+  ipcMain.handle('env:scan', () =>
+    askEnvHost({ type: 'env.scan' }, ENV_SCAN_TIMEOUT_MS, '环境盘点等待超时：host 侧盘点可能仍在进行，请稍后重新打开本页查看结果'))
+  ipcMain.handle('env:install', (_e, input?: { depId?: unknown; version?: unknown }) => {
+    const depId = typeof input?.depId === 'string' ? input.depId.trim() : ''
+    if (!depId) {
+      return Promise.resolve({ ok: false, error: '缺少 depId：请指定要安装的工具链后重试' })
+    }
+    const version = typeof input?.version === 'string' && input.version.trim() ? input.version.trim() : undefined
+    return askEnvHost(
+      { type: 'env.install', depId, version },
+      ENV_LONG_TIMEOUT_MS,
+      `安装 ${depId} 等待超时：host 侧安装可能仍在进行，请稍后重新盘点查看结果`,
+    )
+  })
+  ipcMain.handle('env:importPreview', (_e, manifestJson?: unknown) => {
+    if (typeof manifestJson !== 'string' || !manifestJson.trim()) {
+      return Promise.resolve({ ok: false, error: '清单内容为空：请先选择导出的环境清单 JSON 文件' })
+    }
+    return askEnvHost({ type: 'env.importPreview', manifestJson }, ENV_CATALOG_TIMEOUT_MS, '导入预览超时：请重试')
+  })
+  ipcMain.handle('env:importApply', (_e, manifestJson?: unknown) => {
+    if (typeof manifestJson !== 'string' || !manifestJson.trim()) {
+      return Promise.resolve({ ok: false, error: '清单内容为空：请先选择导出的环境清单 JSON 文件' })
+    }
+    return askEnvHost({ type: 'env.importApply', manifestJson }, ENV_LONG_TIMEOUT_MS, '导入安装等待超时：host 侧任务可能仍在进行，请稍后重新盘点查看结果')
+  })
+  // 导出：manifest 由 host 生成（单一真源），main 只负责弹保存框 + 落盘。
+  // 渲染层不传路径（usage:exportCsv 的安全形状：路径注入防线留在 main）。
+  ipcMain.handle('env:export', async (e) => {
+    const gen = await askEnvHost({ type: 'env.export' }, ENV_SCAN_TIMEOUT_MS, '环境清单生成超时：请重试')
+    if (!gen?.ok || typeof gen.manifestJson !== 'string') {
+      return { ok: false, error: gen?.error || '环境清单生成失败：请先盘点后重试' }
+    }
+    const senderWin = BrowserWindow.fromWebContents(e.sender) || win
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const fileName = `khy-dev-env-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`
+    const result = await dialog.showSaveDialog(senderWin, {
+      defaultPath: fileName,
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+    if (result.canceled || !result.filePath) return { ok: false, canceled: true }
+    try {
+      await fs.promises.writeFile(result.filePath, gen.manifestJson, 'utf-8')
+      return { ok: true, fileName: path.basename(result.filePath), path: result.filePath }
+    } catch (err) {
+      return { ok: false, error: `导出失败（${err instanceof Error ? err.message : String(err)}）：请检查所选目录是否可写` }
+    }
+  })
+  // 上次盘点快照：main 直读数据家文件（可再生缓存），不经 host —— 丢了就重扫，
+  // 不值得为它排 host 的队。落点 T1-domains/tools/env/scan-latest.json 与后端
+  // dataHome 的 devEnv 逻辑名同径。
+  ipcMain.handle('env:lastScan', async () => {
+    const file = dataHomeFile(path.join('T1-domains', 'tools', 'env', 'scan-latest.json'))
+    try {
+      const raw = await fs.promises.readFile(file, 'utf-8')
+      return { ok: true, snapshot: JSON.parse(raw), path: file }
+    } catch {
+      return { ok: false, missing: true, error: '尚未盘点：请先运行扫描' }
+    }
   })
 
   // 上下文窗口估算 — 转发给 host，host 用后端 tokenUsageService.estimateTokens
@@ -1629,6 +1834,12 @@ async function createWindow() {
   // 列表页 Pattern-B 六页的 CRUD + 导入；kind 由 preload 传入（command/hook/
   // skill/subagent/memory），store 侧白名单校验。
   ipcMain.handle('agent:list', (_e, kind: string) => listItems(kind))
+  // ── khy 斜杠命令面（slashCommandSources 正门）──
+  // handle 字面量必须留在本文件：desktopUiContract D6 只扫 index.ts 的
+  // ipcMain.handle 做 preload↔main 配对（ptyHost.ts 顶部同款约束）。
+  ipcMain.handle('slash:list', () => listSlashCommands())
+  ipcMain.handle('slash:run', (_e, cmd: unknown, args?: unknown) =>
+    runSlashCommand(cmd, typeof args === 'string' ? args : ''))
   ipcMain.handle('agent:create', (_e, kind: string, input: unknown) => createItem(kind, input))
   ipcMain.handle('agent:setEnabled', (_e, kind: string, id: string, enabled: boolean) =>
     setItemEnabled(kind, id, enabled))
@@ -1677,6 +1888,54 @@ async function createWindow() {
         return { ok: false, state: 'notRepository' as const }
       }
       return { ok: false, state: 'error' as const, error: e.stderr?.trim() || e.message || 'git status 执行失败' }
+    }
+  })
+
+  // ── Git 分支（列表 / 切换）— 走后端分支领域服务（判据单一真源）──
+  // 前端**不做第二套判定**：分支名合法性、会不会覆盖本地改动、有无冲突等
+  // 全部由 backend services/domain/git/branchGuard.js 判定，回传错误码
+  // （对应 i18n git.branchSwitcher.error.*），渲染层只负责呈现。
+  // 写操作（切换/新建分支）在本进程执行——它改的是工作树，必须与人确认
+  // 的那一步由渲染层的确认弹窗承担。
+  ipcMain.handle('git:branchList', async () => {
+    const cwd = process.cwd()
+    try {
+      const svc = nodeRequire(
+        path.join(resolveKhyOsRoot(), 'runtime', 'node', 'backend', 'src', 'services', 'domain', 'git', 'gitBranchService.js')
+      )
+      const res = svc.listBranches(cwd)
+      if (!res.ok) {
+        return {
+          ok: false,
+          state: res.code === 'notRepository' ? ('notRepository' as const) : ('error' as const),
+          error: res.message,
+        }
+      }
+      return { ok: true, branches: res.branches }
+    } catch (err) {
+      return { ok: false, state: 'error' as const, error: `分支服务不可用：${String((err as Error)?.message || err)}` }
+    }
+  })
+
+  ipcMain.handle('git:branchSwitch', async (_e, branch: string, opts?: { create?: boolean; force?: boolean }) => {
+    const cwd = process.cwd()
+    const name = typeof branch === 'string' ? branch.trim() : ''
+    if (!name) {
+      return { ok: false, code: 'invalidBranchName', message: '请指定要切换到的分支名。' }
+    }
+    try {
+      const svc = nodeRequire(
+        path.join(resolveKhyOsRoot(), 'runtime', 'node', 'backend', 'src', 'services', 'domain', 'git', 'gitBranchService.js')
+      )
+      const res = opts?.create
+        ? svc.createBranch(cwd, name)
+        : svc.switchBranch(cwd, name, { force: !!opts?.force })
+      if (!res.ok) {
+        return { ok: false, code: res.code, message: res.message, detail: res.detail }
+      }
+      return { ok: true, branch: res.branch }
+    } catch (err) {
+      return { ok: false, code: 'unknown', message: `分支服务不可用：${String((err as Error)?.message || err)}` }
     }
   })
 

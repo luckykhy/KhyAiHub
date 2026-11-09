@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-258-ZFAZHYHK
 // automationStore — file-backed automation (定时任务) persistence for the main
 // process. Mirrors settingsStore: JSON file under the BASE data home, atomic
 // writes, defaults on read, in-memory cache invalidated on write.

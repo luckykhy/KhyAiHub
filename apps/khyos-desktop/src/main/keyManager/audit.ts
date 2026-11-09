@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-262-DYSKWS87
 // audit — append-only audit trail for the Key/Endpoint Manager (spec §7.1/§7.2).
 //
 // Single new file (allowed fourth artifact, spec §4.2): key_manager_audit.jsonl

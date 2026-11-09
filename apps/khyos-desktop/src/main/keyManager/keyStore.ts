@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-265-YXTPBJBP
 // keyStore — file layer of the Key/Endpoint Manager (DESIGN-ARCH-091 §4.2).
 //
 // Owns the three SSoT JSON files under the resolved dataHome (never invents a
@@ -10,7 +11,7 @@
 // explicitly documented otherwise (revealKey is the single plaintext seam,
 // rate-limited + audited in ipc.ts).
 
-import { promises as fs, existsSync, readFileSync } from 'node:fs'
+import { promises as fs, existsSync, readdirSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
@@ -81,14 +82,32 @@ function fsSyncExists(p: string): boolean {
 
 // Base home = env/portable/repo/homedir chain, WITHOUT the dataPath pointer.
 // The pointer itself lives here, so this must never recurse into step 2.
+//
+// The portable/repo branches prefer the canonical project data home
+// (works/data/khy) whenever it is established — the same established-wins rule
+// the backend's getProjectDataHome() applies — so a repo or portable run shares
+// one state tree with the backend instead of forking a second one at
+// <root>/.khy. <root>/.khy stays the fallback only for installs whose canonical
+// home does not exist yet.
 function resolveBaseDataHome(): string {
   const envHome = process.env.KHY_DATA_HOME
   if (envHome) return path.resolve(envHome)
   const portableRoot = process.env.KHY_PORTABLE_ROOT || process.env.KHYQUANT_PORTABLE_ROOT
-  if (portableRoot) return path.join(portableRoot, '.khy')
+  if (portableRoot) return portableBaseHome(portableRoot)
   const repoRoot = resolveRepoRoot()
-  if (repoRoot) return path.join(repoRoot, '.khy')
+  if (repoRoot) return portableBaseHome(repoRoot)
   return path.join(os.homedir(), '.khy')
+}
+
+function portableBaseHome(root: string): string {
+  const base = path.resolve(root)
+  const canonical = path.join(base, 'works', 'data', 'khy')
+  try {
+    if (existsSync(canonical) && readdirSync(canonical).length > 0) return canonical
+  } catch {
+    /* canonical home unreadable → legacy <root>/.khy */
+  }
+  return path.join(base, '.khy')
 }
 
 // The settings.json that holds the dataPath pointer always lives in the base
