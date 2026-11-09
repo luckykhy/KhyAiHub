@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-250-1K601CPP
 /**
  * CLI Auth Service — Unified authentication for terminal usage.
  *

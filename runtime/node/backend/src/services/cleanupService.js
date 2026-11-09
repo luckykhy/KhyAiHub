@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-246-H8BDTKGN
 /**
  * Centralized auto-cleanup service for ~/.khyquant/ persistent data.
  *

@@ -21,8 +21,10 @@ const fs = require('fs');
 const path = require('path');
 
 const { getDataHome, getLegacyDataHome } = require('../utils/dataHome');
+// 端口真源在 constants/serviceDefaults.js（LAYOUT-008）；此处不再另写一份字面量。
+const { AI_BACKEND_DEFAULT_PORT } = require('../constants/serviceDefaults');
 
-const PORT = parseInt(process.env.KHY_DAEMON_PORT || '9090', 10);
+const PORT = parseInt(process.env.KHY_DAEMON_PORT || AI_BACKEND_DEFAULT_PORT, 10);
 const PID_FILE = process.env.KHY_DAEMON_PID_FILE || '';
 const RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
 const LEGACY_RUNTIME_FILE = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
