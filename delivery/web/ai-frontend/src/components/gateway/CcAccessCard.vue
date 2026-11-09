@@ -1,5 +1,5 @@
 <template>
-  <el-card class="gw-card" shadow="never">
+  <el-card class="gw-card" shadow="never" :aria-busy="busy ? 'true' : 'false'">
     <template #header>
       <div class="gw-card-head">
         <div class="gw-card-title">

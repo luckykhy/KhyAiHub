@@ -33,10 +33,13 @@ defineProps({
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: var(--khy-space-4);
+  /* 原为 18px 字面量，压掉了全局令牌值。改走 --khy-space-4（=16px）后视觉差 2px。 */
+  margin-bottom: var(--khy-space-4);
 }
-/* 中和全局 .khy-page-title 的 18px 下边距(此处由容器统一管理间距)。 */
+/* 中和全局 .khy-page-title 的下边距(此处由容器统一管理间距)。
+   注意：全局那条现在是 var(--khy-space-4)（newapi-theme.css:516），旧注释写的
+   「18px」早已不存在 —— 别照旧数字去对齐。 */
 .khy-page-head .khy-page-title {
   margin: 0;
 }
