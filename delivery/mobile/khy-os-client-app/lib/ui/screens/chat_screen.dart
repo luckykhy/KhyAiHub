@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿// khy-canary: Khy-20261101-108-QYY2G82Q
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/models.dart';
 import '../../core/gateway/ai_gateway.dart';

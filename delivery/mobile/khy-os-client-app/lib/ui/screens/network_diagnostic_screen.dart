@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-116-SEP4Z79D
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/network/network_diagnostic.dart';
