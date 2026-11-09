@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-354-21R44BRW
 import { useEffect, useCallback } from 'react'
 
 export interface KeyboardShortcut {

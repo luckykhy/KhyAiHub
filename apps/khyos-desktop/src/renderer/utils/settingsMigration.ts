@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-352-5XN3H9EF
 // 设置迁移标记系统 [DESIGN-ARCH-092 §7.13]
 // 当一个设置项的默认值随版本变化时，用 <key>MigrationInitialized 布尔标记
 // 区分「用户显式设置过」与「默认值演进」

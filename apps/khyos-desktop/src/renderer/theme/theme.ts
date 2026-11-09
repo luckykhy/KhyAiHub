@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-350-M58K00MH
 // renderer theme — applies ZCode theme classes to <html> (ZC-ALIGN-003 B4).
 //
 // The persisted theme value is one of 'system' | 'dark' | 'light' (the same
@@ -5,6 +6,10 @@
 //   - .theme-zai-light  → light token set
 //   - :root / .dark / .theme-zai-dark → dark token set (dark is the default,
 //     so leaving both classes off yields dark)
+//
+// 主题类名就是**全部**主题层（色彩令牌 / 字体栈 / 阴影 / color-scheme）的开关：
+// 令牌值本身全部住在 globals.css，本模块只切类名，不直接写任何 CSS 变量 ——
+// 新增令牌时只改 globals.css 一处即可，不要在这里另开一条覆盖路径。
 //
 // 'system' resolves against the OS prefers-color-scheme media query and re-resolves
 // live when it flips; 'dark'/'light' pin the matching class.
@@ -40,6 +45,9 @@ function applyThemeClass(mode: ThemeMode): void {
   if (root.classList.contains(next)) return // idempotent: already correct
   THEME_CLASSES.forEach((c) => root.classList.remove(c))
   root.classList.add(next)
+  // 底图这类「按主题选素材」的消费方不在本模块内 —— 只广播一次类已落定，
+  // 由它们自己重挑一套（theme/background.ts 监听 khy:theme-applied）。
+  window.dispatchEvent(new CustomEvent<string>('khy:theme-applied', { detail: next }))
 }
 
 /** Apply a persisted theme mode to the DOM. Idempotent; safe to call repeatedly. */

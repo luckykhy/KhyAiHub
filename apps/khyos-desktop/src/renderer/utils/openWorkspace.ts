@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-351-ZTE2ER7C
 // openWorkspace — 切换工作空间的唯一渲染层入口（[DESIGN-ARCH-125] P-02）。
 //
 // 此前「打开工作区」这条链路在渲染层被写了三遍：TitleBar（窗口菜单项）、
