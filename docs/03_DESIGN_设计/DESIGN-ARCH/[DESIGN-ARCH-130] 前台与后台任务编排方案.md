@@ -308,6 +308,9 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 必做实证（否则就是空接线）：
 ```bash
 npm run rules:gate:commit 2>&1 | grep "check-bg-lane"
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 必须看到 action=start ... mode=commit rules=<你的 finding ids>
 ```
 

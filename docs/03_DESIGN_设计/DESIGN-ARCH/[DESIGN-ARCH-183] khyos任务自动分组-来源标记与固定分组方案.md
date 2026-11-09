@@ -1,6 +1,7 @@
-<!-- IMPL-STATUS: todo -->
-<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
-> **标记依据**：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<!-- IMPL-STATUS: done -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-26 · 实施落地并回填与实现的差异，依据见文末 §12 -->
+> **标记依据**：核心链路已实现并实跑验证（桌面端 / TUI / 后端三处读到同一份分组）；
+> 与本文原稿有 3 处刻意偏差（自动规则集、成员表主键、网页端只读接口），见 §12。
 # [DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案
 
 > 关联：[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（"项目"视图）、[DESIGN-ARCH-130] 前台与后台任务编排方案。
@@ -155,3 +156,40 @@ renderer 首次挂载分组视图时：若 `khy.sidebar.groups` 存在且后端 
 | UI 特判 | 渲染层按固定 ID 特判组名/权限 | 同样特判，但**权限守卫下沉到服务层**（多端一致） |
 | 存储所有者 | 主进程内存缓存 + SQLite 双轨（有回写覆盖缺陷） | **后端 SQLite 单一所有者，读时 join**（修正缺陷） |
 | 分组对象 | 任务（跨项目） | 会话（带 project_key 项目桶，语义一致） |
+
+## 12. 实施记录（2026-10-26 落地）与与本文原稿的偏差
+
+落地文件：
+
+| 层 | 文件 | 内容 |
+|---|---|---|
+| 后端 | `runtime/node/backend/src/services/sessionGroupService.js` | 分组唯一所有者：系统组常量、ensure/列表/增删改/归组/重排/迁移 |
+| 后端 | `runtime/node/backend/src/services/sessionSearchIndex.js` | 建库 DDL（`session_groups` / `session_group_members` / `session_group_meta`）、`conversations.source_type/source_id` 来源列、`getDb()` 共享连接 |
+| 后端 | `runtime/node/backend/src/services/sessionPersistence.js` | 快照冗余 `metadata.source`；列表暴露 `sourceType` / `sourceId` |
+| 后端 | `runtime/node/backend/src/cli/aiSession.js` | 待写入来源标记（触发点标记 → 落盘时消费，取走即清） |
+| 后端 | `runtime/node/backend/src/jobs/cronScheduler.js` | cron 触发时标记 `source={type:'automation', id:jobId}` |
+| 后端 | `runtime/node/backend/src/cli/handlers/session.js` | `session list --grouped` 分区展示（读同一份分组真源） |
+| 桌面端 | `src/main/index.ts`、`src/host/index.ts`、`src/preload/index.ts` | `sessionGroup:*` 七个通道；host 分组请求处理 |
+| 桌面端 | `src/renderer/components/layout/WorkspaceSidebar.tsx` | 分组视图改读后端真源；新建分组指引；空分组指引；系统组特判 |
+
+**与本文原稿的 3 处刻意偏差**（人 2026-10-26 裁决后落地）：
+
+1. **自动规则集扩为「来源 + 时间衰减」**。原稿只有来源组（定时/闲时），但历史会话
+   没有来源标记 —— 全都落在「未分组」，用户看到的就是「分组不会自动按规则分组」。
+   现规则（优先级自上而下）：显式归属 > 来源组（定时任务 / 闲时任务 / 手动会话）>
+   时间桶（今天 / 本周=近 7 天 / 更早）。落库时未带来源的老会话按时间桶兜底。
+2. **成员表主键用 `session_id` 单列**，不用原稿的 `(project_key, session_id)` 复合
+   主键。复合主键是任务模型的形状（一个任务可跨多个项目）；会话只有单一项目桶，
+   复合主键反而允许同一会话在不同 `project_key` 下重复入组。
+3. **网页端只读接口未做**。原稿 Phase 2 才做，本期只交付桌面端 + TUI + 后端服务；
+   后端服务本身已是多端可用的正门，网页端接上即可。
+
+**顺带修掉的既有缺陷**：`getProjectDataDir('sessions.db')` 把**文件**路径当目录创建 ——
+全新数据家（首次安装 / 隔离测试目录）里会先造出一个同名目录，SQLite 随后报
+「unable to open database file」，搜索索引与分组功能整个静默停用。现新增
+`getProjectDataPath()`（只建父目录、不建末级）并改由文件路径使用它。
+
+**验证**：`src/services/sessionGroupService.test.js`（7 条：系统组守卫 / 自动分组 /
+显式归属压过自动规则 / 删组不删会话 / 迁移幂等 / 参数校验 / 落盘来源标记）；
+桌面端 `tests/sessionListLoad.test.cjs`（20 条）；实跑：50 条真实会话 → 本周 20 /
+更早 30 / 未分组 0，桌面端侧栏与 `session list --grouped` 读到同一份分组。

@@ -276,7 +276,7 @@ prop（TUI）仍可取回完整输出，信息不丢失。
 | 失败模式 | 系统行为 | 恢复手段 |
 |---|---|---|
 | 用户 Ctrl+C 中断 | `markBoulderInterrupted` 打断点（`.khy/boulder/boulder.db`，TTL 24h，512KB 上限） | `khy resume <taskId>` 或 REPL 提示恢复 |
-| 循环达 100 轮 / 10 分钟墙钟 | 停止并如实标注「未完整闭环」（headless 可配 `KHY_HEADLESS_EXIT_ON_LIMIT` 反映退出码 3） | 拆小任务重跑，或 `khy resume` |
+| 循环达 100 轮 / 10 分钟墙钟 | 停止并如实标注「未完整闭环」（headless 需配 `KHY_HEADLESS_EXIT_ON_LIMIT` 才反映退出码 3；默认关时退出码仍是 0、json 仍报 success，见 §6） | 拆小任务重跑，或 `khy resume` |
 | 模型假完成（声称完成/验证） | 仲裁门 redrive → 预算耗尽 close_partial；harness 交付门 fail → 修复循环 ≤3 轮 | 交付门报告 + 台账缺口即「差什么」清单 |
 | 近似错误的工具名（read_fiel 等） | Branch N：键归一 / 唯一编辑距离纠正后执行（留 `_originalName` 痕）；歧义不猜 | 歧义/无关名走 TOOL_UNAVAILABLE 失败 → unknown exploration 探索 |
 | 工具循环整体抛错（headless） | 先走 Branch C：瞬态样抛出循环内有界重试（默认 1 次）；非瞬态/预算耗尽 → stderr 诊断（`KHY_HEADLESS_PROGRESS`）+ 台账记 `closure: error`，回退单发 chat | 依错误信息修复环境后重跑 |
@@ -306,6 +306,30 @@ prop（TUI）仍可取回完整输出，信息不丢失。
 | `KHY_HEADLESS_PROGRESS` / `_TEXT` / `_HEARTBEAT` | auto/开/开 | headless stderr 进度反馈（stdout 契约不动） |
 | `KHY_HEADLESS_EXIT_ON_LIMIT` | 关 | 达上限时退出码 3 + json 如实标注 |
 | `KHY_DELIVERY_LEDGER_MAX` | 500 | 台账自裁剪上限（clamp [1,5000]） |
+
+> **`KHY_HEADLESS_EXIT_ON_LIMIT` 默认关时的机器契约（脚本 / CI 必读）**
+>
+> 上表这一行「关」不是笔误。**关（默认）时，headless `khy -p` 撞内部迭代上限或绝对时间上限，
+> 进程退出码仍是 0**，`--output-format json` 仍报 `subtype:"success"` / `is_error:false`——
+> 与一次完全成功的运行**逐字节无区别**。用 `&&` 或 CI step 判交付的调用方因此拿到假绿：
+> 没做完的任务被当成已交付。这是**已登记的契约决策**（改退出码/is_error 属 json 契约变更，
+> 理由见 `runtime/node/backend/src/utils/flagRegistry/index.js` 该条的注释），不是漏改。
+>
+> 要如实判定，显式打开：
+>
+> ```bash
+> KHY_HEADLESS_EXIT_ON_LIMIT=1 khy -p "任务" --output-format json
+> ```
+>
+> ```powershell
+> $env:KHY_HEADLESS_EXIT_ON_LIMIT=1; khy -p "任务" --output-format json
+> ```
+>
+> 撞上限 → 退出码 **3**（可重试，区别于硬错误 2）、json 报 `error_max_turns` / `is_error:true`。
+>
+> **只传 `--max-turns N` 不够**：json 侧会如实报 `error_max_turns`，退出码仍是 0——两者要分开看。
+>
+> 把该 flag 翻成默认开属 json 契约变更，须按 `PROCESS-005` 走人批准，不由 AI 自行翻。
 
 ---
 
