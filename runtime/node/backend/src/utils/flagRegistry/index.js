@@ -1040,6 +1040,51 @@ const FLAGS = {
     parent: 'KHY_GLM_VISION_IMAGE_DOWNSCALE',
   },
 
+  // ── GLM 视觉降采样三个启发旋钮的 env 化(glmVisionImageDownscale;硬编码 → 可配)──
+  // 缺口:图片目标 token / 缩放安全系数 / 面积系数此前是文件里的裸常量,想调只能改代码重发。
+  // 三者的**默认值一字不动**(12000 / 0.92 / 100),env 只在读取时生效,导出的常量仍是默认值
+  // (复现脚本快照依赖),故「不设 = 逐字节今日行为」。
+  //   · KHY_GLM_VISION_IMAGE_TOKEN_TARGET 夹 [1, 16384-1024]:上界是合并预算减去
+  //     max_new_tokens 上限(0.1.180 修的 code 1210 第一形态),越过必然 400,调大救不了超预算;
+  //   · KHY_GLM_VISION_TOKEN_SAFETY 夹 [0.01,1]:缩放后再乘的保守系数,0/负数夹到 0.01 下限(不回退默认值,解析失败才回退);
+  //   · KHY_GLM_VISION_PIXELS_PER_TOKEN 夹正值:「每 token 多少像素」的面积标定,调小 = 更激进地缩。
+  // 解析失败(设了但不是数)→ 留痕 `[glm_vision_downscale]` 后回退默认,绝不抛。
+  // 注意 KHY_GLM_VISION_TOKEN_SAFETY 是**小数**旋钮,叶子内用 parseFloat 本地解析;
+  // registry.resolveNumeric 是 parseInt 语义(会把 0.92 读成 0),别改用它读这个门。parent 上门。
+  KHY_GLM_VISION_IMAGE_TOKEN_TARGET: {
+    mode: 'numeric',
+    default: 12000,
+    min: 1,
+    max: 15360,
+    parent: 'KHY_GLM_VISION_IMAGE_DOWNSCALE',
+  },
+  KHY_GLM_VISION_TOKEN_SAFETY: {
+    mode: 'numeric',
+    default: 0.92,
+    min: 0.01,
+    max: 1,
+    parent: 'KHY_GLM_VISION_IMAGE_DOWNSCALE',
+  },
+  KHY_GLM_VISION_PIXELS_PER_TOKEN: {
+    mode: 'numeric',
+    default: 100,
+    min: 1,
+    max: 100000,
+    parent: 'KHY_GLM_VISION_IMAGE_DOWNSCALE',
+  },
+
+  // ── 全渠道视觉图片长边归一化(imageNormalize;桌面/网页/终端统一)──
+  // 缺口:GLM 降采样只覆盖 GLM 视觉模型的网关发送面,而**入站**(终端读图/imageService、
+  // 网页上传 aiUploadStore)仍把 3000~6000px 的截图原样 base64 化,IPC/上传体与视觉
+  // token 一起膨胀,非 GLM 的视觉端点还会撞各自的长边上限。开该门 → 入站图片按最大边
+  // KHY_VISION_IMAGE_MAX_EDGE(默认 1568px)等比收敛并重编码为 PNG,GIF 透传;
+  // 已在长边内的图 0 成本透传。关门 / 平台工具缺失 / 任何失败 → 原图透传。
+  KHY_VISION_IMAGE_NORMALIZE: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+  },
+
   // ── GLM 视觉超大文本预算截断(glmVisionTextBudget;排障「为什么会出现剪贴板中转模式」根治)──
   // 实测(v0.1.183 会话日志):扫 C+D 盘 → DiskCleanup 返回约 25304 个 input token 的**纯文本**
   // 工具结果 → 发给 glm-4v-flash 撞合并预算 `inputs + max_new_tokens <= 16384` → 恒 400 code 1210
@@ -1106,6 +1151,96 @@ const FLAGS = {
   // 否则会把 09-13→15 的误诊(钉选读成密钥)反向重犯(密钥读成钉选)。
   // 关门/任何异常 → 逐字节回退今日 errorMsg 拼接路径。纯叶子零 IO 绝不抛。
   KHY_CLI_FAILURE_ENVELOPE: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── TUI 失败路径消费 CLI 失败信封([DESIGN-ARCH-198] W1)────────────────────
+  // 断桥(2026-11-01 实测,用户截图「今日新闻查询与断点续写」):RUNTIME-005 已要求
+  // 「CLI/TUI 失败展示必须由结构化失败信封渲染」,信封叶子也早已实现(门默认开、渲染正确)。
+  // 但**接线断在中间一层**:aiChatCore.chat() 已把信封渲染好并随 reply + failureCode 返回
+  // (failureCode **仅**信封分支才有 → 可当「上游已渲染信封」的判别信号),
+  // toolUseLoopCore 的错误收口却**弃之不用**,改从 failureDetails 重新拼散文墙 →
+  // 用户看到的是「具体原因：真实失败原因: …」压扁的一行,信封首屏的机器码/通道名/
+  // 可执行 hint 全丢(2026-11-01 实测:同份 attempts,信封给 [AUTH_FAILED] + 「运行 ai config
+  // 检查/更新该通道的 API key」,实际给的是双标签 + 通用「输入「继续」」)。
+  // 开该门 → toolUseLoopCore 收到「上游已渲染信封」(failureCode 在)时**直接沿用**该首屏,
+  // 不再二次拼墙;门关 / 上游没给信封 → 逐字节回退今日散文墙路径。
+  KHY_TUI_FAILURE_ENVELOPE: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 重复请求轮次提示不回灌历史([DESIGN-ARCH-198] W2)──────────────────────
+  // 断桥(2026-11-01 实测):toolUseLoopCore 把 [SYSTEM] 重复请求识别 提示**前置进**本轮
+  // currentMessage,而 currentMessage 又被 push 进 conversationMessages 并回灌成下一轮的
+  // initialMessages → 下一轮 countRound 拿「被注入过的文本」跟「干净的新提示词」比,
+  // similarity = 0.0476 ≪ 阈值 0.9 → 判「不同请求」→ 重复计数不增 → 轮次**饱和在 2**
+  // (实测连发 4 次同款,轮次恒为 1/2/2/2,真值 1/2/3/4)。用户在界面上永远只看到
+  // 「第 2 次」,而模型自己数出「第 3 轮」——两者互相矛盾。
+  // 开该门 → 注入只喂**模型**(旁注),**不进历史**(不进 conversationMessages / initialMessages);
+  // 用户消息里不该有它(它是给模型的旁注,不是用户说的话)。门关 → 逐字节回退今日行为。
+  KHY_PROMPT_ROUND_UNPOLLUTED: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 失败墙保留换行 + 不叠双标签([DESIGN-ARCH-198] W3)────────────────────
+  // 断桥(2026-11-01 实测):honestFailureReason.sanitizeCause 用 /\s+/g → ' ' 把多行失败墙
+  // **折叠成一行**,再按 220 字截断(末条适配器被腰斩成「cursor [unavail…」);
+  // resolveFriendlyFailureMessage 还会把「具体原因：」前置到本已自带「真实失败原因:」标签的
+  // 墙上 → 双标签。视觉路径早有同款去重门(KHY_VISION_FAILURE_CAUSE_DEDUP),通用路径没有。
+  // 开该门 → 清洗保留换行(列表是结构化信息)+ 按行截断(保住每行完整)+ 已有标签不再叠加。
+  // 门关 → 逐字节回退今日行为。
+  KHY_FAILURE_WALL_KEEP_LINES: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 失败墙标签去重(通用路径)([DESIGN-ARCH-198] W3)───────────────────────
+  // 与视觉路径的既有门 KHY_VISION_FAILURE_CAUSE_DEDUP **同款**:那里剥的是
+  // visionFailureSummary 墙自己的标签;本门管**通用**失败文案路径 ——
+  // resolveFriendlyFailureMessage 前置「具体原因：」时,cause 可能已自带
+  // 「真实失败原因:」标签 → 叠成「具体原因：真实失败原因:」双标签 stutter
+  // (2026-11-01 实测:31/31 失败墙**全部**命中,100% 必现)。
+  // 开该门 → 已自带标签则剥掉,只留一次;关 → 逐字节回退今日的叠标签行为。
+  KHY_FAILURE_CAUSE_DEDUP: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 上游配额/缺 key 真因可认([DESIGN-ARCH-198] W4)─────────────────────────
+  // 断桥(2026-11-01 实测):upstreamTruthLabel 的规则表不认 FreeUsageLimitError →
+  // 只拿到标签、advice 为空 → aiChatCore 的 _honestContinueHint 拿不到建议 → 回落通用
+  // 「输入「继续」即可从断点续写」;而 AuthError/Missing API key 因 auth 属 ruleOnly
+  // (只有命中已知语义才改写)→ **完全认不出**(实测返 null)。
+  // 开该门 → 补规则:上游免费额度用尽 / 缺少 API Key 均给出**非瞬态**标签 + 可执行 advice
+  // (等配额恢复 / 换通道、配 key)。只改展示标签与建议,**不改** errorType 分类
+  // (分类是熔断语义,不能动)。门关 → 逐字节回退今日行为。
+  KHY_UPSTREAM_QUOTA_TRUTH: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── loop 侧旁白 occurrence 接线([DESIGN-ARCH-198] W5)─────────────────────
+  // 断桥(2026-11-01 实测):toolUseLoopCore._buildOutcomeReflectionHint 调 toolOutcomeNarration
+  // 时**没传** options.occurrence → occurrence undefined → _voice 恒取 occ=0 → 一批并行
+  // 同类工具拿到**同一句**旁白(实测 3 路 webSearch → 3 句逐字相同)。而 TUI 侧
+  // (queryBridgeTimeline.computeToolOutcome)**传了** occurrence,轮换正常 —— 同一件事两处
+  // 实现、两处行为。开该门 → loop 侧按本批次同类工具出现次数传 occurrence(与 TUI 侧同口径)。
+  // 门关 → 逐字节回退今日行为。
+  KHY_LOOP_NARRATION_OCCURRENCE: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 失败尝试分层呈现([DESIGN-ARCH-198] W6)───────────────────────────────
+  // 断桥(2026-11-01 实测):失败墙把「本机没装 IDE」这类**恒定环境事实**(kiro/cursor/trae
+  // unavailable)与真实失败原因**平级罗列**,4 条里 3 条是噪音,把唯一可行动的真因挤到末位
+  // 再被截断。开该门 → 主因置顶、其余适配器折叠为一行计数、IDE 未安装类不单列。
+  // 门关 → 逐字节回退今日行为(全部平级罗列)。
+  KHY_FAILURE_ATTEMPT_TIERS: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 过程旁白去重兜底([DESIGN-ARCH-198] W7)──────────────────────────────
+  // 兜底(不是替代 W5):W5 治「为什么重复」(occurrence 接线),本门治「万一又重复」。
+  // 开该门 → 拼接多行旁白时,逐字相同的只留一条、其余折叠为计数。门关 → 逐字节回退。
+  KHY_OUTCOME_HINT_DEDUP: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 失败文案人话化(cliErrorDescriptor.humanizeFailure;[DESIGN-ARCH-198] W8)────
+  // 断桥(2026-11-01 用户截图实测):上游 401 的 JSON 报文被**原样**贴到用户可见面——
+  // 信封首屏 `通道: OpenCode Zen (401) [auth] — {"type":"error",…}`,失败墙同样只剩
+  // 英文机器串(`Missing API key.` / `Kiro IDE unavailable`)。判码侧(upstreamTruthLabel
+  // 的规则表经 _isActionableCause→_resolveCode)不能动,扩它会静默翻机器码。
+  // 开该门(默认)→ 三个渲染点(信封首屏第 3 行 / CLI 失败墙 shown / 网关 content 墙 shown)
+  // 把 shown 换成 cliErrorDescriptor.humanizeFailure 的固定中文模板(问题+原因+下一步),
+  // 墙与信封共用同一个 composeHuman 去重合成器;kind 槽规则、分组 sig、errorType 分类、
+  // 熔断/冷却集合**一个字都不动**;attempts[].error 与 cause.detail 仍保留结构化原文
+  // (机器通道不丢)。
+  // 安全收紧(契约变更,不是退化):「脱敏≠抹掉」不变式的载体从「脱敏后的上游文本」换成
+  // 「固定中文模板」⇒ 人读面从此不再出现密钥的掩码形态 `***`(cause.detail / attempts[].error
+  // 仍是掩码形态,_redactDetail / _redactWallEntry 不动)。
+  // 门关(0/false/off/no)→ 人话叶子根本不被调用,三个消费点的今日分支原样保留,
+  // 输出与今日逐字节一致。纯叶子零 IO 绝不抛。
+  KHY_FAILURE_HUMAN_TEXT: { mode: 'default-on', off: 'CANON', default: true },
 
   // ── 人肉中转不作自动兜底(manualRelayAutoFallbackPolicy;排障「为什么出现剪贴板中转模式」收尾修)──
   // 剪贴板中转(clipboardRelayAdapter)本质是人肉复制粘贴 + 监听剪贴板(最长等人 5 分钟),网页中转
@@ -2473,6 +2608,18 @@ const FLAGS = {
   // 核验结果会话级 TTL 缓存毫秒数(避免每轮系统提示重建都重复 stat 磁盘)。clamp[0, 86400000]。默认 5 分钟。
   KHY_AUDIT_VERIFY_TTL_MS: { mode: 'numeric', default: 300000, min: 0, max: 86400000 },
 
+  // ── 确信度校准(selfProfile A 层注入 + harness 收尾 S1 观察器;确信度缺陷)──
+  // 生成机制天然倾向「接上一个通顺的回答」而非先判断「我到底知不知道」,一知半解时说得和
+  // 真确定时一样笃定。既有动作声称对账(claimReconciler 六族经 answerVerifier 在同一接缝
+  // 用户可见地纠错)覆盖「已删库/测试全过/已部署」,但其词库不含「我查了/读了/核对过」这类
+  // read/check 系自称;且工具循环的两道证据门都以「已发生过工具调用」为前提(编辑门要求
+  // _allModifiedFiles.size>0、非编辑证据门要求 substantiveCalls>=threshold),零工具调用的纯
+  // 问答不经过这两道门。开该门 → selfProfile 注入「确信度自检」协议(断言分三档:本轮已验证 /
+  // 训练知识 / 未验证;未验证必须明说并给验证路径;禁用笃定措辞包装猜测),且 harness 收尾用
+  // 确定性扫描观察「零工具却笃定断言 / 自称已核验且会话历史无工具活动」的轮次并旁路记账
+  // (S1 只记录不阻断)。关 → 提示词与观察器逐字节回退(不注入、不扫描、不落账)。
+  KHY_CONFIDENCE_CALIBRATION: { mode: 'default-on', off: 'CANON', default: true },
+
   // ── 能力域依据化(selfCapabilityRegistry;自审「能力自知不能只靠文档」)──
   // capabilities 分面此前把能力域**写死成散文**:含事实错误(声称有 Alpine ISO 构建,真实是
   // 自写 C 内核 + Limine/GRUB)、发明的分类标签(与 tools/_toolCategories 真表无一相同)、
@@ -2486,6 +2633,21 @@ const FLAGS = {
   // 能力域核验结果 TTL 缓存毫秒数(与自审核验同口径:避免每轮提示重建都重复 stat 磁盘)。默认 5 分钟。
   KHY_CAPABILITY_VERIFY_TTL_MS: { mode: 'numeric', default: 300000, min: 0, max: 86400000 },
 
+  // ── 「文档 vs 实测」纪律注入 + 结论期观察器(docVsMeasuredPolicy;「已认领的行为缺陷:过分相信文档」)──
+  //   开该门 → ①selfProfile 注入「引述前先自证」三档纪律(实测/读到/引述)+ 三个最便宜的既有取证入口
+  //   (khy docs check / KhySelf self_audit_verify / location+Read/Grep)；②toolUseLoopCore 在零工具
+  //   调用收尾时观察「引述了本回合未取证的仓内路径」,记入既有 toolLoopJournal(event doc-grounding,
+  //   默认开,S1 样本主通道)并叠 breadcrumb(KHY_LOOP_DEBUG 开时)。关 → formatDisciplineForSystemPrompt
+  //   返 ''、observeConclusion 返 observed:false,两个接缝逐字节回退。
+  KHY_DOC_VS_MEASURED: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 执行漂移读数(executionDriftPolicy;「跑偏要在过程中看见,而不是撞上限才暴露」)──
+  //   开该门 → toolUseLoopCore 在轮首观察「连续 3 轮没碰本轮请求的锚点」、在零工具收尾时
+  //   观察「计划未完成 / 点名的验收命令没跑 / 无证据宣布完成」，各写一条 toolLoopJournal
+  //   (event exec-drift，默认开)。S1 只记录:不 nudge、不 continue、不改输出。
+  //   关 → 两个观察函数返 observed:false，接缝逐字节回退到「不观察」。
+  KHY_EXEC_DRIFT: { mode: 'default-on', off: 'CANON', default: true },
+
   // ── 工具簇预激活(toolClusterActivation;自审 #4「工具发现成本高」)──
   // 30 个工具标 shouldDefer,子代理(AgentContext 作用域)起手拿到的是过滤掉延迟工具的精简
   // 定义,要用某能力须先 ToolSearch 命中——而关键词召回不稳(报告:返回的多是被 defer 的工具)。
@@ -2493,6 +2655,13 @@ const FLAGS = {
   // 对每个名字 ensureToolForContext 提前揭示(幂等、加法式)。关 → selectToolsToActivate 返 [],
   // 调用方逐字节回退到「不预激活、靠 ToolSearch 现搜」的旧行为。
   KHY_TOOL_CLUSTER_ACTIVATION: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 延迟工具召回词表(deferredRecallIndex;自审 #4「工具发现成本高」的召回面)──
+  // 36 个 shouldDefer 工具主聊天流只注入裸名清单(# Additional Tools),而 toolSearch 按词命中
+  // (scoreTool:别名 +8 / searchHint +4)——模型看得见名字、看不见可搜的词 → 想到要用的能力也召不回。
+  // 开该门 → 每个未揭示延迟工具的 alias/searchHint 随名字注入(有界:每工具 ≤6 词、≤60 行);
+  // 关 → buildDeferredToolsHint 返历史裸名清单(逐字节),接缝无需第二份模板。
+  KHY_TOOL_RECALL_INDEX: { mode: 'default-on', off: 'CANON', default: true },
 
   // ── 命令替换 shell 感知(commandSubstitutionContext;修「PowerShell $() 被当 bash 注入硬拒」)──
   // execApproval 有一条 bash 视角硬拒:检出 `$(`/反引号且非 FULL 档即 allowed:false 且不带
@@ -3014,6 +3183,30 @@ const FLAGS = {
     parent: 'KHY_DEVICE_APPS',
   },
 
+  // ── 手机桥接:khy-os 主动调用手机上 StepBridge 的 HTTP/信箱通道 ────────────────
+  //   KHY_PHONE_BRIDGE(父)总闸:adb 连接管理 + HTTP 主通道 + 信箱兜底。
+  //                     关 → phoneBridgeClient 每个入口都诚实回报「未启用」,
+  //                     不 spawn adb、不发 HTTP。逐字节回退:khyos 不碰手机。
+  //   KHY_PHONE_BRIDGE_TOOL   NL 工具 PhoneBridge 是否登记(ping/status/call/mailbox/setup)。
+  //                     关 → 工具导出 disabled 占位,loadTools 跳过;客户端/服务不受影响。
+  //   KHY_PHONE_BRIDGE_MAILBOX   HTTP 主通道失败时是否允许回落文件信箱兜底。
+  //                     关 → 只在 HTTP 一条路上重试,失败即诚实报错(信箱 worker 单线程,
+  //                     一个卡死 exec 会冻结整条队列,所以兜底本身是可选的)。
+  // 后二者 parent=KHY_PHONE_BRIDGE:父关→子必关。
+  KHY_PHONE_BRIDGE: { mode: 'default-on', off: 'CANON', default: true },
+  KHY_PHONE_BRIDGE_TOOL: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_PHONE_BRIDGE',
+  },
+  KHY_PHONE_BRIDGE_MAILBOX: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_PHONE_BRIDGE',
+  },
+
   // ── 厂商连通性自检:输入 key 测是否连通(providerConnectivitySpec 纯叶子 + tester IO 壳 + `khy test-key` CLI)──
   //   KHY_PROVIDER_CONNECTIVITY_TEST 总闸:`khy test-key <厂商> --key <k>` / `--all` / `list`。
   //                     关 → spec.isEnabled 返 false,listConnectivityTargets 返 [],
@@ -3021,6 +3214,13 @@ const FLAGS = {
   //                     逐字节回退:khyos 不做厂商探针请求(不影响正常网关调用)。
   //   key 只在运行时传入(命令行 / 环境变量 / 交互密文),绝不写入 repo / 包 / 磁盘。
   KHY_PROVIDER_CONNECTIVITY_TEST: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── Provider 行跨进程快照(activeProviderSnapshot,cli/activeProviderSnapshot.js)──────────
+  //   KHY_PROVIDER_SNAPSHOT=0 → readFresh/remember 双双退化为不存在,`khy status` 逐字节
+  //   回退到「每次完整解析 Provider」。快照本身另有对账面(env 钉选 + 网关 .env 指纹,
+  //   对不上即未命中),所以关它只是省下磁盘读,不影响正确性。此前是 PTX-103 的
+  //   「有读无登记」——语义与该文件私有 _off 逐字节一致(缺值/空串 → 开;0/false/off/no → 关)。
+  KHY_PROVIDER_SNAPSHOT: { mode: 'default-on', off: 'CANON', default: true },
 
   // ── 生命周期边界:后台常驻 vs 一次性启动 vs 按需加载(serviceLifecyclePolicy 纯叶子 SSoT)──
   //   KHY_LIFECYCLE_POLICY 主门:声明 + 驱动 deferredPrefetch 的 cli-startup 调度。
@@ -3845,6 +4045,13 @@ const FLAGS = {
   // 是**字符串**不是布尔门控,登记表无对应 mode ⇒ 与 KHY_TRAJECTORY_ROUTING_STAGE 同族
   // 先例一致:不入表,由消费方直接读。
   KHY_STEP_ANCHOR: { mode: 'default-on', off: 'CANON', default: true },
+
+  // ── 线索保全(clueVault.js;问题「长任务压缩丢早期决策/约束」)──
+  // 开该门 → 压缩摘要提示/增量摘要/cycle boundary briefing/断点 contextSummary 四处
+  // 注入确定性线索台账([CLUE-LEDGER v1],四类:约束/决策/锚/未决);关 → 各接缝逐字节回退
+  // (clueVault.test.js 以不可变基线 commit 889920fe 版对照锁死)。阶段选择器 KHY_CLUE_VAULT_STAGE 与
+  // KHY_STEP_ANCHOR_STAGE 同族,是字符串不是布尔门控,不入表。
+  KHY_CLUE_VAULT: { mode: 'default-on', off: 'CANON', default: true },
 };
 
 /**

@@ -75,6 +75,7 @@ const DATA_PATHS = {
   commands: 'T1-domains/tools/commands',
   hooks: 'T1-domains/tools/hooks',
   bin: 'T1-domains/tools/bin',
+  devEnv: 'T1-domains/tools/env',
   desktopControl: 'T1-domains/desktop/desktopControl',
   computerUse: 'T1-domains/desktop/computerUse',
   browser: 'T1-domains/desktop/browser',
@@ -466,8 +467,13 @@ let _cachedProjectDataHome = null;
 /**
  * Resolve the KHY-OS project/install root.
  *
- * This file lives at <root>/services/backend/src/utils/dataHome.js, so the
- * root is four levels up (utils -> src -> backend -> services -> root).
+ * ⚠ 路径层数随目录物理化变过 —— 改之前先核对本文件的**实际**落点：
+ *   · 旧布局 `<root>/services/backend/src/utils/dataHome.js` → 上溯 **4** 层
+ *   · 现布局 `<root>/runtime/node/backend/src/utils/dataHome.js` → 上溯 **5** 层
+ *     （utils → src → backend → node → runtime → root）
+ * BUG-018 的根因就是方案 P 迁移时「代码回溯层数已改、注释没改」，
+ * 后来者照注释把 5 改回 4 → 数据家锚到 `runtime/works/data/khy` 空壳。
+ * 现值 5 层由实测校验：`getAppRoot()` 必须等于仓库根。
  * Overridable via KHY_OS_ROOT.
  *
  * @returns {string} Absolute path to the KHY-OS project root
@@ -574,6 +580,23 @@ function _pinProjectDataHome(dir, reason, source) {
  * fresh install on any machine. Fail-soft and idempotent — never clobbers a
  * real directory and never blocks startup.
  */
+/**
+ * 读出一条 symlink / junction 的目标绝对路径；读不出返回 null。
+ *
+ * Windows 的 junction 用 readlink 读出来带 `\\?\` 前缀，须剥掉，
+ * 否则 path.resolve 拿到的是带前缀的怪路径、永远判「不等于目标」。
+ */
+function _linkTargetOf(linkPath) {
+  try {
+    let t = fs.readlinkSync(linkPath);
+    if (typeof t !== 'string' || !t) return null;
+    if (t.startsWith('\\\\?\\')) t = t.slice(4);
+    return path.isAbsolute(t) ? path.resolve(t) : path.resolve(path.dirname(linkPath), t);
+  } catch {
+    return null;
+  }
+}
+
 function _ensureVisibleAlias(targetDir, aliasDir) {
   try {
     const base = aliasDir || path.dirname(targetDir);
@@ -583,9 +606,22 @@ function _ensureVisibleAlias(targetDir, aliasDir) {
     } // never alias onto itself
     const stat = fs.lstatSync(aliasPath, { throwIfNoEntry: false });
     if (stat) {
-      // Already a symlink/junction → assume correct, leave it.
-      // A real file/dir under this name → do not clobber user data.
-      return;
+      // 真实文件/目录占了这个名字 → 绝不覆盖用户数据。
+      if (!stat.isSymbolicLink()) return;
+      // 链接/junction 已存在：
+      //   · 指向仍在 → 认为正确，不动（老行为，避免无谓改写）；
+      //   · 指向已消失（**断链**）→ 修回本目标。
+      // 「已有链接一律假设正确」是 BUG-018 的成因之一：数据家搬家后链接悬空，
+      // 界面/脚本看到的是一个指向不存在路径的可见别名，且**永远不会自愈**
+      // ——本仓的实测症状正是「根别名悬空（指向已消失的 .khy）」。
+      const current = _linkTargetOf(aliasPath);
+      if (current && fs.existsSync(current)) return;
+      try {
+        fs.unlinkSync(aliasPath);
+      } catch {
+        /* 摘不掉就退回到「不建别名」，绝不阻断启动 */
+        return;
+      }
     }
     if (process.platform === 'win32') {
       fs.symlinkSync(targetDir, aliasPath, 'junction');
@@ -608,6 +644,28 @@ function getProjectDataDir(...segments) {
   const dir = path.join(getProjectDataHome(), ..._applyDataPaths(segments));
   _ensureDir(dir);
   return dir;
+}
+
+/**
+ * Resolve a path under the project data home **without creating anything**.
+ *
+ * getProjectDataDir() 把末级也当**目录**建出来 —— 拿它解析文件路径
+ * （sessions.db / taskboard.db / *.json 这类登记在 DATA_PATHS 里的文件项）
+ * 会在全新数据家里造出一个同名目录：SQLite 随后报「unable to open database
+ * file」，搜索索引与分组功能整个静默停用（没有任何报错可循）。
+ * 文件路径走这个解析器：只算路径 + 建父目录，不建末级。
+ *
+ * @param {...string} segments Path segments relative to the project data home
+ * @returns {string} Absolute path (parent directory ensured, target not created)
+ */
+function getProjectDataPath(...segments) {
+  const target = path.join(getProjectDataHome(), ..._applyDataPaths(segments));
+  try {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+  } catch {
+    /* best-effort: the caller gets the real error when opening the file */
+  }
+  return target;
 }
 
 // Memo of directories already ensured this process: getDataDir()-style
@@ -896,6 +954,9 @@ function _resetStorageCaches() {
 }
 
 module.exports = {
+  // Logical-name → tier-relative path table; consumers that resolve an explicit
+  // dataHome (tests, desktop overrides) need the same mapping getDataDir uses.
+  DATA_PATHS,
   getDataHome,
   getDataDir,
   getLegacyDataHome,
@@ -906,6 +967,7 @@ module.exports = {
   getAppRoot,
   getProjectDataHome,
   getProjectDataDir,
+  getProjectDataPath,
   getMemoryDataDir,
   isPortableDeployment,
   getBaseHome,

@@ -62,6 +62,12 @@ const PROFILES = {
       'gitStatus',
       'gitDiff',
       'gitCommit',
+      // Git 分支族：gitBranch 是**只读**（列分支，risk safe → 自动放行），
+      // gitSwitch 是**写操作**（切/建分支，risk medium → 走 L1 确认闸，
+      // force 时 isDestructive → L2 红灯）。二者成对：没有 gitBranch 就无从
+      // 知道有哪些分支，AI 只能猜分支名或退回裸 shell 命令。
+      'gitBranch',
+      'gitSwitch',
       // Prefer canonical snake_case names; keep legacy camelCase for compatibility.
       'build_project',
       'run_tests',

@@ -3,6 +3,20 @@ const path = require('path');
 
 const { BaseTool } = require('../_baseTool');
 
+/**
+ * `static risk = 'safe'` 与 `isReadOnly(){return true}` 是**刻意保留**的，别顺手改成 false。
+ *
+ * 对工具自身而言声明准确：execute 只做 existsSync + statSync，然后回一个路径，
+ * 没有任何对外副作用 —— 文件**不**由本工具发出。把「对外投递」变成现实的是微信
+ * 投递层（ilinkFileDelivery），授权与路径闸门都在那边：闸门放在**出站点**，
+ * 因为那才是副作用真实发生的地方（ilinkFileDelivery 是全仓唯一的投递实现）。
+ *
+ * 为什么不能改成 false（实测，会掉进一个收不回来的坑）：
+ *   isReadOnly=false → intentSchema.js 的动作正则 /(read|glob|grep|list|stat|cat|view|search|get|ls)/
+ *   对 'senduserfile' 一个都不匹配 → action=UNKNOWN → resourceClassifier 判 L2；
+ *   isExemptible 对 L2 恒 false，permissionCache 不免审，syscallGateway 默认开。
+ *   结果不是「多一道确认」，是「确认了也不拦」—— 而 ilink 上 L2 的 typed 确认本就是空转。
+ */
 class SendUserFileTool extends BaseTool {
   static toolName = 'SendUserFile';
   static category = 'filesystem';

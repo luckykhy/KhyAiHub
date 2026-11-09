@@ -6,9 +6,9 @@
   "_mayDependOn_note": "刻意声明空集：index.js 全文零 require（唯一命中的 `require(` 出现在注释里解释回退语义）。真身因此可原样住在共享底座而不引入任何边。",
   "fanIn": 223,
   "fanInEvidence": [
-    "services/backend/src/cli/router.js",
-    "services/backend/src/adapters/im/adapterRegistry.js",
-    "services/backend/src/utils/gateOn.js"
+    "runtime/node/backend/src/cli/router.js",
+    "runtime/node/backend/src/adapters/im/adapterRegistry.js",
+    "runtime/node/backend/src/utils/gateOn.js"
   ],
   "_fanIn_note": "223 = 实测（2026-09-28，第 17 批）：以 grep 递归匹配 require 括号内路径含 flagRegistry 的非测试源文件，命中 225 个，减去再导出壳自身（services/flagRegistry.js）与真身注释里的一处自述（utils/flagRegistry/index.js）= 223 个消费者。例证分别是入口（router.js:149）、适配器层（adapterRegistry.js:93）与同目录 D3 helper（gateOn.js）。223 的入度正是 DOMAIN-DEPS.json D3 evidence 所说「fan-in>30 枢纽」的量级样本。",
   "lifecycle": {
@@ -32,8 +32,8 @@
     "flagRegistry/index.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/flagRegistry.test.js",
-    "services/backend/tests/services/featureFlags.test.js"
+    "runtime/node/backend/tests/services/flagRegistry.test.js",
+    "runtime/node/backend/tests/services/featureFlags.test.js"
   ],
   "_move_note": "本单元是 [RESEARCH-018] P2 第 17 批的产物：把 8 处 D3→D1 反向边（utils/gateOn、utils/isEnabledDefaultOn、utils/resolveNumericFlag、utils/pythonPath、constants/prompts ×4）收敛为 D3 内部边。旧路径 services/backend/src/services/flagRegistry.js 成为再导出壳，225 个消费者的 require 串逐字节未改。"
 }
