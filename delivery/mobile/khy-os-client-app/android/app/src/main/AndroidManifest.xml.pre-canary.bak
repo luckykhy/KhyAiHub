@@ -1,0 +1,221 @@
+﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- khy-os 桥（原 StepBridge 并入本 App）：文件信箱与 /sdcard 工作区需要
+         所有文件访问；悬浮框需要 SYSTEM_ALERT_WINDOW；开机自启需要 BOOT。 -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
+    <queries>
+        <intent><action android:name="android.intent.action.MAIN" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
+    </queries>
+
+    <application
+        android:label="khy-os"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- 系统分享菜单入口。
+                 这是唯一让「任意已安装助手」在没被 khy-os 驱动时也能看见
+                 khy-os 的通道——分享菜单在系统侧，不依赖任何助手配合。
+                 进来的文字会开一个新对话，而那个对话的系统提示里带着
+                 projectProfile 的优先级声明，所以走这条路送进来的内容
+                 天然落在「先想 khy-os」的上下文里。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+
+        <!-- 「选中文字后」菜单入口。
+             默认 android:enabled="false"，由设置里的开关经
+             setComponentEnabledSetting 打开。为什么默认关：它出现在**每一次**
+             长按选字的菜单里，那是永久且用户可见的侵入——用一块 manifest 换来，
+             所以决定权给用户，不给我们。
+             用 alias 而不是直接给 MainActivity 加 filter 再在运行期摘：关掉时
+             alias 整个不存在，连 manifest 层面的入口都没有，不会留一个会被
+             点到却什么都不做的死项。 -->
+        <activity-alias
+            android:name=".ProcessTextEntry"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/process_text_entry_label">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Accessibility Service for UI automation (tap/swipe/find elements) -->
+        <service
+            android:name=".KhyAccessibilityService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config"/>
+        </service>
+
+        <!-- Screen Capture foreground service -->
+        <service
+            android:name=".ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"/>
+
+        <!-- khy-os 桥：HTTP(8896) + 文件信箱 + 自愈心跳。前台服务（dataSync），
+             随 App 启动（BootReceiver 也拉）。 -->
+        <service
+            android:name=".bridge.BridgeService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
+
+        <!-- 桥工作期间的悬浮框（SYSTEM_ALERT_WINDOW）。无授权时自己不画。 -->
+        <service
+            android:name=".bridge.BridgeOverlayService"
+            android:exported="false"/>
+
+        <!-- 桥的能力以 Android 16 AppFunction 暴露给系统助手。
+             为什么值得单开一条入口：桥原有的三条（HTTP 8896 / 反代循环 / 文件信箱）
+             都要点别的东西陪着——HTTP 要同主机 PC，反代循环要目标助手全程前台
+             （实测约 6 分钟），信箱要轮询。AppFunction 是第一条三者都不需要的：
+             系统索引声明，助手的能力路由器直接调进来。
+
+             exported=true 是机制要求（绑定方是系统/其它进程），权限由
+             BIND_APP_FUNCTION_SERVICE 收口——只有系统能绑。真正的调用方白名单在
+             KhyAppFunctions.ALLOWED_CALLERS，那里同时记日志，因为「谁在调」
+             只能从日志里发现。
+
+             tools:targetApi="36" 是给 lint 的：本类继承 API 36 的
+             AppFunctionService，而本 App minSdk 24。旧系统上这个类根本不会被
+             实例化（没有系统去绑它），所以运行时安全；标注出来是为了让
+             NewApi 警告有的放矢，而不是被全局忽略。
+
+             元数据两份（legacy + v2）与 assets 下的 xml 对应，形状照本机第一方
+             应用的惯例；一致性由 KhyAppFunctionsTest 对着 EXPOSED 表钉住。 -->
+        <service
+            android:name=".bridge.KhyAppFunctions"
+            android:exported="true"
+            android:permission="android.permission.BIND_APP_FUNCTION_SERVICE"
+            tools:targetApi="36">
+            <property
+                android:name="android.app.appfunctions"
+                android:value="app_functions.xml"/>
+            <!--
+                EXPERIMENT (2026-10-28), reversible: does declaring the schema make
+                the indexer carry `description`?
+
+                Observed on this device: our 11 functions enter the AppSearch index
+                with only four static-metadata fields (enabledByDefault / functionId /
+                mobileApplicationQualifiedId / packageName) and NO description, even
+                though app_functions_v2.xml carries a full one per function. The three
+                first-party providers that DO have descriptions in the same dump
+                (AppStore / Camera / CommonAbility) all declare this property AND ship
+                the androidx.appfunctions toolchain; we declare neither.
+
+                So this is one variable, changed alone. If descriptions appear in
+                `dumpsys app_function` after reinstall, the schema property is the
+                gate; if they do not, the androidx service class is required and this
+                line comes out. Either way the answer is worth one rebuild.
+
+                The xsd is the AOSP original (Apache-2.0, header intact), md5
+                19481529cfb779efc7c479ef16dd90f5 — identical to the copy shipped
+                inside com.stepos.appstore.
+            -->
+            <property
+                android:name="android.app.appfunctions.schema"
+                android:value="app_functions_schema.xsd"/>
+            <property
+                android:name="android.app.appfunctions.v2"
+                android:value="app_functions_v2.xml"/>
+            <intent-filter>
+                <action android:name="android.app.appfunctions.AppFunctionService"/>
+            </intent-filter>
+        </service>
+
+        <!-- PC 侧 khy phone revive 的唤醒入口（导出广播）。 -->
+        <receiver
+            android:name=".bridge.ReviveReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.khyos.khy_os_client.bridge.REVIVE"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- 开机 / 应用更新后自启桥。 -->
+        <receiver
+            android:name=".bridge.BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- FileProvider: lets khyos hand a bundled APK to the system
+             installer without exposing a file:// URI (which is blocked on
+             Android 7+). Used by the shizukuAutoInstall channel. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>

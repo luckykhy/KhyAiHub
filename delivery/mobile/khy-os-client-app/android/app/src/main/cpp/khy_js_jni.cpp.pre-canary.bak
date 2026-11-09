@@ -1,0 +1,558 @@
+// khy_js_jni.cpp — per-plugin quickjs-ng runtime. DESIGN-ARCH-195 option C.
+//
+// WHAT CHANGED FROM THE SPIKE. The T2 spike proved the engine builds, links and
+// runs on this device, using ONE global context and ONE binding. That shape could
+// not enforce the capability table at all: every script saw every binding. This
+// file is the per-plugin version — one JSRuntime + one JSContext per plugin, with
+// bindings installed according to what that plugin's manifest was granted.
+//
+// THE SHAPE, AND WHY IT IS THIS SHAPE.
+//
+//   JS  ──►  one native function, __khyInvoke(api, argsJson)
+//             └─► a Kotlin PluginHost, which decides per call whether the
+//                 plugin's manifest actually grants `api`.
+//
+// Only ONE native function exists, no matter how many capabilities are added.
+// That is the whole point: option C was chosen over option B because its attack
+// surface is a small auditable table, and a surface that grows with every feature
+// is not small. Adding `net.fetch` later must not mean adding JNI code.
+//
+// What the capability filter still does at the JS level is install a thin wrapper
+// object per granted capability — `net`, `store`, `device`, … — each of which
+// funnels into `__khyInvoke`. A plugin that was not granted `net` has
+// `typeof net === 'undefined'`, not a function that returns an error. That matters
+// for two reasons: the plugin can feature-detect honestly, and a bug in the
+// per-call check denies rather than grants.
+//
+// WHAT IS NOT HERE YET, DELIBERATELY.
+//   - DNS-level re-validation of resolved addresses used to be this list's third
+//     entry. It is no longer: PluginNetGuard now classifies what DNS actually
+//     returned, closing the "hostname that resolves to loopback" hole. See
+//     PluginNetGuard for why the resolver is injected.
+//   - The remaining gap is that `net.fetch` is SYNCHRONOUS. A blocking native call
+//     cannot be interrupted by the deadline below, so a plugin calling a slow host
+//     stalls its own evaluations for up to the transport's timeouts — bounded, not
+//     infinite, and confined to that plugin. A promise-based async bridge would
+//     remove the stall and is the eventual shape.
+// Nothing in this file weakens those gaps; they are simply not closed here.
+
+#include <jni.h>
+#include <android/log.h>
+
+#include <atomic>
+#include <cstring>
+#include <limits>
+#include <map>
+#include <mutex>
+#include <string>
+
+#include "quickjs.h"
+
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "KhyJs", __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "KhyJs", __VA_ARGS__)
+
+namespace {
+
+// "No evaluation in progress — never interrupt."
+//
+// THE BUG THIS FIXES. The deadline was initialised to 0, and the handler compares
+// `now > deadline`. Since the monotonic clock is always positive, an UNARMED
+// instance compared as "already past deadline" and interrupted everything —
+// including the capability wrappers installed at load time, before any evaluation
+// had started. Measured on device 2026-10-29: every plugin logged
+// "capability wrapper failed: InternalError: interrupted".
+//
+// A sentinel that means "do not interrupt" is the only correct idle value. Arming
+// sets a real deadline; disarming restores the sentinel.
+constexpr int64_t kNotArmed = std::numeric_limits<int64_t>::max();
+
+// The JavaVM, saved in JNI_OnLoad. Declared here, before its first use, because
+// jsInvoke must upcall into Kotlin and has no other route to a JNIEnv — a
+// namespace-scope variable has to be declared before anything that reads it.
+JavaVM *g_vm = nullptr;
+
+// 32 MB per plugin. Per-runtime, not global, so one plugin exhausting its budget
+// cannot starve another — which is only true because each plugin gets its own
+// JSRuntime (see loadPlugin).
+constexpr size_t kMemoryLimitBytes = 32u * 1024u * 1024u;
+
+// 5 s per evaluation. Same reasoning: the value is arbitrary, the mechanism is
+// what matters. A plugin runtime would make this configurable per plugin.
+constexpr int64_t kEvalDeadlineMs = 5000;
+
+// ── per-plugin state ────────────────────────────────────────────────────────
+struct PluginInstance {
+    JSRuntime *rt = nullptr;
+    JSContext *ctx = nullptr;
+    std::string pluginId;
+    // Deadline for the evaluation currently running on THIS instance. Written
+    // before JS_Eval and cleared after; read by the interrupt handler with no
+    // lock. Per-instance rather than global so two plugins can evaluate
+    // concurrently without one's deadline cutting off the other's script.
+    std::atomic<int64_t> deadlineNs{kNotArmed};
+};
+
+std::mutex g_mapMu;
+std::map<jlong, PluginInstance *> g_plugins;
+jlong g_nextHandle = 1;
+
+// The Kotlin host. A global ref, registered once from Kotlin. Cached method id
+// resolved on first use — JNI_OnLoad runs before any Kotlin code, so it cannot be
+// resolved there.
+jobject g_host = nullptr;
+jmethodID g_hostInvoke = nullptr;
+
+int64_t nowMonotonicNs() {
+    // CLOCK_MONOTONIC, not the wall clock: a timezone change or an NTP step must
+    // not be able to make a deadline expire early or never.
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<int64_t>(ts.tv_sec) * 1000000000ll + ts.tv_nsec;
+}
+
+// Returning non-zero aborts the running script with an InterruptedError.
+//
+// `opaque` is the PluginInstance, passed to JS_SetInterruptHandler below. Reading
+// the instance's atomic here — rather than a shared deadline behind a mutex — is
+// what keeps this from deadlocking: quickjs calls this from inside JS_Eval, and a
+// lock taken here would be a lock the evaluating thread already holds.
+int interruptHandler(JSRuntime * /*rt*/, void *opaque) {
+    auto *inst = static_cast<PluginInstance *>(opaque);
+    if (!inst) return 0;
+    return nowMonotonicNs() > inst->deadlineNs.load(std::memory_order_relaxed) ? 1 : 0;
+}
+
+// The enum values mirrored from Kotlin's PluginCapability, in declaration order.
+// Mirrored rather than looked up because the JNI layer must not depend on Kotlin
+// reflection to know what a capability is called; the parity test in
+// PluginSecurityTest pins the two lists together.
+enum PluginCapabilityKind { CAP_LOG, CAP_DEVICE_INFO, CAP_STORE, CAP_NET, CAP_UI_TOAST };
+
+// ── the one native binding ──────────────────────────────────────────────────
+//
+// Everything a plugin can reach goes through here, and everything here goes to
+// Kotlin, which checks the grant. See the file header for why there is exactly one.
+JSValue jsInvoke(JSContext *ctx, JSValueConst /*this_val*/, int argc,
+                 JSValueConst *argv) {
+    if (argc < 2) {
+        return JS_ThrowTypeError(ctx, "__khyInvoke(api, argsJson) 需要两个参数");
+    }
+
+    // Which plugin is calling. Recovered from the context opaque, which holds the
+    // PluginInstance — so the host is told who is asking by the runtime rather than
+    // by the script, which could otherwise claim to be anyone.
+    //
+    // The opaque is a `void*`, not a JSValue: JS_GetContextOpaque returns exactly
+    // what JS_SetContextOpaque was given. Storing a JSValue here would not compile,
+    // and storing the id as a separate JSValue would mean two sources for the same
+    // fact.
+    auto *inst = static_cast<PluginInstance *>(JS_GetContextOpaque(ctx));
+    if (!inst) {
+        return JS_ThrowInternalError(ctx, "context 没有绑定插件实例");
+    }
+    const std::string pluginId = inst->pluginId;
+
+    const char *apiStr = JS_ToCString(ctx, argv[0]);
+    if (!apiStr) return JS_UNDEFINED;
+    std::string api(apiStr);
+    JS_FreeCString(ctx, apiStr);
+
+    const char *argsStr = JS_ToCString(ctx, argv[1]);
+    std::string args = argsStr ? argsStr : "{}";
+    if (argsStr) JS_FreeCString(ctx, argsStr);
+
+    if (!g_host || !g_hostInvoke) {
+        return JS_ThrowInternalError(ctx, "插件宿主未注册");
+    }
+
+    // The host call is a plain synchronous JNI upcall. Everything it does — file
+    // I/O, a main-thread hop — happens on this thread, inside JS_Eval, which is
+    // why no binding that can block indefinitely may be installed yet.
+    JNIEnv *env = nullptr;
+    // The JVM is attached to this thread because the call originates from a
+    // Java-created thread (the one that called nativeRun). GetEnv rather than
+    // AttachCurrentThread: attaching a thread the JVM does not know about would
+    // leak it, and there is no detach point on this path.
+    JavaVM *vm = nullptr;
+    // Recovered from the host object rather than cached at JNI_OnLoad, because the
+    // object is registered later than that.
+    if (g_vm == nullptr) return JS_ThrowInternalError(ctx, "JavaVM 不可用");
+    if (g_vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK || !env) {
+        return JS_ThrowInternalError(ctx, "取不到 JNIEnv");
+    }
+
+    jstring jId = env->NewStringUTF(pluginId.c_str());
+    jstring jApi = env->NewStringUTF(api.c_str());
+    jstring jArgs = env->NewStringUTF(args.c_str());
+
+    jstring jResult = static_cast<jstring>(
+        env->CallObjectMethod(g_host, g_hostInvoke, jId, jApi, jArgs));
+
+    // A pending Java exception must be cleared before any further JNI use, or the
+    // next call behaves unpredictably. Describing it beats swallowing it.
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->DeleteLocalRef(jId);
+        env->DeleteLocalRef(jApi);
+        env->DeleteLocalRef(jArgs);
+        return JS_ThrowInternalError(ctx, "插件宿主抛出异常");
+    }
+
+    env->DeleteLocalRef(jId);
+    env->DeleteLocalRef(jApi);
+    env->DeleteLocalRef(jArgs);
+
+    if (!jResult) {
+        return JS_ThrowInternalError(ctx, "插件宿主返回空");
+    }
+
+    const char *resultUtf = env->GetStringUTFChars(jResult, nullptr);
+    std::string result = resultUtf ? resultUtf : "{}";
+    if (resultUtf) env->ReleaseStringUTFChars(jResult, resultUtf);
+    env->DeleteLocalRef(jResult);
+
+    // The host answers with a JSON document: {"ok":true,"value":…} or
+    // {"ok":false,"error":"…"}. A host-side failure is DATA, not a JS exception —
+    // the plugin gets to handle it, which is what makes the bindings usable.
+    JSValue parsed = JS_ParseJSON(ctx, result.c_str(), result.size(), "<host>");
+    if (JS_IsException(parsed)) {
+        JS_FreeValue(ctx, parsed);
+        return JS_ThrowInternalError(ctx, "插件宿主返回的不是合法 JSON");
+    }
+    return parsed;
+}
+
+// The JavaVM is declared at the top of this anonymous namespace; see the note
+// there. jsInvoke recovers a JNIEnv from it because the call originates from a
+// Java-created thread (the one that called nativeRun).
+
+// ── capability wrappers ─────────────────────────────────────────────────────
+//
+// One small JS snippet per capability. Each defines the names that capability's
+// PluginCapability.bindings lists, and each funnels into __khyInvoke. A capability
+// that was not granted contributes nothing, so its names are simply absent.
+//
+// Kept as data rather than a chain of if-statements so that adding a capability is
+// one entry here plus one enum entry in Kotlin — and so the whole mapping is
+// readable in one place, which is the auditability claim this design rests on.
+struct WrapperSpec {
+    PluginCapabilityKind cap;
+    const char *js;
+};
+
+const WrapperSpec kWrappers[] = {
+    {CAP_LOG,
+     "globalThis.log = function (...args) {\n"
+     "  return __khyResult('log', JSON.stringify({ args: args.map(String) }));\n"
+     "};\n"},
+    {CAP_DEVICE_INFO,
+     "globalThis.device = {\n"
+     "  info: function () { return __khyResult('device.info', '{}'); }\n"
+     "};\n"},
+    {CAP_STORE,
+     "globalThis.store = {\n"
+     "  get:    function (k) { return __khyResult('store.get',    JSON.stringify({ key: String(k) })); },\n"
+     "  set:    function (k, v) { return __khyResult('store.set', JSON.stringify({ key: String(k), value: v })); },\n"
+     "  remove: function (k) { return __khyResult('store.remove', JSON.stringify({ key: String(k) })); }\n"
+     "};\n"},
+    // SYNCHRONOUS, and that is a stated tradeoff rather than an oversight. The call
+    // blocks the plugin's own evaluation thread for up to the transport's connect
+    // and read timeouts. It cannot hang the app — the block is bounded by the
+    // transport, not by the engine deadline — but it also cannot be cancelled
+    // mid-flight, because a blocking native call cannot be interrupted. A
+    // promise-based async bridge is the right eventual shape and is a larger change;
+    // see PluginHost.handleNetFetch for the full reasoning.
+    {CAP_NET,
+     "globalThis.net = {\n"
+     "  fetch: function (url, init) {\n"
+     "    init = init || {};\n"
+     "    return __khyResult('net.fetch', JSON.stringify({\n"
+     "      url: String(url),\n"
+     "      method: String(init.method || 'GET'),\n"
+     "      headers: init.headers || {},\n"
+     "      body: init.body == null ? null : String(init.body)\n"
+     "    }));\n"
+     "  }\n"
+     "};\n"},
+    {CAP_UI_TOAST,
+     "globalThis.ui = {\n"
+     "  toast: function (msg) { return __khyResult('ui.toast', JSON.stringify({ message: String(msg) })); }\n"
+     "};\n"},
+};
+
+std::string jsonEscape(const std::string &in) {
+    std::string out;
+    out.reserve(in.size() + 8);
+    for (char c : in) {
+        switch (c) {
+            case '"':  out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\b': out += "\\b";  break;
+            case '\f': out += "\\f";  break;
+            case '\n': out += "\\n";  break;
+            case '\r': out += "\\r";  break;
+            case '\t': out += "\\t";  break;
+            default:
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    char buf[8];
+                    snprintf(buf, sizeof(buf), "\\u%04x", c);
+                    out += buf;
+                } else {
+                    out += c;
+                }
+        }
+    }
+    return out;
+}
+
+std::string valueToString(JSContext *ctx, JSValue v) {
+    const char *s = JS_ToCString(ctx, v);
+    std::string out = s ? s : "<unprintable>";
+    if (s) JS_FreeCString(ctx, s);
+    return out;
+}
+
+// ── JNI entry points ────────────────────────────────────────────────────────
+
+/**
+ * Register the Kotlin host that __khyInvoke calls.
+ *
+ * Called once from Kotlin, before any plugin is loaded. A global ref, so the
+ * object survives; the caller must not be a short-lived anonymous class.
+ */
+void setHost(JNIEnv *env, jobject /*thiz*/, jobject host) {
+    if (g_host) {
+        env->DeleteGlobalRef(g_host);
+        g_host = nullptr;
+        g_hostInvoke = nullptr;
+    }
+    if (!host) return;
+    g_host = env->NewGlobalRef(host);
+    jclass cls = env->GetObjectClass(host);
+    g_hostInvoke = env->GetMethodID(
+        cls, "invoke", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+    if (!g_hostInvoke) {
+        LOGE("PluginHost.invoke(String,String,String)String not found");
+        env->DeleteGlobalRef(g_host);
+        g_host = nullptr;
+        return;
+    }
+    LOGI("plugin host registered");
+}
+
+/**
+ * Create a plugin's runtime and context.
+ *
+ * @param pluginId     validated id; also the storage namespace
+ * @param capabilities the granted capability kinds, as a comma-separated list of
+ *                     the PluginCapabilityKind ordinals ("0,2"). Ordinals rather
+ *                     than wire names so a typo cannot silently install nothing —
+ *                     an out-of-range ordinal fails loudly here.
+ * @return a non-zero handle, or 0 on failure
+ */
+jlong loadPlugin(JNIEnv *env, jobject /*thiz*/, jstring pluginId, jstring capabilities) {
+    const char *idUtf = env->GetStringUTFChars(pluginId, nullptr);
+    if (!idUtf) return 0;
+    std::string id(idUtf);
+    env->ReleaseStringUTFChars(pluginId, idUtf);
+
+    const char *capUtf = env->GetStringUTFChars(capabilities, nullptr);
+    std::string caps = capUtf ? capUtf : "";
+    if (capUtf) env->ReleaseStringUTFChars(capabilities, capUtf);
+
+    auto *inst = new PluginInstance();
+    inst->pluginId = id;
+
+    inst->rt = JS_NewRuntime();
+    if (!inst->rt) {
+        LOGE("[%s] JS_NewRuntime failed", id.c_str());
+        delete inst;
+        return 0;
+    }
+    JS_SetMemoryLimit(inst->rt, kMemoryLimitBytes);
+    // The instance itself is the opaque, so the handler reads THIS plugin's
+    // deadline. See interruptHandler.
+    JS_SetInterruptHandler(inst->rt, interruptHandler, inst);
+
+    inst->ctx = JS_NewContext(inst->rt);
+    if (!inst->ctx) {
+        LOGE("[%s] JS_NewContext failed", id.c_str());
+        JS_FreeRuntime(inst->rt);
+        delete inst;
+        return 0;
+    }
+
+    // The context opaque carries the PluginInstance, so __khyInvoke can tell the
+    // host who is calling without trusting the script.
+    JS_SetContextOpaque(inst->ctx, inst);
+
+    // The one native binding, installed for every plugin. Everything else is a JS
+    // wrapper decided by the grant.
+    JSValue global = JS_GetGlobalObject(inst->ctx);
+    JS_SetPropertyStr(inst->ctx, global, "__khyInvoke",
+                      JS_NewCFunction(inst->ctx, jsInvoke, "__khyInvoke", 2));
+    JS_FreeValue(inst->ctx, global);
+
+    // __khyResult is installed UNCONDITIONALLY, not with any capability. It is the
+    // shared adapter that turns the host's {ok:true,…} / {ok:false,error:…}
+    // document into a value or a throw, and every capability wrapper calls it — so
+    // tying it to one capability would break every plugin that lacks that one.
+    //
+    // Why throw rather than return the document: a wrapper handing back
+    // {ok:false,error:"…"} looks like a successful call to the script, which then
+    // carries on and fails much later as nonsense. Throwing puts the failure where
+    // it happened. The raw document is still reachable via __khyInvoke directly.
+    //
+    // NO JSON.parse HERE. __khyInvoke already returns the parsed object — the C side
+    // runs JS_ParseJSON on the host's reply. Parsing again coerces the object to the
+    // string "[object Object]" first, which then fails to parse as JSON with
+    // "unexpected token: 'object'". That is exactly what happened on the first
+    // device run, and it took down every wrapper at once.
+    static const char *kResultHelper =
+        "globalThis.__khyResult = function (api, argsJson) {\n"
+        "  var r = __khyInvoke(api, argsJson);\n"
+        "  if (!r.ok) { var e = new Error(r.error || (api + ' failed')); e.hostError = true; throw e; }\n"
+        "  delete r.ok;\n"
+        "  return r;\n"
+        "};\n";
+    JSValue helper = JS_Eval(inst->ctx, kResultHelper, strlen(kResultHelper),
+                             "<host-adapter>", JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(helper)) {
+        JSValue exc = JS_GetException(inst->ctx);
+        LOGE("[%s] __khyResult helper failed: %s", id.c_str(),
+             valueToString(inst->ctx, exc).c_str());
+        JS_FreeValue(inst->ctx, exc);
+    }
+    JS_FreeValue(inst->ctx, helper);
+
+    // Install only what was granted.
+    for (const auto &w : kWrappers) {
+        // caps is a comma-separated ordinal list.
+        std::string needle = std::to_string(static_cast<int>(w.cap));
+        bool granted = false;
+        size_t pos = 0;
+        while (pos < caps.size()) {
+            size_t comma = caps.find(',', pos);
+            std::string tok = caps.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+            if (tok == needle) { granted = true; break; }
+            if (comma == std::string::npos) break;
+            pos = comma + 1;
+        }
+        if (!granted) continue;
+
+        JSValue r = JS_Eval(inst->ctx, w.js, strlen(w.js), "<capability>", JS_EVAL_TYPE_GLOBAL);
+        if (JS_IsException(r)) {
+            JSValue exc = JS_GetException(inst->ctx);
+            LOGE("[%s] capability wrapper failed: %s", id.c_str(),
+                 valueToString(inst->ctx, exc).c_str());
+            JS_FreeValue(inst->ctx, exc);
+        }
+        JS_FreeValue(inst->ctx, r);
+    }
+
+    std::lock_guard<std::mutex> lock(g_mapMu);
+    jlong handle = g_nextHandle++;
+    g_plugins[handle] = inst;
+    LOGI("[%s] loaded as handle %ld (granted: %s)", id.c_str(), (long)handle,
+         caps.empty() ? "none" : caps.c_str());
+    return handle;
+}
+
+jstring runPlugin(JNIEnv *env, jobject /*thiz*/, jlong handle, jstring code) {
+    PluginInstance *inst = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_mapMu);
+        auto it = g_plugins.find(handle);
+        if (it == g_plugins.end()) {
+            return env->NewStringUTF("{\"ok\":false,\"error\":\"插件句柄无效\"}");
+        }
+        inst = it->second;
+    }
+
+    const char *codeUtf = env->GetStringUTFChars(code, nullptr);
+    if (!codeUtf) {
+        return env->NewStringUTF("{\"ok\":false,\"error\":\"GetStringUTFChars failed\"}");
+    }
+    std::string source(codeUtf);
+    env->ReleaseStringUTFChars(code, codeUtf);
+
+    // Arm the deadline BEFORE evaluating. Arming after would leave the first
+    // evaluation unprotected.
+    inst->deadlineNs.store(nowMonotonicNs() + kEvalDeadlineMs * 1000000ll,
+                           std::memory_order_relaxed);
+
+    JSValue result = JS_Eval(inst->ctx, source.c_str(), source.size(), "<plugin>",
+                             JS_EVAL_TYPE_GLOBAL);
+
+    // Restore the sentinel, not 0. See kNotArmed: 0 means "already past deadline"
+    // to the handler, so leaving it there would interrupt the NEXT plugin's
+    // capability installation.
+    inst->deadlineNs.store(kNotArmed, std::memory_order_relaxed);
+
+    std::string json;
+    if (JS_IsException(result)) {
+        JSValue exc = JS_GetException(inst->ctx);
+        std::string msg = valueToString(inst->ctx, exc);
+        JSValue stack = JS_GetPropertyStr(inst->ctx, exc, "stack");
+        if (!JS_IsUndefined(stack)) {
+            std::string st = valueToString(inst->ctx, stack);
+            if (!st.empty()) msg += "\n" + st;
+        }
+        JS_FreeValue(inst->ctx, stack);
+        JS_FreeValue(inst->ctx, exc);
+        LOGE("[%s] threw: %s", inst->pluginId.c_str(), msg.c_str());
+        json = "{\"ok\":false,\"error\":\"" + jsonEscape(msg) + "\"}";
+    } else {
+        json = "{\"ok\":true,\"value\":\"" + jsonEscape(valueToString(inst->ctx, result)) + "\"}";
+    }
+    JS_FreeValue(inst->ctx, result);
+    return env->NewStringUTF(json.c_str());
+}
+
+void unloadPlugin(JNIEnv * /*env*/, jobject /*thiz*/, jlong handle) {
+    std::lock_guard<std::mutex> lock(g_mapMu);
+    auto it = g_plugins.find(handle);
+    if (it == g_plugins.end()) return;
+    PluginInstance *inst = it->second;
+    g_plugins.erase(it);
+
+    JS_FreeContext(inst->ctx);
+    JS_FreeRuntime(inst->rt);
+    LOGI("[%s] unloaded", inst->pluginId.c_str());
+    delete inst;
+}
+
+const JNINativeMethod kMethods[] = {
+    {"nativeSetHost", "(Ljava/lang/Object;)V", reinterpret_cast<void *>(setHost)},
+    {"nativeLoad", "(Ljava/lang/String;Ljava/lang/String;)J",
+     reinterpret_cast<void *>(loadPlugin)},
+    {"nativeRun", "(JLjava/lang/String;)Ljava/lang/String;",
+     reinterpret_cast<void *>(runPlugin)},
+    {"nativeUnload", "(J)V", reinterpret_cast<void *>(unloadPlugin)},
+};
+
+} // namespace
+
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/) {
+    g_vm = vm;
+    JNIEnv *env = nullptr;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+    // FindClass inside JNI_OnLoad resolves against the loader that loaded THIS
+    // library, which for a System.loadLibrary from the app is the app's own
+    // loader — so app classes are reachable here.
+    jclass cls = env->FindClass("com/khyos/khy_os_client/engine/KhyJs");
+    if (!cls) {
+        LOGE("JNI_OnLoad: KhyJs class not found");
+        return JNI_ERR;
+    }
+    const jint n = sizeof(kMethods) / sizeof(kMethods[0]);
+    if (env->RegisterNatives(cls, kMethods, n) != JNI_OK) {
+        LOGE("JNI_OnLoad: RegisterNatives failed for %d methods", n);
+        return JNI_ERR;
+    }
+    LOGI("JNI_OnLoad: registered %d native methods", n);
+    return JNI_VERSION_1_6;
+}
