@@ -66,11 +66,14 @@ function isTerminal(status) {
 //   · 永不虚报：某拍未推进时，显示值严格低于它的下界（护栏 PERCENT_GUARD）
 //   · 单调：只随真实推进与时间流逝上升，绝不回退
 //   · 恰达 100：全部拍推进完毕才 100 —— 否则「网关降级」时进度条永远停在 83%
-//   · 起步斜坡：进程刚起时不从 0 瞬跳到「已完成拍的下界」，而是平滑爬上去
+//   · 斜坡只保留给 0 拍阶段：已有真实推进（progressedCount>0）时 base 直接取 floor ——
+//     热态开窗 449ms 时 4 拍已 done（真实 66.67%），按 4000ms 时间斜坡画 6%→18%→35%
+//     是把已完成的真实进度画成假低值（RUNTIME-002「进度必须真实」）。起步期的平滑
+//     爬升由 creep 承担，不需要额外斜坡。
 //
 // 三条硬规则（§4.2）不受影响：本函数不产生完成信号、不参与 isReady()、不引入任何
 // 定时完成语义 —— 它只是把**已经真实发生**的推进画成一条连续的曲线。
-const PERCENT_RAMP_MS = 4000; // 起步斜坡时长：0 → 真实下界
+const PERCENT_RAMP_MS = 4000; // 起步斜坡时长（仅 0 拍阶段参与，见上）
 const PERCENT_CREEP_MS = 12000; // 单拍内：向「下一拍的下界」缓慢逼近的时间常数
 const PERCENT_GUARD = 0.4; // 与下一拍下界的护栏：未推进时绝不到达
 
@@ -168,9 +171,10 @@ function createBeatTracker(options) {
     if (progressed >= total) return 100;
     const floor = (progressed / total) * 100;
     const ceiling = ((progressed + 1) / total) * 100;
-    // 起步斜坡：进程刚起时不让显示值瞬跳到真实下界（否则「一出场就是 67%」）。
+    // 起步斜坡只保留给 0 拍阶段；已有真实推进时 base 直接取 floor —— 显示值必须
+    // 落在真实进度上，不能按时间斜坡把已完成的拍压成假低值（RUNTIME-002）。
     const ramp = Math.min(100, (Math.max(0, t - startedAt) / PERCENT_RAMP_MS) * 100);
-    const base = Math.max(0, Math.min(floor, ramp));
+    const base = progressed > 0 ? floor : Math.max(0, Math.min(floor, ramp));
     // 单拍内缓慢爬升：向下一拍的下界逼近，但被护栏挡住 —— 永不虚报那一拍已完成。
     const sinceProgress = Math.max(0, t - lastProgressedAt());
     const creep = base + (ceiling - base) * (1 - Math.exp(-sinceProgress / PERCENT_CREEP_MS));

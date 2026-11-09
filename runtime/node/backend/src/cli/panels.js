@@ -26,6 +26,16 @@ const {
   getToolDisplayName,
 } = require('./renderTheme');
 
+// Ink TUI takeover switch, same predicate steps.js uses: isTTY answers "are we
+// rendering to a terminal", this answers "must the classic renderer yield to the
+// TUI". The guards below used `process.stdout.isTTY` — always true in the REPL,
+// so the whole panel set silently never painted in a real terminal (only when
+// piped). The ctrl+o expand lines and the cursor-up collapse only make sense in
+// the classic REPL, which is exactly what this flag gates.
+function _isInkTuiActive() {
+  return process.env.KHY_INK_TUI_ACTIVE === '1';
+}
+
 // ── Expandable outputs bridge ────────────────────────────────────────
 // aiRenderer owns the canonical _expandableOutputs array.
 // It calls setExpandableOutputs() after requiring this module so that
@@ -169,7 +179,7 @@ class TaskPlanTracker {
    * Render the full task list to stdout.
    */
   render() {
-    if (process.stdout.isTTY) {
+    if (_isInkTuiActive()) {
       return;
     }
     // panelMode: panel rendered by REPL layer, skip inline output
@@ -224,7 +234,7 @@ class TaskPlanTracker {
    * Re-render by clearing previous output and printing again.
    */
   _rerender(changedIndex = -1) {
-    if (process.stdout.isTTY) {
+    if (_isInkTuiActive()) {
       return;
     }
     // panelMode: state updated via taskPanelState, REPL's console.log patch redraws
@@ -403,7 +413,7 @@ class InitPhaseTracker {
     if (this._collapsed) {
       return;
     }
-    if (process.stdout.isTTY) {
+    if (_isInkTuiActive()) {
       this._lines++;
       return;
     }
@@ -418,11 +428,7 @@ class InitPhaseTracker {
   }
   /** Collapse all tracked init lines into a single summary. */
   collapse(summaryText) {
-    if (process.stdout.isTTY) {
-      this._collapsed = true;
-      return;
-    }
-    if (this._collapsed || this._lines <= 0 || !process.stdout.isTTY) {
+    if (_isInkTuiActive() || this._collapsed || this._lines <= 0) {
       this._collapsed = true;
       return;
     }
@@ -480,7 +486,7 @@ class InitPhaseTracker {
  * @param {number} [opts.subtaskCount] - Number of subtasks
  */
 function printExecutionBrief(opts = {}) {
-  if (process.stdout.isTTY) {
+  if (_isInkTuiActive()) {
     return { lineCount: 0, plainText: '' };
   }
   const chalk = c();
@@ -516,7 +522,7 @@ function printExecutionBrief(opts = {}) {
   const titleText = ' ◆ 执行简报 ';
   const titleW = displayWidth(titleText);
   const dashCount = Math.max(0, maxW - titleW - 3);
-  lines.push(dim('  ╭─') + chalk.hex('#D77757').bold(titleText) + dim('─'.repeat(dashCount) + '╮'));
+  lines.push(dim('  ╭─') + chalk.hex(THEME.claude).bold(titleText) + dim('─'.repeat(dashCount) + '╮'));
   addEmpty();
 
   // Request
@@ -598,10 +604,7 @@ function printExecutionBrief(opts = {}) {
  * @param {object} [opts] - { scale, fileCount }
  */
 function collapseExecutionBrief(renderedLines, opts = {}) {
-  if (process.stdout.isTTY) {
-    return;
-  }
-  if (!process.stdout.isTTY || renderedLines <= 0) {
+  if (_isInkTuiActive() || renderedLines <= 0) {
     return;
   }
   // Store the brief content for Ctrl+O expansion before clearing
@@ -651,7 +654,7 @@ function collapseExecutionBrief(renderedLines, opts = {}) {
  * @param {number}  opts.reads
  */
 function printCompletionPanel(opts = {}) {
-  if (process.stdout.isTTY) {
+  if (_isInkTuiActive()) {
     return;
   }
   const chalk = c();
@@ -672,9 +675,10 @@ function printCompletionPanel(opts = {}) {
     lines.push(dim('  │') + ' '.repeat(innerW + 2) + dim('│'));
   };
 
-  // Title bar
+  // Title bar. 颜色走 THEME(renderTheme 代理),不再写死品牌十六进制 ——
+  // 写死的那几个值在 8 套主题里都不变,切主题后这一块和同屏内容对不上。
   const icon = opts.success !== false ? '✓' : '⚠';
-  const iconColor = opts.success !== false ? chalk.hex('#4EBA65') : chalk.hex('#FFC107');
+  const iconColor = opts.success !== false ? chalk.hex(THEME.success) : chalk.hex(THEME.warning);
   const titleText = ` ${icon} 任务完成 `;
   const titleW = displayWidth(titleText);
   const dashCount = Math.max(0, maxW - titleW - 3);
@@ -684,79 +688,85 @@ function printCompletionPanel(opts = {}) {
   // File changes
   const fc = opts.fileChanges || [];
   if (fc.length > 0) {
+    // 标签列按显示宽度对齐:中文标签宽 4~6 列,原来「标签 + 两个空格」与
+    // 「标签 + 一个空格」混用、续行又固定 8 空格,同一份清单的文件名落在
+    // 三个不同列上。统一按最宽标签(重命名 = 6 列)补齐。
+    const LABEL_W = displayWidth('重命名');
+    const labelPrefix = (label) => `  ${chalk.dim(label)}${' '.repeat(2 + LABEL_W - displayWidth(label))}`;
+    const CONT_PREFIX = ' '.repeat(2 + LABEL_W + 2);
     const creates = fc.filter((f) => f.operation === 'create' || f.operation === 'scaffold');
     const modifies = fc.filter((f) => f.operation === 'modify');
     const renames = fc.filter((f) => f.operation === 'rename');
     const moves = fc.filter((f) => f.operation === 'move');
     const deletes = fc.filter((f) => f.operation === 'delete');
     if (modifies.length > 0) {
-      const label = chalk.dim('改动');
+      const label = '改动';
       for (let i = 0; i < Math.min(modifies.length, 6); i++) {
-        const prefix = i === 0 ? `  ${label}  ` : '        ';
+        const prefix = i === 0 ? labelPrefix(label) : CONT_PREFIX;
         const fname = truncateToWidth(pathLib.basename(modifies[i].path), 30);
         const diff = modifies[i].diff ? chalk.dim(` (${modifies[i].diff})`) : '';
         addLine(`${prefix}${chalk.cyan(fname)}${diff}`);
       }
       if (modifies.length > 6) {
-        addLine(`        ${chalk.dim(`...+${modifies.length - 6} 个文件`)}`);
+        addLine(`${CONT_PREFIX}${chalk.dim(`...+${modifies.length - 6} 个文件`)}`);
       }
     }
     if (creates.length > 0) {
-      const label = chalk.dim('新建');
+      const label = '新建';
       for (let i = 0; i < Math.min(creates.length, 4); i++) {
-        const prefix = i === 0 ? `  ${label}  ` : '        ';
+        const prefix = i === 0 ? labelPrefix(label) : CONT_PREFIX;
         const fname = truncateToWidth(pathLib.basename(creates[i].path), 30);
         const diff = creates[i].diff ? chalk.dim(` (${creates[i].diff})`) : '';
-        addLine(`${prefix}${chalk.hex('#4EBA65')(fname)}${diff}`);
+        addLine(`${prefix}${chalk.hex(THEME.success)(fname)}${diff}`);
       }
       if (creates.length > 4) {
-        addLine(`        ${chalk.dim(`...+${creates.length - 4} 个文件`)}`);
+        addLine(`${CONT_PREFIX}${chalk.dim(`...+${creates.length - 4} 个文件`)}`);
       }
     }
     if (renames.length > 0) {
-      const label = chalk.dim('重命名');
+      const label = '重命名';
       for (let i = 0; i < Math.min(renames.length, 4); i++) {
-        const prefix = i === 0 ? `  ${label}` + ' ' : '        ';
+        const prefix = i === 0 ? labelPrefix(label) : CONT_PREFIX;
         const fromName = pathLib.basename(renames[i].fromPath || renames[i].path || '');
         const toName = pathLib.basename(renames[i].toPath || renames[i].path || '');
         const text = truncateToWidth(`${fromName} → ${toName}`, 36);
-        addLine(`${prefix}${chalk.hex('#FFC107')(text)}`);
+        addLine(`${prefix}${chalk.hex(THEME.warning)(text)}`);
       }
       if (renames.length > 4) {
-        addLine(`        ${chalk.dim(`...+${renames.length - 4} 个文件`)}`);
+        addLine(`${CONT_PREFIX}${chalk.dim(`...+${renames.length - 4} 个文件`)}`);
       }
     }
     if (moves.length > 0) {
-      const label = chalk.dim('移动');
+      const label = '移动';
       for (let i = 0; i < Math.min(moves.length, 4); i++) {
-        const prefix = i === 0 ? `  ${label}` + ' ' : '        ';
+        const prefix = i === 0 ? labelPrefix(label) : CONT_PREFIX;
         const fromName = pathLib.basename(moves[i].fromPath || moves[i].path || '');
         const toName = pathLib.basename(moves[i].toPath || moves[i].path || '');
         const text = truncateToWidth(`${fromName} → ${toName}`, 36);
-        addLine(`${prefix}${chalk.hex('#4DB6FF')(text)}`);
+        addLine(`${prefix}${chalk.hex(THEME.link)(text)}`);
       }
       if (moves.length > 4) {
-        addLine(`        ${chalk.dim(`...+${moves.length - 4} 个文件`)}`);
+        addLine(`${CONT_PREFIX}${chalk.dim(`...+${moves.length - 4} 个文件`)}`);
       }
     }
     if (deletes.length > 0) {
-      const label = chalk.dim('删除');
+      const label = '删除';
       for (let i = 0; i < Math.min(deletes.length, 4); i++) {
-        const prefix = i === 0 ? `  ${label}  ` : '        ';
+        const prefix = i === 0 ? labelPrefix(label) : CONT_PREFIX;
         const fname = truncateToWidth(
           pathLib.basename(deletes[i].path || deletes[i].fromPath || ''),
           30
         );
         const diff = deletes[i].diff ? chalk.dim(` (${deletes[i].diff})`) : '';
-        addLine(`${prefix}${chalk.hex('#FF6B80')(fname)}${diff}`);
+        addLine(`${prefix}${chalk.hex(THEME.error)(fname)}${diff}`);
       }
       if (deletes.length > 4) {
-        addLine(`        ${chalk.dim(`...+${deletes.length - 4} 个文件`)}`);
+        addLine(`${CONT_PREFIX}${chalk.dim(`...+${deletes.length - 4} 个文件`)}`);
       }
     }
   } else if ((opts.totalCalls || 0) > 0) {
-    // Tools were called but no files created/modified
-    addLine(`  ${chalk.dim('文件')}  ${chalk.hex('#FFD700').bold('未发生文件变更')}`);
+    // Tools were called but no files created/modified — 中性事实,弱化即可。
+    addLine(`  ${chalk.dim('文件')}  ${chalk.dim('未发生文件变更')}`);
   }
 
   // Commands
@@ -793,7 +803,7 @@ function printCompletionPanel(opts = {}) {
     const sr = opts.subtaskReport;
     const srParts = [`${sr.succeeded}/${sr.total} 子任务完成`];
     if (sr.failed > 0) {
-      srParts.push(chalk.hex('#FF6B80')(`${sr.failed} 失败`));
+      srParts.push(chalk.hex(THEME.error)(`${sr.failed} 失败`));
     }
     addLine(`  ${chalk.dim('子任务')}  ${srParts.join(chalk.dim(' · '))}`);
   }
@@ -836,7 +846,7 @@ function printCompletionPanel(opts = {}) {
  * @param {string} summary - e.g. "搜索 3 次，读取 5 个文件"
  */
 function printCollapseCounter(summary) {
-  if (process.stdout.isTTY) {
+  if (_isInkTuiActive()) {
     return;
   }
   const chalk = c();

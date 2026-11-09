@@ -187,10 +187,10 @@ async function dispatchSlashCommand(command, _ctx) {
       return true;
     }
 
-    // ── Session recap (/recap — aligns with Claude Code /recap; deterministic recap of the current session via existing sessionRecapService) ──
+    // ── Session recap (/recap — aligns with Claude Code /recap; deterministic recap of the current session via existing sessionRecapService; `recap narrative` renders the Genette narrative of DESIGN-ARCH-130) ──
     case 'recap': {
       const { handleRecap } = require('./handlers/recap');
-      printInfo('  正在生成会话摘要...');
+      printInfo(subCommand === 'narrative' ? '  正在生成任务叙事...' : '  正在生成会话摘要...');
       await handleRecap(subCommand, args, options);
       return true;
     }
@@ -909,14 +909,24 @@ async function dispatchSlashCommand(command, _ctx) {
 
     case 'status': {
       try {
-        const ai = require('./ai');
         const hud = require('./hudRenderer');
         // Async path: the three git probes run in parallel; sync refreshGit
         // keeps its sequential execSync only for callers that cannot await.
         await hud.refreshGitAsync();
         const state = hud.getState();
-        const provider =
-          typeof ai.getActiveProvider === 'function' ? ai.getActiveProvider() : 'unknown';
+        // Provider 行走跨进程快照：TTL 内命中就不再为一行展示装载整个 aiGateway
+        // （20 个适配器 + cli/ai + multiFreeService，[DESIGN-PERF-007] W2-1）。
+        // 未命中才 require('./ai') 走完整解析 —— 那条路会顺手刷新快照，
+        // 下一个冷进程受益。快照不可用 / 被门控关 → 逐字节回退旧路径。
+        let provider = null;
+        try {
+          provider = require('./activeProviderSnapshot').readFresh(process.env);
+        } catch { /* 快照缺失 → 走完整解析 */ }
+        if (provider === null) {
+          const ai = require('./ai');
+          provider =
+            typeof ai.getActiveProvider === 'function' ? ai.getActiveProvider() : 'unknown';
+        }
         // 刀94: /status 补齐 CC status.tsx 点名的 Model + Account,以及 git ahead/behind。
         // 三样都早已在 hudState(updateModelInfo/account-email 事件/refreshGit 填充)且已被
         // 状态栏与 /hud 面板渲染,唯 /status 呈现侧未接 → half-wired。纯决策在叶子

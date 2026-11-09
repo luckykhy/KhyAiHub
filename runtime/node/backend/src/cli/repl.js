@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-136-91NP1HAE
 /**
  * Interactive REPL — public entry.
  *

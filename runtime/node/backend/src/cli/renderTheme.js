@@ -329,7 +329,9 @@ const DOT_DONE = '●'; // finished (dimmed)
 // ── Task Plan Indicators ──────────────────────────────────────────────
 const TASK_PENDING = '☐';
 const TASK_IN_PROGRESS = '■';
-const TASK_COMPLETED = '✔';
+// 对勾字形统一 U+2713:任务面板、doctor 逐项图标、HUD 工具历史原本`✔`(U+2714)与
+// `✓` 混用,两行挨着出现时明显一大一小;宽度也不同(✔ 在部分终端按双宽渲染)。
+const TASK_COMPLETED = '✓';
 
 // ── Tool Family Icons ─────────────────────────────────────────────────
 // 不同工具类别用不同图标，一眼区分操作类型

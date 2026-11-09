@@ -514,6 +514,9 @@ async function dispatchTailCommand(command, _ctx) {
         printSuccess(
           `已记住（${scope === 'global' ? '全局' : '项目'}）: ${res.file}${res.created ? ' (新建)' : ''}`
         );
+        if (res.warning) {
+          printWarn(res.warning);
+        }
       } else {
         printError(`记忆未写入: ${res.error}`);
       }
@@ -566,6 +569,9 @@ async function dispatchTailCommand(command, _ctx) {
         const r = store.approve(id);
         if (r.success) {
           printSuccess(`已写入指令文件: ${r.file}${r.created ? ' (新建)' : ''}`);
+          if (r.warning) {
+            printWarn(r.warning);
+          }
         } else {
           printError(`批准失败: ${r.error}`);
         }
