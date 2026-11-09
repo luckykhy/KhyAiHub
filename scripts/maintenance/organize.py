@@ -34,8 +34,15 @@ from pathlib import Path
 
 # 本文件位于 <repo>/scripts/maintenance/organize.py
 REPO = Path(__file__).resolve().parents[2]
-# 隔离区落在 .khyos/housekeeping/（被 .gitignore 忽略，不污染 git 状态）
-OUT_ROOT = REPO / ".khyos" / "housekeeping"
+# 隔离区落在**数据家的临时区** `works/data/khy/T4-transient/tmp/housekeeping/`。
+#
+# ⚠ 2026-10-24 修 B8 复发：原值是 `REPO / ".khyos" / "housekeeping"` ——
+#   那落在**仓库根**，而仓库根的 `.khyos/` 是 CLAUDE.md §二 B8 明令禁止的影子目录，
+#   守卫 root-shadow-dir 会亮红（实测 2026-10-18 的「根临时文件收容」批次
+#   又造出了一棵 .khyos/housekeeping/，是 B8 的第 8 次复发）。
+#   数据家的临时区（works/data/khy/T4-transient/tmp/）本就是章程指定的临时件落点，
+#   被 .gitignore 忽略、不污染 git 状态，且不触犯根目录禁令。
+OUT_ROOT = REPO / "works" / "data" / "khy" / "T4-transient" / "tmp" / "housekeeping"
 
 GUARD_DIRS = {
     ".git", ".khy", ".khyos", "node_modules", "khy_os.egg-info",
