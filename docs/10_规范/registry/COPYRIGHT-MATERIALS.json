@@ -1,37 +1,57 @@
 {
-  "$schemaNote": "软著登记材料候选清单 —— 「哪两端进材料」的机器可读登记（DESIGN-IP-001 C-MAT1 / C-X3）。由 scripts/ci/check-copyright-readiness.js 消费：核验候选文件不落在 vendor/third_party/dist 等排除目录、不命中 *_gen.*/_blob.h/字体数据表/压缩产物，且文件真实存在（防清单与实际脱节）。",
-  "source": "由交付目录 01_草稿/代码文件选择.json 的实测度量段转换而来（2026-09-21）。真源文档 docs/10_规范/其它规范/[DESIGN-IP-001] 软件著作权就绪规范.md §四 C-MAT1。",
-  "generatedAt": "2026-09-21",
+  "$schemaNote": "软著登记材料候选清单 —— 「哪两端进材料」的机器可读登记（DESIGN-IP-001 C-MAT1 / C-X3）。由 scripts/ci/check-copyright-readiness.js 消费：核验候选文件不落在 vendor/third_party/dist 等排除目录、不命中 *_gen.*/_blob.h/字体数据表/压缩产物，且文件真实存在（防清单与实际脱节）。生成入口：node scripts/copyright/build-materials.js（选材与本文件同源，不再有第三份硬编码清单）。",
+  "source": "2026-09-21 初版由仓外 01_草稿/代码文件选择.json 的实测度量段转换而来；2026-10-24 按 [MGMT-OTHER-006] §六「选页约束」改前 30 页为方案 B（名称载体入页），并由 scripts/copyright/build-materials.js 实测刷新度量。",
+  "generatedAt": "2026-10-24",
   "repo": "khy-os",
-  "编制原则": "按运行时调用顺序串成一条链，不东摘西摘：前 30 页 = 启动链（Python 层入口 → 环境检测 → Node 供给），证明这是可运行的完整软件；后 30 页 = 手写内核核心（引导 → 中断 → 调度 → 内存 → 进程），证明这是有原创硬资产的软件。中段文件不进 60 页，但在操作手册里完整描述。",
+  "选材方案": {
+    "当前": "B —— 前 30 页换成「执行轨迹记录与链路校验」链路，后 30 页手写内核不动",
+    "依据": "[MGMT-OTHER-006] §六「选页约束」：services/sessionPersistence.js（含 verifyTraceChain）必须在选页内，以满足 005 §5.2「代码需体现说明文档主要功能部分」。",
+    "决策状态": "推荐项自动选定（2026-10-24 问卷超时，系统按推荐项选中），**未经人确认** —— 人可在任何时候改成方案 A（选材不动只换页眉）或方案 C（后 30 页也换业务 JS，不建议）。改法：改本文件的前30页数组后重跑 node scripts/copyright/build-materials.js。",
+    "三方案对照": {
+      "A": "选材不动，只改页眉 —— 最省，但 60 页内找不到「轨迹/链路校验」任何一行，与说明书功能节对不上，补正风险高。",
+      "B": "前 30 页换名称载体（轨迹落盘 + 链路校验），后 30 页内核不动 —— 名称两词与独创硬资产同时在材料内；代价 = 页数须重新实测（本轮已实测）。",
+      "C": "后 30 页也换业务 JS —— 2026-09-21 已实测否决：后 30 页是仓内唯一的 C/asm 原创层，换掉削弱独创证明力，而「独创性不足」比「行数不足」更难补正。"
+    }
+  },
+  "编制原则": "按运行时调用顺序串成一条链，不东摘西摘：前 30 页 = 轨迹记录与链路校验链路（会话落盘 → 溯源子系统装配 → 防篡改哈希链 → 信封 schema → 声称核对 → 断言否定 → 分类 → 投影），登记全称两个词都有代码载体，且**一个模块都不被截断**；后 30 页 = 手写内核核心（引导 → 中断 → 调度 → 内存 → 进程），证明这是有原创硬资产的软件。中段文件不进 60 页，但在操作手册里完整描述。",
   "页数要求": {
     "依据": "《计算机软件著作权登记办法》—— 源程序前、后各连续 30 页，每页不少于 50 行",
     "实测每页容量": "约 55.4 行/页（A4 / 8pt / 13pt 固定行距，经真实 PDF 页数校准；不是按 1500/30=50 估算）",
-    "两端备料": "每端 1660 有效代码行 → 输出 30 页",
-    "行数口径": "去纯空行 + 剥离整行注释（实测下唯一能让两端同时达标的口径：保留注释时前 30 页 49.8 行/页、后 30 页 43.6 行/页）"
+    "两端备料": "每端 1649 折行后正文行 → 输出 30 页 × 55 行",
+    "行数口径": "去纯空行 + 剥离整行注释（实测下唯一能让两端同时达标的口径：保留注释时前 30 页 49.8 行/页、后 30 页 43.6 行/页）",
+    "行窗口": "正文行数须落在 1644~1649 之间：下限保证末块仍 ≥50 行（(30−1)×55+50−1），上限保证正好 30 块。窗口下沿的意义是让选材能收在**完整模块末尾**，末页读起来是「一个文件的结尾 + 结束标注」而不是「一个函数从中间被切断」。",
+    "度量口径": "本表的「有效代码行」= 源文件里非空、非整行注释的行数；「折行后行」= 经 90 显示列确定性折行后的**输出行数**（材料按后者排版）。两者不同，别混用。"
   },
   "前30页": [
-    { "file": "runtime/substrate/platform/khy_platform/__main__.py", "有效代码行": 16 },
-    { "file": "runtime/substrate/platform/khy_platform/cli.py", "有效代码行": 2184 },
-    { "file": "runtime/substrate/platform/khy_platform/_bootstrap.py", "有效代码行": 1724, "角色": "备选/续入" }
+    { "file": "runtime/node/backend/src/services/sessionPersistence.js", "有效代码行": 893, "折行后行": 900, "角色": "轨迹落盘（appendMessage）+ 链路校验入口（verifyTraceChain，sessionPersistence.js:631）" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/index.js", "有效代码行": 21, "折行后行": 21, "角色": "溯源子系统对外装配面" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/traceChain.js", "有效代码行": 188, "折行后行": 192, "角色": "防篡改 sidecar 哈希链 —— 链路校验技术本体；sessionPersistence 在运行时直接 require 它" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/khyTrace.js", "有效代码行": 100, "折行后行": 101, "角色": "_khyTrace 信封 schema 单一真源（sessionPersistence 落盘时写入）" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/claimReconciler.js", "有效代码行": 260, "折行后行": 271, "角色": "正文声称 vs 本地工具日志的确定性核对（P4）" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/claimNegation.js", "有效代码行": 57, "折行后行": 58, "角色": "断言否定（链路校验的判定侧）" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/provenanceClassifier.js", "有效代码行": 39, "折行后行": 40, "角色": "入站 producer/trust 分类" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/traceProjection.js", "有效代码行": 61, "折行后行": 62, "角色": "人读标签 / 回放投影" }
   ],
   "后30页": [
-    { "file": "runtime/boot/kernel/boot/boot.asm", "有效代码行": 123 },
-    { "file": "runtime/boot/kernel/boot/long_mode.asm", "有效代码行": 16 },
-    { "file": "runtime/boot/kernel/boot/isr.asm", "有效代码行": 181 },
-    { "file": "runtime/boot/kernel/boot/context_switch.asm", "有效代码行": 32 },
-    { "file": "runtime/boot/kernel/boot/usermode.asm", "有效代码行": 51 },
-    { "file": "runtime/boot/kernel/src/sched.c", "有效代码行": 267 },
-    { "file": "runtime/boot/kernel/src/vmm.c", "有效代码行": 434 },
-    { "file": "runtime/boot/kernel/src/process.c", "有效代码行": 763 },
-    { "file": "runtime/boot/kernel/src/syscall.c", "有效代码行": 1367, "角色": "后备/续入（后 30 页素材余量仅 14%，Word 版每页行数低于 55 时续入）" }
+    { "file": "runtime/boot/kernel/boot/boot.asm", "有效代码行": 123, "折行后行": 124 },
+    { "file": "runtime/boot/kernel/boot/long_mode.asm", "有效代码行": 16, "折行后行": 16 },
+    { "file": "runtime/boot/kernel/boot/isr.asm", "有效代码行": 181, "折行后行": 181 },
+    { "file": "runtime/boot/kernel/boot/context_switch.asm", "有效代码行": 32, "折行后行": 32 },
+    { "file": "runtime/boot/kernel/boot/usermode.asm", "有效代码行": 51, "折行后行": 51 },
+    { "file": "runtime/boot/kernel/src/sched.c", "有效代码行": 267, "折行后行": 267 },
+    { "file": "runtime/boot/kernel/src/vmm.c", "有效代码行": 434, "折行后行": 449 },
+    { "file": "runtime/boot/kernel/src/process.c", "有效代码行": 763, "折行后行": 775, "角色": "本端末文件，按 1649 行窗口截断（末页标注覆盖收尾）" },
+    { "file": "runtime/boot/kernel/src/syscall.c", "有效代码行": 1367, "折行后行": 1377, "角色": "后备/续入（本端素材余量不足时才用）" }
   ],
   "中段（不提交，手册描述）": [
-    { "file": "runtime/node/backend/bin/khy.js", "有效代码行": 1538 }
+    { "file": "runtime/node/backend/bin/khy.js", "有效代码行": 1690, "折行后行": 1877, "角色": "CLI 总入口" },
+    { "file": "runtime/node/backend/src/cli/handlers/trace.js", "有效代码行": 167, "折行后行": 172, "角色": "CLI 轨迹命令面（khy trajectory list 等）—— 手册描述其用法，代码不进 60 页" },
+    { "file": "runtime/node/backend/src/services/sessionSearchIndex.js", "有效代码行": 353, "折行后行": 359, "角色": "会话检索索引（write-through）" },
+    { "file": "runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/quarantinePolicy.js", "有效代码行": 84, "折行后行": 86, "角色": "溯源隔离策略" }
   ],
   "排除清单_已核验": {
-    "核验日期": "2026-09-20",
-    "结论": "候选文件全部「排除命中 = 否」",
+    "核验日期": "2026-10-24",
+    "结论": "候选文件全部「排除命中 = 否」，且全部真实存在（守卫 C-X3 实测核验）",
     "全仓排除项命中总数": 40,
     "构成": {
       "二进制blob_*_blob.h": 37,
@@ -44,16 +64,17 @@
       "runtime/node/backend/vendor",
       "delivery/desktop/khyos-desktop/dist-ts、out",
       "任意 node_modules"
-    ]
+    ],
+    "测试文件": "trajectoryProvenance/ 下的 *.test.js 一律不进材料（测试代码不是登记客体的一部分）"
   },
   "原创性声明": {
-    "前30页": "自研（Python 启动器）",
+    "前30页": "自研（Node.js 轨迹记录与链路校验链路）",
     "后30页": "自研（手写 OS 内核；全仓 .c 共 12946 行、.asm 共 5381 行，100% 位于 runtime/boot/kernel/，是仓内唯一的原创底层语言层）",
     "第三方": "vendor/ 与 node_modules/ 一律不入选材（已在排除清单中）"
   },
   "未决项": [
+    "选材方案 B 为推荐项自动选定，**待人确认**（改法见「选材方案.决策状态」）",
     "Word 导出后的真实页数需再复核一次（Chrome 与 Word 分页不会逐行一致）",
-    "后 30 页素材余量仅 14%，若 Word 版每页行数低于 55 需续入 runtime/boot/kernel/src/syscall.c",
-    "人工确认：是否接受「剥离整行注释」这一材料编排方式"
+    "著作权人身份字段（姓名/证件类型与号/国籍/省市）仍为空，见 阶段0_登记事实确认表.md"
   ]
 }

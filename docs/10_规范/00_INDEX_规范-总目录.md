@@ -223,9 +223,14 @@
 |`[DESIGN-DOC-001] 文档结构规范.md`|文档结构（§12 规范骨架 ≤150 行、§13 中文排版）|在产|
 |`[DESIGN-DOC-002] AI 指令文件标准.md`|AI 指令文件的预算·真源·死指针·优先级登记（规则 `DOCS-003`）|在产|
 |`[DESIGN-DOC-003] README 内容规范.md`|README 不得成为第二真源：禁项表、T0/T1/T2 档位（规则 `DOCS-004`）|在产|
+|`[DESIGN-DOC-004] 文档实现状态标注规范.md`|IMPL-STATUS 标注口径（done / superseded / todo 与实现路径锚定）（规则 `DOCS-005`）|在产|
+|`[DESIGN-DOC-005] 文档可执行主张校验规范.md`|文档里「端点/命令」这类可执行主张须有实现支撑（规则 `DOCS-006`）|在产|
+|`[DESIGN-DOC-006] 文档数值主张校验规范.md`|同名常量的值在文档与代码间须逐字一致（规则 `DOCS-007`）|在产|
+|`[DESIGN-DOC-007] 开发版文档地图与层间关系.md`|索引之上的索引：四条导航轴的分工、五域层间关系与硬约束、「改 X → 读哪篇 → 跑哪些守卫」路由表|在产|
 |`[DESIGN-SKILL-001] Skill 编写规范.md`|Skill 作者的书写约束：description 四段式（触发短语前置）、1024 字符上限、任务型 `disableModelInvocation`、`allowed-tools` 最小权限（规则 `SKILL-001`）|在产|
 |`[DESIGN-I18N-001] 国际化规范.md`|国际化|在产|
 |`[DESIGN-LOG-001] 日志规范.md`|日志|在产|
+|`[DESIGN-LOG-002] 手机端日志规范.md`|手机端 APK 日志：按天分文件、错误双写、崩溃必落盘、分析包导出|在产|
 |`[DESIGN-PERF-001] 性能规范.md`|性能（`[DESIGN-PERF-002]` 是设计提案，留 03）|在产|
 |`[DESIGN-STD-001] 文档国标映射规范.md`|ISO/IEC/IEEE 15289 + GB/T 8567 双标→khy-os 映射|在产|
 

@@ -2,7 +2,7 @@
   "$comment": "数据落点的单一真源。派生对象：[DESIGN-LAY-007] §2 目录表、utils/dataHome.js 的 DATA_PATHS 查表、scripts/ci/check-data-layout.js 的预算常量、.gitignore 数据段。禁止在任何一处手写第二份。见 [DESIGN-LAY-004] 的「登记表派生」原则。",
   "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-007] 三态目录立体分层方案.md",
   "ruleId": "LAYOUT-007",
-  "version": "1.3.0 (2026-10-08) 用户裁决：底座家并入项目家——roots.khyos.rel 改为 works/data/khy/T1-domains/base，works/data/khyos 降级为兼容 junction（[DESIGN-LAY-007] §5 移动即建链接），correction-phrase-samples 等 seedEntries.home 随迁；accessor getBaseHome() 便携分支同步。1.2.0 (2026-10-07) W9′ 落点对齐：roots.khy.accessor 改 getProjectDataHome()；protected/budgets 路径从 .khy/… 改 works/data/…；check-data-layout 增加空目录/杂件/原子写孤儿活体读数与 L-5 棘轮比对。1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)；W9′ 2026-10-02 roots 迁 works/data（[DESIGN-LAY-008]§22 R1）",
+  "version": "1.3.2 (2026-11-01) 新增 canary-apk-ledger seedEntry：登记 [DESIGN-ARCH-199] 金丝雀 APK 层台账 works/data/khy/canary/ledger.jsonl（T3-archives，只追加永不裁剪，gitignore 区不入仓，逐接收人映射、回滚前须归档）；顶层 canary/ 目录将被 S1 观察者记 L-1/unregistered（works/data/khy 顶层预算 6 = 五档+索引，与现存 unregisteredTotal 同属观察口径债）。1.3.1 (2026-10-30) 新增 knownGaps 块：登记 user-home 段（~/.khyquant/phone/discovery.json）的能力缺口——roots 只覆盖仓内相对路径，手机发现缓存两写两读零 TTL，待独立 schema 裁决；配套 scripts/ci/check-data-layout.js 的 L-3 allowed 显式登记 phoneBridgeConfig.js:340 与 wireless.js:91 两处站点。1.3.0 (2026-10-08) 用户裁决：底座家并入项目家——roots.khyos.rel 改为 works/data/khy/T1-domains/base，works/data/khyos 降级为兼容 junction（[DESIGN-LAY-007] §5 移动即建链接），correction-phrase-samples 等 seedEntries.home 随迁；accessor getBaseHome() 便携分支同步。1.2.0 (2026-10-07) W9′ 落点对齐：roots.khy.accessor 改 getProjectDataHome()；protected/budgets 路径从 .khy/… 改 works/data/…；check-data-layout 增加空目录/杂件/原子写孤儿活体读数与 L-5 棘轮比对。1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)；W9′ 2026-10-02 roots 迁 works/data（[DESIGN-LAY-008]§22 R1）",
   "roots": {
     "khy": {
       "rel": "works/data/khy",
@@ -194,6 +194,64 @@
       "backup": "none",
       "delete": "recursive",
       "note": "[DESIGN-ARCH-163] D5 校准话术 S1 观察样本台账（只追加 JSONL）。删除=样本计数归零、观察期重计，无业务数据损失；毕业统计见 FEATURE-OWNERSHIP.json image-calibrate-hint-skeleton。2026-10-08 起物理落点随底座家并入：works/data/khy/T1-domains/base/correction_phrase_samples.jsonl。"
+    },
+    {
+      "id": "amoo-secretary-ledger",
+      "name": "ledger.jsonl",
+      "home": "khy",
+      "tier": "T1-domains",
+      "domain": "desktop",
+      "kind": "file",
+      "regenerable": false,
+      "backup": "none",
+      "delete": "recursive",
+      "note": "amoo 秘书问答台账（桌面 host 进程唯一持有者，环形 500 条 + 只追加 JSONL，apps/khyos-desktop/src/host/amooSecretaryLedger.ts 经后端 dataHome.js getProjectDataPath 解析落点）。本地观察记录，非 Amoo 侧真源；凡 Amoo 内容条目恒带 unverified:true，失败/预算耗尽/中止按终态逐字入账。删除=回看历史归零，不影响手机侧任何状态。"
+    },
+    {
+      "id": "canary-apk-ledger",
+      "name": "canary/ledger.jsonl",
+      "home": "khy",
+      "tier": "T3-archives",
+      "kind": "file",
+      "regenerable": false,
+      "backup": "none",
+      "delete": "never",
+      "note": "[DESIGN-ARCH-199] 金丝雀 APK 层台账（build-android.ps1 构建收尾追加 {ts,canary,apkSha256,aabSha256}，只追加 JSONL、永不裁剪）。落点 works/data/khy/canary/ledger.jsonl，gitignore 区不入仓——逐接收人映射是敏感语义，公开面只留批次+序号+随机段（与 canary-manifest.json 两层分离，见 DATA-SSOT.json sources）。删除=泄露源定位能力归零且不可再生；回滚打标前须先归档本文件。"
+    },
+    {
+      "id": "dev-env-scan",
+      "name": "T1-domains/tools/env/scan-latest.json",
+      "home": "khy",
+      "tier": "T2-regenerable",
+      "kind": "file",
+      "regenerable": true,
+      "backup": "none",
+      "delete": "recursive",
+      "note": "[DESIGN-ARCH-204] 开发环境盘点快照（khy devenv scan / POST /api/dev-env/scan 原子写，GET /api/dev-env/inventory 读；经 dataHome.js DATA_PATHS.devEnv=getProjectDataPath 解析落点）。快照不是数据真源（真源是机器系统状态本身），不登记 DATA-SSOT.json；重跑 khy devenv scan 即可再生，删除仅丢上次盘点缓存，无业务损失。"
+    }
+  ],
+  "knownGaps": [
+    {
+      "id": "phone-discovery-user-home",
+      "status": "open",
+      "openedAt": "2026-10-30",
+      "path": "<user-home>/.khyquant/phone/discovery.json",
+      "segment": "user-home",
+      "gap": "roots 只登记仓内相对路径（khy / khyos / state 三项，均带 accessor），seedEntries.home 也只能指这三个 root；user-home 段（~/.khyquant/...）不在任何 root 之下。这是登记表的能力缺口，不是漏登记——不得为了塞进去而歪曲现有 root 语义，也不许静默跳过。user-home 段需要独立的 schema 裁决（路径形状、TTL、清理责任、备份归属）。",
+      "writers": [
+        "runtime/node/backend/src/services/domain/network/phone/phoneBridgeClient.js:464-484",
+        "runtime/node/backend/src/services/domain/network/amoo/amooBridgeClient.js:465-488"
+      ],
+      "readers": [
+        "runtime/node/backend/src/services/domain/network/amoo/amooBridgeClient.js:430-450",
+        "delivery/extension/bridges/khy-amoon-bridge/lib/wireless.js:89-100"
+      ],
+      "consequence": "零 TTL：detectedAt 被两个写入方落下（phoneBridgeClient.js:477、amooBridgeClient.js:481）却无任何消费方。本机实测该文件此刻存着陈旧条目（detectedAt 2023-11-14、serial 192.168.1.117:34103）；陈旧 serial 会被 amoo 车道当活设备写回并执行 connect，把「未发现手机」误报成 device_absent / connect 失败。",
+      "mitigation": "amoo 侧读取已补新鲜度校验：amooBridgeClient._readDiscoverySerial 按 detectedAt 判过期即忽略，设备判据回落「未发现手机」；行为覆盖在 amooBridgeClient.test.js（过期条目被忽略 / 新鲜条目被采用 / KHY_PHONE_DISCOVERY_FILE 覆盖生效）。桥侧读取（wireless.js readSharedDiscovery）尚未验新鲜度，留待同族处理。L-3 的两处字面量站点（phoneBridgeConfig.js:340、wireless.js:91）已在 scripts/ci/check-data-layout.js 的 allowed 里显式登记并指向本条目。写入侧 TTL 策略与 user-home 段 schema 仍待裁决。",
+      "literalSites": [
+        "runtime/node/backend/src/services/domain/network/phone/phoneBridgeConfig.js:340",
+        "delivery/extension/bridges/khy-amoon-bridge/lib/wireless.js:91"
+      ]
     }
   ],
   "budgets": [
