@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: ASSISTANT-AND-TRANSPORT-SEAMS.md -->
+<title>助手层与设备传输层的可插拔缝 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>mobile<span class="sep">›</span>khy-os-client-app<span class="sep">›</span>助手层与设备传输层的可插拔缝</div>
+      <header class="hero reveal"><h1>助手层与设备传输层的可插拔缝</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#助手层与设备传输层的可插拔缝">助手层与设备传输层的可插拔缝</a></li><li class="lvl-2"><a href="#1-先说实测-耦合到底有多大">1. 先说实测：耦合到底有多大</a></li><li class="lvl-3"><a href="#已经助手无关的-一个字都不用改">已经助手无关的（一个字都不用改）</a></li><li class="lvl-3"><a href="#amoo-专属的-一整个命名的模块组-不是撒开的">Amoo 专属的（一整个命名的模块组，不是撒开的）</a></li><li class="lvl-2"><a href="#2-真正的-5-个耦合点-带行号-可核">2. 真正的 5 个耦合点（带行号，可核）</a></li><li class="lvl-2"><a href="#3-缝一-助手通道-第二个助手要实现什么">3. 缝一：助手通道——第二个助手要实现什么</a></li><li class="lvl-2"><a href="#4-缝二-设备传输-hdc-要接在哪">4. 缝二：设备传输——HDC 要接在哪</a></li><li class="lvl-3"><a href="#华为-荣耀-小米-分三种情况">华为 / 荣耀 / 小米，分三种情况</a></li><li class="lvl-2"><a href="#5-已经跨品牌无关的部分-这是好消息-值得说清">5. 已经跨品牌无关的部分（这是好消息，值得说清）</a></li><li class="lvl-2"><a href="#6-本文没有做的事-以及为什么">6. 本文没有做的事，以及为什么</a></li><li class="lvl-2"><a href="#7-什么时候该回来做-4">7. 什么时候该回来做 §4</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="助手层与设备传输层的可插拔缝">助手层与设备传输层的可插拔缝<a class="anchor" href="#助手层与设备传输层的可插拔缝" aria-label="锚点">#</a></h1>
+<blockquote><p>本文回答一个问题：<strong>khy-os 怎样才能既兼容 Amoo、又不被 Amoo 绑死，并且将来到<br>华为（鸿蒙）手机上也能用。</strong></p>
+<p>结论先说：<strong>执行基质已经是助手无关的</strong>。真正耦合的地方只有 5 处，全部集中、<br>全部有名字。换助手是写一套平行的模块，不是重写。换手机品牌（华为/荣耀/小米）<br>分两种：荣耀/小米是 Android，<code>adb</code> 现在就通，<strong>什么都不用改</strong>；只有华为鸿蒙<br>需要另一条传输（HDC）。</p>
+<p><strong>本文没有实现任何 HDC 适配器</strong>，理由见 §6：本机没有 <code>hdc</code> 可执行文件，没有<br>鸿蒙设备，写一个没跑过的适配器就是&quot;凭想象交付&quot;，正是本项目章程禁止的那件事。</p></blockquote>
+<hr>
+<h2 id="1-先说实测-耦合到底有多大">1. 先说实测：耦合到底有多大<a class="anchor" href="#1-先说实测-耦合到底有多大" aria-label="锚点">#</a></h2>
+<p>扫过 <code>android/app/src/main/java/com/khyos/khy_os_client/bridge/</code> 全部文件和<br><code>lib/</code> 全部 Dart 文件，按&quot;这个文件提不提 Amoo&quot;分类。</p>
+<h3 id="已经助手无关的-一个字都不用改">已经助手无关的（一个字都不用改）<a class="anchor" href="#已经助手无关的-一个字都不用改" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>职责</th><th>为什么无关</th></tr></thead><tbody><tr><td><code>Tools.java</code></td><td>39 个工具的派发 + 会话预算门</td><td>除了 3 个 <code>amoo_*</code> 工具名，其余全是文件/执行/UI/系统</td></tr><tr><td><code>KhyUi.java</code></td><td>无障碍派发（<code>ui_tap</code>/<code>ui_type</code>/<code>ui_dump</code>…）</td><td>0 处 Amoo 引用</td></tr><tr><td><code>LoopVerify.java</code></td><td>事后验证</td><td>0 处</td></tr><tr><td><code>LoopModes.java</code></td><td>安全底 + 模式闸</td><td>2 处，都是注释里引 Amoo 的红线作依据</td></tr><tr><td><code>LoopState.java</code></td><td>停止/退避判定</td><td>1 处，注释</td></tr><tr><td><code>AmooSafe.java</code></td><td>出站净化</td><td><strong>2 个字面量</strong>，见 §2</td></tr><tr><td><code>ShellSidecar.java</code> / <code>ShellSidecarClient.java</code></td><td>uid 2000 的 shell 边车</td><td>完全无关</td></tr><tr><td><code>lib/core/tools/*</code>、<code>lib/core/agent/*</code>、<code>lib/core/workspace/*</code></td><td>Dart 工具层、四个子智能体、工作空间</td><td>完全无关</td></tr><tr><td><code>lib/core/db/*</code></td><td>SQLite 层</td><td>完全无关</td></tr></tbody></table>
+<p><strong>会话预算门（<code>Tools.java:239-249</code>）、安全底（<code>LoopModes.floorReason</code>）、<br>出站净化（<code>AmooSafe</code>）、UID 2000 边车、四个子智能体——这些是这套桥真正的资产，<br>它们一个都不绑 Amoo。</strong> 这是本次调查最重要的发现：<strong>&quot;不要完全依赖 Amoo&quot;<br>这个目标在结构上已经完成了大部分。</strong></p>
+<h3 id="amoo-专属的-一整个命名的模块组-不是撒开的">Amoo 专属的（一整个命名的模块组，不是撒开的）<a class="anchor" href="#amoo-专属的-一整个命名的模块组-不是撒开的" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>模块</th><th>职责</th><th>行数量级</th></tr></thead><tbody><tr><td><code>AmooLoop.java</code></td><td>读 Amoo 聊天气泡 → 执行 → 写回输入框</td><td>~1400</td></tr><tr><td><code>AmooProtocol.java</code></td><td>```khy-exec 围栏协议</td><td>~360</td></tr><tr><td><code>AmooSelfDesc.java</code></td><td>注入给 Amoo 的自描述</td><td>~180</td></tr><tr><td><code>AmooMemory.java</code></td><td>共享记忆文件</td><td>~250</td></tr><tr><td><code>AmooChatText.java</code></td><td>从无障碍树抽聊天气泡</td><td>~180</td></tr><tr><td><code>lib/core/services/amoo_chat_service.dart</code></td><td>反代三步通道（ask/poll/stop）</td><td>57 处引用</td></tr><tr><td><code>lib/core/services/amoo_service.dart</code></td><td>包名 + 3 个 Activity</td><td>36 处</td></tr><tr><td><code>lib/core/db/amoo_turn*.dart</code></td><td>提问回合持久化</td><td>72 处</td></tr><tr><td><code>lib/ui/widgets/amoo_task_card.dart</code>、<code>amoo_composer.dart</code></td><td>界面</td><td>74 处</td></tr></tbody></table>
+<p>这些是<strong>一套</strong>：它们共同实现&quot;一个跑在云端的助手，通过反代把命令写进手机本地执行&quot;。<br>第二个助手就是第二套同角色的实现，<strong>不是</strong>把这些拆散。</p>
+<hr>
+<h2 id="2-真正的-5-个耦合点-带行号-可核">2. 真正的 5 个耦合点（带行号，可核）<a class="anchor" href="#2-真正的-5-个耦合点-带行号-可核" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>位置</th><th>耦合内容</th><th>换助手时怎么办</th></tr></thead><tbody><tr><td>1</td><td><code>Tools.java:111</code>、<code>:370-372</code></td><td>3 个工具名 <code>amoo_ask</code> / <code>amoo_result</code> / <code>amoo_memory</code> 在 <code>NAMES</code> 和派发表里</td><td>新助手加自己的 3 个；<strong>不要</strong>把这 3 个删掉（PC 侧 <code>phoneBridgeCatalog.js</code> 和 A 通道在用）</td></tr><tr><td>2</td><td><code>AmooSafe.java:81</code></td><td><code>AMOO_PKG = &quot;com.stepos.ailauncher&quot;</code> —— 净化器把包名泛化成 &quot;amoo&quot;</td><td>新助手有包名就加一条 <code>genericFor</code> 分支。<strong>这是基质里唯一的助手专属字面量</strong></td></tr><tr><td>3</td><td><code>AmooSafe.java:84</code></td><td><code>OWN_PKG_PREFIX = &quot;com.khyos.&quot;</code></td><td>不变——这是 khy-os 自己，与助手无关</td></tr><tr><td>4</td><td><code>amoo_service.dart:17-22</code></td><td>4 个常量：包名 + <code>ShareActivity</code> + <code>ChatMainActivity</code> + <code>OPEN_CHAT</code> action</td><td>新助手给 4 个新值。这就是 Dart 侧全部的硬编码</td></tr><tr><td>5</td><td><code>MainActivity.kt:1501-1504</code></td><td>同上的 Kotlin 副本</td><td>同上。<strong>两处重复，改时要一起改</strong>——这是本文唯一建议的小重构（提成一份）</td></tr></tbody></table>
+<p>除此之外没有任何跨层耦合。<strong>没有</strong> &quot;Amoo 的名字出现在工具实现里&quot;这种情况。</p>
+<hr>
+<h2 id="3-缝一-助手通道-第二个助手要实现什么">3. 缝一：助手通道——第二个助手要实现什么<a class="anchor" href="#3-缝一-助手通道-第二个助手要实现什么" aria-label="锚点">#</a></h2>
+<p>一个新助手要接入，需要实现的是下面这个角色，不是修改基质：</p>
+<pre><code>AssistantChannel
+  ├─ foreground()          → 哪个包在前台（AmooLoop:213 已有实现）
+  ├─ openChat()            → 打开它的聊天页（amoo_service.dart:96）
+  ├─ readLastBubble()      → 从无障碍树读它最新的一条回复
+  │                            （AmooChatText.java，按资源 id 定位）
+  ├─ writeBack(text)       → 把文本写进它的输入框并点发送
+  │                            （AmooLoop.writeBack，KhyUi.ui_type + ui_tap）
+  ├─ selfDescription()     → 注入给它的自我介绍（AmooSelfDesc.render）
+  └─ memoryFile()          → 共享记忆的落点（AmooMemory.DEFAULT_PATH）</code></pre>
+<p><strong>六个方法里，五个在不同助手之间是不同的，一个是共通的</strong>：<code>writeBack</code> 的机制<br>（无障碍写文本框 + 点发送）与助手无关，可复用；其余五个都要按助手的资源 id 重写。</p>
+<p><strong>接入一个新助手的真实工作量</strong>：一套 <code>XxxLoop/XxxProtocol/XxxSelfDesc/XxxMemory</code><br>（照 <code>Amoo*</code> 的样子写）+ <code>amoo_service.dart</code> 那样一个 descriptor + <code>Tools.java</code> 里<br>3 个工具名。<strong>基质零改动</strong>，除了 <code>AmooSafe</code> 加一条包名分支。</p>
+<p><strong>为什么现在不写第二个</strong>：没有第二个助手的包名和资源 id。这两个值拿不到也不该猜<br>——猜错的代价是写出一整套跑不通的代码，而它看起来是能跑的。</p>
+<hr>
+<h2 id="4-缝二-设备传输-hdc-要接在哪">4. 缝二：设备传输——HDC 要接在哪<a class="anchor" href="#4-缝二-设备传输-hdc-要接在哪" aria-label="锚点">#</a></h2>
+<p>PC 侧连手机的传输层已经有一个干净的缝：</p>
+<table><thead><tr><th>文件</th><th>现在的行为</th><th>HDC 要改什么</th></tr></thead><tbody><tr><td><code>phoneBridgeConfig.js:37</code></td><td><code>ADB_EXECUTABLE_NAMES = ['adb.exe','adb']</code></td><td>加 <code>['hdc.exe','hdc']</code>，由一个 env / 配置项选传输</td></tr><tr><td><code>phoneBridgeClient.js:111</code></td><td><code>spawn(adbExecutable, args, …)</code></td><td>不变——<strong>可执行名已经是参数</strong>，这是缝所在</td></tr><tr><td><code>phoneBridgeClient.js:392</code></td><td><code>_runAdb(['devices'])</code></td><td>HDC 的等价命令（<code>hdc list targets</code>）输出格式不同，要一个解析分支</td></tr><tr><td><code>phoneBridgeClient.js:589</code></td><td><code>adb forward tcp:L tcp:R</code></td><td>HDC 的等价命令（<code>hdc fport</code> 系），<strong>语义不同，不是改个名字</strong></td></tr><tr><td><code>phoneBridgeClient.js:373</code></td><td><code>adb mdns services</code> 找无线实例</td><td>HDC 的发现机制不同，可能没有对应物</td></tr></tbody></table>
+<p><strong>关键事实：<code>adb forward</code> 和 HDC 的端口转发不是同一条命令的不同拼写。</strong><br>所以 HDC 适配器不是&quot;把 <code>adb</code> 换成 <code>hdc</code>&quot;，是一个平行的 client 实现，<br>共用 <code>phoneBridgeClient</code> 的 HTTP/socket 上层。</p>
+<h3 id="华为-荣耀-小米-分三种情况">华为 / 荣耀 / 小米，分三种情况<a class="anchor" href="#华为-荣耀-小米-分三种情况" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>品牌</th><th>系统</th><th>现在能不能用</th><th>要做什么</th></tr></thead><tbody><tr><td>荣耀、小米、三星、OPPO、vivo…</td><td>Android</td><td><strong>能</strong>。<code>adb</code> 通，桥跑在 App 里，与 OEM 无关</td><td>什么都不用做</td></tr><tr><td>华为（鸿蒙 NEXT / HarmonyOS）</td><td>HarmonyOS</td><td><strong>不能</strong></td><td>需要 HDC 传输 + 一个鸿蒙版宿主 App。<strong>本文未实现</strong></td></tr><tr><td>华为（仍是 Android，如旧机型/部分平板）</td><td>Android</td><td><strong>能</strong></td><td>什么都不用做</td></tr></tbody></table>
+<p><strong>&quot;换华为/荣耀/小米&quot;这个需求，三条里两条现在已经满足了。</strong> 剩下的是鸿蒙，<br>而鸿蒙缺的不只是一条传输——是一整个宿主 App（无障碍服务、sidecar、前台服务<br>在鸿蒙上的形态都不同）。那是一个独立项目，不是这次能顺手带上的。</p>
+<hr>
+<h2 id="5-已经跨品牌无关的部分-这是好消息-值得说清">5. 已经跨品牌无关的部分（这是好消息，值得说清）<a class="anchor" href="#5-已经跨品牌无关的部分-这是好消息-值得说清" aria-label="锚点">#</a></h2>
+<p>桥之所以在荣耀/小米上开箱即用，是因为它不依赖任何 OEM 专属能力：</p>
+<ul><li><strong>sidecar</strong>：<code>adb shell dalvikvm</code> 起一个纯 Java 类，跑成 uid 2000。这是 AOSP</li></ul>
+<p>能力，不是 StepOS 能力。</p>
+<ul><li><strong>无障碍服务</strong>：标准 <code>AccessibilityService</code>，<code>ACTION_SET_TEXT</code> / 节点点击。</li><li><strong>前台服务 + 常亮</strong>：标准 API。</li><li><strong>SELinux 那条坑</strong>（<code>/sdcard</code> 是 fuse，<code>system_server</code> 读不了，所以安装要走</li></ul>
+<p><code>/data/local/tmp</code> 中转）是 AOSP sepolicy 行为，所有 Android 品牌一样。</p>
+<ul><li><strong><code>pm install</code> 的逐包授权</strong>（<code>usb_install_item_&lt;pkg&gt;</code>）是 OEM 设置项，</li></ul>
+<p>StepX 上有，别家可能有别的名字或没有——这是<strong>唯一</strong>已知的跨品牌差异点，<br>  且已有 <code>code</code> 字段把拒绝分类透出（<code>install_apk_test.dart</code> 钉着四种 code）。</p>
+<hr>
+<h2 id="6-本文没有做的事-以及为什么">6. 本文没有做的事，以及为什么<a class="anchor" href="#6-本文没有做的事-以及为什么" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>没做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>HDC 传输适配器</strong></td><td>本机 <code>which hdc</code> 为空，<code>C:\Users\25789</code> 下也没有 <code>hdc.exe</code>；没有鸿蒙设备。写一个没编译过、没跑过、没有设备可验证的适配器，就是&quot;凭想象交付&quot;——<code>ADB_EXECUTABLE_NAMES</code> 那类改动看起来能跑，但 <code>hdc fport</code> 的参数语义和 <code>adb forward</code> 不同，猜错要到真机上才暴露，而那时它已经看起来完成了</td></tr><tr><td><strong>第二个助手通道</strong></td><td>没有第二个助手的包名和输入框资源 id。这两个值拿不到</td></tr><tr><td><strong>把 4 个 Amoo 常量提成一份</strong>（消除 §2 第 5 项的重复）</td><td>这是本文唯一建议的小重构，但它跨 Dart 和 Kotlin 两个语言，要一个共享常量层。现在只有一份重复、改的时候一起改就行，不值得为一个还不存在的第二个助手先建抽象</td></tr><tr><td><strong><code>Tools.java</code> 的 3 个 <code>amoo_*</code> 工具名泛化</strong></td><td>PC 侧 <code>phoneBridgeCatalog.js</code> 已发布这 3 个名字，<code>ATOMIC-CAPABILITIES.json</code> 从它生成。改名是破坏发布契约，B7 要人点头</td></tr></tbody></table>
+<hr>
+<h2 id="7-什么时候该回来做-4">7. 什么时候该回来做 §4<a class="anchor" href="#7-什么时候该回来做-4" aria-label="锚点">#</a></h2>
+<p>满足这三条中的任意两条，就值得开工：</p>
+<ol><li>手上有一台鸿蒙设备（能 <code>hdc list targets</code> 看到）</li><li>本机装好了 HDC 工具链（能跑 <code>hdc -h</code>）</li><li>确定了要在鸿蒙上跑的宿主 App 形态（无障碍/sidecar 在鸿蒙上是否可用，未知）</li></ol>
+<p>在那之前，正确做法是<strong>保持现状</strong>：桥在 Android 上开箱可用，Amoo 是第一个助手<br>而不是唯一的助手，HDC 的缝已经标在 <code>phoneBridgeConfig.js:37</code>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../delivery/mobile/khy-os-client-app/AMOO-INTEGRATION.html"><div class="dir">← 上一篇</div><div class="ttl">khy-os ↔ Amoo 集成说明</div></a><a class="next" href="../../../delivery/mobile/khy-os-client-app/DESIGN-UI.html"><div class="dir">下一篇 →</div><div class="ttl">khy-os 手机端视觉规范 ·「霓虹果冻」</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="delivery/mobile/khy-os-client-app/ASSISTANT-AND-TRANSPORT-SEAMS.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

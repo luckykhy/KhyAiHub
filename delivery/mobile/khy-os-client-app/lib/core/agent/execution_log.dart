@@ -1,4 +1,7 @@
+// khy-canary: Khy-20261101-059-75F4CFYF
 import 'dart:convert';
+
+import '../trajectory/trace_envelope.dart';
 
 /// 工具执行生命周期
 enum ExecState { queued, running, success, failed, timeout }
@@ -15,12 +18,36 @@ class ExecutionStep {
   DateTime? endTime;
   final Map<String, dynamic> metadata;
 
+  /// Position in the trajectory sidecar chain (0-based, aligned with the
+  /// chain's own seq). Assigned by TrajectoryStore on append; null while the
+  /// step has not been recorded. Distinct from [index], which is the 1-based
+  /// display number.
+  final int? seq;
+
+  /// sha256 over the canonical params JSON. The chain binds this digest so the
+  /// raw args never travel into the trajectory record. Callers that already
+  /// hashed pass it in; the store computes it otherwise.
+  final String? paramsHash;
+
+  /// File artifacts this step touched (path + sha256 of after-bytes), same
+  /// shape as the platform replay ledger's artifacts[].
+  final List<TraceArtifact> artifacts;
+
+  /// Replay tier for the backend replay gate (see [ReplayTier]). Recorded
+  /// verbatim; the phone does not classify — the tier's tool-name registry is
+  /// a backend asset and the mobile tool set is a different list.
+  final ReplayTier? tier;
+
   ExecutionStep({
     required this.index,
     required this.toolName,
     required this.args,
     this.state = ExecState.queued,
     this.metadata = const {},
+    this.seq,
+    this.paramsHash,
+    this.artifacts = const [],
+    this.tier,
   }) : startTime = DateTime.now();
 
   /// 标记开始执行
@@ -75,6 +102,14 @@ class ExecutionStep {
         'start': startTime.toIso8601String(),
         if (endTime != null) 'end': endTime!.toIso8601String(),
         'duration_ms': durationMs,
+        // Provenance fields are additive: they only appear once populated, so a
+        // step built the old way serializes byte-identically and the existing
+        // reportExecution payload / AppLogger writes stay as they were.
+        if (seq != null) 'seq': seq,
+        if (paramsHash != null) 'params_hash': paramsHash,
+        if (artifacts.isNotEmpty)
+          'artifacts': artifacts.map((a) => a.toJson()).toList(),
+        if (tier != null) 'tier': tier!.wire,
       };
 }
 

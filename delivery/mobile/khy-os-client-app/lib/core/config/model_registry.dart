@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-069-BTPTFW0P
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../config/built_in_keys.dart';
@@ -89,7 +90,12 @@ class ModelRegistry {
 
   /// 验证模型是否存在于 provider 中
   static bool isModelValidForProvider(String baseUrl, String modelId) {
+    if (baseUrl.isEmpty) return false;
     for (final p in BuiltInKeys.providers.values) {
+      // 跳过端点未配置的项：它们的 baseUrl 是空串，而调用方也可能传来空串
+      // （新对话还没挑目录、配置还没保存），那一匹配就会对着一个并不存在的
+      // 端点返回「模型有效」。
+      if (!p.endpointConfigured) continue;
       if (p.baseUrl == baseUrl) {
         return p.models.contains(modelId);
       }
