@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../data/models/models.dart';
+import '../theme/app_colors.dart';
 import '../theme/design_tokens.dart';
 import 'aurora.dart';
 import 'tool_card.dart';
@@ -195,6 +198,9 @@ class ChatBubbleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final isUser = message.role == MessageRole.user;
+    // 附件只可能是用户发过来的（assistant 侧没有产生图片附件的入口），所以
+    // 缩略行也只在用户消息上找。
+    final thumbs = isUser ? _attachmentThumbs(palette) : null;
 
     final bubble = Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadNarrow),
@@ -250,18 +256,86 @@ class ChatBubbleRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.dense),
           ],
           Flexible(
-            // 有思维链时才套 Column：块在气泡之上，读作「先想后答」。没有时直接
-            // 给气泡，布局与抽组件之前逐字节一致（用户消息与无思维链的回复走这条）。
-            child: thinking == null
+            // 有思维链或图片时才套 Column：块在气泡之上，读作「先想后答」。两者
+            // 都没有时直接给气泡，布局与抽组件之前逐字节一致（无思维链的回复与
+            // 不带图的用户消息走这条）。
+            child: thinking == null && thumbs == null
                 ? bubble
                 : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: [thinking!, bubble],
+                    children: [
+                      if (thinking != null) thinking!,
+                      if (thumbs != null) thumbs!,
+                      bubble,
+                    ],
                   ),
           ),
         ],
       ),
     );
   }
+
+  /// 用户消息的图片缩略行。没有图片附件时返回 null——那一行的布局与加这个
+  /// 功能之前一致。
+  Widget? _attachmentThumbs(AppPalette palette) {
+    final images = message.imageAttachments;
+    if (images.isEmpty) return null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.dense),
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        spacing: AppSpacing.dense,
+        runSpacing: AppSpacing.dense,
+        children: [
+          for (final a in images)
+            _AttachmentThumb(attachment: a, palette: palette),
+        ],
+      ),
+    );
+  }
+}
+
+/// 一张图片附件的缩略块。
+///
+/// 文件不在就画占位框而不是让整行崩掉：相册/相机挑出来的临时文件可能已被系统
+/// 清掉，而缩略图是这条消息的附属信息——为一张图毁掉整行正文说不通。
+class _AttachmentThumb extends StatelessWidget {
+  const _AttachmentThumb({required this.attachment, required this.palette});
+
+  final MessageAttachment attachment;
+  final AppPalette palette;
+
+  static const double _edge = 64;
+
+  @override
+  Widget build(BuildContext context) {
+    final file = File(attachment.path);
+    return Container(
+      width: _edge,
+      height: _edge,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: palette.surfaceHigh,
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: palette.stroke, width: AppStroke.thin),
+      ),
+      // existsSync 先把「临时文件已不在」这条路定下来，errorBuilder 兜另一种
+      // （文件在但不是能解码的图）。两条都落到同一个占位框。
+      child: file.existsSync()
+          ? Image.file(
+              file,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _placeholder(),
+            )
+          : _placeholder(),
+    );
+  }
+
+  Widget _placeholder() => Icon(
+        Icons.image_not_supported_outlined,
+        size: 22,
+        color: palette.textFaint,
+      );
 }
