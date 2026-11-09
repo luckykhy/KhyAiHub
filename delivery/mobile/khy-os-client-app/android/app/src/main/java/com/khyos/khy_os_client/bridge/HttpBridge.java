@@ -1,5 +1,6 @@
 package com.khyos.khy_os_client.bridge;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -28,6 +29,8 @@ import java.util.Map;
  *      超时」就是旧实现每请求 synchronized 读 token.txt 撞上存储 IO 卡死导致
  *      的。所以文件 IO 只允许出现在 ensureToken() 一个方法里，且它【不是】
  *      每请求路径——请求路径走 activeToken() / tokenMatches()，两者都零 IO；
+ *      loadGuide() 是后并入的第二个 IO 点（每进程只读一次指南 asset，之后
+ *      纯内存应答），同样不进每请求路径；
  *      展示路径（MainActivity.bridgeStatus、BridgeOverlayService.refreshPanel）
  *      走 currentToken()，同样零 IO。早先版本在 ensureToken 里起了两个异步线程，
  *      谁先落盘不定，且读盘线程会把刚生成的内存令牌反写成磁盘上的旧值，
@@ -36,6 +39,8 @@ import java.util.Map;
  *
  * 与独立版唯一的功能差别：UI 工具不再由本 APK 自己的无障碍服务承接，而是
  * 路由到 app 既有的 KhyAccessibilityService（一个 app 只需一个无障碍服务）。
+ * 并入后新增：/ping 心跳字段、/call 信封校验（参数闭集 + guide_topic）、
+ * /agent-guide 指南端点——契约原文见 assets/khy_bridge_guide.md。
  */
 public class HttpBridge {
     public static final int DEFAULT_PORT = 8896;
@@ -388,13 +393,25 @@ public class HttpBridge {
 
             JSONObject resp = new JSONObject();
             int code = 200;
+            // Non-JSON paths (the guide) answer with their own body and type;
+            // everything else keeps the JSON receipt.
+            String contentType = "application/json; charset=utf-8";
+            byte[] rawBody = null;
             String auth = headers.containsKey("authorization") ? headers.get("authorization") : "";
             if (!tokenMatches(auth.startsWith("Bearer ") ? auth.substring(7).trim() : "")) {
                 resp.put("ok", false).put("error", "unauthorized");
                 code = 401;
             } else if (path.startsWith("/ping")) {
                 notePcSeen();
-                resp.put("ok", true).put("pong", System.currentTimeMillis());
+                // Worker-loop heartbeat fields (source: BridgeService.loop).
+                // heartbeat_age_ms = -1 means the worker loop has not ticked
+                // yet; stale alone never implies frozen/crashed — long mailbox
+                // commands run synchronously in the loop and age it honestly.
+                resp.put("ok", true).put("pong", System.currentTimeMillis())
+                     .put("pid", android.os.Process.myPid())
+                     .put("heartbeat_seq", BridgeService.heartbeatSeq())
+                     .put("heartbeat_age_ms", BridgeService.heartbeatAgeMs())
+                     .put("heartbeat_stale", BridgeService.heartbeatStale());
             } else if (path.startsWith("/status")) {
                 notePcSeen();
                 // tools 仍是数字（PC 侧 amooDispatchRunner.js:289、phoneCliPlan.js:235
@@ -414,21 +431,42 @@ public class HttpBridge {
                     .put("withheld", Tools.withheld());
             } else if (path.startsWith("/call")) {
                 notePcSeen();
-                JSONObject req = new JSONObject(body.length() == 0 ? "{}" : body);
-                String tool = req.optString("tool", "");
-                JSONObject args = req.optJSONObject("args");
-                if (args == null) args = new JSONObject();
-                resp = Tools.dispatch(tool, args);
-                resp.put("tool", tool);
+                resp = callTool(body);
+            } else if (path.startsWith("/agent-guide")) {
+                notePcSeen();
+                try {
+                    loadGuide();
+                    String topic = queryParam(path, "topic");
+                    String md;
+                    if (topic == null) {
+                        md = guideCore;
+                    } else if (guideTopics.containsKey(topic)) {
+                        md = guideTopics.get(topic) + "\n\n---\n" + topicIndexLine();
+                    } else {
+                        resp.put("ok", false).put("code", "guide_topic_unavailable")
+                             .put("error", "主题 \"" + topic + "\" 不存在：本桥指南只提供主题索引里列出的主题。修复：改用索引中的主题名，或去掉 topic 参数读核心层")
+                             .put("guide_topics", new JSONArray(guideTopics.keySet()));
+                        code = 400;
+                        md = null;
+                    }
+                    if (md != null) {
+                        rawBody = fillGuide(md).getBytes("UTF-8");
+                        contentType = "text/markdown; charset=utf-8";
+                    }
+                } catch (Throwable t) {
+                    resp.put("ok", false).put("code", "guide_unavailable")
+                         .put("error", "指南资产读取失败（" + t.getClass().getSimpleName() + "）：APK 内缺 khy_bridge_guide.md。修复：重装含该资产的 APK 后重试");
+                    code = 500;
+                }
             } else {
                 resp.put("ok", false).put("error", "not found");
                 code = 404;
             }
 
-            byte[] outB = resp.toString().getBytes("UTF-8");
+            byte[] outB = rawBody != null ? rawBody : resp.toString().getBytes("UTF-8");
             String head = "HTTP/1.1 " + code + " " + (code == 200 ? "OK" : "ERR") + "\r\n"
                     + "Server: khy-os-bridge (" + khyBuild() + ")\r\n"
-                    + "Content-Type: application/json; charset=utf-8\r\n"
+                    + "Content-Type: " + contentType + "\r\n"
                     + "Content-Length: " + outB.length + "\r\nConnection: close\r\n\r\n";
             out.write(head.getBytes("UTF-8"));
             out.write(outB);
@@ -453,6 +491,178 @@ public class HttpBridge {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    // ==================== /call 信封校验 ====================
+
+    /**
+     * Envelope-level rejection receipt, shared by the two /call-shaped entry
+     * points (HTTP and file mailbox). Parameters are a closed set by contract;
+     * a rejection must say what to read next (guide_topic) and that nothing
+     * was dispatched, so the caller fixes the request instead of retrying it.
+     */
+    static JSONObject invalidArguments(String error, String guideTopic) {
+        try {
+            return new JSONObject()
+                    .put("ok", false)
+                    .put("code", "invalid_arguments")
+                    .put("error", error)
+                    .put("guide_topic", guideTopic)
+                    .put("action_dispatched", false)
+                    .put("replay_safe", false)
+                    .put("retry_safe", false);
+        } catch (Throwable t) {
+            return new JSONObject();
+        }
+    }
+
+    /**
+     * The unknown-tool fallbacks inside Tools/KhyUi carry no code and no guide
+     * pointer; the schema topic is exactly what a caller with a wrong tool name
+     * needs next. Applied at BOTH /call-shaped boundaries — HTTP and the file
+     * mailbox dispatch the same receipts — matched by their stable error
+     * prefixes so nothing inside Tools changes.
+     */
+    static void markUnknownTool(JSONObject out) {
+        try {
+            if (!out.optBoolean("ok", false)) {
+                String err = out.optString("error", "");
+                if (err.startsWith("unknown tool:") || err.startsWith("unknown ui tool:")) {
+                    out.put("code", "invalid_arguments").put("guide_topic", "schema");
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    /**
+     * Envelope validation + dispatch for POST /call. The envelope is a closed
+     * set by contract ({"tool","args"}), and args must be an object — the old
+     * behavior coerced a non-object args into {} silently, turning a malformed
+     * call into a random no-arg call against whatever tool was named.
+     */
+    private static JSONObject callTool(String body) {
+        try {
+            JSONObject req;
+            try {
+                req = new JSONObject(body.length() == 0 ? "{}" : body);
+            } catch (Throwable t) {
+                return invalidArguments("请求体不是合法 JSON（" + t.getClass().getSimpleName() + "）：/call 形状为 {\"tool\":\"工具名\",\"args\":{...}}。修复：按该形状重发，每工具参数细节读 GET /agent-guide?topic=schema", "schema");
+            }
+            java.util.Iterator<String> keys = req.keys();
+            while (keys.hasNext()) {
+                String k = keys.next();
+                if (!k.equals("tool") && !k.equals("args")) {
+                    return invalidArguments("收到未定义的字段 \"" + k + "\"：/call 顶层只允许 tool 与 args。修复：去掉多余字段后重发，形状细节读 GET /agent-guide?topic=schema", "schema");
+                }
+            }
+            String tool = req.optString("tool", "");
+            if (tool.length() == 0) {
+                return invalidArguments("缺 tool 字段或 tool 为空：/call 形状为 {\"tool\":\"工具名\",\"args\":{...}}。修复：补上工具名（可用清单读 GET /agent-guide）后重发", "schema");
+            }
+            JSONObject args = new JSONObject();
+            if (req.has("args")) {
+                args = req.optJSONObject("args");
+                if (args == null) {
+                    return invalidArguments("args 必须是 JSON 对象（收到 " + req.get("args").getClass().getSimpleName() + "）：/call 形状为 {\"tool\":\"工具名\",\"args\":{...}}。修复：把 args 改为对象后重发，每工具参数细节读 GET /agent-guide?topic=schema", "schema");
+                }
+            }
+            JSONObject out = Tools.dispatch(tool, args);
+            out.put("tool", tool);
+            markUnknownTool(out);
+            return out;
+        } catch (Throwable t) {
+            return invalidArguments("/call 信封处理失败（" + t.getClass().getSimpleName() + "）：请求未派发到工具层。修复：按 {\"tool\",\"args\"} 形状重发，细节读 GET /agent-guide?topic=schema", "schema");
+        }
+    }
+
+    // ==================== /agent-guide ====================
+
+    private static final Object GUIDE_LOCK = new Object();
+    private static volatile String guideCore = null;
+    private static volatile java.util.LinkedHashMap<String, String> guideTopics = null;
+
+    /**
+     * Loads the guide asset once. It ships inside the APK and cannot change at
+     * runtime, so it is parsed one time and served from memory — the request
+     * path must not touch storage (same rule that keeps token reads off it).
+     */
+    private static void loadGuide() throws Exception {
+        if (guideCore != null) return;
+        synchronized (GUIDE_LOCK) {
+            if (guideCore != null) return;
+            android.content.Context ctx = Tools.ctxRef();
+            if (ctx == null) throw new IllegalStateException("context 未就绪");
+            java.io.InputStream in = ctx.getAssets().open("khy_bridge_guide.md");
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+            in.close();
+            String raw = new String(bo.toByteArray(), "UTF-8");
+            // Sections are delimited by <!-- TOPIC:name --> anchors; the core is
+            // everything before the first anchor and after the last section. The
+            // anchor set IS the topic whitelist — the endpoint cannot drift from
+            // what the asset actually carries.
+            java.util.LinkedHashMap<String, String> topics = new java.util.LinkedHashMap<String, String>();
+            java.util.ArrayList<int[]> marks = new java.util.ArrayList<int[]>();
+            java.util.ArrayList<String> names = new java.util.ArrayList<String>();
+            int p = 0;
+            while (true) {
+                int i = raw.indexOf("<!-- TOPIC:", p);
+                if (i < 0) break;
+                int j = raw.indexOf("-->", i);
+                if (j < 0) break;
+                names.add(raw.substring(i + 11, j).trim());
+                marks.add(new int[] { i, j + 3 });
+                p = j + 3;
+            }
+            if (!names.isEmpty()) {
+                for (int k = 0; k < names.size(); k++) {
+                    int from = marks.get(k)[1];
+                    int to = k + 1 < names.size() ? marks.get(k + 1)[0] : raw.length();
+                    topics.put(names.get(k), raw.substring(from, to).trim());
+                }
+                guideCore = raw.substring(0, marks.get(0)[0])
+                        + raw.substring(marks.get(marks.size() - 1)[1]);
+            } else {
+                guideCore = raw;
+            }
+            guideTopics = topics;
+        }
+    }
+
+    /** ?topic= style query value; plain words only — anything else misses the whitelist anyway. */
+    private static String queryParam(String path, String key) {
+        int q = path.indexOf('?');
+        if (q < 0) return null;
+        for (String part : path.substring(q + 1).split("&")) {
+            int eq = part.indexOf('=');
+            if (eq > 0 && part.substring(0, eq).equals(key)) return part.substring(eq + 1);
+        }
+        return null;
+    }
+
+    private static String topicIndexLine() {
+        StringBuilder index = new StringBuilder("主题索引（GET /agent-guide?topic=<名>，未列出的主题返回 400 guide_topic_unavailable）：");
+        boolean first = true;
+        for (String t : guideTopics.keySet()) {
+            index.append(first ? "" : "、").append(t);
+            first = false;
+        }
+        return index.toString();
+    }
+
+    /** Placeholders the asset leaves to runtime: port, token, tool names, topic index. */
+    private static String fillGuide(String md) {
+        StringBuilder toolNames = new StringBuilder();
+        for (String t : Tools.availableNamesCached()) {
+            if (toolNames.length() > 0) toolNames.append(' ');
+            toolNames.append(t);
+        }
+        return md.replace("{{PORT}}", String.valueOf(port()))
+                 .replace("{{BRIDGE_TOKEN}}", activeToken())
+                 .replace("{{TOOL_NAMES}}", toolNames.toString())
+                 .replace("{{TOPIC_INDEX}}", topicIndexLine());
     }
 
     // Delivery canary stamp, from the same "khy.build" manifest literal
