@@ -12,6 +12,7 @@ const RESOURCES = [
   require('./resources/apiKeys.resource'),
   require('./resources/dependencies.resource'),
   require('./resources/customProviders.resource'),
+  require('./resources/visionConfig.resource'),
   require('./resources/modelOverrides.resource'),
   require('./resources/modelConfig.resource'),
   require('./resources/cron.resource'),

@@ -259,10 +259,10 @@ describe('parityGuard.checkParity', () => {
   it('默认 commandSchema 走仓内真源：与出厂 manage 子命令表自洽', () => {
     // Only `registry` is injected, so checkParity falls back to the real
     // constants/commandSchema. The registry is derived from that same shipped
-    // list, which pins today's `manage` surface (8 entries incl. 'list').
+    // list, which pins today's `manage` surface (9 entries incl. 'list').
     const schema = require('../../../../constants/commandSchema');
     const subs = schema.getRouterSubCommands().manage;
-    assert.deepEqual(subs, ['list', 'users', 'api-keys', 'dependencies', 'custom-providers', 'model-overrides', 'model-config', 'cron']);
+    assert.deepEqual(subs, ['list', 'users', 'api-keys', 'dependencies', 'custom-providers', 'vision-config', 'model-overrides', 'model-config', 'cron']);
     const contracts = subs
       .filter((s) => s !== 'list')
       .map((id) => ({ id, source: 'env', sourceDetail: `stub:${id}`, ...cmd() }));
@@ -296,7 +296,7 @@ describe('parityGuard.checkParity', () => {
       const r = checkParity({ registry });
       assert.equal(r.ok, false);
       assert.deepEqual(r.errors, [
-        'CLI_PARITY: manage sub-commands [api-keys, cron, custom-providers, dependencies, model-config, model-overrides, users] != registry resources [pg-one, pg-two]',
+        'CLI_PARITY: manage sub-commands [api-keys, cron, custom-providers, dependencies, model-config, model-overrides, users, vision-config] != registry resources [pg-one, pg-two]',
       ]);
       assert.throws(
         () => registry.register({ id: 'pg-three', label: '三', source: 'env', sourceDetail: 'pg:1', capabilities: ['list'], ops: { list: () => {} } }),

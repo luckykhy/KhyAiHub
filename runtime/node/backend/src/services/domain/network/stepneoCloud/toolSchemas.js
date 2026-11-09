@@ -16,7 +16,7 @@
  * will validate against.
  */
 
-const { getPhoneBridgeTools, getPhoneBridgeUiTools, UI_TOOL_ACCESS } = require('../phone/phoneBridgeCatalog');
+const { getPhoneBridgeTools, getPhoneBridgeUiTools, getPhoneBridgeAssistantRelayTools, UI_TOOL_ACCESS } = require('../phone/phoneBridgeCatalog');
 
 /**
  * Arg specs for the UI tools, transcribed from the bridge's own KhyUi dispatch.
@@ -152,11 +152,20 @@ function toolToFunctionSchema(tool) {
  * the model burns a round trip discovering the refusal, and the refusal reads
  * as "the capability does not exist".
  *
- * @param {{includeUi?: boolean}} [opts]
+ * The assistant relay group (Amoo 反代) is excluded by DEFAULT — a fresh clone of
+ * khyos must not hand the model a tool面 that presumes Amoo is installed. It is
+ * an explicit opt-in (STEPNEO_INCLUDE_ASSISTANT_RELAY). "Not advertised" is not
+ * "not callable": createToolNameResolver still resolves every relay name, so a
+ * human `khy phone call amoo_ask` keeps working.
+ *
+ * @param {{includeUi?: boolean, includeAssistantRelay?: boolean}} [opts]
  * @returns {Array<{type:'function', function: object}>}
  */
-function buildToolSchemas({ includeUi = true } = {}) {
-  const schemas = getPhoneBridgeTools().map(toolToFunctionSchema);
+function buildToolSchemas({ includeUi = true, includeAssistantRelay = false } = {}) {
+  const relayNames = new Set(getPhoneBridgeAssistantRelayTools().map((tool) => tool.bridgeName));
+  const schemas = getPhoneBridgeTools()
+    .filter((tool) => includeAssistantRelay || !relayNames.has(tool.bridgeName))
+    .map(toolToFunctionSchema);
   if (includeUi) {
     // getPhoneBridgeUiTools() is a NAME list, not objects — the catalog keeps
     // UI_TOOLS as strings and carries the access level in UI_TOOL_ACCESS. The

@@ -87,6 +87,12 @@ function _collectFindings(text) {
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     for (const ch of _INVISIBLE_CHARS) {
+      // An empty table entry matches every line (indexOf('') === 0), which once
+      // turned every scanned line into an invisible_unicode finding; skip it so a
+      // future entry lost in transit degrades to a missed check, not a full false-positive sweep.
+      if (!ch) {
+        continue;
+      }
       if (line.indexOf(ch) === -1) {
         continue;
       }

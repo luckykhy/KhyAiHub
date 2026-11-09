@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const {
   argSpecToJsonSchema, toolToFunctionSchema, buildToolSchemas, createToolNameResolver,
 } = require('./toolSchemas');
-const { getPhoneBridgeTools, findPhoneBridgeTool, getPhoneBridgeUiTools } = require('../phone/phoneBridgeCatalog');
+const { getPhoneBridgeTools, findPhoneBridgeTool, getPhoneBridgeUiTools, getPhoneBridgeAssistantRelayTools } = require('../phone/phoneBridgeCatalog');
 
 // ── arg conversion ───────────────────────────────────────────────────────────
 
@@ -77,16 +77,40 @@ test('the schema name is khyName, which is what the model will emit', () => {
 
 // ── the whole list ───────────────────────────────────────────────────────────
 
-test('every non-UI bridge tool is advertised', () => {
-  const schemas = buildToolSchemas({ includeUi: false });
-  assert.equal(schemas.length, getPhoneBridgeTools().length);
+test('the assistant relay group is excluded by default and included on opt-in', () => {
+  // 默认关是独立性的机读定义：一份新克隆的 khyos 交给模型的工具里不许出现 amoo。
+  // 「不广告」不等于「不可调」——createToolNameResolver 仍从全量建表（见下面用例）。
+  const relay = getPhoneBridgeAssistantRelayTools();
+  const nonRelay = getPhoneBridgeTools().length - relay.length;
+  assert.equal(buildToolSchemas({ includeUi: false }).length, nonRelay);
+  assert.equal(
+    buildToolSchemas({ includeUi: false, includeAssistantRelay: true }).length,
+    getPhoneBridgeTools().length
+  );
+  // relay 组的 khyName 默认缺席、显式开才出现。
+  const def = new Set(buildToolSchemas({ includeUi: false }).map((s) => s.function.name));
+  const on = new Set(
+    buildToolSchemas({ includeUi: false, includeAssistantRelay: true }).map((s) => s.function.name)
+  );
+  for (const tool of relay) {
+    assert.equal(def.has(tool.khyName), false, `${tool.khyName} 默认不该广告`);
+    assert.equal(on.has(tool.khyName), true, `${tool.khyName} 显式开应该广告`);
+  }
 });
 
 test('UI tools are included on request and excluded otherwise', () => {
+  const nonRelay = getPhoneBridgeTools().length - getPhoneBridgeAssistantRelayTools().length;
   assert.equal(buildToolSchemas({ includeUi: true }).length,
-    getPhoneBridgeTools().length + getPhoneBridgeUiTools().length);
-  assert.equal(buildToolSchemas({ includeUi: false }).length,
-    getPhoneBridgeTools().length);
+    nonRelay + getPhoneBridgeUiTools().length);
+  assert.equal(buildToolSchemas({ includeUi: false }).length, nonRelay);
+});
+
+test('the resolver still maps a relay name even when it is not advertised', () => {
+  // 「不广告」不等于「不可调」：人显式 khy phone call amoo_ask 仍要能解析到 bridgeName。
+  const resolver = createToolNameResolver();
+  for (const tool of getPhoneBridgeAssistantRelayTools()) {
+    assert.equal(resolver.resolve(tool.khyName), tool.bridgeName, tool.khyName);
+  }
 });
 
 test('no two schemas share a name', () => {

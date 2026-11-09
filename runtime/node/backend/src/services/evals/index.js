@@ -22,6 +22,101 @@ const RESULT_TYPES = {
   safety: 'Safety Score',
 };
 
+// Weighted scoring mirrors guiEval ScoringEngine (src/services/domain/eval/
+// guiEval/scoringEngine.js); kept as a local copy so this service stays
+// self-contained (node builtins only) instead of reaching into the guiEval
+// platform module.
+const PASS_THRESHOLD = 0.8;
+const PARTIAL_THRESHOLD = 0.5;
+
+function _aggregate(items) {
+  let totalWeight = 0;
+  let earnedWeight = 0;
+  const resolved = [];
+
+  for (const item of items) {
+    const w = Math.max(0, item.weight || 1);
+    totalWeight += w;
+    if (item.passed) {
+      earnedWeight += w;
+    }
+    resolved.push({ ...item, weight: w });
+  }
+
+  if (totalWeight === 0) {
+    totalWeight = items.length || 1;
+  }
+  const autoScore = Math.max(0, Math.min(1, earnedWeight / totalWeight));
+
+  return {
+    autoScore: Math.round(autoScore * 10000) / 10000,
+    verdict: autoScore >= PASS_THRESHOLD ? 'pass' : autoScore >= PARTIAL_THRESHOLD ? 'partial' : 'fail',
+    totalWeight,
+    earnedWeight,
+    items: resolved,
+  };
+}
+
+// A bare string entry only names the metric; an object entry carries its
+// measured result. Entries without a measurement are reported, never scored.
+function _parseItems(metrics) {
+  const entries = Array.isArray(metrics) ? metrics : [metrics];
+  const items = [];
+  const unmeasured = [];
+
+  for (const entry of entries) {
+    const metric = typeof entry === 'string' ? entry : String((entry && entry.metric) || '');
+    if (!entry || typeof entry !== 'object' || typeof entry.passed !== 'boolean') {
+      unmeasured.push(metric || JSON.stringify(entry));
+      continue;
+    }
+    const item = {
+      metric,
+      type: RESULT_TYPES[metric] || metric,
+      passed: entry.passed,
+      weight: entry.weight,
+    };
+    if (entry.evidence !== undefined) {
+      item.evidence = entry.evidence;
+    }
+    items.push(item);
+  }
+
+  return { items, unmeasured };
+}
+
+function _unmeasurableError(unmeasured) {
+  const detail = unmeasured.length > 0
+    ? `${unmeasured.join('、')} 没有实测结果`
+    : 'metrics 为空，无评分项';
+  return {
+    error: `无法评分：${detail}。请逐项传入 { metric, passed, weight?, evidence? }；`
+      + '本服务不生成模拟分，provider 测量层尚未实现。',
+  };
+}
+
+function _scoredResult(base, items) {
+  const aggregate = _aggregate(items);
+  const scores = {};
+  for (const item of aggregate.items) {
+    scores[item.metric] = item;
+  }
+  return {
+    ...base,
+    id: `eval_${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    scores,
+    status: 'completed',
+    overallScore: aggregate.autoScore,
+    verdict: aggregate.verdict,
+    breakdown: {
+      totalWeight: aggregate.totalWeight,
+      earnedWeight: aggregate.earnedWeight,
+      items: aggregate.items,
+    },
+  };
+}
+
 // ── Run Evaluation ──
 async function runEvaluation(options = {}) {
   const {
@@ -35,31 +130,15 @@ async function runEvaluation(options = {}) {
   if (!model) return { error: 'Model is required' };
   if (!prompt) return { error: 'Prompt is required' };
 
-  const results = {
-    id: `eval_${Date.now()}`,
-    model,
-    prompt,
-    expectedOutput,
-    timestamp: new Date().toISOString(),
-    scores: {},
-    status: 'completed',
-  };
-
-  // Simulated evaluation (in real implementation, this would call the model)
-  for (const metric of metrics) {
-    results.scores[metric] = {
-      score: 0.85 + Math.random() * 0.1, // Simulated score
-      type: RESULT_TYPES[metric] || metric,
-    };
+  const { items, unmeasured } = _parseItems(metrics);
+  // Unmeasured input is an error, not a zero: this service has no provider
+  // measurement layer, and the simulated path used to hand back a different
+  // random score for identical input on every call.
+  if (items.length === 0 || unmeasured.length > 0) {
+    return _unmeasurableError(unmeasured);
   }
 
-  // Calculate overall score
-  const scores = Object.values(results.scores).map((s) => s.score);
-  results.overallScore = scores.length > 0
-    ? scores.reduce((a, b) => a + b, 0) / scores.length
-    : 0;
-
-  return { success: true, results };
+  return { success: true, results: _scoredResult({ model, prompt, expectedOutput }, items) };
 }
 
 // ── Batch Evaluation ──
@@ -95,13 +174,21 @@ async function compareModels(models, prompt, options = {}) {
     prompt,
     timestamp: new Date().toISOString(),
     models: {},
+    failed: [],
   };
 
   for (const model of models) {
     const result = await runEvaluation({ model, prompt, ...options });
     if (result.success) {
       comparison.models[model] = result.results;
+    } else {
+      comparison.failed.push({ model, error: result.error });
     }
+  }
+
+  if (Object.keys(comparison.models).length === 0) {
+    const why = comparison.failed.map((f) => `${f.model} — ${f.error}`).join('；');
+    return { error: `全部 ${models.length} 个模型评分失败：${why}` };
   }
 
   return { success: true, comparison };

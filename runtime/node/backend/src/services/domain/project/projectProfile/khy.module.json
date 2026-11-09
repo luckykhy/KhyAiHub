@@ -1,0 +1,19 @@
+{
+  "name": "projectProfile",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "fanIn": 2,
+  "fanInEvidence": [
+    "runtime/node/backend/src/services/domain/network/stepneoCloud/agentLoop.js",
+    "scripts/project-profile/build-project-profile.js"
+  ],
+  "tests": [
+    "services/backend/src/services/domain/project/projectProfile/index.test.js"
+  ],
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-25",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：第二个消费方（scripts/project-profile/build-project-profile.js 生成 Dart 侧画像）尚未经过一次真实的「改画像 → 重新生成 → 装机」闭环检验。晋级三判据：单元 README ✓、唯一源文件同名同目录测试 ✓、整数 fanIn 声明 ✓。出边只有 node:fs / node:path 标准库，无仓内出边、无第三方依赖，域方向合法。"
+}
