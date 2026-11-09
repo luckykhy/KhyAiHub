@@ -43,8 +43,21 @@ jest.mock('../../src/services/changeRegressionGate', () => ({
   evaluateBugfixRegressionGate: jest.fn(),
 }));
 
-jest.mock('../../src/memdir/memdir', () => ({
-  searchMemories: jest.fn(),
+jest.mock('../../src/memdir/memdir', () => {
+  // P1-2: 复盘沉淀用例走真实的 memoryEngine.addStructuredMemory → memdir.saveMemory
+  // 原子写,只有 searchMemories 需要打桩(上下文包的记忆提示)。故透传真模块、只替换
+  // 这一个函数——其余既有用例仍只依赖 searchMemories,行为不变。
+  const actual = jest.requireActual('../../src/memdir/memdir');
+  return { ...actual, searchMemories: jest.fn() };
+});
+
+jest.mock('../../src/services/crossModelVerify', () => ({
+  // 真模块会按候选清单逐个调用 chat() 打真实供应商;本文件只需要它的结构化产出。
+  // 默认「未执行」,与改前行为一致(旧用例的 mock chat 返回体没有 .text/.content,
+  // 真模块同样走到 performed:false)。复盘用例按需覆盖 verify 的返回值。
+  verify: jest.fn(async () => ({ performed: false, reason: 'mocked' })),
+  _classifyVendor: jest.fn(() => 'unknown'),
+  getStage: jest.fn(() => 'S1'),
 }));
 
 jest.mock('../../src/skills', () => ({
@@ -59,6 +72,7 @@ const toolUseLoop = require('../../src/services/toolUseLoop');
 const bgTask = require('../../src/services/backgroundTaskManager');
 const projectMemoryService = require('../../src/services/projectMemoryService');
 const changeRegressionGate = require('../../src/services/changeRegressionGate');
+const crossModelVerify = require('../../src/services/crossModelVerify');
 const memdir = require('../../src/memdir/memdir');
 const skills = require('../../src/skills');
 
@@ -283,6 +297,47 @@ describe('agenticHarnessService', () => {
     });
   });
 
+  test('run reports delivery fail when the loop only ran out of room', async () => {
+    // The harness exit must not read an unfinished loop as success: the loop
+    // self-reports maxIterationsReached/truncated and no other gate fails. The
+    // message is short and free of action words, so Ralph continuation does not
+    // fire (verified: continuation.shouldAutoContinue('看下日志') === false) and
+    // the last-round flags reach buildHarnessDeliveryVerdict unchanged. This is
+    // the regression lock for "ran out of room !== success" — without it the
+    // runtime criterion could regress silently while every suite stayed green.
+    contextRouter.routeContextStrategy.mockReturnValue({
+      route: 'fits',
+      overflow: 0,
+      toolCallTokens: 0,
+    });
+
+    toolUseLoop.runToolUseLoop.mockResolvedValue({
+      finalResponse: 'half-done work',
+      errorType: null,
+      toolCallLog: [],
+      iterations: 10,
+      provider: 'mock',
+      maxIterationsReached: true,
+      truncated: true,
+    });
+
+    const harness = createAgenticHarness({ continuationCooldownMs: 0 });
+    const result = await harness.run({
+      userMessage: '看下日志',
+      chat: async () => ({ reply: 'unused' }),
+    });
+
+    expect(toolUseLoop.runToolUseLoop).toHaveBeenCalledTimes(1);
+    const report = bgTask.complete.mock.calls[0][1];
+    expect(report.deliveryVerdict).toMatchObject({
+      verdict: 'fail',
+      blockedBy: expect.arrayContaining(['runtime']),
+    });
+    expect(report.deliveryVerdict.gates.runtime.passed).toBe(false);
+    // The honest-closing contract: the verdict is appended to what the user sees.
+    expect(result.finalResponse).toContain('[Delivery]');
+  });
+
   test('run emits both change and legacy regression gate events for compatibility', async () => {
     contextRouter.routeContextStrategy.mockReturnValue({
       route: 'fits',
@@ -390,5 +445,159 @@ describe('agenticHarnessService', () => {
     expect(packet.skillHints.length).toBeGreaterThan(0);
     expect(packet.skillHints[0].trigger).toBe('/alpha');
     expect(skills.discoverAllSkills).toHaveBeenCalled();
+  });
+
+  // P1-2: 复盘沉淀(crossModelVerify 接线处 → memoryTrigger.classifyReflection →
+  // memoryEngine.addStructuredMemory 真实落盘)。KHY_MEMORY_DIR 指向临时目录,
+  // 断言的是真文件、真 frontmatter、真去重——不是 mock 调用计数。
+  describe('cross-model reflection memory capture (P1-2)', () => {
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const memPaths = require('../../src/memdir/paths');
+
+    // 一次 run 含真实记忆写入;KHY_DELIVERY_GATE=0 已避开 Remediation 冷却,但两次 run
+    // 的去重用例仍可能顶到 5s 默认线,给这个 describe 放宽。
+    jest.setTimeout(30000);
+
+    const REVIEW = {
+      performed: true,
+      reviewModel: 'deepseek-chat',
+      reviewVendor: 'deepseek',
+      primaryVendor: 'anthropic',
+      verdict: 'issues',
+      issues: [
+        '金额解析未处理千分位逗号,1,234.56 被截断为 1',
+        '缺少对负值的校验,退款场景会算出正数',
+      ],
+      suggestedFixes: [
+        '解析前统一 strip 千分位再 parseFloat',
+        '对 amount < 0 的输入直接拒绝并报错',
+      ],
+      remediationPrompt: '[SYSTEM: 跨模型交叉验证发现以下问题，请修复]',
+      stage: 'S1',
+    };
+
+    const savedEnv = {};
+    let tmpDir;
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-p1-2-mem-'));
+      savedEnv.reflection = process.env.KHY_MEMORY_REFLECTION;
+      savedEnv.memoryDir = process.env.KHY_MEMORY_DIR;
+      savedEnv.mergeLegacy = process.env.KHY_MEMORY_MERGE_LEGACY;
+      savedEnv.deliveryGate = process.env.KHY_DELIVERY_GATE;
+      savedEnv.cmvRemediate = process.env.KHY_CROSS_MODEL_REMEDIATE;
+      process.env.KHY_MEMORY_DIR = tmpDir;
+      process.env.KHY_MEMORY_MERGE_LEGACY = '0'; // 别把本机既有记忆拷进临时目录
+      process.env.KHY_DELIVERY_GATE = '0'; // 避开交付门 1500ms Remediation 冷却
+      process.env.KHY_CROSS_MODEL_REMEDIATE = '0'; // 只验沉淀,不跑 Remediation 轮
+      memPaths._resetCache(); // 路径解析有进程内缓存,env 改完必须重置
+    });
+
+    afterEach(() => {
+      if (savedEnv.reflection === undefined) delete process.env.KHY_MEMORY_REFLECTION; else process.env.KHY_MEMORY_REFLECTION = savedEnv.reflection;
+      if (savedEnv.memoryDir === undefined) delete process.env.KHY_MEMORY_DIR; else process.env.KHY_MEMORY_DIR = savedEnv.memoryDir;
+      if (savedEnv.mergeLegacy === undefined) delete process.env.KHY_MEMORY_MERGE_LEGACY; else process.env.KHY_MEMORY_MERGE_LEGACY = savedEnv.mergeLegacy;
+      if (savedEnv.deliveryGate === undefined) delete process.env.KHY_DELIVERY_GATE; else process.env.KHY_DELIVERY_GATE = savedEnv.deliveryGate;
+      if (savedEnv.cmvRemediate === undefined) delete process.env.KHY_CROSS_MODEL_REMEDIATE; else process.env.KHY_CROSS_MODEL_REMEDIATE = savedEnv.cmvRemediate;
+      memPaths._resetCache();
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch {
+        /* 临时目录清理 best-effort */
+      }
+    });
+
+    function lessonFiles() {
+      return fs
+        .readdirSync(tmpDir)
+        .filter((f) => f.endsWith('.md') && f !== 'MEMORY.md');
+    }
+
+    async function runOnce(events) {
+      contextRouter.routeContextStrategy.mockReturnValue({
+        route: 'fits',
+        overflow: 0,
+        toolResultTokens: 0,
+      });
+      toolUseLoop.runToolUseLoop.mockResolvedValue({
+        finalResponse: '已修复金额解析',
+        errorType: null,
+        toolCallLog: [],
+        iterations: 1,
+        provider: 'mock',
+      });
+      const harness = createAgenticHarness({ continuationCooldownMs: 0 });
+      return harness.run({
+        userMessage: '修复 parser 的金额解析 bug',
+        chat: async () => ({ reply: 'unused' }),
+        onEvent: (e) => events.push(e),
+      });
+    }
+
+    test('一条跨模型复盘落 cross_session 记忆(真实写入,隔离目录)', async () => {
+      process.env.KHY_MEMORY_REFLECTION = '1';
+      crossModelVerify.verify.mockResolvedValue({ ...REVIEW });
+
+      const events = [];
+      const result = await runOnce(events);
+
+      const files = lessonFiles();
+      expect(files.length).toBe(1);
+      expect(files[0].startsWith('feedback_')).toBe(true);
+      const saved = memdir.readMemory(files[0]);
+      expect(saved.exists).toBe(true);
+      expect(saved.frontmatter.type).toBe('feedback');
+      expect(saved.frontmatter.tier).toBe('cross_session');
+      expect(saved.body).toContain('金额解析未处理千分位逗号');
+      expect(saved.body).toContain('建议修复方向:');
+      expect(events.find((e) => e.type === 'reflection_memory')).toMatchObject({
+        action: 'write',
+        tier: 'cross_session',
+        issueCount: 2,
+      });
+      // S1 观察数据随 harnessReport 进 session trace
+      expect(result.harness.crossModelVerify.reflectionMemory).toMatchObject({
+        action: 'write',
+        tier: 'cross_session',
+        issueCount: 2,
+      });
+    });
+
+    test('重复复盘不二次写入(同一复盘第二次 run 被去重)', async () => {
+      process.env.KHY_MEMORY_REFLECTION = '1';
+      crossModelVerify.verify.mockResolvedValue({ ...REVIEW });
+
+      const events = [];
+      await runOnce(events);
+      await runOnce(events);
+
+      // 库内仍只有一条教训——重复复盘不会堆副本,也就无处「二次注入」
+      expect(lessonFiles().length).toBe(1);
+      const actions = events
+        .filter((e) => e.type === 'reflection_memory')
+        .map((e) => e.action);
+      expect(actions).toEqual(['write', 'skip']);
+    });
+
+    test('门控默认关不沉淀;低质复盘(无修复方向)被门槛拦在库外', async () => {
+      delete process.env.KHY_MEMORY_REFLECTION; // 默认关
+      crossModelVerify.verify.mockResolvedValue({ ...REVIEW });
+
+      const events = [];
+      await runOnce(events);
+      expect(lessonFiles().length).toBe(0);
+      expect(events.find((e) => e.type === 'reflection_memory')).toBeUndefined();
+
+      process.env.KHY_MEMORY_REFLECTION = '1';
+      crossModelVerify.verify.mockResolvedValue({
+        ...REVIEW,
+        suggestedFixes: [], // 有问题没下一步 ⇒ 完整度 0.5,不过 0.9 线
+      });
+      await runOnce(events);
+      expect(lessonFiles().length).toBe(0);
+      expect(events.find((e) => e.type === 'reflection_memory')).toBeUndefined();
+    });
   });
 });

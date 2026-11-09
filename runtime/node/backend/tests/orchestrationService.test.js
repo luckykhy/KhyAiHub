@@ -21,11 +21,19 @@ const fs = require('fs');
 const TMP_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-orch-test-'));
 process.env.KHY_DATA_HOME = TMP_HOME;
 
+// P1-3: the real-memoryEngine case below writes through addStructuredMemory;
+// memdir resolves KHY_MEMORY_DIR ahead of the unified data home and caches it on
+// first use, so pinning it here keeps that write inside a throwaway dir instead
+// of the developer's real memory store.
+const TMP_MEMORY = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-orch-mem-'));
+process.env.KHY_MEMORY_DIR = TMP_MEMORY;
+
 const test = require('node:test');
 const assert = require('node:assert');
 
 const svc = require('../src/services/domain/state/orchestrator/orchestrationService.js');
 const journal = require('../src/services/domain/state/orchestrator/orchestrationJournal.js');
+const roleLedger = require('../src/services/domain/state/orchestrator/orchestrationRoleLedger.js');
 
 // Globally unique id counter — real taskBoard never reuses ids across runs, so
 // each run gets its own journal file (run-<id>.jsonl). A per-instance counter
@@ -280,6 +288,251 @@ test('journal records the run trajectory and listRuns surfaces it', async () => 
   assert.ok(runs.some((r) => r.runId === status.runId));
 });
 
+// ── P1-3: task/result pairs into memory ───────────────────────────────────────
+// The write path is gated OFF by default (KHY_ORCH_RESULT_MEMORY); these cases
+// drive it through the injected memoryWriter seam (what gets written) plus one
+// run against the real memoryEngine (that it actually lands on disk).
+
+const RESULT_MEMORY_ON = { ...process.env, KHY_ORCH_RESULT_MEMORY: '1' };
+
+function makeMemoryWriter() {
+  const entries = [];
+  return {
+    entries,
+    writer(entry) {
+      entries.push(entry);
+      return { success: true, action: 'write' };
+    },
+  };
+}
+
+test('a completed step remembers its task/result pair when the gate is on', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner();
+  const mem = makeMemoryWriter();
+  const status = await svc.runOrchestration(
+    { mode: 'sequential', steps: [{ prompt: '盘点三个供应商的报价' }] },
+    { taskBoard: tb, agentRunner: runner, env: RESULT_MEMORY_ON, memoryWriter: mem.writer },
+  );
+  assert.strictEqual(status.control, 'done');
+  assert.strictEqual(mem.entries.length, 1);
+  const entry = mem.entries[0];
+  // memoryTier maps project → cross_session, the tier [RESEARCH-028] P1-3 asks for.
+  assert.strictEqual(entry.type, 'project');
+  assert.ok(entry.name.includes('盘点三个供应商的报价'));
+  assert.ok(entry.content.includes('任务：盘点三个供应商的报价'));
+  assert.ok(entry.content.includes('结论：done:盘点三个供应商的报价'));
+});
+
+test('intermediate tool output never reaches the memory entry', async () => {
+  const tb = makeTaskBoard();
+  const runner = async () => ({
+    success: true,
+    output: {
+      text: '结论：选供应商 A',
+      toolCalls: [{ tool: 'bash', command: 'curl secret-internal' }],
+      iterations: 9,
+      trajectory: ['step-1', 'step-2'],
+    },
+  });
+  const mem = makeMemoryWriter();
+  const status = await svc.runOrchestration(
+    { mode: 'sequential', steps: [{ prompt: '比较两家云厂商的 GPU 报价' }] },
+    { taskBoard: tb, agentRunner: runner, env: RESULT_MEMORY_ON, memoryWriter: mem.writer },
+  );
+  assert.strictEqual(status.control, 'done');
+  assert.strictEqual(mem.entries.length, 1);
+  const { name, description, content } = mem.entries[0];
+  assert.ok(content.includes('结论：选供应商 A'));
+  const written = JSON.stringify({ name, description, content });
+  for (const noise of ['toolCalls', 'curl secret-internal', 'iterations', 'trajectory', 'step-1']) {
+    assert.ok(!written.includes(noise), `intermediate output leaked into memory: ${noise}`);
+  }
+});
+
+test('the memory write stays off unless the gate is explicitly enabled', async () => {
+  for (const env of [process.env, { ...process.env, KHY_ORCH_RESULT_MEMORY: '0' }]) {
+    const tb = makeTaskBoard();
+    const { runner } = makeRunner();
+    const mem = makeMemoryWriter();
+    await svc.runOrchestration(
+      { mode: 'sequential', steps: [{ prompt: 'p' }] },
+      { taskBoard: tb, agentRunner: runner, env, memoryWriter: mem.writer },
+    );
+    assert.strictEqual(mem.entries.length, 0);
+  }
+});
+
+test('a throwing memory writer never breaks the run', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner();
+  const status = await svc.runOrchestration(
+    { mode: 'sequential', steps: [{ prompt: 'q1' }, { prompt: 'q2' }] },
+    {
+      taskBoard: tb,
+      agentRunner: runner,
+      env: RESULT_MEMORY_ON,
+      memoryWriter: () => {
+        throw new Error('memory dir unavailable');
+      },
+    },
+  );
+  assert.strictEqual(status.control, 'done');
+  assert.strictEqual(status.progress.done, 2);
+});
+
+test('the real memoryEngine stores the pair on disk and updates it in place on a re-run', async () => {
+  const prompt = 'P1-3 存证：核算本季度渠道分成';
+  const runWith = (output) =>
+    svc.runOrchestration(
+      { mode: 'sequential', steps: [{ prompt }] },
+      {
+        taskBoard: makeTaskBoard(),
+        env: RESULT_MEMORY_ON,
+        agentRunner: async () => ({ success: true, output }),
+      },
+    );
+  const memoryFiles = () =>
+    fs.readdirSync(TMP_MEMORY).filter((f) => f.endsWith('.md') && f !== 'MEMORY.md');
+
+  const first = await runWith('结论：分成比例 3:7');
+  assert.strictEqual(first.control, 'done');
+  assert.strictEqual(memoryFiles().length, 1);
+  const stored = fs.readFileSync(path.join(TMP_MEMORY, memoryFiles()[0]), 'utf8');
+  assert.ok(stored.includes('type: project'));
+  assert.ok(stored.includes('结论：分成比例 3:7'));
+
+  // Same task, new conclusion → the same file is rewritten (decideUpdate supersede),
+  // so re-running a task never stacks a near-duplicate copy.
+  const second = await runWith('结论：分成比例 4:6');
+  assert.strictEqual(second.control, 'done');
+  assert.strictEqual(memoryFiles().length, 1);
+  const updated = fs.readFileSync(path.join(TMP_MEMORY, memoryFiles()[0]), 'utf8');
+  assert.ok(updated.includes('结论：分成比例 4:6'));
+  assert.ok(!updated.includes('结论：分成比例 3:7'));
+});
+
+// ── P2-3: per-role outcome ledger ───────────────────────────────────────────
+// Recording only. The DyLAN selector [RESEARCH-028] §4.1 P2-4 names is NOT
+// built — the report's own conclusion is "no data before it lands", so this
+// work order only accumulates the success history a selector would need.
+// Cases cover the real on-disk write (that it lands, with role/成败/时间), the
+// failure path, the dark-by-default gate and fail-softness.
+
+const ROLE_LEDGER_ON = { ...process.env, KHY_ORCH_ROLE_LEDGER: '1' };
+
+function makeRoleLedgerSink() {
+  const records = [];
+  return {
+    records,
+    sink(record) {
+      records.push(record);
+      return true;
+    },
+  };
+}
+
+test('every step outcome lands in the on-disk role ledger with role/成败/时间', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner();
+  const status = await svc.runOrchestration(
+    {
+      mode: 'sequential',
+      steps: [
+        { prompt: '调研三家供应商的报价', role: 'researcher' },
+        { prompt: '撰写采购建议', role: 'writer' },
+      ],
+    },
+    { taskBoard: tb, agentRunner: runner, env: ROLE_LEDGER_ON },
+  );
+  assert.strictEqual(status.control, 'done');
+
+  const ledgerPath = roleLedger.roleLedgerPath();
+  assert.ok(fs.existsSync(ledgerPath), `ledger file exists at ${ledgerPath}`);
+  // The ledger is one shared file for all runs, so scope the assertion to this run.
+  const records = roleLedger.readRoleLedger().filter((r) => r.runId === status.runId);
+  assert.strictEqual(records.length, 2);
+  const roles = records.map((r) => r.role).sort();
+  assert.deepStrictEqual(roles, ['researcher', 'writer']);
+  for (const r of records) {
+    assert.strictEqual(r.success, true);
+    assert.ok(!Number.isNaN(Date.parse(r.at)), 'at is a parseable timestamp');
+    assert.ok(Number.isFinite(r.durationMs), 'durationMs is a number');
+    assert.ok(r.stepId, 'stepId is recorded');
+  }
+});
+
+test('a failing step records success:false together with its failure reason', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner(new Set(['b']));
+  const sink = makeRoleLedgerSink();
+  const status = await svc.runOrchestration(
+    {
+      mode: 'sequential',
+      steps: [
+        { prompt: 'a', role: 'analyst' },
+        { prompt: 'b', role: 'analyst' },
+      ],
+    },
+    { taskBoard: tb, agentRunner: runner, env: ROLE_LEDGER_ON, roleLedgerSink: sink.sink },
+  );
+  assert.strictEqual(status.control, 'failed');
+  assert.strictEqual(sink.records.length, 2);
+  const failed = sink.records.find((r) => !r.success);
+  assert.ok(failed, 'the failed step is recorded');
+  assert.strictEqual(failed.role, 'analyst');
+  assert.match(String(failed.error), /boom:b/);
+});
+
+test('a step with no explicit role is recorded under the general role', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner();
+  const sink = makeRoleLedgerSink();
+  await svc.runOrchestration(
+    { mode: 'sequential', steps: [{ prompt: 'p' }] },
+    { taskBoard: tb, agentRunner: runner, env: ROLE_LEDGER_ON, roleLedgerSink: sink.sink },
+  );
+  assert.strictEqual(sink.records.length, 1);
+  assert.strictEqual(sink.records[0].role, 'general');
+});
+
+test('the role ledger stays off unless the gate is explicitly enabled', async () => {
+  for (const env of [process.env, { ...process.env, KHY_ORCH_ROLE_LEDGER: '0' }]) {
+    const tb = makeTaskBoard();
+    const { runner } = makeRunner();
+    const sink = makeRoleLedgerSink();
+    await svc.runOrchestration(
+      { mode: 'sequential', steps: [{ prompt: 'p', role: 'general' }] },
+      { taskBoard: tb, agentRunner: runner, env, roleLedgerSink: sink.sink },
+    );
+    assert.strictEqual(sink.records.length, 0);
+  }
+  // The module-level gate holds too, not just the service-side short circuit.
+  assert.strictEqual(
+    roleLedger.appendRoleOutcome({ role: 'general', success: true }, process.env),
+    false,
+  );
+});
+
+test('a throwing ledger sink never breaks the run', async () => {
+  const tb = makeTaskBoard();
+  const { runner } = makeRunner();
+  const status = await svc.runOrchestration(
+    { mode: 'sequential', steps: [{ prompt: 'q1', role: 'r' }, { prompt: 'q2', role: 'r' }] },
+    {
+      taskBoard: tb,
+      agentRunner: runner,
+      env: ROLE_LEDGER_ON,
+      roleLedgerSink: () => {
+        throw new Error('ledger dir unavailable');
+      },
+    },
+  );
+  assert.strictEqual(status.control, 'done');
+  assert.strictEqual(status.progress.done, 2);
+});
+
 test.after(() => {
   try { fs.rmSync(TMP_HOME, { recursive: true, force: true }); } catch { /* best-effort */ }
+  try { fs.rmSync(TMP_MEMORY, { recursive: true, force: true }); } catch { /* best-effort */ }
 });

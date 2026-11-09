@@ -22,6 +22,12 @@ const path = require('path');
 
 process.env.KHYOS_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'khyos-ilinkloop-'));
 process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件刻意测多 peer,名单必须正好是这三个 ——
+// 多一个会让「不同 peer 各自隔离」这类用例失去意义,少一个会让默认档翻成 fail-closed 时红。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1,u2,u3';
+// 本文件断言的是「agent 答完直接外发」这条旧路径;出站草稿确认(默认开)会把正文压成
+// 预览。故显式走逃生阀回到直发档 —— 草稿机制本身由 ilinkDraft.test.js 覆盖。
+process.env.KHY_ILINK_DRAFT_CONFIRM = '0';
 
 const { IlinkDispatcher, normalizeReply, _resolveToolLoop } =
   require('../../../src/services/domain/messaging/channels/ilinkDispatcher.js');

@@ -14,6 +14,12 @@ process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 // 测的是权限桥本身(y/n 插队、超时拒绝、宽限期),不是工具执行。关掉结构化工具循环,
 // 让注入的假 chat 直接被调 —— 工具循环的接线由 ilinkToolLoop.test.js 覆盖。
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1';
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件不注入账号存储,唯一的 peer 是 u1。列出来
+// 是为了默认档哪天翻成 fail-closed 时,这些用例测的仍是「权限桥」而不是「准入闸门」。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1';
+// 本文件断言的是「agent 答完直接外发」这条旧路径;出站草稿确认(默认开)会把正文压成
+// 预览。故显式走逃生阀回到直发档 —— 草稿机制本身由 ilinkDraft.test.js 覆盖。
+process.env.KHY_ILINK_DRAFT_CONFIRM = '0';
 
 const core = require('../../../src/services/domain/messaging/messaging/ilinkCore.js');
 const { IlinkDispatcher } = require('../../../src/services/domain/messaging/channels/ilinkDispatcher.js');

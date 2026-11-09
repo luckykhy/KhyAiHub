@@ -21,11 +21,26 @@ const prompts = require('../src/constants/prompts');
 const A = require('../src/constants/promptAnchors');
 
 const CWD = process.cwd();
+// enabledTools mirrors the production tool registry (src/tools getDefinitions():
+// 155 tools incl. ToolRecommend/toolSearch) — prompts.js filters the
+// tool_discovery capsule out unless at least one of them is enabled, so a
+// fixture without them silently under-counts the on-demand capsule set.
 const OPTIONS = {
   cwd: CWD,
   userMessage: '',
   taskScale: '',
-  enabledTools: ['Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash', 'TaskCreate', 'Agent'],
+  enabledTools: [
+    'Read',
+    'Edit',
+    'Write',
+    'Glob',
+    'Grep',
+    'Bash',
+    'TaskCreate',
+    'Agent',
+    'ToolRecommend',
+    'toolSearch',
+  ],
   contextWindowTokens: 128000,
   hasNativeToolUse: true,
 };
@@ -258,6 +273,29 @@ describe('C. 每轮重算预算(尾部槽)', () => {
     );
     // 空用户消息 → 按需胶囊回退为「全部激活」,应看到 17 个
     assert.equal(capsuleCount, 17, `空用户消息下应激活全部 17 个胶囊,实测 ${capsuleCount}`);
+  });
+
+  test('tool_discovery 胶囊随工具面显隐(锁 prompts.js 的 enabledTools 过滤)', () => {
+    // The capsule commands the model to call ToolRecommend/ToolSearch; when
+    // neither is on the tool face the whole section must vanish instead of
+    // advertising tools that do not exist in this run.
+    const _NO_DISCOVERY = /^(toolsearch|toolrecommend)$/i;
+    const withTools = prompts.listOnDemandPromptSectionIds({
+      ...OPTIONS,
+      enabledTools: [...OPTIONS.enabledTools, 'ToolRecommend', 'toolSearch'],
+    });
+    const withoutTools = prompts.listOnDemandPromptSectionIds({
+      ...OPTIONS,
+      enabledTools: OPTIONS.enabledTools.filter((n) => !_NO_DISCOVERY.test(n)),
+    });
+    assert.ok(
+      withTools.includes('tool_discovery'),
+      '工具面含 ToolRecommend/ToolSearch 时应保留 tool_discovery'
+    );
+    assert.ok(
+      !withoutTools.includes('tool_discovery'),
+      '工具面缺 ToolRecommend/ToolSearch 时应过滤掉 tool_discovery'
+    );
   });
 
   test('单条注入内容不超过 token 上限(无超限即通过)', async () => {

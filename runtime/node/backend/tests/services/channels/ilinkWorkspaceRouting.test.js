@@ -25,6 +25,8 @@ const path = require('path');
 // 隔离任何 best-effort 落盘(自动检查点/会话持久化),避免污染真实用户目录。
 process.env.KHYOS_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'khyos-ilinkroute-'));
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1'; // 让注入的假 chat 直接被调
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件不注入账号存储,唯一的 peer 是 u1。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1';
 process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 process.env.KHY_ILINK_QUERY_TIMEOUT_MS = '5000'; // 放宽墙钟上限,避免看门狗误砍
 process.env.KHY_DISABLE_SESSION_PERSIST = '1';
@@ -302,5 +304,8 @@ test('chat 抛错: 恢复仍在 finally 内发生(cwd/agent 都被还原)', asyn
   assert.strictEqual(router.state.agent, 'defaultAgent', 'chat 抛错后 agent 仍应恢复');
   assert.strictEqual(router.calls.switchCwd.length, 2, 'chat 抛错后 cwd 恢复步骤仍应执行');
   assert.notStrictEqual(router.state.cwd, '/ws/bound', 'chat 抛错后 cwd 应已切回');
-  assert.ok(ch.out.join('\n').includes('⚠️'), 'chat 抛错应兜底成一句可发送的中文');
+  // 兜底文案带真实病因(不吞错),前缀用 dispatcher 全篇统一的裸 ⚠(U+26A0,不带变体选择符)。
+  const said = ch.out.join('\n');
+  assert.ok(said.includes('⚠'), 'chat 抛错应兜底成一句可发送的中文');
+  assert.ok(said.includes('boom: chat 半路炸了'), '兜底文案应带上真实病因,而不是吞掉');
 });

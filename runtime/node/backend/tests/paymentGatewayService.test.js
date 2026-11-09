@@ -5,10 +5,15 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const MODULES = [
   '../src/services/gateway/paymentGatewayService',
   '../src/services/gateway/customerRegistry',
+  // The enforcer captures getDataHome() at require time. Left out of this list
+  // it survives resetModules() holding the PREVIOUS test's resolved home, so it
+  // reads a different customers file than the one this test just wrote.
+  '../src/services/gateway/customerQuotaEnforcer',
   '../src/services/gateway/proxyServer',
   '../src/utils/dataHome',
 ];
@@ -173,4 +178,152 @@ test('mock webhook verifies HMAC signature when secret is configured', async (t)
       baseUrl: 'https://pay.example.test',
     });
   }, /invalid webhook signature/);
+});
+
+// ── P2 账本缺陷回归（DESIGN-ARCH-190 §五 P2，存证 190-saas-p2-ledger）────────
+
+test('refund: a negative grant is preserved instead of clamped to 0', async (t) => {
+  const { customerRegistry, paymentService } = withIsolatedHome(t);
+
+  assert.equal(paymentService.__test__.normalizeGrant({ monthlyBudgetCny: -100 }, 0).monthlyBudgetCny, -100);
+  // An explicit all-zero grant means "credit nothing" and must not fall back to
+  // the order amount the way an omitted grant does.
+  assert.equal(paymentService.__test__.normalizeGrant({ monthlyBudgetCny: 0 }, 500).monthlyBudgetCny, 0);
+  assert.equal(paymentService.__test__.normalizeGrant({}, 500).monthlyBudgetCny, 500);
+
+  const cust = customerRegistry.createCustomer({
+    name: 'refund-customer',
+    quota: { monthlyRequests: 0, monthlyTokens: 0, monthlyBudgetCny: 0 },
+  });
+  customerRegistry.adjustCustomerQuota(cust.id, { monthlyBudgetCny: 100 });
+  customerRegistry.adjustCustomerQuota(cust.id, { monthlyBudgetCny: -30 });
+  assert.equal(
+    customerRegistry.getCustomer(cust.id, { includeSecrets: false }).quota.monthlyBudgetCny,
+    70
+  );
+});
+
+test('refund: a balance landing exactly on 0 is refused, not silently unlimited', async (t) => {
+  const { customerRegistry } = withIsolatedHome(t);
+  const cust = customerRegistry.createCustomer({
+    name: 'zero-balance',
+    quota: { monthlyRequests: 0, monthlyTokens: 0, monthlyBudgetCny: 100 },
+  });
+
+  assert.throws(
+    () => customerRegistry.adjustCustomerQuota(cust.id, { monthlyBudgetCny: -100 }),
+    /zero balance/
+  );
+  // Untouched by the refused reversal.
+  assert.equal(
+    customerRegistry.getCustomer(cust.id, { includeSecrets: false }).quota.monthlyBudgetCny,
+    100
+  );
+});
+
+test('refund beyond the balance creates arrears, and the gateway blocks it', async (t) => {
+  const { tmpHome, customerRegistry, paymentService } = withIsolatedHome(t);
+  const enforcer = require('../src/services/gateway/customerQuotaEnforcer');
+
+  const cust = customerRegistry.createCustomer({
+    name: 'arrears',
+    quota: { monthlyRequests: 0, monthlyTokens: 0, monthlyBudgetCny: 100 },
+  });
+  customerRegistry.adjustCustomerQuota(cust.id, { monthlyBudgetCny: -150 });
+
+  const view = customerRegistry.getCustomer(cust.id, { includeSecrets: false });
+  assert.equal(view.quota.monthlyBudgetCny, -50);
+
+  const verdict = enforcer.checkQuota(view, new Date());
+  assert.equal(verdict.ok, false);
+  assert.equal(verdict.scope, 'arrears');
+
+  const issued = customerRegistry.issueToken(cust.id, { label: 'arrears' });
+  const rejection = enforcer.enforce(issued.token);
+  assert.equal(rejection.allowed, false);
+  assert.equal(rejection.code, 'ARREARS');
+  assert.match(rejection.message, /充值/);
+});
+
+test('idempotencyKey is scoped to the customer that owns the order', async (t) => {
+  const { customerRegistry, paymentService } = withIsolatedHome(t);
+
+  const a = customerRegistry.createCustomer({ name: 'idem-a', quota: { monthlyBudgetCny: 0 } });
+  const b = customerRegistry.createCustomer({ name: 'idem-b', quota: { monthlyBudgetCny: 0 } });
+
+  const store = paymentService.__test__.loadStore();
+  store.payments.push({
+    id: 'pay_a_1',
+    customerId: a.id,
+    customerName: a.name,
+    amountCny: 100,
+    status: 'pending',
+    grant: { monthlyRequests: 0, monthlyTokens: 0, monthlyBudgetCny: 100 },
+    idempotencyKey: 'shared-key',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+  paymentService.__test__.saveStore(store);
+
+  // Same customer, same key -> replay returns the original order.
+  const replay = await paymentService.createPayment(
+    { customerId: a.id, amountCny: 100, idempotencyKey: 'shared-key' },
+    { actorUser: { id: 0, role: 'admin' } }
+  );
+  assert.equal(replay.id, 'pay_a_1');
+
+  // Different customer, same key -> their own order, not A's.
+  const bOrder = await paymentService.createPayment(
+    { customerId: b.id, amountCny: 250, idempotencyKey: 'shared-key' },
+    { actorUser: { id: 0, role: 'admin' } }
+  );
+  assert.notEqual(bOrder.id, 'pay_a_1');
+  assert.equal(bOrder.customerId, b.id);
+  assert.equal(bOrder.amountCny, 250);
+});
+
+test('concurrent quota grants do not lose updates', async (t) => {
+  // Real concurrency, not a simulated one: the read-modify-write races with the
+  // other process only if they overlap, and a same-process loop would pass even
+  // against the unfixed code. Six child processes each credit the same customer.
+  const { customerRegistry } = withIsolatedHome(t);
+  const registryPath = require.resolve('../src/services/gateway/customerRegistry');
+
+  const cust = customerRegistry.createCustomer({
+    name: 'cas-race',
+    quota: { monthlyRequests: 0, monthlyTokens: 0, monthlyBudgetCny: 0 },
+  });
+
+  const N = 6;
+  const EACH = 25;
+  const childCode =
+    'const r = require(process.argv[1]);' +
+    'r.adjustCustomerQuota(process.argv[2], { monthlyBudgetCny: Number(process.argv[3]) });';
+
+  const results = await Promise.all(
+    Array.from({ length: N }, () =>
+      new Promise((resolve) => {
+        const child = spawn(process.execPath, ['-e', childCode, registryPath, cust.id, String(EACH)], {
+          env: { ...process.env, NODE_PATH: path.join(__dirname, '../../../../node_modules') },
+        });
+        let stderr = '';
+        child.stderr.on('data', (d) => { stderr += d; });
+        child.on('close', (code) => resolve({ code, stderr }));
+      })
+    )
+  );
+
+  // Before the store lock, concurrent renames onto the same destination failed
+  // with EPERM on Windows and silently lost updates elsewhere. Neither is
+  // acceptable for a payment callback, so assert both are gone.
+  const crashed = results.filter((r) => r.code !== 0);
+  assert.deepEqual(
+    crashed.map((r) => r.stderr.split('\n').find((l) => /EPERM|ENOENT/.test(l)) || 'unknown'),
+    [],
+    'concurrent quota writers must not die on rename'
+  );
+
+  const finalBalance = customerRegistry.getCustomer(cust.id, { includeSecrets: false }).quota
+    .monthlyBudgetCny;
+  assert.equal(finalBalance, N * EACH, `${N} concurrent grants of ${EACH} must all land`);
 });
