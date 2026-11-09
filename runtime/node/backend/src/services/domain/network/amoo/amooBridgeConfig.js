@@ -46,13 +46,19 @@ function _readFlag(env, name, fallback) {
 
 const LOOPBACK_HOST = '127.0.0.1';
 
+// 桥接端口真源在 constants/serviceDefaults.js（LAYOUT-008）：8896 这个数字在
+// serviceDefaults 与本文件各写一份时，改一边就等于让手机连不上。此处取真源。
+const { PHONE_BRIDGE_DEFAULT_PORT } = require('../../../../constants/serviceDefaults');
+
 const DEFAULTS = Object.freeze({
   ADB_TIMEOUT_MS: 15000,
   BRIDGE_HTTP_TIMEOUT_MS: 10000,
-  BRIDGE_PORT: 8896,
+  BRIDGE_PORT: PHONE_BRIDGE_DEFAULT_PORT,
   BRIDGE_ALIAS_PORT: 8898,
   CONNECT_PORT: 33743,
-  DEVICE_SERIAL: '192.168.2.46:33743',
+  // 无默认：未设 env 时强制走自动探测（见 amooBridgeClient.ensureDevice）。这里
+  // 原先钉着一台开发机的无线调试地址，手机换网后必失败；改成空串后由 IO 层发现。
+  DEVICE_SERIAL: '',
   LAUNCH_WAIT_MS: 2500,
   INPUT_WAIT_MS: 1200,
   SEND_WAIT_MS: 1500,
@@ -206,16 +212,22 @@ function resolveAmooConfig(env = process.env) {
   );
 
   const useForward = transport.value !== 'lan';
+  // lan 传输要用设备 host 拼 baseUrl；serial 为空（未探测到设备）时留空串，
+  // 而不是拼出 `http://:8896` 这种连不起来的坏 URL——空串让调用方看出「还没地址」。
+  const lanHost = serial.value ? serial.value.split(':')[0] : '';
   const baseUrl = useForward
     ? buildLoopbackUrl(bridgeHost.value, bridgePort.value)
-    : buildLoopbackUrl(serial.value.split(':')[0], bridgePort.value);
+    : (lanHost ? buildLoopbackUrl(lanHost, bridgePort.value) : '');
 
   return {
     adb: {
       path: adbPath.value,
       pathSource: adbPath.source,
       serial: serial.value,
-      connectHost: serial.value.split(':')[0],
+      // serial 来源，供 IO 层决定要不要走自动档（default → 探测并写回；env → 显式
+      // 指定永远赢，不重探）。空默认也算 default，自动档逻辑照常触发。
+      serialSource: serial.source === 'env' ? 'env' : 'default',
+      connectHost: serial.value ? serial.value.split(':')[0] : '',
       connectPort: connectPort.value,
       timeoutMs: adbTimeoutMs.value,
     },

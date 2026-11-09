@@ -1,0 +1,38 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。",
+  "name": "git",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测边：branchGuard.js 零 require（纯判定叶子，零 IO · 确定性 · 绝不抛）；gitBranchService.js → ../../gitExecutableDetector（D3 侧的 git 可执行文件解析叶子，与既有 gitContextService / gitStatus 同一条复用路径，不另起一套解析）。无 D1 边，故无需登记偏差。",
+  "fanIn": 3,
+  "fanInEvidence": [
+    "runtime/node/backend/src/tools/gitBranch.js",
+    "runtime/node/backend/src/tools/gitSwitch.js",
+    "runtime/node/backend/src/cli/handlers/repo.js"
+  ],
+  "_fanIn_note": "非测试消费者 3 个（去重）。桌面端 apps/khyos-desktop 走 Electron 主进程 CH-2 服务直调（nodeRequire 载本单元模块），不构成仓内 require 边，故未计入。",  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-11-08",
+    "provenance": "new-unit",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、两个源文件各有同名同目录测试。",
+  "contract": {
+    "purpose": "Git 分支领域的一对件：branchGuard.js 是分支操作的前置判据纯叶子（分支名合法性 / 未解决冲突 / 进行中操作 / worktree 占用 / 会不会覆盖本地改动 / git stderr 到错误码的翻译）；gitBranchService.js 是执行层（list / switch / create 分支，跑真 git，产出结构化结果）。",
+    "purity": "branchGuard.js 零 IO、确定性、绝不抛，一切经入参注入；gitBranchService.js 独占 IO 面（execFileSync 跑 git + fs 探测 .git 标志文件），全部 fail-soft，失败一律翻译成 branchGuard 的错误码，绝不把 git 的英文 stderr 透给用户。",
+    "ioOwner": "gitBranchService.js：execFileSync 跑 git、fs.existsSync 探测 rebase-merge / MERGE_HEAD 等进行中操作标志。",
+    "injectionPoints": [
+      "assessSwitch(input) / assessCreate(input) — 判据全经入参（branchName / branchExists / conflicted / operationInProgress / inOtherWorktree / trackedOverwrite / untrackedOverwrite）",
+      "isValidBranchName(name) / isBranchInOtherWorktree(porcelain, name, cwd) / classifyGitFailure(stderr) — 纯文本入参，纯文本出参",
+      "switchBranch(cwd, name, { force }) — force 只由调用方在用户显式确认后传入"
+    ],
+    "gates": "本单元无 env 门控——分支读写是产品基座能力，不做开关灰度（工具层的风险档位与确认闸另行由 tools 层承担，见 tools/gitBranch.js 与 tools/gitSwitch.js）。",
+    "error_codes": "错误码与桌面端 i18n 键 git.branchSwitcher.error.* 一一对应：invalidBranchName / branchAlreadyExists / targetBranchNotFound / conflictsPresent / operationInProgress / branchInOtherWorktree / dirtyWorkingTree / unknown。后端 _MESSAGE 表提供中文兜底，供无 i18n 的调用方（工具层 / CLI）使用。",
+    "honest_boundary": "覆盖风险判据只覆盖「本地已跟踪的修改」与「会被目标分支覆盖的未跟踪文件」两类——stash 后的改动、未纳入 index 的意图、以及 rebase 中途的中间态都不在本单元判据内（后者由 operationInProgress 拦下）。force 开关不在本单元判据内，它是执行层的最后手段，须由调用方在用户显式确认后传入。"
+  },
+  "tests": [
+    "branchGuard.test.js",
+    "gitBranchService.test.js"
+  ],
+  "_test_dialect_note": "两份共置测试为 node:test 方言（node --test <显式文件名>）。"
+}

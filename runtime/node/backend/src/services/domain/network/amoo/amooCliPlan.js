@@ -166,7 +166,9 @@ function renderStatusText(status = {}) {
   const screen = _isPlainObject(snap.screen) ? snap.screen : null;
   const lines = [];
   lines.push(`adb：${snap.adb && snap.adb.resolved ? `已解析（${snap.adb.source}）` : '未解析'}`);
-  lines.push(`设备：${device.connected ? `已连接 ${device.serial || ''}` : `未连接（${device.reason || 'unknown'}）`}`);
+  // 未连接时把 reason 与 detail 都带上：detail 里的「未发现手机：adb 设备表为空…」
+  // 是「未发现手机」验收能成立的前提，只打 reason（device_not_found）排查时是死路。
+  lines.push(`设备：${device.connected ? `已连接 ${device.serial || ''}` : `未连接（${device.reason || 'unknown'}）${device.detail ? '：' + device.detail : ''}`}`);
   lines.push(`转发：${forwards.ok ? `已建立 ${(forwards.ports || []).join(' + ')}` : forwards.detail || '未建立'}`);
   // An offline bridge without its reason is a dead end for whoever reads it:
   // collectStatus() always carries a detail (bridge_request_timeout,

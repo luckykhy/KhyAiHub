@@ -44,6 +44,13 @@ const {
 // 协议版本与协商逻辑的单一真源在 mcpServerProtocol —— server 与 client 共用同一常量。
 // 此前这里独立硬编码了同一个字面量,改一处必然漂移。
 const { PROTOCOL_VERSION } = require('./mcpServerProtocol');
+// 存根诊断放这个纯叶里(index.js 的导出面被 index.test.js 逐字钉死 24 键,不能新增导出)。
+// 叶零依赖、无循环;_resolvePythonCommand 里的惰性 require 保持不动。
+const {
+  describeStubLaunchFailure,
+  isPythonCommand,
+  isStoreAliasStub,
+} = require('./pythonCommandResolver');
 
 // ── Client capabilities(单一真源)────────────────────────────────────────────
 // MCP 的 ClientCapabilities 只允许四个字段:experimental / roots / sampling /
@@ -456,12 +463,25 @@ class MCPClient extends EventEmitter {
         // stale absolute path. Fail-soft: on any resolver problem keep the
         // configured command as-is.
         let command = this.config.command;
+        // exit 处理器要区分「解释器一个字都没吐」(存根)与「真解释器崩在 stderr」
+        // (保留通用文案,不拿存根结论诬陷真 python)。末 chunk 全空白会把 tail 打成
+        // 空,故用布尔量记录 stderr 是否曾带内容,而不是事后再读 _lastError。
+        let sawStderr = false;
         const resolved = this._resolvePythonCommand(command, env);
         if (resolved && resolved.command) {
-          if (resolved.stale) {
+          // 三个 gate 缺一不可:
+          //  isStoreAliasStub — 配置直指存根时不发,同根因只保留 exit 后那条精确诊断;
+          //  isPythonCommand  — 文案给的是 python 专属补救(VIRTUAL_ENV/PYTHON_PATH)。
+          //    npx/node/uvx/docker 同样走 as_configured,且 existsSync 对裸名恒假
+          //    (那是 PATH 查找不是 stat),对它们发这条是把用户引去改坏 server。
+          if (
+            resolved.stale &&
+            !isStoreAliasStub(resolved.command) &&
+            isPythonCommand(resolved.command)
+          ) {
             console.warn(
-              `[MCP] "${this.name}" interpreter ${resolved.command} is missing (stale path from another machine); ` +
-                `rebuild the venv or use a bare "python" command.`
+              `[MCP] "${this.name}" interpreter ${resolved.command} 在本机不可用（探测不到可执行的解释器）：` +
+                '把该 server 的 command 改成本机可用的 python.exe，或设 VIRTUAL_ENV（venv 根）/ PYTHON_PATH（解释器路径）后重连。'
             );
           }
           command = resolved.command;
@@ -502,6 +522,7 @@ class MCPClient extends EventEmitter {
         this._process.stderr.on('data', (data) => {
           const text = data.toString().trim();
           if (text) {
+            sawStderr = true;
             this._lastError = text;
           }
         });
@@ -527,7 +548,13 @@ class MCPClient extends EventEmitter {
         this._process.on('exit', (code) => {
           if (this.state === ConnectionState.CONNECTING) {
             clearTimeout(timer);
-            reject(new Error(`MCP server "${this.name}" exited with code ${code} during startup`));
+            // 唯一同时掌握 spawn 目标与退出码的位置;诊断写进 Error.message 后,
+            // CLI(mcp.js:425)与 autoConnect(→ formatConnectFailure)两条路径自动获得它,
+            // handler 与 autoConnect 一行不碰。stderr 有过内容 → 真解释器崩溃,留通用文案。
+            const diagnosis = sawStderr ? null : describeStubLaunchFailure(command, code);
+            const message =
+              diagnosis || `MCP server "${this.name}" exited with code ${code} during startup`;
+            reject(new Error(message));
           } else if (this.state === ConnectionState.CONNECTED) {
             this.state = ConnectionState.FAILED;
             this._lastError = `Process exited with code ${code}`;

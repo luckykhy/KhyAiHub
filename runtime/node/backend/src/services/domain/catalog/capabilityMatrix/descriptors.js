@@ -356,7 +356,7 @@ const DESCRIPTORS = Object.freeze([
     phase: 3,
     owner: 'agenticHarnessService.js',
     wired: false,
-    flag: { env: 'KHY_CONTEXT_SCOPE', kind: 'onEnables' },
+    flag: { env: 'KHY_CONTEXT_SCOPE', kind: 'envFlagDefault', default: true },
     preconditions: PRE.always,
     requires: {},
     cost: 2,

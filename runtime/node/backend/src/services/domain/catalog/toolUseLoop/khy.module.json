@@ -12,7 +12,7 @@
     "since": "2026-10-14",
     "provenance": "recorded-after-the-fact",
     "enteredVia": null,
-    "_stage_note": "晋级三判据此刻都在盘上：单元级 README.md、整数 fanIn、13 个源文件全部有同名同目录测试。provenance 如实写明它是机制建立后补记的存量，不是从 scripts/quarantine/ 晋级上来的。"
+    "_stage_note": "晋级三判据此刻都在盘上：单元级 README.md、整数 fanIn、14 个源文件全部有同名同目录测试（2026-11-02 复核：tests 数组此前的 13 项漏了 toolExecutionGroups.test.js，已补；本字段的「13 个源文件」同源漂移一并改正）。provenance 如实写明它是机制建立后补记的存量，不是从 scripts/quarantine/ 晋级上来的。"
   },
   "tests": [
     "abortCascade.test.js",
@@ -27,6 +27,7 @@
     "loopObservability.test.js",
     "monitorState.test.js",
     "protocolContext.test.js",
-    "resolveToolCalls.test.js"
+    "resolveToolCalls.test.js",
+    "toolExecutionGroups.test.js"
   ]
 }

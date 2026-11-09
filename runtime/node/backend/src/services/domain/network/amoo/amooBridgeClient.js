@@ -31,6 +31,7 @@
 const http = require('http');
 const { spawn } = require('child_process');
 const nodePath = require('path');
+const fs = require('fs');
 
 const { safeKill, searchExecutable } = require('../../../../tools/platformUtils');
 const {
@@ -41,16 +42,51 @@ const {
   buildTokenReadArgv,
   buildRecoverBridgeArgv,
   classifyDeviceList,
+  parseDeviceList,
   normalizeBridgeToken,
   maskToken,
 } = require('./amooBridgePolicy');
+// 与 phone 车道共用同一套发现判据（pickDeviceSerial / pickMdnsSerial）与同机发现
+// 文件的落点（discoveryFile）：两条桥看的是同一台手机，发现逻辑只有一份真源。
+const { pickDeviceSerial, pickMdnsSerial, discoveryFile } = require('../phone/phoneBridgeConfig');
 
 const TOKEN_TTL_MS = 6 * 60 * 60 * 1000;
+// Freshness ceiling for discoveryFile. The phone rotates its wireless-debug
+// port every 10-15 minutes (phone-side observation), so a stale entry is
+// usually a dead address, and the costs are asymmetric: adopting one buys a
+// blind `adb connect` with no rollback that misreads "no phone found" as
+// device_absent, while ignoring a fresh one only costs another probe.
+// 5min mirrors the bridge side's DISCOVERY_TTL_MS (wireless.js); the test pins it.
+const DISCOVERY_TTL_MS = 5 * 60 * 1000;
 
 function defaultSleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, Math.max(0, Number(ms) || 0));
   });
+}
+
+// `adb mdns services` 里可连接的 _adb-tls-connect 实例地址。只收 connect 实例
+// （pairing 实例是配对档口，对它跑 adb pair 会 protocol fault，本单元绝不配对），
+// 只认 IPv4:port 形态。与 phone 车道同一套判据的本地副本——amoo 只依赖 phone 的
+// 纯叶子 phoneBridgeConfig（pickDeviceSerial/pickMdnsSerial/discoveryFile），不反向
+// 依赖 phone 的 IO 壳，故这里自带一份最小的地址抽取。
+const MDNS_CONNECT_SERVICE = '_adb-tls-connect._tcp.';
+const MDNS_IP_PORT_SHAPE = /^[\d.]+:\d+$/;
+
+function _mdnsConnectAddresses(stdout) {
+  const out = [];
+  for (const rawLine of String(stdout || '').split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || !line.includes(MDNS_CONNECT_SERVICE)) {
+      continue;
+    }
+    const parts = line.split(/\s+/);
+    const address = parts[parts.length - 1] || '';
+    if (MDNS_IP_PORT_SHAPE.test(address)) {
+      out.push(address);
+    }
+  }
+  return out;
 }
 
 /**
@@ -103,6 +139,9 @@ class AmooBridgeClient {
    */
   constructor(opts = {}) {
     this.config = opts.config;
+    // 注入 env：探测命中后写回 KHY_AMOO_DEVICE_SERIAL（进程级，新进程重连前重新探测）。
+    // 默认 process.env；测试注入以隔离写回，不污染真实环境。
+    this._env = opts.env || process.env;
     this._spawn = typeof opts.spawnImpl === 'function' ? opts.spawnImpl : spawn;
     this._sleep = typeof opts.sleep === 'function' ? opts.sleep : defaultSleep;
     this._now = typeof opts.now === 'function' ? opts.now : () => Date.now();
@@ -284,7 +323,7 @@ class AmooBridgeClient {
    *                    detail:string}>}
    */
   async ensureDevice() {
-    const serial = this.config.adb.serial;
+    const serialSource = this.config.adb.serialSource || 'default';
     const listed = await this.runAdb(buildDevicesArgv());
     if (!listed.ok) {
       return {
@@ -294,10 +333,37 @@ class AmooBridgeClient {
         detail: (listed.stderr || listed.error || '').trim() || 'adb devices 执行失败',
       };
     }
-    const classified = classifyDeviceList(listed.stdout, serial);
+    let serial = this.config.adb.serial;
+    let classified = classifyDeviceList(listed.stdout, serial);
+    // 自动发现：serial 是空默认（serialSource==='default'）或「已写回 serial 分类失败」
+    // （无线调试每十几分钟掉一次，旧地址失效）时，趁设备表在手先探测一轮。不用 phone
+    // 车道那种一次性 autoDetectDone 闸——掉线重连正是要解决的场景，分类失败即重探。
+    // env 显式指定（serialSource==='env'）永远赢，不重探。
+    if (!classified.connected && serialSource !== 'env') {
+      const discovered = await this._discoverSerial(listed.stdout);
+      if (discovered) {
+        this._writeBackSerial(discovered.serial, discovered.source);
+        serial = discovered.serial;
+        classified = classifyDeviceList(listed.stdout, serial);
+      }
+    }
     if (classified.connected) {
       return { ok: true, connected: true, reason: null, detail: '设备已连接' };
     }
+    // 空 serial 闸：探测全部落空、serial 仍为空时，绝不执行 connect（buildConnectArgv
+    // 会打出 `adb connect ''`），直接回 device_not_found + 「未发现手机」——与 phone
+    // 车道同一句话，两条车道一种说法。
+    if (!serial) {
+      return {
+        ok: false,
+        connected: false,
+        reason: 'device_not_found',
+        detail: '未发现手机：adb 设备表为空，mDNS 也没有 _adb-tls-connect 实例。'
+          + '请确认手机与电脑在同一局域网、无线调试已开启且此前完成过一次配对；'
+          + '本机可用 `adb mdns services` 查看手机广播的连接实例，再重试。',
+      };
+    }
+    // serial 已定（env 显式或探测写回）但不在设备表里：走 connect 老路径。
     const connectHost = this.config.adb.connectHost;
     const connectPort = this.config.adb.connectPort;
     const connect = await this.runAdb(buildConnectArgv(connectHost, connectPort));
@@ -314,6 +380,113 @@ class AmooBridgeClient {
         (connect.stdout || connect.stderr || '').trim() ||
         `connect ${connectHost}:${connectPort} 后仍未出现在设备列表`,
     };
+  }
+
+  /**
+   * 只读探测一台设备的 serial，不猜。顺序：adb 设备表（IP 形态优先、按物理身份
+   * 去重）→ adb mdns services 的 _adb-tls-connect 实例 → phone 车道发布的
+   * discoveryFile 兜底。多台真机一律不猜（ambiguous）。
+   * @param {string} devicesStdout 已经在手的 `adb devices` 输出
+   * @returns {Promise<{serial:string, source:string}|null>}
+   */
+  async _discoverSerial(devicesStdout) {
+    const devices = parseDeviceList(devicesStdout);
+    const picked = pickDeviceSerial({ devices });
+    if (picked.ok && picked.serial) {
+      return { serial: picked.serial, source: picked.source };
+    }
+    if (picked.source !== 'none') {
+      // 多台真机（ambiguous）：不猜，mdns 也解不了歧义。
+      return null;
+    }
+    const mdnsRes = await this.runAdb(['mdns', 'services']);
+    if (mdnsRes.ok) {
+      const mdnsPicked = pickMdnsSerial(_mdnsConnectAddresses(mdnsRes.stdout));
+      if (mdnsPicked.ok && mdnsPicked.serial) {
+        return { serial: mdnsPicked.serial, source: mdnsPicked.source };
+      }
+    }
+    const fileSerial = this._readDiscoverySerial();
+    if (fileSerial) {
+      return { serial: fileSerial, source: 'discovery-file' };
+    }
+    return null;
+  }
+
+  /** 探测命中后写回 config + env，并重新广播给同机另一条桥。 */
+  _writeBackSerial(serial, source) {
+    this.config.adb.serial = serial;
+    // 探测出来的值不再算「默认档」：后续不再触发探测（除非再次分类失败）。
+    this.config.adb.serialSource = 'auto';
+    // lan 传输的 connectHost 由 serial 派生，写回时同步，避免留下旧 host。
+    this.config.adb.connectHost = serial.split(':')[0];
+    this._env.KHY_AMOO_DEVICE_SERIAL = serial;
+    this._publishDiscovery(serial, source);
+  }
+
+  /**
+   * 读 phone 车道发布的 discoveryFile 里的 serial 兜底；读不到、或条目已过期
+   * （detectedAt 超过 DISCOVERY_TTL_MS）回空串——过期条目一律忽略，让调用方
+   * 落到「未发现手机」，而不是拿着陈旧地址去 connect 再把判据带偏。
+   */
+  _readDiscoverySerial() {
+    let file = '';
+    try {
+      file = discoveryFile(this._env);
+    } catch {
+      file = '';
+    }
+    if (!file) {
+      return '';
+    }
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const serial = parsed && typeof parsed.serial === 'string' ? parsed.serial.trim() : '';
+      if (!serial || !this._discoveryEntryFresh(parsed)) {
+        return '';
+      }
+      return serial;
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * detectedAt 缺失或不可解析一律按过期处理：没有可核验时间戳的条目不兜底，
+   * 宁可不采用，也不把陈旧设备当真设备。时钟走注入的 this._now()，测试可钉住。
+   */
+  _discoveryEntryFresh(parsed) {
+    const detectedAt = Date.parse(parsed && parsed.detectedAt);
+    if (!Number.isFinite(detectedAt)) {
+      return false;
+    }
+    return this._now() - detectedAt <= DISCOVERY_TTL_MS;
+  }
+
+  /** 把探测结果广播到同机 discoveryFile（phone 车道也读它当兜底）。失败一律吞掉。 */
+  _publishDiscovery(serial, source) {
+    let file = '';
+    try {
+      file = discoveryFile(this._env);
+    } catch {
+      return;
+    }
+    if (!file) {
+      return;
+    }
+    try {
+      fs.mkdirSync(nodePath.dirname(file), { recursive: true });
+      const payload = {
+        schema: 'khy-phone-discovery/1',
+        serial,
+        source,
+        detectedAt: new Date(this._now()).toISOString(),
+        by: 'khy-amoo',
+      };
+      fs.writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    } catch {
+      /* 广播是加强，不是主路径 */
+    }
   }
 
   /**
@@ -584,4 +757,5 @@ module.exports = {
   withDeadline,
   defaultSleep,
   TOKEN_TTL_MS,
+  DISCOVERY_TTL_MS,
 };

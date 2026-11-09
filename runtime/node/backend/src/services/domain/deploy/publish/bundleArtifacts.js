@@ -13,6 +13,9 @@
 
 const fs = require('fs');
 const path = require('path');
+// 容器内监听端口的单一真源（LAYOUT-008）：生成的 compose 模板里
+// 「宿主机端口 → 容器端口」与容器内 PORT 环境变量都必须是同一个数。
+const { BACKEND_PORT } = require('../../../../constants/serviceDefaults');
 
 function _writeDockerBundleDockerfile(backendDir) {
   const dockerfile = `FROM node:20-slim
@@ -64,10 +67,10 @@ function _writeDockerBundleCompose(bundleRoot, options = {}) {
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "\${BACKEND_PORT:-13000}:3000"
+      - "\${BACKEND_PORT:-13000}:${BACKEND_PORT}"
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${BACKEND_PORT}
       DB_TYPE: \${DB_TYPE:-sqlite}
       DB_PATH: /app/data/khy-quant.db
       JWT_SECRET: \${JWT_SECRET:-change_this_in_production}

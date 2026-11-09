@@ -4,7 +4,8 @@
  * 从 extensionRoots.js 抽出「读一个拓展目录的 manifest 并归一成统一形状」这一族
  * 自包含逻辑：manifest 文件名/种类常量 + `_asArray`/`_normalize`/`readManifest`。
  * 只依赖 `fs`/`path` 与自身常量，零指向宿主扩展根的 back-edge（发现/roots/state
- * 逻辑仍归宿主，宿主单向 require 本叶的 `readManifest`）。逐字搬移，行为不变。
+ * 逻辑仍归宿主，宿主单向 require 本叶的 `readManifest`）。逐字搬移之外，另加
+ * OpenClaw manifest 的 JSON5 注释 / 尾逗号容错（见 parseManifestJson）。
  *
  * @module services/delivery/extension/extensionRoots/extensionManifest
  */
@@ -20,6 +21,89 @@ const MANIFEST_CANONICAL = 'khy.extension.json';
 const MANIFEST_LEGACY_JSON = 'openclaw.plugin.json';
 const MANIFEST_PKG = 'package.json';
 const MANIFEST_NAMES = [MANIFEST_CANONICAL, MANIFEST_LEGACY_JSON, MANIFEST_PKG];
+
+// OpenClaw manifests are JSON5 in practice (comments, trailing commas). The
+// legacy path used strict JSON, so a syntactically valid manifest could read as
+// "no manifest" and the extension silently disappeared. Strict JSON stays the
+// first attempt; the lenient pass only removes comments and trailing commas
+// (single-quoted JSON5 strings are left unsupported on purpose — rewriting a
+// quote state machine is how a reader starts accepting garbage).
+function stripJsonComments(text) {
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (inString) {
+      out += ch;
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === '/' && next === '/') {
+      while (i < text.length && text[i] !== '\n') i += 1;
+      out += '\n';
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i += 1;
+      i += 1;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function stripTrailingCommas(text) {
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inString) {
+      out += ch;
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === ',') {
+      let j = i + 1;
+      while (j < text.length && /\s/.test(text[j])) j += 1;
+      if (text[j] === '}' || text[j] === ']') continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function parseManifestJson(raw) {
+  if (typeof raw !== 'string') return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    /* fall through to the JSON5-tolerant pass */
+  }
+  try {
+    return JSON.parse(stripTrailingCommas(stripJsonComments(raw)));
+  } catch {
+    return null;
+  }
+}
 
 // 拓展种类。runtime = 参与运行时、可被激活；ide-bridge = 交付给外部 IDE 的产物
 // （VSIX 等），核**不激活**它，但它仍须声明自己，否则 delivery/extension/ 下会重新出现
@@ -97,14 +181,9 @@ function readManifest(dir) {
     } catch {
       continue; // 该格式不存在 → 试下一种
     }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      continue; // 坏 JSON → 当作没有这一格式（不静默接受半个 manifest）
-    }
+    const parsed = parseManifestJson(raw);
     if (!parsed || typeof parsed !== 'object') {
-      continue;
+      continue; // 坏 manifest → 当作没有这一格式（不静默接受半个 manifest）
     }
 
     let body = parsed;
@@ -124,6 +203,7 @@ function readManifest(dir) {
 
 module.exports = {
   readManifest,
+  parseManifestJson,
   MANIFEST_CANONICAL,
   MANIFEST_LEGACY_JSON,
   MANIFEST_NAMES,
