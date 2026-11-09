@@ -26,7 +26,8 @@
       <header class="hero reveal"><h1>khyos 元工具系统设计（Meta-Tool / Tool-Forging）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khyos-元工具系统设计-meta-tool-tool-forging">khyos 元工具系统设计（Meta-Tool / Tool-Forging）</a></li><li class="lvl-2"><a href="#0-目标与非目标">0. 目标与非目标</a></li><li class="lvl-2"><a href="#1-架构总览">1. 架构总览</a></li><li class="lvl-2"><a href="#2-触发机制-任务①">2. 触发机制（任务①）</a></li><li class="lvl-2"><a href="#3-生成逻辑-任务②">3. 生成逻辑（任务②）</a></li><li class="lvl-2"><a href="#4-安全审查-任务②-防呆">4. 安全审查（任务②/防呆）</a></li><li class="lvl-2"><a href="#5-注册与集成-任务③">5. 注册与集成（任务③）</a></li><li class="lvl-2"><a href="#6-用户体验-透明性-任务④">6. 用户体验 / 透明性（任务④）</a></li><li class="lvl-2"><a href="#7-防呆-任务③防呆规则">7. 防呆（任务③防呆规则）</a></li><li class="lvl-2"><a href="#8-边界-只改元工具相关模块">8. 边界（只改元工具相关模块）</a></li><li class="lvl-2"><a href="#9-落地检查清单">9. 落地检查清单</a></li></ul></nav>
       <article class="doc-body">
-<p>&lt;!-- 文档分类: DESIGN-ARCH-017 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-017] 元工具系统设计.md（新建） --&gt;</p>
+<p>&lt;!-- 文档分类: DESIGN-ARCH-017 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-017] 元工具系统设计.md（新建） --&gt;<br>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：2 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。</p></blockquote>
 <h1 id="khyos-元工具系统设计-meta-tool-tool-forging">khyos 元工具系统设计（Meta-Tool / Tool-Forging）<a class="anchor" href="#khyos-元工具系统设计-meta-tool-tool-forging" aria-label="锚点">#</a></h1>
 <blockquote><p>版本 v1.0（2026-06-12）。本文定义 khyos 生态底座的<strong>元工具系统</strong>：当现有工具<br>无法满足任务需求时，由 Agent 经 LLM <strong>动态生成</strong>一个新工具，经<strong>静态安全扫描 +<br>沙箱冒烟测试</strong>后<strong>自动注册</strong>进工具系统，供后续步骤即时调用。</p>
 <p>关键词 <strong>必须 / 严禁 / 应 / 可</strong> 按 RFC 2119 语义。本系统是<strong>可选能力</strong>，默认关闭，<br>仅当运营者显式设置 <code>KHY_ENABLE_META_TOOL=1</code> 时启用（与 <code>executeCode</code> 同样的<br>「知情启用」纪律）。</p></blockquote>
