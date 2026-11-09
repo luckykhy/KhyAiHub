@@ -47,7 +47,10 @@ P2（最后恢复）：文档 → 分析工具 → 非核心服务</code></pre>
 <h3 id="3-1-备份矩阵">3.1 备份矩阵<a class="anchor" href="#3-1-备份矩阵" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>数据</th><th>频率</th><th>保留</th><th>类型</th><th>存储位置</th></tr></thead><tbody><tr><td>数据库（主库）</td><td>每 15 分钟 WAL 归档 + 每日全量</td><td>30 天</td><td>增量 + 全量</td><td>对象存储 + 异地</td></tr><tr><td>数据库（从库）</td><td>实时复制</td><td>同主库</td><td>流复制</td><td>同机房</td></tr><tr><td>用户上传文件</td><td>实时同步</td><td>30 天</td><td>对象存储多副本</td><td>跨区</td></tr><tr><td>配置/密钥</td><td>每次变更</td><td>永久</td><td>Git + 加密归档</td><td>Git + 异地存储</td></tr><tr><td>对话记录</td><td>每日</td><td>90 天</td><td>增量</td><td>对象存储</td></tr><tr><td>AI 模型</td><td>按需</td><td>永久</td><td>对象存储</td><td>跨区</td></tr></tbody></table>
 <h3 id="3-2-备份验证">3.2 备份验证<a class="anchor" href="#3-2-备份验证" aria-label="锚点">#</a></h3>
-<pre><code class="language-bash"><span class="hljs-comment"># 每周自动验证备份可恢复性</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：2 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 每周自动验证备份可恢复性</span>
 scripts/backup/verify-restore.sh --backup-id &lt;latest&gt; --dry-run</code></pre>
 <p><strong>规则</strong>：</p>
 <ul><li>备份创建后 24 小时内必须验证可恢复性</li><li>每月至少一次完整恢复演练</li><li>备份脚本必须幂等（重复执行不破坏现有备份）</li></ul>
