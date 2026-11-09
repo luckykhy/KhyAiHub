@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-173-RZ6QRMTV
 'use strict';
 
 /**
@@ -26,6 +27,8 @@
 
 const os = require('os');
 const path = require('path');
+
+const taskMonitor = require('./taskMonitorService');
 
 // 宿主注入的反向边(聊天请求号 / 认证 / 响应 / 请求体解析 / 懒加载 getter),加载时由 setChatHttpDeps 注入一次。
 let _genChatRequestId = null;
@@ -364,6 +367,13 @@ async function handleChatStreamHttp(req, res) {
   // and stamped onto any terminal failsafe error event so the frontend can drill
   // down to the server-side timeline (GET …/monitor/attribution?requestId=…).
   const requestId = _genChatRequestId();
+  // 任务监控：SSE 是 WS 的回退通道，同样要登记，否则回退期间面板看不到这一轮。
+  const monitorKey = taskMonitor.beginRun({
+    scope: 'web',
+    id: `sse:${requestId}`,
+    title: message,
+  });
+  let monitorOutcome = { ok: false };
   let failsafe = null;
   try {
     const { StreamFailSafeInjector } = require('./failsafe');
@@ -396,6 +406,7 @@ async function handleChatStreamHttp(req, res) {
         if (!chunk || clientGone) {
           return;
         }
+        taskMonitor.touchRun(monitorKey);
         const t = String(chunk.type || '');
         if (t === 'text') {
           const piece = String(chunk.text || '');
@@ -432,6 +443,11 @@ async function handleChatStreamHttp(req, res) {
             id: String(chunk.id || chunk.toolUseId || ''),
             timestamp: Date.now(),
           });
+          taskMonitor.beginToolCall(monitorKey, {
+            callId: String(chunk.id || chunk.toolUseId || ''),
+            tool: String(chunk.tool || chunk.name || 'tool'),
+            input: chunk.input,
+          });
         } else if (t === 'tool_result') {
           let success;
           if (typeof chunk.success === 'boolean') {
@@ -448,6 +464,12 @@ async function handleChatStreamHttp(req, res) {
             text: _summarizeToolResultForStream(chunk),
             id: String(chunk.id || chunk.toolUseId || ''),
             timestamp: Date.now(),
+          });
+          taskMonitor.endToolCall(monitorKey, {
+            callId: String(chunk.id || chunk.toolUseId || ''),
+            tool: String(chunk.tool || chunk.name || 'tool'),
+            success,
+            result: _summarizeToolResultForStream(chunk),
           });
         } else if (t === 'status') {
           sendEvent({ type: 'status', text: String(chunk.text || ''), timestamp: Date.now() });
@@ -526,6 +548,7 @@ async function handleChatStreamHttp(req, res) {
     }
 
     if (reply || streamedChars > 0 || toolRan) {
+      monitorOutcome = { ok: true };
       // Structured turn envelope for web/API parity (我希望Khy-os是结构化输出): derived
       // purely from the chat result's structured fields (toolCallLog/error_code), not
       // from the prose. Additive — `content` stays the human-facing text.
@@ -558,6 +581,7 @@ async function handleChatStreamHttp(req, res) {
       // fully fail-soft — must never disturb the stream we just completed.
       maybeAutoCapturePrompt(auth.user?.id ?? 0, rawMessage);
     } else if (failsafe) {
+      monitorOutcome = { ok: false, error: '模型无输出' };
       // Empty reply with no tool activity → precise E01 (or E02 if the model
       // stopped on a safety policy). Replaces the vague "未返回有效回复".
       failsafe.fail(
@@ -569,9 +593,11 @@ async function handleChatStreamHttp(req, res) {
         { kind: 'llm' }
       );
     } else {
+      monitorOutcome = { ok: false, error: '模型无输出' };
       sendEvent({ type: 'error', message: 'AI 未返回有效回复 — 请重试或检查连接' });
     }
   } catch (err) {
+    monitorOutcome = { ok: false, error: String((err && err.message) || err) };
     // Classify the thrown error to E0x (timeout/network→E06, refusal→E02,
     // context→E03, permission→E07, else E04) instead of leaking a raw message.
     if (failsafe) {
@@ -581,6 +607,10 @@ async function handleChatStreamHttp(req, res) {
     }
   } finally {
     clearInterval(heartbeatTimer);
+    taskMonitor.endRun(
+      monitorKey,
+      clientGone ? { status: 'cancelled', error: '连接已断开' } : monitorOutcome
+    );
     // Last-resort: if no terminal event was emitted (unexpected escape), inject
     // the forced fallback so the stream never ends silently. no-op if already
     // finalized via done/fail above.

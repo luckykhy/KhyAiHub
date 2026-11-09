@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-171-S4K5933S
 /**
  * aiLocalState.js — Shared mutable state singleton for ai.js-local bindings.
  *

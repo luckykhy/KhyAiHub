@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-159-PK9Z8RBM
 /**
  * Agent Communication Service — Multi-agent messaging, shared memory, and growth.
  *
