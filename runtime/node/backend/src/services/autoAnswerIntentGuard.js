@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-209-DYW9W2HV
 'use strict';
 
 // autoAnswerIntentGuard.js — 无人值守自动作答的「不偏离用户本意」纯叶子(零 IO、零随机、绝不抛)。

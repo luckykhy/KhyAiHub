@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-218-5D6W972R
 /**
  * binaryAnalyzer.js — ELF + PE static binary analysis service
  *

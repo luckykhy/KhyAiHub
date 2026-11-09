@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-206-G3BCDQ6G
 'use strict';
 
 const PASSWORD_MIN_LENGTH = 6;
