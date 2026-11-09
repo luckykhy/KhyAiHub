@@ -101,8 +101,14 @@ void main() {
     test('execute unknown tool returns fail', () async {
       final r = await engine.execute('nonexistent', {});
       expect(r.success, false);
+      // The name must appear — that is the part the model needs to correct itself.
       expect(r.output, contains('nonexistent'));
-      expect(r.output, contains('not found'));
+      // Wording changed deliberately: the old message was the English
+      // "Tool not found: X", which told a model that invented a tool name
+      // nothing about what DOES exist. It now lists the registered names.
+      // The failure semantics are unchanged; only the text is.
+      expect(r.output, contains('不存在'));
+      expect(r.output, contains('请从这些名字里选一个'));
     });
 
     test('execute happy path', () async {
