@@ -46,6 +46,14 @@ const DAEMON_ONLY_NAMESPACES = [
   '/gui-eval-screenshots',
   '/api/wx',
   '/api/daemon',
+  // 任务监控：在跑会话/工具事件只存在于守护进程的内存里（聊天走守护进程的 /ws），
+  // 兜底转给 web 后端会让「会话在跑」永远为空。两个后端都挂了同名端点，
+  // 但只有守护进程能看到聊天这一半，所以开发代理必须优先给守护进程。
+  '/api/task-monitor',
+  // 生态市场编目由守护进程 serve（aiManagementServer → routeRequest）。
+  // 不在名单里就会被下面的 '/api' 兜底转给 web 后端，得到 404「接口不存在」——
+  // 那会把代理配置的 bug 误报成「服务端与前端版本不匹配」。
+  '/api/eco-markets',
   // 出站桥由守护进程实现（aiManagementServer → aiManagementProxyEgress）。
   // 不在名单里就会被 '/api' 兜底转给 web 后端，得到 404「接口不存在」。
   '/api/proxy-egress',
@@ -93,6 +101,16 @@ export default defineConfig({
         manualChunks: {
           // Core framework layer (framework layer long-term caching).
           vendor: ['vue', 'vue-router', 'pinia', 'axios'],
+          // Icons BEFORE the UI library. src/nav/index.js imports three of them
+          // statically, so mounting the app needs them; without a key of their own
+          // they are folded into the element-plus chunk and "needs the icons" turns
+          // into "download the whole UI library first". Rollup 4.62.4 probe over the
+          // real element-plus 2.14.4 + @element-plus/icons-vue 2.3.2 (entry importing
+          // both, unminified output): with this key the icons land in their own
+          // 33.9 kB chunk importing only vendor; without it they ride inside the
+          // 2.45 MB element-plus chunk. The probe showed key order does not matter —
+          // the key's presence does; it is listed first to match the reference order.
+          icons: ['@element-plus/icons-vue'],
           // UI library split separately: large and versioned independently.
           'element-plus': ['element-plus'],
           // NOTE: object-form manualChunks resolves every listed id as an entry

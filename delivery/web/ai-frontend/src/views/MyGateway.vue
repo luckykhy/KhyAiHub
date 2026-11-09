@@ -13,6 +13,13 @@
       :configured="isConfigured"
     />
 
+    <!-- 目录读取失败时，「暂无可用模型」与「后端挂了」在页面上长得一模一样。 -->
+    <LoadErrorBanner :message="gw.loadError.value">
+      <template #action>
+        <el-button size="small" @click="gw.fetchAll()">重试</el-button>
+      </template>
+    </LoadErrorBanner>
+
     <!-- 按功能领域聚合:接入配置 / 密钥与供应商 / 模型管理 / 令牌接入。
          所有 pane 默认非 lazy 常驻 DOM,切页不卸载,数据与引用不受影响。 -->
     <el-tabs v-model="activeTab" class="mg-tabs">
@@ -116,7 +123,7 @@
           </div>
 
           <KhyEmpty
-            v-if="!pivotedGroups.length"
+            v-if="!pivotedGroups.length && !gw.loadError.value"
             compact
             icon-props="{ kind: search.trim() ? 'search' : 'link' }"
             :title="search.trim() ? '没有匹配的项' : '暂无可用模型'"
@@ -126,7 +133,7 @@
                 : '先配置上游供应商或添加 Key,模型会自动出现在这里。'
             "
           />
-          <div v-else class="mg-pivot-list" v-loading="modelBusy">
+          <div v-else-if="pivotedGroups.length" class="mg-pivot-list" v-loading="modelBusy">
             <div v-for="group in pivotedGroups" :key="group.groupKey" class="mg-pivot-group">
               <div class="mg-pivot-group-head">
                 <span class="mg-pivot-group-name">{{ groupHeadName(group) }}</span>
@@ -256,6 +263,112 @@
           @revoke="onRevokeToken"
         />
       </el-tab-pane>
+
+      <!-- 客户端应用（[DESIGN-ARCH-189] S1 只读）。
+           S1 纪律：只读由「后端不挂写路由」保证（RUNTIME-010），不靠按钮置灰，
+           所以「一键配置」是常驻不可用状态而不是 loading 态。
+           模型下拉同样禁用——per-app 绑定表（裁决 D6）尚未落地，没有数据可绑；
+           若显示一个能选但选了不生效的下拉，就是 fail-open。 -->
+      <el-tab-pane label="客户端应用" name="clientApps">
+        <LoadErrorBanner v-if="caError" :message="caError">
+          <template #action>
+            <el-button size="small" @click="caFetchAll">重试</el-button>
+          </template>
+        </LoadErrorBanner>
+
+        <div class="mg-clientapps">
+          <div class="mg-clientapps-head">
+            <div class="mg-clientapps-title">
+              本机 AI 客户端
+              <span class="mg-clientapps-count">{{ caApps.length }} 个在册</span>
+            </div>
+            <el-button size="small" :loading="caBusy" @click="caRescan">扫描应用</el-button>
+          </div>
+
+          <div class="mg-clientapps-filters">
+            <el-input
+              v-model="caSearch"
+              size="small"
+              clearable
+              placeholder="搜索名称或包名"
+              class="mg-clientapps-search"
+            />
+            <el-radio-group v-model="caCategory" size="small">
+              <!-- value 承载选项值（caCategory 的取值），展示文案交给插槽内容：
+                   Element Plus 3.0 起 label 不再兼任 value，契约见
+                   src/__tests__/elementPlusCompat.contract.test.js。 -->
+              <el-radio-button value="all">全部</el-radio-button>
+              <el-radio-button value="cli">CLI</el-radio-button>
+              <el-radio-button value="desktop">桌面端</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <div v-loading="caBusy">
+            <KhyEmpty
+              v-if="!caFiltered.length && !caBusy"
+              compact
+              icon-props="{ kind: 'search' }"
+              :title="caSearch.trim() ? '没有匹配的应用' : '暂无在册应用'"
+              desc="登记表由 catalog.json 提供；扫描只反映本机探测结果。"
+            />
+
+            <div v-else class="mg-clientapps-grid">
+              <div
+                v-for="app in caFiltered"
+                :key="app.appId"
+                class="mg-clientapps-card"
+                :data-installed="app.installed ? '1' : '0'"
+              >
+                <div class="mg-clientapps-card-head">
+                  <span class="mg-clientapps-card-name">{{ app.name }}</span>
+                  <el-tag
+                    size="small"
+                    :type="app.installed ? 'success' : 'info'"
+                    effect="plain"
+                  >{{ app.installed ? '已安装' : '未安装' }}</el-tag>
+                </div>
+                <div class="mg-clientapps-card-desc">{{ app.desc }}</div>
+                <div class="mg-clientapps-card-meta">
+                  <span class="mg-clientapps-pkg">{{ app.pkgName }}</span>
+                  <el-tag
+                    v-if="app.badge"
+                    size="small"
+                    :type="caBadgeType(app.badge)"
+                    effect="plain"
+                  >{{ app.badge }}</el-tag>
+                </div>
+                <div class="mg-clientapps-card-actions">
+                  <!-- S2 起开写。三态而非两态：能写 / 本期不接（后端给理由）/
+                       未安装。第三种不能置灰了事——用户需要知道为什么。 -->
+                  <el-button
+                    v-if="app.writeState === 'ready'"
+                    size="small"
+                    type="primary"
+                    :loading="caBusy"
+                    @click="caConfigure(app)"
+                  >一键配置</el-button>
+                  <el-tooltip
+                    v-else-if="app.writeState === 'blocked'"
+                    :content="app.writeBlockedReason || '本期不接'"
+                    placement="top"
+                  >
+                    <span class="mg-clientapps-model-disabled">{{ app.writeBlockedShort || '未开放' }}</span>
+                  </el-tooltip>
+                  <el-tooltip
+                    content="per-app 模型绑定（裁决 D6）尚未落地，无可绑数据"
+                    placement="top"
+                  >
+                    <span class="mg-clientapps-model-disabled">模型绑定：未开放</span>
+                  </el-tooltip>
+                </div>
+                <div v-if="app.detail && app.detail.note" class="mg-clientapps-card-note">
+                  {{ app.detail.note }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <!-- Interactive provider/key wizard: configure a provider + key + models,
@@ -306,8 +419,11 @@ import CcAccessCard from '@/components/gateway/CcAccessCard.vue';
 import ImageModelCard from '@/components/gateway/ImageModelCard.vue';
 import GatewayOnboarding from '@/components/gateway/GatewayOnboarding.vue';
 import KhyEmpty from '@/components/KhyEmpty.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
+import { clientAppsApi } from '@/api/clientApps';
+import { ccSwitchApi } from '@/api/ccSwitch';
 const gw = useUserGateway();
 const providerBusy = ref(false);
 // 多条目模型播种循环的实时进度（RUNTIME-002：动作+目标+进度），展示在 CustomProviderCard 按钮旁。
@@ -319,7 +435,7 @@ const justIssued = ref('');
 // 分类标签页:按功能领域聚合(接入 / 密钥 / 模型 / 令牌),选中项记忆到 localStorage。
 // 读失败(隐私模式等)或值非法时回落到「接入配置」。
 const TAB_STORAGE_KEY = 'khy_my_gateway_tab';
-const VALID_TABS = ['access', 'keys', 'models', 'tokens'];
+const VALID_TABS = ['access', 'keys', 'models', 'tokens', 'clientApps'];
 function readGatewayTab() {
   try {
     const v = localStorage.getItem(TAB_STORAGE_KEY);
@@ -332,6 +448,177 @@ const activeTab = ref(readGatewayTab());
 watch(activeTab, (v) => {
   safeSet(TAB_STORAGE_KEY, v);
 });
+
+// ---- 客户端应用（[DESIGN-ARCH-189] S1 只读）--------------------------------
+// 两份数据：catalog（登记表，静态）与 scan（本机探测，动态）。卡片把两者按
+// appId 合并——登记表给 name/desc/pkgName/category，扫描给 installed/badge。
+// 扫描失败不清空登记表：用户至少还能看到「有哪些客户端、该配什么」。
+const caCatalog = ref(null);
+const caScanData = ref(null);
+const caWritePosture = ref({});
+const caBusy = ref(false);
+const caError = ref('');
+const caSearch = ref('');
+const caCategory = ref('all');
+
+const BADGE_TYPES = {
+  已配置: 'success',
+  配置未完成: 'warning',
+  未配置: 'info',
+  未接入: 'info',
+  未安装: 'info',
+  探测失败: 'danger',
+};
+function caBadgeType(badge) {
+  return BADGE_TYPES[badge] || 'info';
+}
+
+const caApps = computed(() => {
+  const apps = (caCatalog.value && caCatalog.value.apps) || [];
+  const scanned = (caScanData.value && caScanData.value.apps) || [];
+  const byId = new Map(scanned.map((s) => [s.appId, s]));
+  return apps.map((entry) => {
+    const s = byId.get(entry.appId);
+    const w = caWritePosture.value[entry.appId] || null;
+    return {
+      appId: entry.appId,
+      name: entry.name,
+      desc: entry.desc,
+      pkgName: entry.pkgName,
+      category: entry.category,
+      installed: s ? s.installed : null,
+      badge: s ? s.badge : '',
+      detail: s ? s.detail : null,
+      // 写姿态来自 /preview（后端 previewConfigure）。三态：
+      // ready 可写 / blocked 本期不接（带理由）/ unknown 还没问到。
+      writeState: w ? w.state : 'unknown',
+      writeBlockedReason: w ? w.reason : '',
+      writeBlockedShort: w ? w.short : '未开放',
+    };
+  });
+});
+
+const caFiltered = computed(() => {
+  const q = caSearch.value.trim().toLowerCase();
+  return caApps.value.filter((a) => {
+    if (caCategory.value !== 'all' && a.category !== caCategory.value) return false;
+    if (!q) return true;
+    return (
+      String(a.name).toLowerCase().includes(q) ||
+      String(a.pkgName).toLowerCase().includes(q)
+    );
+  });
+});
+
+async function caFetchAll() {
+  caBusy.value = true;
+  caError.value = '';
+  try {
+    // 登记表与扫描各自失败要分开报：前者是运营问题（catalog.json 被改坏），
+    // 后者是本机探测问题。混成一句「加载失败」用户没法下手。
+    const catalog = await clientAppsApi.catalog();
+    caCatalog.value = catalog;
+    try {
+      caScanData.value = await clientAppsApi.scan();
+    } catch (e) {
+      caScanData.value = null;
+      showWarning(`应用清单已加载，但本机扫描失败：${(e && e.message) || e}`);
+    }
+    // 写姿态单独问 /preview：它只算路径不做探测，13 个并行可接受。
+    // 失败不阻塞页面——卡片退化成「未开放」而不是整页报错。
+    caLoadWritePosture();
+  } catch (e) {
+    caError.value = (e && e.message) || String(e);
+  } finally {
+    caBusy.value = false;
+  }
+}
+
+// 并行问一遍 preview，把每个 app 的写姿态收进 caWritePosture。
+// 单个失败只让那个 app 退化成 unknown，不影响其余。
+async function caLoadWritePosture() {
+  const apps = (caCatalog.value && caCatalog.value.apps) || [];
+  const results = await Promise.all(
+    apps.map(async (a) => {
+      try {
+        const p = await clientAppsApi.preview(a.appId, {});
+        return [a.appId, p.ok
+          ? { state: 'ready', reason: '', short: '' }
+          : { state: 'blocked', reason: p.message || '本期不接', short: '未开放' }];
+      } catch {
+        return [a.appId, { state: 'unknown', reason: '', short: '未开放' }];
+      }
+    })
+  );
+  caWritePosture.value = Object.fromEntries(results);
+}
+
+// 一键配置：真实写入（备份 → 写 → 逐键回报）。
+// 409 是「本次没写成」的正常业务结果，不是服务端故障——故单独提示并展示原因。
+async function caConfigure(app) {
+  caBusy.value = true;
+  try {
+    const card = await pickCardForApp(app);
+    if (!card) return;
+    const out = await clientAppsApi.configure(app.appId, { card, mode: 'proxy' });
+    if (out.ok) {
+      const bad = (out.readBack || []).filter((r) => r.status === 'MISSING' || r.status === 'DIFF');
+      if (bad.length) {
+        showWarning(`已写入，但有 ${bad.length} 项回读不一致：${bad.map((b) => b.key).join(', ')}`);
+      } else {
+        showSuccess(`${app.name} 配置完成`);
+      }
+      await caRescan();
+    } else {
+      showError(`配置失败：${out.message || '未知原因'}`);
+    }
+  } catch (e) {
+    const status = e && e.response && e.response.status;
+    if (status === 409) {
+      showError(`配置未执行：${(e.response.data && e.response.data.message) || '被拒'}`);
+    } else {
+      showError(`配置失败：${(e && e.message) || e}`);
+    }
+  } finally {
+    caBusy.value = false;
+  }
+}
+
+// 卡片选择：复用 ccSwitch 的卡片列表，让用户选一张供应商卡。
+// 返回 null 表示用户取消。
+async function pickCardForApp(app) {
+  try {
+    const cards = await ccSwitchApi.listCards();
+    const list = (cards && cards.cards) || cards || [];
+    if (!list.length) {
+      showWarning('还没有供应商卡片，请先到「密钥与供应商」建一张');
+      return null;
+    }
+    // 单张卡时不必问；多张时让用户选。
+    if (list.length === 1) return list[0];
+    const picked = await ElMessageBox.prompt(
+      `选择要写入 ${app.name} 的供应商卡片`,
+      '一键配置',
+      { inputValue: String(list[0].id), confirmButtonText: '写入', cancelButtonText: '取消' }
+    );
+    return list.find((c) => String(c.id) === String(picked.value)) || null;
+  } catch {
+    return null; // 用户取消
+  }
+}
+
+async function caRescan() {
+  caBusy.value = true;
+  caError.value = '';
+  try {
+    caScanData.value = await clientAppsApi.scan();
+    showSuccess('扫描完成');
+  } catch (e) {
+    showError(`扫描失败：${(e && e.message) || e}`);
+  } finally {
+    caBusy.value = false;
+  }
+}
 
 // 新手引导：是否已有任何配置（已配 relay / 供应商 Key / 模型）。决定引导默认展开还是折叠。
 const isConfigured = computed(() => {
@@ -532,6 +819,15 @@ const detectionSkipped = computed(() => {
 
 onMounted(() => {
   gw.fetchAll();
+  // 客户端应用页签懒加载：只在用户真的打开过时才拉登记表 + 扫描，
+  // 避免每次进「我的网关」都白跑一次本机探测（12 个 app 的 existsSync + 反读）。
+  if (activeTab.value === 'clientApps' && !caCatalog.value) caFetchAll();
+});
+
+// 打开页签时若还没加载过就加载一次；已加载过则不重复拉（扫描靠用户点按钮刷新）。
+watch(activeTab, (v) => {
+  safeSet(TAB_STORAGE_KEY, v);
+  if (v === 'clientApps' && !caCatalog.value) caFetchAll();
 });
 
 async function onDetect() {
@@ -1058,5 +1354,98 @@ async function onRevokeToken(id) {
 }
 .mg-pivot-cap {
   width: 92px;
+}
+
+/* ---- 客户端应用（[DESIGN-ARCH-189] S1）------------------------------------ */
+.mg-clientapps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mg-clientapps-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mg-clientapps-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mg-clientapps-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--el-text-color-secondary);
+}
+.mg-clientapps-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mg-clientapps-search {
+  width: 220px;
+}
+.mg-clientapps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.mg-clientapps-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--khy-radius-sm, 6px);
+  background: var(--khy-bg-soft);
+}
+/* 未安装的卡淡化，但不禁用——用户仍需要看到「有这个客户端、该配什么」。 */
+.mg-clientapps-card[data-installed='0'] {
+  opacity: 0.62;
+}
+.mg-clientapps-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mg-clientapps-card-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mg-clientapps-card-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-regular);
+}
+.mg-clientapps-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mg-clientapps-pkg {
+  font-family: var(--el-font-family, monospace);
+  font-size: 11px;
+  color: var(--el-text-color-secondary);
+}
+.mg-clientapps-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mg-clientapps-model-disabled {
+  font-size: 12px;
+  color: var(--el-text-color-disabled);
+  border-bottom: 1px dashed var(--el-border-color);
+  cursor: not-allowed;
+}
+.mg-clientapps-card-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--el-text-color-secondary);
 }
 </style>
