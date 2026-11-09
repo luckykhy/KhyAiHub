@@ -126,7 +126,13 @@ const _ARG_SUMMARY_KEYS = [
   'description',
 ];
 
-function summarizeArgs(tool) {
+function summarizeArgs(tool, capOverride) {
+  // capOverride：给「行内点击展开」用 —— 传一个足够大的预算（调用方传
+  // Number.MAX_SAFE_INTEGER）就拿到**未裁剪**的摘要原文。不传 = 现状（逐字节回退，
+  // 所有既有调用方与测试不受影响）。摘要的唯一真源仍在这里，展开层不另写一份。
+  const capOverrideN = Number.isFinite(capOverride) ? Math.max(1, capOverride) : null;
+  const capOf = (key) => (capOverrideN === null ? argDisplayCap(key, process.env) : capOverrideN);
+  const cap60 = capOverrideN === null ? 60 : capOverrideN;
   const raw = tool.input ?? tool.args ?? tool.parameters ?? tool.arguments;
   if (raw == null) {
     return '';
@@ -136,11 +142,11 @@ function summarizeArgs(tool) {
     try {
       obj = JSON.parse(raw);
     } catch {
-      return truncate(raw, 60);
+      return truncate(raw, cap60);
     }
   }
   if (typeof obj !== 'object') {
-    return truncate(String(obj), 60);
+    return truncate(String(obj), cap60);
   }
   // Prefer the most descriptive common keys.
   for (const key of _ARG_SUMMARY_KEYS) {
@@ -170,22 +176,22 @@ function summarizeArgs(tool) {
           // truncatePathMiddle 按显示宽度判断「放得下就原样返回」,故无需 `raw.length > 60`
           // 的 code-unit 预判(那会对 CJK 路径误判「放得下」而漏截,列宽撑破工具头行)。
           // 宽度门控关时策略退化 code-unit → 与旧 `>60?…:raw` 逐字节一致。
-          return truncatePathMiddle(raw, 60) + suffix;
+          return truncatePathMiddle(raw, cap60) + suffix;
         }
-        return truncate(relPath, 60) + suffix;
+        return truncate(relPath, cap60) + suffix;
       }
       // Non-path descriptive keys keep the legacy end-truncate, but route the
       // CAP through the per-key SSOT: the Bash `command` key rises to CC's 160
       // (gate KHY_TOOL_HEADER_CAP on), every other key stays at the legacy 60;
       // gate off → 60 for all, byte-identical.
-      return truncate(String(obj[key]), argDisplayCap(key, process.env));
+      return truncate(String(obj[key]), capOf(key));
     }
   }
   const keys = Object.keys(obj);
   if (keys.length === 0) {
     return '';
   }
-  return truncate(keys.map((k) => `${k}=${shorten(obj[k])}`).join(', '), 60);
+  return truncate(keys.map((k) => `${k}=${shorten(obj[k])}`).join(', '), cap60);
 }
 
 // [DESIGN-ARCH-155] 头行字段的纯组装（渲染体的可测孪生）。

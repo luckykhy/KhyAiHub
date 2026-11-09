@@ -44,7 +44,7 @@
 const React = require('react');
 const inkRuntime = require('../inkRuntime');
 const { beats, STATUS } = require('../../startupBeats');
-const { cloverRows, WORDMARK, TAGLINE } = require('../logoArt');
+const { markRows, SHADE_COLOR, WORDMARK, TAGLINE } = require('../logoArt');
 const { plan } = require('../bootLayout');
 const ProgressBar = require('./ProgressBar');
 const { _elapsedMsToStr } = require('../../bootPhaseLine');
@@ -63,15 +63,36 @@ const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '
 const { spinnerFrameMs } = require('../perfTunables');
 const FRAME_MS = spinnerFrameMs();
 
-const OFF_VALUES = ['0', 'false', 'off', 'no', 'legacy'];
-
-// logoArt 的三档明暗 → ink 颜色。`D` = 暗边（green + dim），`M` = 主体，`B` = 高光。
-const SHADE_COLOR = { D: 'green', M: 'green', B: 'greenBright' };
-
-function isBootScreenEnabled(env = process.env) {
-  const v = String((env && env.KHY_BOOT_SCREEN) || '').trim().toLowerCase();
-  return !OFF_VALUES.includes(v);
+// 静态硬件档位行（[DESIGN-PERF-007] T1）。只在**非 full** 时渲染：全速档（今天的
+// 8 核/16GB 机器）不新增画面噪声、启动屏逐字节保持原样；降档是能看见的判断，
+// 不是静默行为。tui.json 的 perf.tier 覆盖同口径。
+//
+// 2026-11-04：从模块加载期挪到首帧之后（useTierLine）。detectTier + loadTuiConfig
+// 实测 54ms，而这一行只在非 full 档才显示 —— 绝大多数机器永远看不到它，却让每一台
+// 都为它等一帧。押后一帧后 full 档连重绘都不会有（setLine('') 不改变状态）。
+function computeTierLine() {
+  try {
+    const { detectTier, describeTier } = require('../../../services/perfTier');
+    const cfg = require('../tuiConfig').loadTuiConfig();
+    const tier = detectTier({ override: cfg && cfg.perf ? cfg.perf.tier : undefined });
+    return tier.tier === 'full' ? '' : describeTier(tier);
+  } catch {
+    return '';
+  }
 }
+
+function useTierLine() {
+  const [line, setLine] = React.useState('');
+  React.useEffect(() => {
+    setLine(computeTierLine());
+  }, []);
+  return line;
+}
+
+const { isBootScreenEnabled } = require('../bootScreenSwitch');
+
+// logoArt 的三档明暗 → ink 颜色。**唯一一份在 logoArt.SHADE_COLOR**
+// （启动屏与欢迎横幅共用；此前两处各写一份 'green'/'greenBright'，主标换色时会漂移）。
 
 /**
  * 订阅节拍真源。组件自己驱动重绘，不依赖父组件的渲染周期 ——
@@ -112,16 +133,18 @@ function BootScreen({ tracker, rows, cols }) {
 
   // 帧高阶梯 + 是否居中。纯函数，零 IO；rows 缺省 ⇒ 保守档（不比改造前差）。
   const layout = plan({ rows, cols });
+  // 档位行押后一帧（见模块顶部 computeTierLine 的说明）。
+  const tierLine = useTierLine();
   const prog = src.progress();
 
   // 品牌块（整块作为一个子元素参与居中，内部左齐）。
   const brandChildren = [];
-  if (layout.clover) {
-    cloverRows().forEach((cells, i) => {
+  if (layout.mark) {
+    markRows().forEach((cells, i) => {
       brandChildren.push(
         h(
           Text,
-          { key: `clover-${i}` },
+          { key: `mark-${i}` },
           ...cells.map((c, j) =>
             c.ch === ' '
               ? h(Text, { key: `c${i}-${j}` }, ' ')
@@ -129,7 +152,7 @@ function BootScreen({ tracker, rows, cols }) {
                   Text,
                   {
                     key: `c${i}-${j}`,
-                    color: SHADE_COLOR[c.shade] || 'green',
+                    color: SHADE_COLOR[c.shade] || SHADE_COLOR.M,
                     dimColor: c.shade === 'D',
                   },
                   c.ch
@@ -140,7 +163,9 @@ function BootScreen({ tracker, rows, cols }) {
     });
   }
   if (layout.wordmark) {
-    brandChildren.push(h(Text, { key: 'wordmark', bold: true, color: 'green' }, WORDMARK));
+    brandChildren.push(
+      h(Text, { key: 'wordmark', bold: true, color: SHADE_COLOR.B }, WORDMARK)
+    );
   }
   if (layout.tagline) {
     brandChildren.push(h(Text, { key: 'tagline', dimColor: true }, TAGLINE));
@@ -224,6 +249,8 @@ function BootScreen({ tracker, rows, cols }) {
       ...stepRows,
       tailRow
     ),
+    // 档位行：尾部的一行透明账（非 full 才渲染，见模块顶部 useTierLine）。
+    tierLine ? h(Text, { key: 'perf-tier', dimColor: true }, '  ' + tierLine) : null,
     h(Text, { key: 'tail-gap', dimColor: true }, '')
   );
 }

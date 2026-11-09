@@ -25,7 +25,7 @@ function bannerRowsBeforeVersion() {
 
 // 四叶草像素表已收敛到 `cli/tui/logoArt.js` —— 本组件与启动屏共用**一份**品牌资产
 // （[DESIGN-ARCH-134] §3.4；修 [DESIGN-ARCH-115] 登记的 D5：同一进程先后出现两种品牌符号）。
-const { cloverRows } = require('../logoArt');
+const { markRows, SHADE_COLOR } = require('../logoArt');
 
 // 定位话术单一真源（INIT-PRD-004 的代码化）：横幅第二行的一句话承诺。
 // ⚠ 只允许出现在**版本行之后** —— ROWS_BEFORE_VERSION=0 是 App.js 侧栏顶对齐契约，
@@ -46,12 +46,17 @@ function WelcomeBanner({
   const { Box, Text } = inkRuntime.get();
   const h = React.createElement;
 
-  // 使用共享 banner 数据服务（与经典模式同源）
+  // Greeting name only. Historically this called the shared getBannerData(),
+  // which probes every gateway adapter and spawns git for fields this component
+  // already receives as props — ~1s of synchronous spawnSync inside React's
+  // render path, freezing the first frame ([DESIGN-PERF-007] W1-2). The greeting
+  // has exactly one source (cliAuth session → OS user fallback); taking it
+  // directly keeps the re-render-after-login freshness (App clears the banner
+  // element ref, so this runs again and picks up the new username).
   let greetingName = process.env.USER || process.env.USERNAME || 'user';
   try {
-    const { getBannerData } = require('../../bannerDataService');
-    const data = getBannerData({ version });
-    greetingName = data.greetingName || greetingName;
+    const { resolveGreetingName } = require('../../bannerDataService');
+    greetingName = resolveGreetingName() || greetingName;
   } catch {
     /* fallback to OS username */
   }
@@ -127,17 +132,17 @@ function WelcomeBanner({
     )
   );
 
-  // Right column: compact clover with three-tone green shading for depth.
-  // 像素与明暗都来自 `logoArt.cloverRows()`（单一资产）；着色映射与启动屏保持同一份口径。
-  const SHADE_COLOR = { D: 'green', M: 'green', B: 'greenBright' };
+  // Right column: the brand mark (内核环) with three-tone amber shading for depth.
+  // 像素与明暗都来自 `logoArt.markRows()`（单一资产）；着色映射也来自 logoArt，
+  // 与启动屏保持同一份口径（此前两处各写一份 'green'/'greenBright'，会漂移）。
   const art = showArt
     ? h(
         Box,
         { flexDirection: 'column', marginLeft: 4 },
-        ...cloverRows().map((cells, i) =>
+        ...markRows().map((cells, i) =>
           h(
             Text,
-            { key: `clover-${i}` },
+            { key: `mark-${i}` },
             ...cells.map((c, j) =>
               c.ch === ' '
                 ? h(Text, { key: `c${i}-${j}` }, ' ')
@@ -145,7 +150,7 @@ function WelcomeBanner({
                     Text,
                     {
                       key: `c${i}-${j}`,
-                      color: SHADE_COLOR[c.shade] || 'green',
+                      color: SHADE_COLOR[c.shade] || SHADE_COLOR.M,
                       dimColor: c.shade === 'D',
                     },
                     c.ch

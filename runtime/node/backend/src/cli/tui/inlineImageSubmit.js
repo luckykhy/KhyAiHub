@@ -46,22 +46,27 @@ function isMultiEnabled(env) {
 /**
  * 解析一次提交文本里的内联图片路径。
  *
- * 命中且读图成功 → 返回 `{ text: <提示词>, images: [{ base64, mimeType, label? }] }`
+ * 命中且读图成功 → 返回 `{ text: <提示词>, images: [...], display: [...] }`
  * (路径已从提示里剥掉,prompt 由 imageIntent 的上下文构造给出)。
- * 门控关 / 无路径 / 读图失败 → 返回 `{ text: <原文>, images: [] }`,绝不抛。
+ * 门控关 / 无路径 / 读图失败 → 返回 `{ text: <原文>, images: [], display: [] }`,绝不抛。
+ *
+ * `display` 是**只读的显示面描述**（`{name, format, size}`），给 chip 行 / 回显用；
+ * `images` 仍是网关载荷（base64 + mimeType [+ 多图对照的 label]），两者分开构造，
+ * 加显示字段不会改动载荷形状。
  *
  * @param {string} text                  本轮提交的原始文本
  * @param {object} [opts]
  * @param {object} [opts.env]            注入 env(测试用)
- * @returns {{ text: string, images: Array<{base64:string, mimeType:string}> }}
+ * @returns {{ text: string, images: Array<{base64:string, mimeType:string}>, display: Array<object> }}
  */
 function resolveInlineImageSubmit(text, opts = {}) {
   const original = String(text == null ? '' : text);
   try {
     if (!isEnabled(opts.env)) {
-      return { text: original, images: [] };
+      return { text: original, images: [], display: [] };
     }
     const { extractInlineImageIntent, extractAllInlineImageIntents } = require('../repl/imageIntent');
+    const { attachmentBasename } = require('../attachmentFormat');
 
     // ── 多路径同轮分支(≥2 命中且门控开;0/1 成功读图 → 落回单路径老逻辑) ──
     if (isMultiEnabled(opts.env)) {
@@ -69,6 +74,7 @@ function resolveInlineImageSubmit(text, opts = {}) {
       if (all.length >= 2) {
         const { readImageFromFile } = require('../../services/imageService');
         const images = [];
+        const display = [];
         for (const { filePath } of all) {
           try {
             const image = readImageFromFile(filePath);
@@ -78,33 +84,45 @@ function resolveInlineImageSubmit(text, opts = {}) {
                 mimeType: image.mimeType,
                 label: filePath,
               });
+              display.push({
+                name: attachmentBasename(filePath),
+                format: 'image',
+                size: Number(image.sizeBytes) || 0,
+              });
             }
           } catch {
             /* 单张读失败 → 跳过该张,其余照常(诚实:卡片只出成功读到的) */
           }
         }
         if (images.length > 0) {
-          return { text: original, images };
+          return { text: original, images, display };
         }
       }
     }
 
     const intent = extractInlineImageIntent(original);
     if (!intent || !intent.filePath) {
-      return { text: original, images: [] };
+      return { text: original, images: [], display: [] };
     }
     const { readImageFromFile } = require('../../services/imageService');
     const image = readImageFromFile(intent.filePath);
     if (!image || !image.base64) {
-      return { text: original, images: [] };
+      return { text: original, images: [], display: [] };
     }
     return {
       text: intent.prompt || '请描述这张图片',
       images: [{ base64: image.base64, mimeType: image.mimeType }],
+      display: [
+        {
+          name: attachmentBasename(intent.filePath),
+          format: 'image',
+          size: Number(image.sizeBytes) || 0,
+        },
+      ],
     };
   } catch {
     // parity with repl.js:5020 — 读不出就当纯文本发,绝不打断提交。
-    return { text: original, images: [] };
+    return { text: original, images: [], display: [] };
   }
 }
 
