@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-353-CFRCD8VP
 /**
  * Strip model-facing control text from user-visible message content.
  *

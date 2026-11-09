@@ -1,15 +1,28 @@
+// khy-canary: Khy-20261102-355-HKC1P7TG
 import { useState, useEffect } from 'react'
 
-// 模型/provider 选项（来自后端 providerPresets.getProviderPresets()，经 host
-// CH-2 桥转发，P3-7）。provider 级选项 format 同 apiFormat；模型级选项
-// id 形如 `<provider>/<model>`。channel 是后端池 key（网关 preferredAdapter
-// 认的名字）；channelKnown=false 时（聚合网关等未注册池）不应钉 preferredAdapter。
+// 模型/provider 选项（后端终端同源采集叶 collectModelEntries，采集为空时
+// 回退 providerPresets.getProviderPresets() 静态目录，经 host CH-2 桥转发，
+// P3-7）。provider 级选项
+// format 同 apiFormat；模型级选项 id 形如 `<provider>/<model>`。channel 的口径
+// 按生产者分：采集路径填的是适配器类型（entry.value.adapter，'api'），presets
+// 兜底路径才填后端池 key；channelKnown=false 时（聚合网关等未注册池）不应钉
+// preferredAdapter。
 export interface ModelOption {
   id: string
   label: string
   format: string
   channel?: string
   channelKnown?: boolean
+  // 网关适配器类型与模型 id（终端选中后传给网关的同一对值）。
+  adapter?: string
+  model?: string
+  // 分组依据 = 上游提供商名（终端 composeModelDisplay().group 同口径）。
+  group?: string
+  // 该条目来自上游真实 /models。false = providerPresets 静态目录兜底。
+  fromUpstream?: boolean
+  // 能力徽章（视觉 / 图像 / 视频 / 音频），判定在后端做。
+  tags?: string[]
 }
 
 interface ModelCatalogState {
@@ -23,7 +36,7 @@ interface ModelCatalogState {
 // provider 已从 presets 消失，调用方回退到首个可用选项，永不写死模型名。
 const SETTING_KEY = 'selectedModel'
 
-// 从全量选项表（静态 presets 与动态 adapter.listModels 结果的并集）解析某
+// 从全量选项表（终端同源采集叶，或采集为空时的 presets 静态目录）解析某
 // id 的展示标签；未知 id 返回 null（调用方自行兜底为 '选择模型'）。
 // P3-7④ 起 App/ModelSelector 共用，替代 App.tsx 里已删除的 GLM 静态默认名。
 export function getModelOptionLabel(id: string, options: ModelOption[]): string | null {
@@ -63,37 +76,12 @@ export async function loadPersistedModelSelection(): Promise<string | null> {
   }
 }
 
-// 拉取动态模型（P3-7③ 非 React 版）：把 selected provider 的 channel 传入
-// listModels(channel)，host 侧经 aiGateway.listModels(channel) 拉取运行时
-// 模型（凭据/网络缺失时 best-effort 空数组，不抛错），去重后并入模块级
-// 缓存。幂等：已拉过的 channel 直接命中缓存，重复调用零网络开销。
-// App.tsx 顶层调用（一次），Composer 经 useModelCatalog() 共享同一缓存表。
-const dynamicFetched = new Set<string>()
-
-export async function fetchDynamicModels(adapterKey?: string): Promise<ModelOption[]> {
-  const api = (window as unknown as {
-    __KHYOS__?: {
-      listModels?: (k?: string) => Promise<{ ok: boolean; models?: ModelOption[]; error?: string }>
-    }
-  }).__KHYOS__
-  if (!adapterKey || !api?.listModels || dynamicFetched.has(adapterKey)) return cached ?? []
-  dynamicFetched.add(adapterKey)
-  try {
-    const res = await api.listModels(adapterKey)
-    if (res?.ok && Array.isArray(res.models)) {
-      const base = cached ?? []
-      const seen = new Set(base.map((o) => o.id))
-      const extra = res.models.filter((o) => !seen.has(o.id))
-      if (extra.length > 0) cached = [...base, ...extra]
-    }
-  } catch {
-    /* fail-soft：动态拉取失败保留静态基线 */
-  }
-  return cached ?? []
-}
-
-// 拉取后端 providerPresets 真源（含预置模型），失败时 fail-soft 返回空。
-// 同一模块内只拉一次（模块级缓存），后续调用复用。
+// 模型选项表：一次拉取，模块级缓存共享给所有 useModelCatalog() 实例。
+//
+// 没有「按通道补拉」的第二条路径：host 侧的 listModels 一次性返回终端同源的
+// 全量采集结果（或 presets 静态兜底），传通道名也只会拿回同一份全量 ——
+// 早前的 fetchDynamicModels 因此是空转，还要为此在渲染侧加一层订阅才「看起来」
+// 会更新。
 let cached: ModelOption[] | null = null
 
 export function useModelCatalog(): ModelCatalogState {
@@ -106,7 +94,7 @@ export function useModelCatalog(): ModelCatalogState {
   useEffect(() => {
     const api = (window as unknown as {
       __KHYOS__?: {
-        listModels?: (adapterKey?: string) => Promise<{
+        listModels?: () => Promise<{
           ok: boolean
           models?: ModelOption[]
           error?: string
@@ -144,30 +132,35 @@ export function useModelCatalog(): ModelCatalogState {
   return state
 }
 
-// 把模型选项拆成 provider 一级 + 每个 provider 下的模型二级（label 含
-// provider 前缀的归到对应 provider 下，否则 provider 自身即选项）。
-export function groupByProvider(options: ModelOption[]): Array<{ provider: ModelOption; models: ModelOption[] }> {
-  const providers = new Map<string, ModelOption>()
-  const modelsByProvider = new Map<string, ModelOption[]>()
+// 按**提供商**分组模型选项（两级选择器的第一级）。
+//
+// 分组依据是 ModelOption.group —— 后端 composeModelDisplay().group 给出的上游
+// 提供商名，与终端 `/model` 的分组同一口径。刻意不用 id 前缀：所有中转站走的
+// 都是 api 适配器，按前缀分会把它们塌成「api」一组，用户加了几个中转站就分不清。
+//
+// 组内上游真实模型排前面，静态目录兜底的排后面 —— 前者是「这家现在真的在售」，
+// 后者是「可能卖过」，两者混排会让人选到早已改版的模型。
+export interface ProviderGroup {
+  key: string
+  label: string
+  options: ModelOption[]
+}
+
+export function groupByProvider(options: ModelOption[]): ProviderGroup[] {
+  const groups = new Map<string, ProviderGroup>()
   for (const o of options) {
-    if (o.id.includes('/')) {
-      const [pid] = o.id.split('/')
-      if (!providers.has(pid)) {
-        // 动态模型先于 provider 基线到达时（理论上不会——动态结果总是按
-        // provider/channel 拉取后并入），补一个最小 provider 占位，
-        // 保证二级条目有可归属的一级父项。
-        providers.set(pid, { id: pid, label: pid, format: o.format })
-      }
-      const arr = modelsByProvider.get(pid) ?? []
-      arr.push(o)
-      modelsByProvider.set(pid, arr)
-    } else {
-      providers.set(o.id, o)
-      if (!modelsByProvider.has(o.id)) modelsByProvider.set(o.id, [])
+    const key = o.group || o.id.split('/')[0] || o.id
+    let g = groups.get(key)
+    if (!g) {
+      g = { key, label: o.group || key, options: [] }
+      groups.set(key, g)
     }
+    g.options.push(o)
   }
-  return Array.from(providers.entries()).map(([pid, p]) => ({
-    provider: p,
-    models: modelsByProvider.get(pid) ?? [],
+  return Array.from(groups.values()).map((g) => ({
+    ...g,
+    options: g.options.sort(
+      (a, b) => Number(Boolean(b.fromUpstream)) - Number(Boolean(a.fromUpstream))
+    ),
   }))
 }

@@ -540,6 +540,30 @@ body {
   font-size: var(--khy-message-font-size, 14px);
 }
 
+/* 用户气泡内的首末块去掉外边距：正文里 1.25em 的段间距是通栏阅读的节奏，
+   进了气泡会把一行短句上下各撑出 17.5px，看着是方块不是气泡。 */
+.khy-user-bubble > :first-child { margin-top: 0; }
+.khy-user-bubble > :last-child { margin-bottom: 0; }
+
+/* 用户气泡右下角的小尾巴：伪元素三角形，颜色直接吃 --color-surface ——
+   气泡底色是半透明叠加（#ffffff0d），尾巴若压进气泡里，重叠处会叠成双倍
+   alpha 显出一块亮斑，所以尾巴只与气泡侧边相切、不重叠；右下角圆角归零，
+   让尾巴的底边与气泡底边连成一条线，接缝处不留缺口。 */
+.khy-user-bubble {
+  position: relative;
+  border-bottom-right-radius: 0;
+}
+.khy-user-bubble::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  bottom: 0;
+  width: 8px;
+  height: 12px;
+  background: var(--color-surface);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
 /* ===== 边框工具类 ===== */
 .border { border-width: 1px; border-style: solid; }
 .border-t { border-top-width: 1px; border-top-style: solid; }
@@ -729,4 +753,41 @@ body {
 .khy-tui {
   /* 与真终端同源：--font-mono 在 @theme 注册（终端的 var(--font-mono) 用同一栈） */
   font-family: var(--font-mono);
+}
+
+/* ===== 品牌背景 =====
+   主工作区（对话列及其空白页）背后的品牌底图，取自品牌主标：四段弧叶 + 菱形
+   内核 + K 形负槽，暖金渐变 #FFC078 → #E2703A —— 深色落在墨蓝底上，
+   浅色落在瓷白/米白底上（theme/background.ts 为两套各备一组预设）。
+
+   三个变量由 theme/background.ts 写入 <html>（预设 / 自定义图片 / GIF）。
+   两个主题读同一组变量，值按当前生效主题整组换掉：
+   --khy-bg-image 为 none 时只剩渐变层，对应「纯墨蓝」与「素笺」。
+   变量还没写上（首帧）时走 var() 兜底：深色是品牌环，浅色是素笺渐变 ——
+   浅色首帧不会闪出深色壁纸。注意不能用 `.dark` 判断：渲染层 index.html 的
+   <html> 硬编码了 class="dark"，切浅色时它不会消失（由 .theme-zai-light
+   覆盖令牌），只能取反主题类。
+   `fixed` 是为了让对话滚起来时底图不跟着滚出视口 —— 壁纸应该一直贴在窗口上。 */
+html:not(.theme-zai-light) .khy-brand-main {
+  /* 底图上压一层从左往右由深到浅的墨色：左半是消息列与问候语，必须压到
+     几乎看不出来；右侧留一点暖光，让品牌环只当壁纸，不抢正文。 */
+  background-image:
+    var(--khy-bg-overlay, linear-gradient(100deg, rgba(8, 12, 20, 0.93) 0%, rgba(8, 12, 20, 0.88) 42%, rgba(8, 12, 20, 0.6) 100%)),
+    var(--khy-bg-image, url('../assets/background/khyos-backdrop.jpg'));
+  background-size: cover;
+  background-position: var(--khy-bg-position, 88% 45%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+html.theme-zai-light .khy-brand-main {
+  /* 浅色同理但反向压白：左侧铺到接近 --color-background（#f6f7f9），
+     正文对比度不掉；右侧只留一层薄纱，壁纸在浅色下仍看得见。 */
+  background-image:
+    var(--khy-bg-overlay, radial-gradient(900px 620px at 84% 42%, rgba(226, 112, 58, 0.12), rgba(246, 247, 249, 0) 68%), linear-gradient(118deg, #fbfcfd 0%, #f4f6f8 55%, #eef1f4 100%)),
+    var(--khy-bg-image, none);
+  background-size: cover;
+  background-position: var(--khy-bg-position, 84% 42%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }

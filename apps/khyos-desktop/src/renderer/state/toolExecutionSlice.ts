@@ -1,4 +1,5 @@
-﻿import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+﻿// khy-canary: Khy-20261102-348-RN0J6RNZ
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { ToolDiff } from '../../shared/toolDiff'
 
 export type ToolExecutionStatus = 'pending' | 'running' | 'success' | 'error' | 'cancelled'
@@ -119,6 +120,16 @@ const toolExecutionSlice = createSlice({
       state.affectedFiles = []
       state.turnMessageId = null
     },
+    // 重开旧会话：存档里的工具过程按消息归属灌回来，面板照常按 messageId 认领。
+    // 只替换执行列表 —— 会话加载前已经 clearExecutions，这里不该再保留任何
+    // 在途状态；历史调用没有「进行中」，activeIds 必须为空。上限与在线累积
+    // 同一档（超了丢最早的），否则一次加载老会话就能绕过 MAX_EXECUTIONS。
+    hydrateToolExecutions: (state, action: PayloadAction<ToolExecution[]>) => {
+      state.executions = action.payload.slice(-MAX_EXECUTIONS)
+      state.activeIds = []
+      state.affectedFiles = []
+      state.turnMessageId = null
+    },
     clearHistory: (state) => {
       state.history = []
     },
@@ -127,7 +138,7 @@ const toolExecutionSlice = createSlice({
 
 export const {
   beginToolTurn, startToolExecution, updateToolExecution, cancelToolExecution,
-  recordAffectedFiles, clearExecutions, clearHistory,
+  recordAffectedFiles, clearExecutions, hydrateToolExecutions, clearHistory,
 } = toolExecutionSlice.actions
 
 export default toolExecutionSlice.reducer

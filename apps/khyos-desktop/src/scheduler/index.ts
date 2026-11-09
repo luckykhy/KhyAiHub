@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-356-0XB937VW
 // scheduler 进程：定时任务、闲时算力（092 Phase 0d 四进程架构的第四位）。
 //
 // 由 main fork 拉起（startSchedulerProcess），经 IPC 与 main 通信：
