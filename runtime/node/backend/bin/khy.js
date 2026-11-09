@@ -148,6 +148,14 @@ function _isFalsy(value) {
  * --verbose/--debug(与 router 的 _applyVerbosityFlag 同一意图,只是提前到日志器初始化前
  * 判定)。另有门控 KHY_CLI_QUIET_LOGS=0 可整体关掉,逐字节回退到今日行为。
  *
+ * 2026-10-10（[DESIGN-PERF-007] W2-2）：旧实现在这里 `require('../src/utils/logger')` 再
+ * `setConsoleLevel('warn')` —— 为了设一个级别把整套 winston 图（winston +
+ * winston-daily-rotate-file + logform…，实测 ~200ms）拉进每条命令的启动路径。改为只设
+ * 进程级全局：共享 logger 在**构造时**读它（vendor/shared/src/utils/logger.js），
+ * 真正要记日志的模块照旧在那一刻拿到 'warn' 控制台，而从不在控制台记日志的命令
+ * （如 `khy status`）整套 winston 都不会被装载。用全局而非 env：env 会被
+ * startWithServer 派生的后端服务器子进程继承，把服务端控制台日志一并静音掉。
+ *
  * @param {string[]} args - 已标准化的命令行参数
  */
 function _quietConsoleLogsForCli(args) {
@@ -155,8 +163,8 @@ function _quietConsoleLogsForCli(args) {
   if (process.env.LOG_LEVEL || _isTruthy(process.env.KHY_DEBUG)) return;
   if (args.includes('--verbose') || args.includes('--debug')) return;
   try {
-    require('../src/utils/logger').setConsoleLevel('warn');
-  } catch { /* logger 不可用时不影响启动 */ }
+    global.__khyCliConsoleLevel = 'warn';
+  } catch { /* 全局不可写时静默跳过：控制台音量维持默认，不影响启动 */ }
 }
 
 let _startupUpdateCheckScheduled = false;
@@ -1384,6 +1392,92 @@ function getInvokedBinary() {
 }
 
 /**
+ * `khy repair` 的实现 —— 便携版一键自愈，与 khy.bat:16-28 走同一个脚本。
+ *
+ * 为什么在这里再实现一遍（而不是只修 khy.bat）：PATH 上的全局入口是
+ * `bin/khy.cmd`，它直连 `node bin/khy.js`，批处理里那段 repair 拦截根本执行不到。
+ * 两个入口必须给出同一套语义，否则「在仓库根敲能修、在任意目录敲不能修」。
+ *
+ * 语义照抄 khy.bat（逐条对应）：
+ *   1. `KHYQUANT_PORTABLE_ROOT` 设为**仓库根**（%~dp0 的 JS 等价物）；
+ *   2. 删掉 Python 探针负缓存 —— repair 可能现场装一个便携 Python，而缓存里的
+ *      「没有」会把后续启动继续按在 Node 档上，直到 PATH 签名变化才翻身；
+ *   3. spawn `delivery/extension/scripts/khy-portable/repair-portable.js`，
+ *      透传剩余参数，stdio 继承，退出码原样带回。
+ *
+ * 路径纪律：全部由 `__dirname` 相对推导，**不硬编码盘符**（本仓随盘漂移）。
+ * 失败软化：脚本缺失 / spawn 失败一律打印中文指引并非零退出，绝不静默成功。
+ *
+ * @param {string[]} restArgs `repair` 之后的参数，原样透传
+ * @param {{end: function(): void}|null} [bootPhaseLine] 瞬时进度行句柄，收尾用
+ */
+function runPortableRepair(restArgs = [], bootPhaseLine = null) {
+  // 收掉瞬时进度行：repair 的输出是给人看的报告，不能从一行半截进度后面续写。
+  try {
+    if (bootPhaseLine && typeof bootPhaseLine.end === 'function') bootPhaseLine.end();
+  } catch { /* 进度行是辅助显示，收不掉也不影响修复 */ }
+
+  // __dirname is <root>/runtime/node/backend/bin, so the repo root is four
+  // levels up (bin -> backend -> node -> runtime -> root). Three levels lands
+  // on <root>/runtime and produced "runtime\delivery\extension\...".
+  const portableRoot = path.resolve(__dirname, '..', '..', '..', '..');
+  const repairScript = path.join(
+    portableRoot,
+    'delivery',
+    'extension',
+    'scripts',
+    'khy-portable',
+    'repair-portable.js'
+  );
+
+  if (!fs.existsSync(repairScript)) {
+    console.error(`[ERROR] 找不到便携自愈脚本: ${repairScript}`);
+    console.error('请确认 delivery/extension/scripts/khy-portable/ 目录完整后重试。');
+    process.exit(1);
+  }
+
+  // khy.bat 的 `set "KHYQUANT_PORTABLE_ROOT=%~dp0"`：便携根是契约输入，
+  // repair-portable.js / portable-health-check.js 都靠它定位链接与数据指针。
+  if (!process.env.KHYQUANT_PORTABLE_ROOT) {
+    process.env.KHYQUANT_PORTABLE_ROOT = portableRoot;
+  }
+
+  // khy.bat 的 `del /q "%KHY_CACHE_HOME%\py-probe.txt"`。缓存路径在批处理里由
+  // KHY_DATA_HOME/KHY_CACHE_HOME 早先定好；JS 侧同样尊重外部注入，缺省才按
+  // 便携根推导。取不到路径就跳过 —— 删缓存是优化，不是修复的前提。
+  try {
+    const cacheHome = process.env.KHY_CACHE_HOME
+      || (process.env.KHY_DATA_HOME
+        ? path.join(process.env.KHY_DATA_HOME, 'cache')
+        : path.join(portableRoot, 'works', 'data', 'khy', 'cache'));
+    const probeCache = path.join(cacheHome, 'py-probe.txt');
+    if (fs.existsSync(probeCache)) fs.unlinkSync(probeCache);
+  } catch { /* 负缓存删不掉不影响修复本身 */ }
+
+  let result;
+  try {
+    const { spawnSync } = require('child_process');
+    result = spawnSync(process.execPath, [repairScript, ...restArgs], {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: process.env,
+      windowsHide: false,
+    });
+  } catch (err) {
+    console.error(`[ERROR] 启动便携自愈失败: ${err && err.message ? err.message : err}`);
+    console.error('可手动执行: node delivery/extension/scripts/khy-portable/repair-portable.js');
+    process.exit(1);
+  }
+
+  if (result.error) {
+    console.error(`[ERROR] 启动便携自愈失败: ${result.error.message}`);
+    console.error('请确认 Node.js 20+ 可用（https://nodejs.org/）。');
+    process.exit(1);
+  }
+  process.exit(typeof result.status === 'number' ? result.status : 1);
+}
+
+/**
  * 主函数 —— 整个 CLI 的入口点
  *
  * 启动流程：
@@ -1406,9 +1500,13 @@ async function main() {
   // 在引导初始化的各关键节点调用 _updateBootPhase() 更新进度文本，
   // 使用 \r 覆盖同一行，让用户感知系统正在逐步就绪。
   const _isBootTty = process.stderr.isTTY && !args.includes('--help') && args[0] !== 'help';
+  // repair 也不开进度行：它转手 spawn repair-portable.js 并把 stdio 继承过去，
+  // 「khy 正在启动」会抢在修复报告前面，观感像是启动流程而不是修复流程。
+  // （判定本身在 normalizeArgs 之后，args[0] 已可读。）
+  const _isRepairQuickPath = String(args[0] || '') === 'repair';
   let _bootPhaseWrite = null; // 函数引用,在 _isBootTty 判定后才创建
   let _bootPhaseLine = null;  // 句柄:负责在别人输出前让出瞬时行,并在交棒时收尾
-  if (_isBootTty) {
+  if (_isBootTty && !_isRepairQuickPath) {
     // 进度行是瞬时的(\r 覆写、行尾无换行),所以它必须在任何其他输出落地前先擦掉自己,
     // 否则「ℹ 已登录」「版本通知」会从行中间续写,糊成一条永久残留的半截行。
     _bootPhaseLine = require('../src/cli/bootPhaseLine').create();
@@ -1444,6 +1542,24 @@ async function main() {
       /* 节拍上报是辅助显示，绝不影响启动 */
     }
   };
+
+  // ── repair 快速路径（P0-7：`khy repair` 曾在全局入口上静默失效）──────────
+  // 病灶：本文件全文对 `repair` 只在一句错误提示文案里出现过，router 没有 repair 分支，
+  // 于是 `khy repair` 100% 掉进 51 行通用帮助卡 —— 不报错、也不做任何修复。
+  // 根因是入口分裂：khy.bat:16-28 有 repair 拦截，但 PATH 上的全局入口
+  // D:\Portable\bin\khy.cmd 直连 node bin/khy.js，永远走不到那段批处理。
+  // 修法：转去 spawn 与 khy.bat **同一个** repair-portable.js。位置必须是快速路径 ——
+  // repair 自己就要修「环境装不好」，先跑 bootstrap init 等于让被修的东西审修它的人。
+  //
+  // ⚠ 必须排在 `--help` 快速路径**之前**：`khy repair --help` 是最自然的问法
+  // （想先看看 repair 干什么），而 help 分支只看 `args.includes('--help')` 就会
+  // 把它整条吞掉，又变成那张 51 行通用帮助卡 —— P0-7 的静默失效原样复现。
+  // 排在它前面之后，`--help` 作为剩余参数透传给 repair-portable.js（该脚本本身
+  // 不解析参数，直接跑健康检查并打印报告），用户看到的是 repair 的真实行为。
+  if (String(args[0] || '') === 'repair') {
+    runPortableRepair(args.slice(1), _bootPhaseLine);
+    return;
+  }
 
   // ── 快速路径：在 bootstrap 之前检查，立即退出 ─────────────────────────
   // --help / --version 不需要数据库或环境初始化，直接响应
@@ -1509,16 +1625,64 @@ async function main() {
     if (process.env.KHY_SLASH_AUTOMENU === undefined) process.env.KHY_SLASH_AUTOMENU = 'false';
     if (process.env.KHY_INPUT_BATCH_MODE === undefined) process.env.KHY_INPUT_BATCH_MODE = 'off';
     if (process.env.KHY_INPUT_ESCAPE_TIMEOUT_MS === undefined) process.env.KHY_INPUT_ESCAPE_TIMEOUT_MS = '40';
+    // ── 静态硬件档位（[DESIGN-PERF-007] T1）─────────────────────────────────
+    // 定档只用静态签名（platform|arch|totalRamMB|cores，无 TTL、相邻启动不抖动），
+    // 任何异常 fail-open 到 full；full 档**零写入**，今天的高档机行为逐字节不变。
+    // 写入必须发生在这里：TUI 树里的闩值在**模块加载期**读 env
+    // （BootScreen.js:64 / Spinner.js:21 / topicBar.js:64），晚于 require 的写入不起作用。
+    // 作用域限定：本块只在 invokedAs==='khy' 分支内执行，khyquant 路径不写。这 5 个
+    // 键的读者全在 TUI 树内（perfTunables / useQueryBridge / perfEntryReaper），khy 进程
+    // 后续派生的服务端子进程会继承到它们，但服务端不读 → 空转，服务端语义不受影响。
+    // （与下面 console 级别走进程级全局而非 env 的理由不同：那是怕静音服务端控制台
+    // 日志，这里没有对应的服务端读者。）
+    try {
+      const _perfTier = require('../src/services/perfTier');
+      const _tuiCfg = require('../src/cli/tui/tuiConfig').loadTuiConfig();
+      _perfTier.applyTierEnv(
+        process.env,
+        _perfTier.detectTier({ override: _tuiCfg && _tuiCfg.perf ? _tuiCfg.perf.tier : undefined }).tier
+      );
+    } catch { /* fail-soft：定档失败 → 零写入，行为逐字节回到 full */ }
     // Ink TUI 独占终端画面:交互全屏 TUI 下把 winston 控制台 transport 降到 error,
     // 否则后台 warn(实测 `[warn] [rtkInstaller] no install method succeeded…`)
     // 以裸行撕裂 live 帧(2026-09-19 TUI 审计 BUG-13)。文件 transport 不受影响,
     // 日志零丢失;经典模式(KHY_FULL_TUI=0)与非 TTY 不降,保持既有可观察性。
+    //
+    // 2026-10-11（[DESIGN-PERF-007] T1）：旧实现在这里 require('../src/utils/logger')
+    // 只为调 setConsoleLevel('error') —— 走到这行时 logger **从未被装载**
+    // (require.cache logger=false / 39 模块)，于是每条 TUI 命令现付 326.3–591.9ms /
+    // 98 模块去换一个级别。改为与 _quietConsoleLogsForCli 同一手法：记下 prevLevel
+    // 后设进程级全局，门面在**构造时**读取（vendor/shared/src/utils/logger.js:47）；
+    // 仅当门面**已经在 require.cache** 里才退回实例调用 —— 那时构造已完成，全局对
+    // 它不再生效（require.resolve 判据本身不触发装载）。退出/降级还原全局：未设过
+    // 则 delete，_quietConsoleLogsForCli 设过则回到 'warn'。
     if (
       process.env.KHY_TUI_CONSOLE_LOGS === undefined &&
       process.env.KHY_FULL_TUI !== '0' &&
       process.stdout.isTTY
     ) {
-      try { require('../src/utils/logger').setConsoleLevel('error'); } catch { /* fail-soft */ }
+      try {
+        const _prevLevel = global.__khyCliConsoleLevel;
+        let _tuiConsoleRestored = false;
+        const _restoreTuiConsoleLevel = () => {
+          if (_tuiConsoleRestored) return true;
+          _tuiConsoleRestored = true;
+          try {
+            if (_prevLevel === undefined) delete global.__khyCliConsoleLevel;
+            else global.__khyCliConsoleLevel = _prevLevel;
+            return true;
+          } catch {
+            return false;
+          }
+        };
+        process.once('exit', () => { try { _restoreTuiConsoleLevel(); } catch { /* exiting */ } });
+        const _loggerPath = require.resolve('../src/utils/logger');
+        if (require.cache[_loggerPath]) {
+          require('../src/utils/logger').setConsoleLevel('error');
+        } else {
+          global.__khyCliConsoleLevel = 'error';
+        }
+      } catch { /* fail-soft：全局不可写/门面不可解析时维持默认音量，不影响启动 */ }
     }
     // Sidebar threshold: DO NOT override here. The single source of truth is
     // sidebarLayout.minCols (default 120) — quoted by the Ctrl+T hint and the
@@ -2044,10 +2208,43 @@ async function main() {
       // 冷启动数十秒),此前用户盯着 2/5 一行长达整个窗口。拆成 3/5、4/5,
       // 每个重步骤前有「动作+目标」的当前阶段,同步加载期间该行驻留可见。
       if (_bootPhaseWrite) _bootPhaseWrite('检查登录状态', 3, 5);
-      // 强制认证后再进入 REPL
-      const authOk = await ensureAuthenticated();
-      if (!authOk) { printError('认证失败，无法使用终端。'); process.exit(1); }
-      _markBeat('auth');
+      // 强制认证后再进入 REPL —— 除非 KHY_DEFER_AUTH 打开（默认关）：那种情况下
+      // 界面先挂载，认证在后台跑，pending 期间的输入由 router.route 的闸门挂起。
+      // 为什么只在这条路径上开：返回用户的认证只要 7.6ms，真正要救的是首启/过期/
+      // 后端不可用时那 2-3 秒的纯终端登录提示（见 src/cli/deferredAuth.js）。
+      {
+        const deferredAuth = require('../src/cli/deferredAuth');
+        if (deferredAuth.isEnabled(process.env, { interactive: isInteractiveTerminal(), oneShot: false })) {
+          const settle = ensureAuthenticated().then(
+            (ok) => {
+              _markBeat('auth');
+              return ok;
+            },
+            () => false,
+          );
+          deferredAuth.attach(settle);
+          settle.then((ok) => {
+            if (ok) return;
+            // 失败不退出、不打断界面：通知缓冲会在界面挂载后回放，用户看到的是
+            // 「未登录 + 怎么修」，而不是一个消失的进程。
+            try {
+              require('../src/services/notificationPort').emitNotification({
+                type: 'auth-deferred',
+                level: 'error',
+                title: '未登录：模型调用与工具执行不可用',
+                detail: '输入 /login 登录，或运行 khy gateway config 检查凭据',
+                timestamp: Date.now(),
+              });
+            } catch {
+              /* aux UI — never throw */
+            }
+          });
+        } else {
+          const authOk = await ensureAuthenticated();
+          if (!authOk) { printError('认证失败，无法使用终端。'); process.exit(1); }
+          _markBeat('auth');
+        }
+      }
       // khy 主入口仅做轻量平台初始化，避免触发上层默认应用启动链路
       if (_bootPhaseWrite) _bootPhaseWrite('加载服务 (数据库/网关/会话)', 4, 5);
       try {
