@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-279-0PJJ21XZ
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type React from 'react'
 import { EmptyState } from '../ui/EmptyState'
@@ -166,33 +167,33 @@ export function BrowserPane() {
         <button
           onClick={goBack}
           disabled={!nav.canGoBack}
-          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground/60 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="后退"
           aria-label="后退"
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.07">
             <path d="M9.5 3.5L5 8l4.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
         <button
           onClick={goForward}
           disabled={!nav.canGoForward}
-          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground/60 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="前进"
           aria-label="前进"
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.07">
             <path d="M6.5 3.5L11 8l-4.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
         <button
           onClick={reload}
           disabled={!currentUrl}
-          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground/60 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="刷新"
           aria-label="刷新"
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.07">
             <path d="M13.5 2.5v4h-4" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M13.3 6.4A5.5 5.5 0 1 0 13.5 8.5" strokeLinecap="round" />
           </svg>
@@ -209,7 +210,7 @@ export function BrowserPane() {
             onChange={(e) => setAddress(e.target.value)}
             placeholder="输入网址后回车"
             spellCheck={false}
-            className={`flex-1 h-7 rounded-md bg-input border px-2.5 text-xs text-foreground placeholder:text-foreground/30 focus:outline-none transition-colors ${
+            className={`flex-1 h-7 rounded-md bg-input border px-2.5 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none transition-colors ${
               invalidHint ? 'border-destructive' : 'border-input-border focus:border-input-border-focused'
             }`}
           />
@@ -221,17 +222,17 @@ export function BrowserPane() {
         {/* 空态：browser.empty */}
         {!currentUrl && (
           <EmptyState
-            icon="◉"
+            icon="browser"
             title="粘贴或输入 URL 以打开网页。"
           />
         )}
 
-        {/* 加载失败 / 证书错误 / 内置浏览器崩溃 */}
+        {/* 加载失败 / 证书错误 / 内置浏览器崩溃（崩溃态用内联字形，与 Icon 注册表的 error 同源；本文件刻意不增删行——typecheck 基线按 file|line|code 记账，行号整体漂移会被误判成新增错误） */}
         {currentUrl && failure && (
           <div className="absolute inset-0 z-10 bg-panel">
             {failure.kind === 'cert' && (
               <EmptyState
-                icon="◆"
+                icon="warning"
                 title="该站点的 HTTPS 证书不受信任"
                 description="如确认此地址可信，可在「设置 → 浏览器 → 安全」里开启「忽略证书校验」，再重启 App 后即可访问。"
                 action={{ label: '重新加载', onClick: reload }}
@@ -239,7 +240,7 @@ export function BrowserPane() {
             )}
             {failure.kind === 'load' && (
               <EmptyState
-                icon="⚠"
+                icon="warning"
                 title="无法打开该页面"
                 description={`页面加载失败：${failure.message}`}
                 action={{ label: '重新加载', onClick: reload }}
@@ -247,12 +248,12 @@ export function BrowserPane() {
             )}
             {failure.kind === 'guest' && (
               <div className="flex flex-col items-center justify-center h-full text-center px-8 animate-fade-in">
-                <span className="text-4xl mb-4">✕</span>
+                <span className="mb-4 text-foreground-subtle" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6M9 9l6 6" /></svg></span>
                 <h3 className="text-base font-medium text-foreground mb-2">内置浏览器启动失败</h3>
-                <p className="text-sm text-foreground/50 max-w-xs mb-2">
+                <p className="text-sm text-foreground-muted max-w-xs mb-2">
                   浏览器进程在显示页面前退出。检查系统环境后可以重试。
                 </p>
-                <p className="text-xs text-foreground/30 max-w-xs mb-4">
+                <p className="text-xs text-foreground-muted max-w-xs mb-4">
                   渲染进程：{failure.reason}（退出码 {failure.exitCode}）
                 </p>
                 <button

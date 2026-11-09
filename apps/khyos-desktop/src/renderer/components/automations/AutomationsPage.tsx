@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-278-30P8P1CK
 // AutomationsPage — 定时任务管理（route #/automations, sidebar 自动化 entry).
 // UI copy mirrors ZCode's automations i18n bundle extracted read-only from
 // ZCode app.asar (automations.runNow/empty/lifecycle/schedule/runs.* keys).
@@ -52,12 +53,14 @@ function scheduleSummary(s: Automation['schedule']): string {
 }
 
 // ZCode lifecycle badges: automations.lifecycle.active/paused/completed
+// 色一律走语义令牌：硬编码调色板（blue-500/green-500 这类 400 系）在浅色主题
+// 上接近白字，且与既有 success/destructive 令牌并成两套同义色。
 function lifecycle(a: Automation): { label: string; cls: string } {
   if (a.enabled && typeof a.maxRuns === 'number' && a.runCount >= a.maxRuns) {
-    return { label: '已完成', cls: 'bg-blue-500/15 text-blue-400' }
+    return { label: '已完成', cls: 'bg-brand/15 text-brand' }
   }
-  if (!a.enabled) return { label: '已暂停', cls: 'bg-foreground/10 text-foreground/60' }
-  return { label: '运行中', cls: 'bg-green-500/15 text-green-500' }
+  if (!a.enabled) return { label: '已暂停', cls: 'bg-foreground/10 text-foreground' }
+  return { label: '运行中', cls: 'bg-success/15 text-success' }
 }
 
 function formatWhen(ts: number): string {
@@ -81,10 +84,10 @@ function formatDuration(ms?: number): string {
 
 const TRIGGER_LABEL: Record<AutomationRun['trigger'], string> = { schedule: '定时', manual: '手动' }
 const RUN_STATUS: Record<AutomationRun['status'], { label: string; cls: string }> = {
-  running: { label: '进行中', cls: 'text-foreground/60' },
-  succeeded: { label: '成功', cls: 'text-green-500' },
-  failed: { label: '失败', cls: 'text-red-400' },
-  skipped: { label: '已跳过', cls: 'text-foreground/40' },
+  running: { label: '进行中', cls: 'text-foreground-muted' },
+  succeeded: { label: '成功', cls: 'text-success' },
+  failed: { label: '失败', cls: 'text-destructive' },
+  skipped: { label: '已跳过', cls: 'text-foreground-muted' },
 }
 
 const EMPTY = { title: '还没有定时任务', description: '创建一个任务，按周期自动运行你的指令。', create: '手动创建' }
@@ -116,7 +119,7 @@ export function AutomationsPage() {
     else flash(res?.error || '读取定时任务列表失败：请重启应用后重试', true)
   }, [flash])
 
-  // 首屏拉取。⚠️ 顺序是硬要求：`refresh` 必须声明在下面那个轮询 effect **之前**。
+  // 首屏拉取。注意：顺序是硬要求：`refresh` 必须声明在下面那个轮询 effect **之前**。
   // 轮询 effect 的依赖数组 [hasRunning, refresh] 是**渲染期求值**的，若 refresh 还
   // 在后面用 const + useCallback 声明，进这个页面就会抛
   // `Cannot access 'refresh' before initialization`（TDZ 暂时性死区），React 卸载
@@ -258,7 +261,7 @@ export function AutomationsPage() {
                 <h1 className="text-xl font-semibold text-foreground">自动化</h1>
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand/15 text-brand">Beta</span>
               </div>
-              <p className="text-sm text-foreground/50 mt-1">创建定时任务，或排队在闲时算力空间时后台执行。</p>
+              <p className="text-sm text-foreground-muted mt-1">创建定时任务，或排队在闲时算力空间时后台执行。</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
@@ -271,7 +274,7 @@ export function AutomationsPage() {
               </button>
               <button
                 onClick={openCreate}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors bg-brand text-white hover:opacity-90"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors bg-primary text-primary-foreground hover:opacity-90"
               >
                 新建
               </button>
@@ -282,7 +285,7 @@ export function AutomationsPage() {
           {notice && (
             <div
               className={`mb-4 px-4 py-2.5 rounded-lg text-sm ${
-                noticeError ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-500'
+                noticeError ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
               }`}
             >
               {notice}
@@ -295,34 +298,34 @@ export function AutomationsPage() {
               <h2 className="text-sm font-medium text-foreground mb-1">
                 {editing ? '编辑定时任务' : '新建定时任务'}
               </h2>
-              <p className="text-xs text-foreground/50 mb-4">配置任务的执行时间、指令和运行方式。</p>
+              <p className="text-xs text-foreground-muted mb-4">配置任务的执行时间、指令和运行方式。</p>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-foreground/60 mb-1.5">任务标题</label>
+                  <label className="block text-xs text-foreground-muted mb-1.5">任务标题</label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="例如：每日站会摘要"
-                    className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+                    className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-foreground/60 mb-1.5">调度</label>
+                  <label className="block text-xs text-foreground-muted mb-1.5">调度</label>
                   <div className="flex items-center gap-2 flex-wrap">
                     <select
                       value={freq}
                       onChange={(e) => setFreq(e.target.value as 'minutes' | 'daily' | 'weekdays')}
-                      className="bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-input-border-focused"
+                      className="khy-select bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-input-border-focused"
                     >
                       <option value="minutes">自定义间隔</option>
                       <option value="daily">每天</option>
                       <option value="weekdays">每工作日</option>
                     </select>
                     {freq === 'minutes' ? (
-                      <div className="flex items-center gap-2 text-sm text-foreground/60">
+                      <div className="flex items-center gap-2 text-sm text-foreground-muted">
                         <span>每</span>
                         <input
                           type="number"
@@ -346,36 +349,36 @@ export function AutomationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-foreground/60 mb-1.5">指令</label>
+                  <label className="block text-xs text-foreground-muted mb-1.5">指令</label>
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={4}
                     placeholder="每次运行时这个任务要做什么？"
-                    className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused resize-y"
+                    className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused resize-y"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-foreground/60 mb-1.5">最大运行次数（留空表示无限重复）</label>
+                  <label className="block text-xs text-foreground-muted mb-1.5">最大运行次数（留空表示无限重复）</label>
                   <input
                     type="number"
                     min={1}
                     value={maxRuns}
                     onChange={(e) => setMaxRuns(e.target.value)}
                     placeholder="例如：10"
-                    className="w-40 bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+                    className="w-40 bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
                   />
                 </div>
 
-                {formError && <p className="text-sm text-red-400">{formError}</p>}
+                {formError && <p className="text-sm text-destructive">{formError}</p>}
 
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={() => {
                       void submitForm()
                     }}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-brand text-white hover:opacity-90 transition-opacity"
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     {editing ? '保存' : '创建定时任务'}
                   </button>
@@ -395,7 +398,7 @@ export function AutomationsPage() {
             <div className="bg-card border border-card-border rounded-xl p-12 text-center">
               <span className="text-3xl mb-3 block">◷</span>
               <p className="text-sm font-medium text-foreground/70 mb-1">{EMPTY.title}</p>
-              <p className="text-xs text-foreground/40 mb-5">{EMPTY.description}</p>
+              <p className="text-xs text-foreground-muted mb-5">{EMPTY.description}</p>
               <button
                 onClick={openCreate}
                 className="px-4 py-2 text-sm font-medium rounded-lg border border-brand/30 text-brand hover:bg-brand/10 transition-colors"
@@ -416,7 +419,7 @@ export function AutomationsPage() {
                           <span className="text-sm font-medium text-foreground">{a.title}</span>
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${lc.cls}`}>{lc.label}</span>
                         </div>
-                        <div className="text-xs text-foreground/50 mt-1.5 flex items-center gap-3 flex-wrap">
+                        <div className="text-xs text-foreground-muted mt-1.5 flex items-center gap-3 flex-wrap">
                           <span>{scheduleSummary(a.schedule)}</span>
                           <span>
                             {typeof a.maxRuns === 'number'
@@ -426,7 +429,7 @@ export function AutomationsPage() {
                           {a.enabled && a.nextRunAt !== null && !isRunning && (
                             <span>下次运行 {formatWhen(a.nextRunAt)}</span>
                           )}
-                          {isRunning && <span className="text-foreground/60">进行中</span>}
+                          {isRunning && <span className="text-foreground-muted">进行中</span>}
                         </div>
                       </div>
                       {/* Row actions — ZCode: runNow / pause / resume / edit / history / delete */}
@@ -462,12 +465,12 @@ export function AutomationsPage() {
                         </button>
                         {confirmDelete === a.id ? (
                           <span className="flex items-center gap-1.5">
-                            <span className="text-xs text-foreground/60">确定删除？此操作无法撤销</span>
+                            <span className="text-xs text-foreground-muted">确定删除？此操作无法撤销</span>
                             <button
                               onClick={() => {
                                 void doDelete(a)
                               }}
-                              className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-500/90 text-white hover:bg-red-500 transition-colors"
+                              className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
                             >
                               确认
                             </button>
@@ -481,7 +484,7 @@ export function AutomationsPage() {
                         ) : (
                           <button
                             onClick={() => setConfirmDelete(a.id)}
-                            className="px-2.5 py-1.5 text-xs text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="px-2.5 py-1.5 text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                           >
                             删除
                           </button>
@@ -490,30 +493,30 @@ export function AutomationsPage() {
                     </div>
 
                     {/* Prompt preview */}
-                    <div className="text-xs text-foreground/40 mt-2 line-clamp-2">{a.prompt}</div>
+                    <div className="text-xs text-foreground-muted mt-2 line-clamp-2">{a.prompt}</div>
 
                     {/* Run history — ZCode: runs.title / col.* / status.* */}
                     {historyOpen === a.id && (
                       <div className="mt-4 border-t border-card-border pt-3">
-                        <div className="text-xs font-medium text-foreground/60 mb-2">运行历史</div>
+                        <div className="text-xs font-medium text-foreground-muted mb-2">运行历史</div>
                         {a.runs.length === 0 ? (
-                          <p className="text-xs text-foreground/40">还没有运行记录。</p>
+                          <p className="text-xs text-foreground-muted">还没有运行记录。</p>
                         ) : (
                           <div className="space-y-2">
                             {a.runs.map((r, i) => {
                               const st = RUN_STATUS[r.status]
                               return (
                                 <div key={i} className="text-xs flex items-center gap-3 flex-wrap">
-                                  <span className="text-foreground/60 w-32">{formatWhen(r.startedAt)}</span>
-                                  <span className="text-foreground/40 w-10">{TRIGGER_LABEL[r.trigger]}</span>
+                                  <span className="text-foreground-muted w-32">{formatWhen(r.startedAt)}</span>
+                                  <span className="text-foreground-muted w-10">{TRIGGER_LABEL[r.trigger]}</span>
                                   <span className={`w-12 ${st.cls}`}>{st.label}</span>
-                                  <span className="text-foreground/40 w-16">{formatDuration(r.durationMs)}</span>
+                                  <span className="text-foreground-muted w-16">{formatDuration(r.durationMs)}</span>
                                   {r.resultPreview && (
-                                    <span className="text-foreground/50 truncate flex-1 min-w-[200px]">
+                                    <span className="text-foreground-muted truncate flex-1 min-w-[200px]">
                                       {r.resultPreview}
                                     </span>
                                   )}
-                                  {r.error && <span className="text-red-400/80 truncate flex-1 min-w-[200px]">{r.error}</span>}
+                                  {r.error && <span className="text-destructive/80 truncate flex-1 min-w-[200px]">{r.error}</span>}
                                 </div>
                               )
                             })}

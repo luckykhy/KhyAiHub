@@ -1,4 +1,6 @@
+// khy-canary: Khy-20261102-283-DYW8FWYR
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Icon, type IconName } from '../ui/Icon'
 
 // 工作区文件树（侧栏 fileTree 视图，workspaceFileTree.* 文案）：
 // 数据经 __KHYOS__.workspaceReadTree → main workspace:readTree（单目录懒加载，
@@ -27,7 +29,12 @@ interface FileTreeProps {
 
 // Loading text carries action + target (Rule 2). Item count is unknown until
 // readdir returns, so no fabricated progress digits are shown.
-const loadingText = (dirName: string) => `读取 ${dirName} 目录...`
+const loadingText = (dirName: string) => `读取 ${dirName} 目录…`
+
+// 步长取 ZCode 真源（每级 .75rem + 基 .5rem，见
+// zcode-analysis/unpacked/out/renderer/assets/styles-t2tKjMWX.css 的
+// pl-[calc(var(--workspace-file-tree-depth)*.75rem+.5rem)]）—— 1:1 复刻以真源为准。
+const INDENT_PX = 12
 
 const loadDir = (dirPath: string, query: string): Promise<ReadTreePayload> => {
   const api = (window as unknown as {
@@ -110,43 +117,45 @@ export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
     <div className="flex flex-col h-full overflow-hidden">
       {/* 头部：workspaceFileTree.title + 返回任务由 WorkspaceSidebar 视图切换承担 */}
       <div className="px-3 pt-3 pb-2 flex items-center gap-2 shrink-0">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0 text-foreground/60">
-          <path d="M2 4h8M2 4a1 1 0 011-1h2l1 1h3a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" strokeWidth="1.2" />
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0 text-foreground-muted">
+          <path d="M2 4h8M2 4a1 1 0 011-1h2l1 1h3a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" strokeWidth="1" />
         </svg>
         <span className="text-sm font-medium text-foreground truncate" title={rootPath}>{rootName}</span>
         <div className="flex-1" />
         <button
           onClick={handleRefresh}
-          className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"
+          className="w-7 h-7 rounded-md flex items-center justify-center text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"
           title="刷新文件树"
           aria-label="刷新文件树"
         >
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M12 7a5 5 0 11-1.5-3.5M12 1.5V4h-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 7a5 5 0 11-1.5-3.5M12 1.5V4h-2.5" stroke="currentColor" strokeWidth="0.93" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
 
       {/* 搜索框：workspaceFileTree.searchPlaceholder */}
-      <div className="px-2.5 pb-2 shrink-0">
+      <div className="px-3 pb-2 shrink-0">
         <div className="relative">
           <input
             ref={searchInputRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索文件..."
+            placeholder="搜索文件…"
             aria-label="搜索文件"
-            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-input-border-focused focus:outline-none transition-colors"
+            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-input-border-focused focus:outline-none transition-colors"
           />
           {search && (
             <button
               onClick={() => { setSearch(''); searchInputRef.current?.focus() }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground text-sm font-bold"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded flex items-center justify-center text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors"
               title="清空文件搜索"
               aria-label="清空文件搜索"
             >
-              ✕
+              <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="0.93" strokeLinecap="round" />
+              </svg>
             </button>
           )}
         </div>
@@ -155,14 +164,14 @@ export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
       {/* 树体 */}
       <div className="flex-1 overflow-auto py-1">
         {loading ? (
-          <div className="px-3 py-6 text-sm text-foreground/50">{loadingText(rootName)}</div>
+          <div className="px-3 py-6 text-sm text-foreground-muted">{loadingText(rootName)}</div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <span className="text-3xl mb-3">⚠</span>
+            <span className="mb-3 text-foreground-muted"><Icon name="warning" size={32} /></span>
             <span className="text-sm text-destructive leading-relaxed">{error}</span>
           </div>
         ) : items.length === 0 ? (
-          <div className="px-3 py-6 text-sm text-foreground/40">
+          <div className="px-3 py-6 text-sm text-foreground-muted">
             {search ? '没有匹配的文件。' : '当前目录为空。'}
           </div>
         ) : (
@@ -213,34 +222,38 @@ function TreeRow({
     <div>
       <button
         onClick={toggle}
-        className="w-full flex items-center gap-1 px-2 py-1 mx-1 rounded-md text-left transition-colors hover:bg-surface-hover"
-        style={{ paddingLeft: depth * 14 + 8 }}
+        className="relative w-full flex items-center gap-1 px-2 py-1 mx-1 rounded-md text-left transition-colors hover:bg-surface-hover"
+        style={{ paddingLeft: depth * INDENT_PX + 8 }}
         title={item.path}
       >
+        <IndentGuides count={depth} boxLeft={4} />
         {isDir ? (
-          <span className={`w-4 h-4 flex items-center justify-center text-xs text-foreground/40 transition-transform duration-150 flex-shrink-0 ${expanded ? 'rotate-90' : ''}`}>
-            ▶
+          <span className={`w-4 h-4 flex items-center justify-center text-foreground-subtle transition-transform duration-150 flex-shrink-0 ${expanded ? 'rotate-90' : ''}`}>
+            <Icon name="chevron-right" size={12} />
           </span>
         ) : (
           <span className="w-4 flex-shrink-0" />
         )}
-        <span className="text-xs flex-shrink-0" aria-hidden="true">
-          {isDir ? (expanded ? '▾' : '▸') : fileIcon(item.name)}
+        <span className="w-4 text-center text-xs flex-shrink-0" aria-hidden="true">
+          {isDir ? null : <Icon name={fileIcon(item.name)} size={13} />}
         </span>
         <span className="truncate text-sm text-foreground/90">{item.name}</span>
       </button>
       {expanded && isDir && (
         <div>
           {childState === 'loading' ? (
-            <div className="px-3 py-1.5 text-xs text-foreground/40" style={{ paddingLeft: depth * 14 + 30 }}>
+            <div className="relative px-3 py-1.5 text-xs text-foreground-muted" style={{ paddingLeft: (depth + 1) * INDENT_PX + 16 }}>
+              <IndentGuides count={depth + 1} boxLeft={0} />
               {loadingText(item.name)}
             </div>
           ) : childState === 'error' ? (
-            <div className="px-3 py-1.5 text-xs text-destructive" style={{ paddingLeft: depth * 14 + 30 }}>
+            <div className="relative px-3 py-1.5 text-xs text-destructive" style={{ paddingLeft: (depth + 1) * INDENT_PX + 16 }}>
+              <IndentGuides count={depth + 1} boxLeft={0} />
               读取目录失败：请检查目录权限后重试
             </div>
           ) : children.length === 0 ? (
-            <div className="px-3 py-1.5 text-xs text-foreground/40" style={{ paddingLeft: depth * 14 + 30 }}>
+            <div className="relative px-3 py-1.5 text-xs text-foreground-muted" style={{ paddingLeft: (depth + 1) * INDENT_PX + 16 }}>
+              <IndentGuides count={depth + 1} boxLeft={0} />
               当前目录为空。
             </div>
           ) : (
@@ -254,14 +267,33 @@ function TreeRow({
   )
 }
 
-// Glyph icons by extension (placeholder set — swap for real assets later)
-const FILE_ICONS: Record<string, string> = {
-  ts: '◆', tsx: '◆', js: '◇', jsx: '◇', mjs: '◇', cjs: '◇',
-  vue: '○', json: '☰', md: '✲', css: '◫', html: '◉',
-  py: '●', bat: '✱', ps1: '✱', sh: '✱', yml: '✱', yaml: '✱', toml: '✱',
+// 祖先列引导线：x 恒为「第 i 层父项箭头槽中线」= 12i + 20（树坐标）；
+// boxLeft 传所在定位盒的左缘（行按钮 4 = mx-1，占位块 0），把树坐标换算到本盒坐标。
+// 绝对定位元素绘制在行内内容之上，安全性来自「线不进内容列」（最内侧仍差 4px），
+// 不来自 DOM 顺序或 z-index —— 若把线右移，它会静默盖在字形上。
+function IndentGuides({ count, boxLeft }: { count: number; boxLeft: number }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className="absolute top-0 bottom-0 w-px bg-border pointer-events-none"
+          style={{ left: i * INDENT_PX + 20 - boxLeft }}
+        />
+      ))}
+    </>
+  )
 }
 
-function fileIcon(name: string): string {
+// 按扩展名映射图标（统一走 Icon 注册表，描边与全局一致）
+const FILE_ICONS: Record<string, IconName> = {
+  ts: 'code', tsx: 'code', js: 'code', jsx: 'code', mjs: 'code', cjs: 'code',
+  vue: 'code', json: 'file', md: 'doc', css: 'file', html: 'file',
+  py: 'file', bat: 'terminal', ps1: 'terminal', sh: 'terminal', yml: 'terminal', yaml: 'terminal', toml: 'terminal',
+}
+
+function fileIcon(name: string): IconName {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  return FILE_ICONS[ext] ?? '▤'
+  return FILE_ICONS[ext] ?? 'file'
 }

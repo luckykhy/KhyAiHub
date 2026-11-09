@@ -1,4 +1,6 @@
+// khy-canary: Khy-20261102-282-PAQZ668H
 import { useState, useEffect, useRef } from 'react'
+import { Icon } from '../ui/Icon'
 
 // 模式选择器 — 对齐 ZCode Composer 工具行的「切换模式」combobox
 // （ZC-ALIGN-002 G0b 实测 + 092 §7.3）。真源四项取自 i18n
@@ -55,22 +57,20 @@ export function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="px-2 py-1 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1 whitespace-nowrap"
+        className="inline-flex items-center h-7 px-2 rounded-md text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors gap-1 whitespace-nowrap"
         title={`切换模式（当前：${current.label}，Shift+Tab 循环切换）`}
         aria-haspopup="menu"
         aria-expanded={open}
       >
         <span>{current.label}</span>
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-          <path d="M1.5 3l2.5 2.5L6.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        </svg>
+        <Icon name="chevron-down" size={12} className="shrink-0 opacity-70" />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute bottom-full mb-2 right-0 w-60 bg-popover border border-popover-border rounded-xl shadow-xl overflow-hidden z-50"
+          className="absolute bottom-full mb-2 right-0 w-60 bg-popover border border-popover-border rounded-lg shadow-xl overflow-hidden z-50"
         >
-          <div className="px-3 py-2 text-xs font-semibold text-popover-header border-b border-popover-border">
+          <div className="px-3 py-2 text-xs font-semibold text-foreground-muted border-b border-popover-border">
             切换模式
           </div>
           {AGENT_MODES.map((m) => (
@@ -83,7 +83,7 @@ export function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
               }`}
             >
               <div className="text-sm font-medium text-popover-foreground">{m.label}</div>
-              <div className="text-xs text-foreground/40 mt-0.5">{m.description}</div>
+              <div className="text-xs text-foreground-muted mt-0.5">{m.description}</div>
             </button>
           ))}
         </div>

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-285-PFNN80J9
 // KeyManagerPage — 密钥与端点中心管理 (DESIGN-ARCH-091 §5.2, P1).
 //
 // Four tabs: T1 Provider 与密钥 / T2 端点预设 / T3 Agent 应用矩阵（Mode B
@@ -17,14 +18,15 @@ import {
   type AuditEntry,
   type EnvOverlayView
 } from '../../keyManager/api'
+import { Icon, type IconName } from '../ui/Icon'
 
 type Tab = 'providers' | 'endpoints' | 'agents' | 'health'
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'providers', label: 'Provider 与密钥', icon: '◆' },
-  { id: 'endpoints', label: '端点预设', icon: '◉' },
-  { id: 'agents', label: 'Agent 应用', icon: '❯' },
-  { id: 'health', label: '健康与审计', icon: '▤' }
+const TABS: { id: Tab; label: string; icon: IconName }[] = [
+  { id: 'providers', label: 'Provider 与密钥', icon: 'plugins' },
+  { id: 'endpoints', label: '端点预设', icon: 'browser' },
+  { id: 'agents', label: 'Agent 应用', icon: 'chat' },
+  { id: 'health', label: '健康与审计', icon: 'check' }
 ]
 
 const P1_APPS: { id: string; label: string }[] = [
@@ -51,7 +53,7 @@ export function KeyManagerPage({
 
   if (!api) {
     return (
-      <div className="h-full flex items-center justify-center text-sm text-foreground/60 bg-panel">
+      <div className="h-full flex items-center justify-center text-sm text-foreground-muted bg-panel">
         密钥管理模块不可用：preload 未就绪，请重启 KhyOS 桌面端
       </div>
     )
@@ -61,13 +63,16 @@ export function KeyManagerPage({
     <div className={`flex flex-col bg-panel text-foreground ${standalone ? 'h-full' : 'min-h-0'}`}>
       {standalone && (
         <div className="flex items-center justify-between px-4 h-11 border-b border-border flex-shrink-0">
-          <div className="text-sm font-semibold">◆ KhyOS 密钥与端点管理</div>
+          <div className="flex items-center gap-1.5 text-sm font-semibold">
+            <Icon name="settings" size={14} className="text-foreground-muted" />
+            KhyOS 密钥与端点管理
+          </div>
           <button
             onClick={() => api.closeWindow()}
-            className="text-foreground/60 hover:text-foreground text-lg leading-none px-2"
+            className="text-foreground-muted hover:text-foreground leading-none px-2"
             aria-label="关闭窗口"
           >
-            ✕
+            <Icon name="close" size={14} />
           </button>
         </div>
       )}
@@ -83,7 +88,7 @@ export function KeyManagerPage({
                   tab === t.id ? 'bg-selected text-brand font-medium' : 'text-foreground/70 hover:bg-surface-hover'
                 }`}
               >
-                <span>{t.icon}</span>
+                <Icon name={t.icon} size={13} />
                 <span>{t.label}</span>
               </button>
             ))}
@@ -161,7 +166,7 @@ function T1Providers({
   const [selected, setSelected] = useState('')
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
-  // add-key form（DESIGN-ARCH-150 §3.2：常驻表单收成「＋ 添加密钥」展开式纵向单列）
+  // add-key form（DESIGN-ARCH-150 §3.2：常驻表单收成「添加密钥」展开式纵向单列）
   const [showAdd, setShowAdd] = useState(false)
   const [fProvider, setFProvider] = useState('')
   const [fEndpoint, setFEndpoint] = useState('')
@@ -240,10 +245,10 @@ function T1Providers({
   // 动线状态条（DESIGN-ARCH-150 §3.3）：数据全部来自已加载的 providers/cards/agentMode
   const nextStep: { text: string; goto?: 'endpoints' | 'agents'; done?: boolean; prefill?: string } | null = (() => {
     if (!sel) return null
-    if (sel.keys.length === 0) return { text: `第 1 步：为 ${sel.id} 添加密钥（点上方「＋ 添加密钥」）` }
+    if (sel.keys.length === 0) return { text: `第 1 步：为 ${sel.id} 添加密钥（点上方「添加密钥」）` }
     if (cards.length === 0) return { text: '下一步：创建端点卡片 →', goto: 'endpoints', prefill: sel.keys[0]?.endpoint || '' }
     if (!agentActivated) return { text: '下一步：激活 Agent 应用 →', goto: 'agents' }
-    return { text: '✓ 配置就绪：卡片已激活，可在聊天中选择使用', done: true }
+    return { text: '配置就绪：卡片已激活，可在聊天中选择使用', done: true }
   })()
 
   async function doAdd() {
@@ -300,7 +305,7 @@ function T1Providers({
       {!embedded && (
         <>
           <h2 className="text-lg font-bold mb-1">Provider 与密钥</h2>
-          <p className="text-xs text-foreground/50 mb-4">
+          <p className="text-xs text-foreground-muted mb-4">
             一处配置 → 全 Agent 跟随。密钥默认脱敏展示，reveal 为一次性操作（60s 冷却 + 审计）。
           </p>
         </>
@@ -312,24 +317,26 @@ function T1Providers({
       {nextStep && (
         <div
           onClick={nextStep.goto ? () => onNavigate?.(nextStep.prefill || '') : undefined}
-          className={`text-xs rounded-lg border px-3 py-2 mb-3 ${
+          className={`text-xs rounded-lg border px-3 py-2 mb-3 flex items-center gap-1.5 ${
             nextStep.done
               ? 'border-success/40 text-success bg-success/10'
               : 'border-brand/30 text-brand bg-brand/10'
           } ${nextStep.goto ? 'cursor-pointer hover:bg-brand/20' : ''}`}
         >
-          {nextStep.text}
+          {nextStep.done && <Icon name="check" size={12} />}
+          <span>{nextStep.text}</span>
         </div>
       )}
 
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+          className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg border transition-colors ${
             showAdd ? 'border-brand/60 bg-brand/10 text-brand' : 'border-brand/30 text-brand hover:bg-brand/10'
           }`}
         >
-          ＋ 添加密钥
+          <Icon name="plus" size={12} />
+          添加密钥
         </button>
         <button
           onClick={async () => {
@@ -359,12 +366,12 @@ function T1Providers({
               }`}
             >
               <div className="font-medium">{p.id}</div>
-              <div className="text-xs text-foreground/50">{p.keys.length} 条密钥</div>
+              <div className="text-xs text-foreground-muted">{p.keys.length} 条密钥</div>
             </button>
           ))}
           {envOverlay.filter((e) => e.set).length > 0 && (
             <div className="pt-2">
-              <div className="text-xs text-foreground/40 px-1 mb-1">env 叠加层（仅展示）</div>
+              <div className="text-xs text-foreground px-1 mb-1">env 叠加层（仅展示）</div>
               {envOverlay
                 .filter((e) => e.set)
                 .map((e) => (
@@ -381,8 +388,8 @@ function T1Providers({
           {showAdd && (
             <div className="bg-card border border-card-border rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">添加密钥</div>
-                <button onClick={() => setShowAdd(false)} className="text-xs text-foreground/50 hover:text-foreground">
+                <div className="text-xs font-medium text-foreground-muted">添加密钥</div>
+                <button onClick={() => setShowAdd(false)} className="text-xs text-foreground-muted hover:text-foreground">
                   收起
                 </button>
               </div>
@@ -415,13 +422,13 @@ function T1Providers({
                 <button
                   onClick={() => void doAdd()}
                   disabled={busy === 'add'}
-                  className="px-4 py-1.5 text-sm rounded-lg bg-brand text-white disabled:opacity-50"
+                  className="px-4 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
                 >
                   {busy === 'add' ? '入库中…' : '入库'}
                 </button>
               </div>
               {fetchedModels && (
-                <div className="text-xs text-foreground/60">
+                <div className="text-xs text-foreground-muted">
                   {fetchedModels.verified ? (
                     <span>
                       模型目录已拉取（{fetchedModels.models.length} 个）：{fetchedModels.models.slice(0, 8).join(', ')}
@@ -438,10 +445,10 @@ function T1Providers({
           {sel && editKey && (
             <div className="bg-card border border-brand/40 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+                <div className="text-xs font-medium text-foreground-muted">
                   编辑密钥 — {sel.id} · {editKey.keyId.slice(0, 8)}
                 </div>
-                <button onClick={() => setEditKey(null)} className="text-xs text-foreground/50 hover:text-foreground">
+                <button onClick={() => setEditKey(null)} className="text-xs text-foreground-muted hover:text-foreground">
                   取消
                 </button>
               </div>
@@ -468,7 +475,7 @@ function T1Providers({
                 <button
                   onClick={() => void doUpdateKey()}
                   disabled={busy === 'edit'}
-                  className="px-4 py-1.5 text-sm rounded-lg bg-brand text-white disabled:opacity-50"
+                  className="px-4 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
                 >
                   {busy === 'edit' ? '保存中…' : '保存修改'}
                 </button>
@@ -483,11 +490,11 @@ function T1Providers({
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium flex items-center gap-2">
                       {k.label || k.fingerprint}
-                      <span className="text-xs text-foreground/40 font-mono">{k.mask}</span>
+                      <span className="text-xs text-foreground-muted font-mono">{k.mask}</span>
                       {!k.enabled && <span className="text-xs px-1.5 rounded bg-destructive/20 text-destructive">已停用</span>}
                       {k.source === 'env' && <span className="text-xs px-1.5 rounded bg-brand/20 text-brand">env</span>}
                     </div>
-                    <div className="text-xs text-foreground/50 mt-0.5 truncate">{k.endpoint || '(未设端点)'}</div>
+                    <div className="text-xs text-foreground-muted mt-0.5 truncate">{k.endpoint || '(未设端点)'}</div>
                   </div>
                   {k.source !== 'env' && (
                     <button
@@ -548,14 +555,14 @@ function T1Providers({
                   </button>
                 </div>
               ))}
-              {sel.keys.length === 0 && <div className="px-4 py-6 text-xs text-foreground/40 text-center">该 provider 暂无密钥</div>}
+              {sel.keys.length === 0 && <div className="px-4 py-6 text-xs text-foreground-muted text-center">该 provider 暂无密钥</div>}
             </div>
           )}
 
           {/* 只读：网关聚合模型目录（默认折叠，DESIGN-ARCH-150 §3.3） */}
           {catalog.length > 0 && (
             <details className="bg-card border border-card-border rounded-xl p-4">
-              <summary className="text-xs font-semibold text-foreground/60 uppercase tracking-wider cursor-pointer select-none">
+              <summary className="text-xs font-medium text-foreground-muted cursor-pointer select-none">
                 网关聚合模型目录（只读 · {catalog.length} 个）
               </summary>
               <div className="flex flex-wrap gap-1.5 mt-3">
@@ -699,7 +706,7 @@ function T2Endpoints({
       {!embedded && (
         <>
           <h2 className="text-lg font-bold mb-1">端点预设</h2>
-          <p className="text-xs text-foreground/50 mb-4">
+          <p className="text-xs text-foreground-muted mb-4">
             卡片 = 端点 + 协议 + 池内 key 引用（无凭据设计：卡片本身不存密钥）。预设目录{' '}
             {presets.length > 0 && presets[0].source === 'builtin-fallback' ? '（内置回退源，backend 未解析）' : '（backend 真源）'}。
           </p>
@@ -714,9 +721,9 @@ function T2Endpoints({
             <div key={c.id} className="flex items-center gap-3 bg-card border border-card-border rounded-xl px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">
-                  {c.name} <span className="text-xs text-foreground/40">[{c.protocol}]</span>
+                  {c.name} <span className="text-xs text-foreground-muted">[{c.protocol}]</span>
                 </div>
-                <div className="text-xs text-foreground/50 truncate">{c.baseUrl} · 模型 {c.defaultModel || '(未设)'} · key {c.keyId ? c.keyId.slice(0, 8) : '(未绑定)'}</div>
+                <div className="text-xs text-foreground-muted truncate">{c.baseUrl} · 模型 {c.defaultModel || '(未设)'} · key {c.keyId ? c.keyId.slice(0, 8) : '(未绑定)'}</div>
               </div>
               {!c.enabled && <span className="text-xs px-1.5 rounded bg-destructive/20 text-destructive">停用</span>}
               <button
@@ -737,17 +744,17 @@ function T2Endpoints({
               </button>
             </div>
           ))}
-          {cards.length === 0 && <div className="text-xs text-foreground/40 py-8 text-center bg-card border border-card-border rounded-xl">暂无卡片，在右侧创建</div>}
+          {cards.length === 0 && <div className="text-xs text-foreground-muted py-8 text-center bg-card border border-card-border rounded-xl">暂无卡片，在右侧创建</div>}
         </div>
 
         <div className="w-80 flex-shrink-0 space-y-2">
           <div className="bg-card border border-card-border rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+              <div className="text-xs font-medium text-foreground-muted">
                 {editingCard ? `编辑卡片 — ${editingCard.name}` : '新建卡片'}
               </div>
               {editingCard && (
-                <button onClick={cancelEditCard} className="text-xs text-foreground/50 hover:text-foreground">
+                <button onClick={cancelEditCard} className="text-xs text-foreground-muted hover:text-foreground">
                   取消
                 </button>
               )}
@@ -760,7 +767,7 @@ function T2Endpoints({
                 const p = presets.find((x) => x.id === e.target.value)
                 if (p) setFModel(p.defaultModel || '')
               }}
-              className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none"
+              className="khy-select bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none"
             >
               <option value="">自定义端点…</option>
               {presets.map((p) => (
@@ -772,7 +779,7 @@ function T2Endpoints({
             {!preset && (
               <>
                 <input value={fEndpoint} onChange={(e) => setFEndpoint(e.target.value)} placeholder="端点 Base URL" className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none focus:border-input-border-focused" />
-                <select value={fProtocol} onChange={(e) => setFProtocol(e.target.value)} className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none">
+                <select value={fProtocol} onChange={(e) => setFProtocol(e.target.value)} className="khy-select bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none">
                   {PROTOCOLS.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -781,7 +788,7 @@ function T2Endpoints({
                 </select>
               </>
             )}
-            <select value={fKeyId} onChange={(e) => setFKeyId(e.target.value)} className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none">
+            <select value={fKeyId} onChange={(e) => setFKeyId(e.target.value)} className="khy-select bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none">
               <option value="">不绑定密钥（端点直连无鉴权场景）</option>
               {allKeys.map((k) => (
                 <option key={k.keyId} value={k.keyId}>
@@ -805,12 +812,12 @@ function T2Endpoints({
               >
                 验证端点
               </button>
-              <button onClick={() => void doSave()} className="flex-1 text-xs px-2 py-1.5 rounded-lg bg-brand text-white">
+              <button onClick={() => void doSave()} className="flex-1 text-xs px-2 py-1.5 rounded-lg bg-primary text-primary-foreground">
                 {editingCard ? '保存修改' : '保存卡片'}
               </button>
             </div>
             {validateState && (
-              <div className="text-xs text-foreground/60">
+              <div className="text-xs text-foreground-muted">
                 {validateState.reachable ? `端点可达 (HTTP ${validateState.status}，${validateState.latencyMs}ms)` : `端点不可达：${validateState.error || '网络错误'}`}
               </div>
             )}
@@ -891,7 +898,7 @@ function T3Agents({
       {!embedded && (
         <>
           <h2 className="text-lg font-bold mb-1">Agent 应用</h2>
-          <p className="text-xs text-foreground/50 mb-4">
+          <p className="text-xs text-foreground-muted mb-4">
             推荐「khy 聚合」模式：Agent 只指向 khy 本地网关（凭据为本地 relay token，真实 key 不出池）。
           </p>
         </>
@@ -908,7 +915,7 @@ function T3Agents({
             <div className={`text-sm font-medium ${proxy.running ? 'text-success' : 'text-warning'}`}>
               {proxy.running ? `khy 本地网关运行中：${proxy.endpoint}` : proxy.detail}
             </div>
-            <div className="text-xs text-foreground/50 mt-0.5">
+            <div className="text-xs text-foreground-muted mt-0.5">
               {proxy.running ? '聚合模式可用：换模型/换 key 纯 khy 侧操作' : '聚合模式暂不可用（直连模式仍可用）'}
             </div>
           </div>
@@ -923,7 +930,7 @@ function T3Agents({
                   setMsg({ kind: 'err', text: `启动失败：${r.error || 'backend 服务不可用，请改用 khy CLI 启动网关'}` })
                 }
               }}
-              className="px-3 py-1.5 text-xs rounded-lg bg-brand text-white"
+              className="px-3 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground"
             >
               启动网关
             </button>
@@ -943,18 +950,18 @@ function T3Agents({
                 <div className="flex-1">
                   <div className="text-sm font-medium">
                     {app.label}
-                    {row?.mode === 'none' && <span className="text-xs text-foreground/40 ml-2">未激活</span>}
+                    {row?.mode === 'none' && <span className="text-xs text-foreground-muted ml-2">未激活</span>}
                     {row?.mode === 'proxy' && <span className="text-xs text-success ml-2">khy 聚合中</span>}
                     {row?.mode === 'direct' && <span className="text-xs text-warning ml-2">直连中</span>}
                   </div>
-                  <div className="text-xs text-foreground/50 truncate mt-0.5">
+                  <div className="text-xs text-foreground-muted truncate mt-0.5">
                     {row?.targetPath || '(目标路径未解析)'}{row?.lastApplied ? ` · 上次激活 ${new Date(row.lastApplied).toLocaleString()}` : ''}
                   </div>
                 </div>
                 <select
                   value={pick[app.id] || ''}
                   onChange={(e) => setPick((prev) => ({ ...prev, [app.id]: e.target.value }))}
-                  className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-xs min-w-[160px] focus:outline-none"
+                  className="khy-select bg-input border border-input-border rounded-lg px-3 py-1.5 text-xs min-w-[160px] focus:outline-none"
                 >
                   <option value="">选择卡片…</option>
                   {cards.map((c) => (
@@ -968,7 +975,7 @@ function T3Agents({
                     onClick={() => void doActivate(app.id, 'proxy')}
                     disabled={applying === app.id}
                     className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                      pick[app.id] ? 'text-brand border-brand/40 hover:bg-brand/10' : 'text-foreground/40 border-card-border'
+                      pick[app.id] ? 'text-brand border-brand/40 hover:bg-brand/10' : 'text-foreground-muted border-card-border'
                     } disabled:opacity-50`}
                   >
                     激活（khy 聚合）
@@ -978,7 +985,7 @@ function T3Agents({
                   onClick={() => void doActivate(app.id, qoderOnlyProxy ? 'proxy' : 'direct')}
                   disabled={applying === app.id}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                    qoderOnlyProxy ? 'text-brand border-brand/40 hover:bg-brand/10' : pick[app.id] ? 'text-foreground/70 border-card-border hover:bg-surface-hover' : 'text-foreground/40 border-card-border'
+                    qoderOnlyProxy ? 'text-brand border-brand/40 hover:bg-brand/10' : pick[app.id] ? 'text-foreground/70 border-card-border hover:bg-surface-hover' : 'text-foreground-muted border-card-border'
                   } disabled:opacity-50`}
                 >
                   {qoderOnlyProxy ? '激活（qoder-proxy 门控）' : '激活（直连）'}
@@ -1001,7 +1008,7 @@ function T3Agents({
                 )}
               </div>
               {qoderOnlyProxy && (
-                <div className="text-xs text-foreground/40 mt-1.5">
+                <div className="text-xs text-foreground-muted mt-1.5">
                   Qoder CLI 走 qoder-proxy 门控（KHY_QODER_PROXY）：激活后网关池出现 qoder 哨兵条目，模型经 khy 代理路由。
                 </div>
               )}
@@ -1035,14 +1042,14 @@ function T4Health({ api, tick, embedded = false }: { api: NonNullable<ReturnType
         ? 'text-destructive'
         : s === 'rate'
           ? 'text-warning'
-          : 'text-foreground/60'
+          : 'text-foreground-muted'
 
   return (
     <div>
       {!embedded && (
         <>
           <h2 className="text-lg font-bold mb-1">健康与审计</h2>
-          <p className="text-xs text-foreground/50 mb-4">单条探测 10s 短超时（并发上限 4，单条卡死不阻塞批次）。</p>
+          <p className="text-xs text-foreground-muted mb-4">单条探测 10s 短超时（并发上限 4，单条卡死不阻塞批次）。</p>
         </>
       )}
 
@@ -1060,7 +1067,7 @@ function T4Health({ api, tick, embedded = false }: { api: NonNullable<ReturnType
           }
         }}
         disabled={probing}
-        className="px-3 py-1.5 text-xs rounded-lg bg-brand text-white disabled:opacity-50 mb-3"
+        className="px-3 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground disabled:opacity-50 mb-3"
       >
         {probing ? '探测中…' : '全量探测'}
       </button>
@@ -1073,24 +1080,24 @@ function T4Health({ api, tick, embedded = false }: { api: NonNullable<ReturnType
             <div key={r.keyId} className="flex items-center gap-3 px-4 py-2.5">
               <div className={`w-20 text-xs font-medium ${statusCls(r.status)}`}>{r.status}</div>
               <div className="text-xs flex-1 truncate">
-                {r.provider} <span className="text-foreground/40">({r.endpoint || '无端点'})</span>
+                {r.provider} <span className="text-foreground-muted">({r.endpoint || '无端点'})</span>
               </div>
-              <div className="text-xs text-foreground/50">{r.detail}</div>
-              <div className="text-xs text-foreground/40 w-16 text-right">{r.latencyMs}ms</div>
+              <div className="text-xs text-foreground-muted">{r.detail}</div>
+              <div className="text-xs text-foreground-muted w-16 text-right">{r.latencyMs}ms</div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">审计流水（只读）</div>
+      <div className="text-xs font-medium text-foreground-muted mb-2">审计流水（只读）</div>
       <div className="bg-card border border-card-border rounded-xl divide-y divide-card-border max-h-72 overflow-auto">
-        {audit.length === 0 && <div className="px-4 py-6 text-xs text-foreground/40 text-center">暂无审计记录</div>}
+        {audit.length === 0 && <div className="px-4 py-6 text-xs text-foreground-muted text-center">暂无审计记录</div>}
         {audit
           .slice()
           .reverse()
           .map((a, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-2 text-xs">
-              <span className="text-foreground/40 w-36">{new Date(a.ts).toLocaleString()}</span>
+              <span className="text-foreground-muted w-36">{new Date(a.ts).toLocaleString()}</span>
               <span className="w-24 text-brand">{a.op}</span>
               <span className="flex-1 truncate text-foreground/70">
                 {a.target || ''} {a.detail ? `· ${a.detail}` : ''} {a.fingerprint ? `· fp:${a.fingerprint}` : ''}
