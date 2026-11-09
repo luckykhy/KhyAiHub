@@ -223,14 +223,36 @@ router.get('/custom-providers', async (req, res) => {
 });
 
 // POST /api/user-gateway/custom-providers — add a provider+key entry (409 dup)
+//
+// 先测绿再落盘：探测不通过就不写库。表单层也有一道闸（ProviderConfigDialog），
+// 但那是 UI 约定 —— 这里才是不能被绕过的那道（2026-10-20 事故：地址少写 /v1 也照存，
+// 之后每次真实对话都以 `404 page not found` 收场）。确需跳过时显式传 force:true，
+// 响应里如实标注本次未经验证。
 router.post('/custom-providers', async (req, res) => {
   try {
     const uid = userId(req);
-    const data = await svc.addProviderEntry(uid, req.body || {});
+    const body = req.body || {};
+    const probe = body.force === true
+      ? { ok: true, count: 0, models: [], error: null, forced: true }
+      : await userModelDetectionService.probeConfig({
+          baseUrl: body.baseUrl,
+          endpoint: body.endpoint,
+          apiKey: body.key || body.apiKey,
+          apiFormat: body.apiFormat,
+        });
+    if (!probe.ok) {
+      return res.status(502).json({
+        success: false,
+        saved: false,
+        error: probe.error || '连通性自检未通过',
+        hint: '请确认 Base URL（OpenAI 兼容中转通常需带 /v1）、密钥是否属于该中转；确需跳过可传 force:true',
+      });
+    }
+    const data = await svc.addProviderEntry(uid, body);
     invalidateUser(uid);
     // Best-effort auto-detect on add: probe this provider's /v1/models and persist.
     const detection = await detectSafely(uid, data.provider);
-    res.status(201).json({ success: true, data, detection });
+    res.status(201).json({ success: true, data, detection, verification: probe });
   } catch (err) {
     fail(res, err);
   }

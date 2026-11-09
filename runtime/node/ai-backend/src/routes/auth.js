@@ -14,9 +14,20 @@ const { User } = require('@khy/shared/models');
 const { authenticateToken } = require('../middleware/auth');
 const { resolveLoginKey, normalizeAliases, findAliasConflicts } = require('../services/loginKeyResolver');
 
-// SECURITY: JWT_SECRET must be set in production
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required in production');
+// SECURITY: production refuses a secret shorter than the backend's own threshold
+// (shared/src/config/env.js requires >= 32 chars). Checking only for presence let
+// a 25-char value through — exactly the length of the compose default, which is
+// brute-forceable. The dev fallback below is 38 chars and stays byte-identical
+// across services on purpose: credentials are interchangeable, so both
+// processes must sign dev tokens with the same key.
+const MIN_SECRET_LEN = 32;
+if (process.env.NODE_ENV === 'production') {
+  const configured = String(process.env.JWT_SECRET || '').trim();
+  if (configured.length < MIN_SECRET_LEN) {
+    throw new Error(
+      `JWT_SECRET must be set to at least ${MIN_SECRET_LEN} characters in production (got ${configured.length}); generate one with: openssl rand -hex 32`
+    );
+  }
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
