@@ -29,6 +29,24 @@
  *   - 统一错误信封中间件处理异常
  */
 
+// ── V8 compile cache: reuse bytecode across launches (Node >= 22.8) ──
+// Mirrors the block at the top of bin/khy.js so that every entry point which
+// does NOT go through bin/khy.js (this server, start-daemon.js, bridgeServer.js,
+// the tray app) shares the same on-disk compile cache instead of recompiling the
+// require graph from scratch on every launch.
+//
+// Benefit is UNVERIFIED and must not be assumed: it needs a controlled A/B to
+// settle. Local measurements so far are neutral-to-slightly-negative, and an
+// earlier measurement in the repo already concluded "no stable gain, do not
+// enable" — hence this is structural parity only, and no millisecond figure
+// should be quoted from it. Rollback is three-layered: this call is fail-soft
+// (try/catch, no-op when the API is missing), NODE_DISABLE_COMPILE_CACHE=1 opts
+// out at the Node level, and deleting the cache directory resets everything.
+try {
+  const nodeModule = require('module');
+  if (typeof nodeModule.enableCompileCache === 'function') nodeModule.enableCompileCache();
+} catch { /* compile cache is a best-effort accelerator */ }
+
 const path = require('path');
 // Windows: hide child-process console windows before loading any module that may
 // spawn. Prevents the "black box flicker" when this server runs. Reuses the
@@ -246,6 +264,7 @@ const replayRoutes = require('./src/routes/replay'); // 数据回放路由
 
 const remoteSshRoutes = require('./src/routes/remoteSsh'); // 远程 SSH 会话管理
 const largeTaskRoutes = require('./src/routes/largeTasks'); // 大型任务运行时控制面
+const taskMonitorRoutes = require('./src/routes/taskMonitor'); // 任务监控只读快照（与守护进程同源）
 const aiGatewayPaymentsRoutes = require('./src/routes/aiGatewayPayments'); // AI 网关支付订单本地闭环
 const videoRoutes = require('./src/routes/video'); // 视频生成（文生视频 / 图生视频 / 关键帧动画）
 const imageRoutes = require('./src/routes/image'); // 图像生成（文生图 / 图生图，Agnes Image 2.1 Flash）
@@ -426,7 +445,11 @@ app.use('/api', apiLimiter);
 // 第1组：认证与授权（接入与路由层）
 // 设计模式：策略模式（Strategy），authLimiter 按策略限制登录频率
 // ============================================================
+// 生态 SSO：public-key / ticket 必须先于 /api/auth 挂载
+app.use('/api/auth/sso', require('./src/routes/sso'));
 app.use('/api/auth', authLimiter, authRoutes); // 登录、注册、Token刷新
+// 生态 SSO：浏览器授权跳转页（同源，读 localStorage 登录态）
+app.use('/sso', require('./src/routes/sso'));
 
 app.use('/api/users', userRoutes); // 用户信息增删改查
 
@@ -591,6 +614,21 @@ app.use('/.well-known', require('./src/routes/wellKnown'));
 // 公开发现 + 按需 Bearer 鉴权（KHY_A2A_API_KEY）。见 routes/a2a.js 与 [DESIGN-A2A-002]。
 app.use('/v1', require('./src/routes/a2a'));
 
+// A2A 入站 executor 接线（P0-2）：门控 KHY_A2A_EXECUTOR（default-off，PROCESS-008 S1）。
+// 未设 → routes/a2a.js 的默认回显 executor 原样生效，行为与接线前逐字节一致。
+// 设了 → message/send 的文本真驱一次 agent 循环（审批 / shell 安全 / 循环检测走
+// toolUseLoop 正门，不接交互审批通道 → 无人应答时 fail-closed）。装失败只警告、
+// 不回退成静默回显：任务会如实落 failed，而不是假装跑过。
+try {
+  const a2aExecutor = require('./src/services/a2a/executor');
+  const wired = a2aExecutor.installServerExecutor({ route: require('./src/routes/a2a') });
+  if (wired.installed) {
+    console.log('[A2A] executor 接线完成：message/send 将驱动 agent 循环（KHY_A2A_EXECUTOR 已开启）');
+  }
+} catch (e) {
+  console.warn('[A2A] executor 接线失败，保持默认回显 executor:', e && e.message ? e.message : e);
+}
+
 app.use('/api/feedback', feedbackRoutes); // 用户反馈收集
 
 // ============================================================
@@ -645,7 +683,8 @@ app.use('/api/api-keys', require('./src/routes/apiKey')); // API 密钥管理
 app.use('/api/channel-apis', require('./src/routes/channelApis')); // 渠道 API 注册表（端点 + 加密 Key + 配置指南，路由内部自门禁 admin）
 
 app.use('/api/cc-switch', require('./src/routes/ccSwitch')); // CC-Switch 供应商卡片（GET cards/status + POST use，路由内部自门禁 admin）
-
+app.use('/api/client-apps', require('./src/routes/clientApps')); // 客户端应用目录 + 扫描（[DESIGN-ARCH-189] S1 只读：GET catalog + POST scan，路由内部自门禁 admin；无写路由，RUNTIME-010 由执行面保证）
+app.use('/api/dev-env', require('./src/routes/devEnv')); // 开发环境盘点/安装/清单（[DESIGN-ARCH-204]：auth 在路由内部 use，挂载处不加，防双重鉴权）
 app.use('/api/downloads', require('./src/routes/downloads')); // 安装包下载（Windows/APK）
 app.use('/api/ai-gateway-admin', require('./src/routes/aiGatewayAdmin')); // AI 网关管理（本地 Key Pool 管理，需 Admin 认证）
 app.use('/api/ai-gateway/payments', authMiddleware, aiGatewayPaymentsRoutes); // 支付订单（本地实现，避免落到通用 AI 代理）
@@ -654,6 +693,7 @@ app.use('/api/video', authMiddleware, aiLimiter, videoRoutes); // 视频生成�
 app.use('/api/image', authMiddleware, aiLimiter, imageRoutes); // 图像生成（文生图 / 图生图，Agnes Image 2.1 Flash）
 app.use('/api/remote/ssh', authMiddleware, remoteSshRoutes); // 远程 SSH 会话与命令预演（需认证）
 app.use('/api/large-tasks', authMiddleware, largeTaskRoutes); // 大型任务调度与审计（需认证）
+app.use('/api/task-monitor', authMiddleware, taskMonitorRoutes.router); // 任务监控只读快照（需认证；守护进程另有同名端点）
 app.use('/api/proxy-subscriptions', authMiddleware, require('./src/routes/proxySubscription')); // 代理管理：订阅组导入（需认证，SSRF 校验）
 
 // ============================================================
@@ -1011,12 +1051,15 @@ function _runDeferredInstrumentSync() {
                   category: 'A股',
                 },
               ];
-              // B3: 并行插入种子仪器(Promise.all 替代 sequential await, ~200-500ms 节省)
-              await Promise.all(
-                defaultInstruments.map((inst) =>
-                  Instrument.findOrCreate({ where: { symbol: inst.symbol }, defaults: inst }),
-                ),
-              );
+              // Sequential on purpose: findOrCreate opens a transaction per row, and the
+              // SQLite adapter maps every sequelize transaction to BEGIN IMMEDIATE. Running
+              // these concurrently on a fresh DB fails the first COMMIT with "database is
+              // locked" and leaves that connection unusable for the rest of the process,
+              // so every later write 500s (see works/data/khy/feedback/sso-idp-fresh-db-lock/).
+              // SQLite has a single writer anyway, so parallel only buys lock waits.
+              for (const inst of defaultInstruments) {
+                await Instrument.findOrCreate({ where: { symbol: inst.symbol }, defaults: inst });
+              }
               const adminUser = await User.findOne({ where: { username: 'admin' } });
               if (adminUser) {
                 const defaultWatchlist = [
@@ -1063,15 +1106,14 @@ function _runDeferredInstrumentSync() {
                     basePrice: 38,
                   },
                 ];
-                // B3: 并行插入种子自选(Promise.all 替代 sequential await)
-                await Promise.all(
-                  defaultWatchlist.map((item) =>
-                    Watchlist.findOrCreate({
-                      where: { userId: adminUser.id, symbol: item.symbol },
-                      defaults: { userId: adminUser.id, ...item },
-                    }),
-                  ),
-                );
+                // Same reason as the instruments loop above: one BEGIN IMMEDIATE per row,
+                // so these must not run concurrently.
+                for (const item of defaultWatchlist) {
+                  await Watchlist.findOrCreate({
+                    where: { userId: adminUser.id, symbol: item.symbol },
+                    defaults: { userId: adminUser.id, ...item },
+                  });
+                }
                 console.log('Default instruments and watchlist seeded');
               }
             } catch (e) {
