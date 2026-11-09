@@ -1,70 +1,23 @@
 'use strict';
 
 /**
- * noticeInbox.js — 会话期「宿主想让用户看见、但不能自己写屏」的一行话收件箱。
+ * noticeInbox — RE-EXPORT（洋葱下沉后的皮侧门面）。
  *
- * 为什么需要它（BUG-17，`AGENTS.md` §0.9.7 单写者原则）：ink 拥有终端期间，任何绕过
- * 注入流的写入（`process.stderr`、`console._stdout`）都不在 `lastOutputHeight` 账本里，
- * `eraseLines` 永远擦不到 ⇒ 状态栏下方一行永久残影。sessionWatchdog 的诊断行是**给用户看**
- * 的（Rule 3 要求卡死必须如实上报），不能像 winston 那样一静音了事，所以改走这里，
- * 由 TUI 把它落成系统消息区的 notice。
+ * 【为什么它搬到了 utils/terminal/】
+ * 会话期「宿主想让用户看见、但不能自己写屏」的一行话收件箱，是一套
+ * **发布订阅机制**：逻辑侧投递（push），表现侧订阅并落成屏幕上的消息区。
+ * 它本身零 IO、零依赖，与「怎么渲染」无关。
  *
- * 契约：
- *   - `push(line)` 返回 true 表示「已有人在屏幕上安置它」；false 表示无人认领，
- *     调用方**必须**回到自己的旧行为（watchdog → 直写 stderr）。绝不静默丢弃。
- *   - 零 IO、绝不抛；订阅者抛错视为未认领。
- *   - 门控 `KHY_WATCHDOG_NOTICE`（默认开）：显式 `0` → `push` 恒 false ⇒ 逐字节回到今日行为。
+ * 但它此前住在 src/cli/tui/ 下，于是逻辑层要投递一行通知时，只能去
+ * require 视觉皮 —— 逻辑芯的可达闭包因此渗入 cli/tui/。
+ *
+ * 剥洋葱的切法是把机制下沉到通用层，皮只保留门面。
+ *
+ * 【本文件的作用】
+ * 保留 `require('./noticeInbox')` 这条既有调用路径可用，字节等价。
+ * 真源已移到 utils/terminal/noticeInbox.js。
+ *
+ * 【真源】runtime/node/backend/src/utils/terminal/noticeInbox.js
  */
 
-const subscribers = new Set();
-
-function _gateOn(env) {
-  const raw = String((env || process.env).KHY_WATCHDOG_NOTICE || 'true').toLowerCase();
-  return !(raw === '0' || raw === 'false' || raw === 'off');
-}
-
-/**
- * @param {(line: string) => (boolean|void)} fn - 接收一行并把它渲染进消息区；返回 false 表示拒收
- * @returns {() => void} 退订函数
- */
-function subscribe(fn) {
-  if (typeof fn !== 'function') {
-    return () => false;
-  }
-  subscribers.add(fn);
-  return () => {
-    subscribers.delete(fn);
-  };
-}
-
-/** @returns {boolean} 是否已被认领 */
-function push(line, env) {
-  try {
-    if (subscribers.size === 0 || !_gateOn(env)) {
-      return false;
-    }
-    const text = String(line == null ? '' : line).trim();
-    if (!text) {
-      return false;
-    }
-    for (const fn of subscribers) {
-      try {
-        if (fn(text) !== false) {
-          return true;
-        }
-      } catch {
-        /* 单个订阅者失败不影响其它订阅者 */
-      }
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-/** Test seam: forget all subscribers. */
-function resetForTest() {
-  subscribers.clear();
-}
-
-module.exports = { subscribe, push, resetForTest };
+module.exports = require('../../utils/terminal/noticeInbox');

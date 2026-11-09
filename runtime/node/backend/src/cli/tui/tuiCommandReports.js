@@ -89,6 +89,16 @@ function buildHardwareReport() {
     } catch {
       /* transparency block is best-effort */
     }
+    try {
+      // TUI 性能档位（[DESIGN-PERF-007] T1）：静态签名定档 + tui.json perf.tier 覆盖。
+      // 与启动路径（bin/khy.js）、BootScreen 尾部同一口径 —— 增减档位先看这里。
+      const perfTier = require('../../services/perfTier');
+      const cfg = require('./tuiConfig').loadTuiConfig();
+      const tier = perfTier.detectTier({ override: cfg && cfg.perf ? cfg.perf.tier : undefined });
+      out.push('', 'TUI 性能档位:', `  ${perfTier.describeTier(tier)}`);
+    } catch {
+      /* tier 行是补充信息，best-effort */
+    }
     return out;
   } catch (e) {
     return [`硬件检测失败: ${e && e.message ? e.message : String(e)}`];

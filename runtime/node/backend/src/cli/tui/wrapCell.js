@@ -49,18 +49,39 @@ function sw() {
   return _stringWidth;
 }
 
-/** Display width of a string (CJK=2, combining=0). Falls back to code units. */
+/**
+ * Display width of a string (CJK=2, combining=0).
+ *
+ * 度量口径走共享底座 utils/text/width（显示宽度的单一真源）：它有 string-width 快路径，
+ * 也有**正确的**手工 CJK 回退（宽字符 +2）。
+ *
+ * 原来这里自己实现了一份，失败时退回 `String(s).length` —— 那是**字符数**，不是显示列：
+ * 中文一字两列，于是「按 80 显示列预算裁剪」实际放出了 160 列，截断点也随之落错。
+ * 更糟的是 string-width 是 ESM，jest 的 require 拿不到它 ⇒ 测试环境正好走进这条错回退，
+ * 于是「中文长消息不超过 80 显示列」这类断言全红，而生产环境（require 得通）看不出来 ——
+ * 一份只在测试里显形的度量错误。
+ */
 function visWidth(s) {
+  const text = String(s == null ? '' : s);
+  try {
+    const { displayWidth } = require('../../utils/text/width');
+    const n = displayWidth(text);
+    if (Number.isFinite(n)) {
+      return n;
+    }
+  } catch {
+    /* 底座不可用 → 退回本地实现 */
+  }
   const w = sw();
   if (w) {
     try {
-      const n = w(String(s == null ? '' : s));
-      return Number.isFinite(n) ? n : String(s).length;
+      const n = w(text);
+      return Number.isFinite(n) ? n : text.length;
     } catch {
       /* fall through */
     }
   }
-  return String(s == null ? '' : s).length;
+  return text.length;
 }
 
 /**
@@ -106,48 +127,40 @@ function sgrGroup(first) {
   return 'code' + n;
 }
 
+function _newRun(cap) {
+  return { cap, rows: [], acc: '', accW: 0, styled: Object.create(null) };
+}
+
 /**
- * Wrap text into segments of display width <= `width`.
+ * Fill `run` from `t[i..)`. 全量与增量折行**共用这一段循环** —— 两者结果逐字节相同
+ * 不是靠「两份实现碰巧一致」，而是靠同一段代码（两份抄写迟早分叉，那正是本文件要
+ * 消灭的病）。run.styled 与行缓冲跨调用存活，是增量能续扫的前提。
  *
- * ANSI-aware: escape sequences are atomic and zero-width, so a wrap point can
- * never land inside `\x1b[36m` (which made the terminal print the leftover
- * `36m` as literal text). When a styled span straddles a wrap point the row is
- * closed with `ESC[0m` and the next row reopens the styles still in effect, so
- * coloring neither leaks past the line nor silently drops.
+ * acc/accW 走局部变量、只在断行与退出时写回 run：每 token 一次属性写在这个热循环里
+ * 是能测到的开销（同一个 run 对象被全量与增量共用，不能退回闭包局部量）。
  *
- * @param {string} text
- * @param {number} width - max display width per segment (<= 0 → no wrapping)
- * @returns {string[]}
+ * Walk by code point so surrogate pairs (emoji, CJK outside BMP) are never
+ * split in half; step over escape sequences whole.
  */
-function wrapCell(text, width) {
-  const t = String(text == null ? '' : text);
-  const cap = Math.max(0, Math.floor(Number(width) || 0));
-  if (cap <= 0) {
-    return t.split('\n');
-  }
-  const out = [];
-  let acc = '';
-  let accW = 0;
-  // SGR state for `acc`: group → parameter string ('38;5;208' stays whole).
-  const styled = Object.create(null);
-  const replay = () => {
-    const ps = Object.values(styled);
-    return ps.length ? '\x1b[' + ps.join(';') + 'm' : '';
-  };
+function _scan(t, i, run) {
+  const cap = run.cap;
+  const styled = run.styled;
+  const rows = run.rows;
+  let acc = run.acc;
+  let accW = run.accW;
+  const len = t.length;
   const breakRow = () => {
-    const open = replay();
+    const ps = Object.values(styled);
+    const open = ps.length ? '\x1b[' + ps.join(';') + 'm' : '';
     if (open) acc += SGR_OFF;
-    out.push(acc);
+    rows.push(acc);
     acc = open;
     accW = 0;
   };
-  // Walk by code point so surrogate pairs (emoji, CJK outside BMP) are never
-  // split in half; step over escape sequences whole.
-  let i = 0;
-  while (i < t.length) {
+  while (i < len) {
     let token;
     let w;
-    if (t[i] === '\x1b') {
+    if (t.charCodeAt(i) === 27) {
       ESC_SEQ_RE.lastIndex = i;
       const m = ESC_SEQ_RE.exec(t);
       token = m ? m[0] : t[i];
@@ -179,8 +192,125 @@ function wrapCell(text, width) {
     }
     i += token.length;
   }
-  out.push(acc);
-  return out;
+  run.acc = acc;
+  run.accW = accW;
+}
+
+/**
+ * Wrap text into segments of display width <= `width`.
+ *
+ * ANSI-aware: escape sequences are atomic and zero-width, so a wrap point can
+ * never land inside `\x1b[36m` (which made the terminal print the leftover
+ * `36m` as literal text). When a styled span straddles a wrap point the row is
+ * closed with `ESC[0m` and the next row reopens the styles still in effect, so
+ * coloring neither leaks past the line nor silently drops.
+ *
+ * @param {string} text
+ * @param {number} width - max display width per segment (<= 0 → no wrapping)
+ * @returns {string[]}
+ */
+function wrapCell(text, width) {
+  const t = String(text == null ? '' : text);
+  const cap = Math.max(0, Math.floor(Number(width) || 0));
+  if (cap <= 0) {
+    return t.split('\n');
+  }
+  const run = _newRun(cap);
+  _scan(t, 0, run);
+  run.rows.push(run.acc);
+  return run.rows;
+}
+
+/**
+ * 追加边界是否「干净」—— 干净才能从 `prev.length` 处续扫。
+ *
+ * 判据只有一条:**prev 里的转义序列,放到完整文本 t 上重新匹配,必须仍完整收在 prev
+ * 内**(越界 = 上一帧的 token 化与全量扫描会不同,从续扫点起就分叉)。
+ * 两种命中:
+ *   - 代理对被劈开:全量扫描把 `❤️` 当**一个** code point(宽 2),从低代理项起扫会
+ *     把它当两个字,行宽与切分点都不同。
+ *   - 序列没闭合:上一帧只有 `\x1b[3` 时它匹配不上,退化成可打印的 `\x1b`,续扫会把
+ *     `6m` 当正文。
+ *
+ * 查两处而不是一处,是被 OSC 的两个特性逼出来的:
+ *   - OSC 的匹配长度取决于**后面还有没有终结符**,在截断的 prev 上 OSC 分支必然
+ *     失配,正则退回最后一个备选 `[@-Z\\-_]`,把 `\x1b]` 当两字节 dispatch 吃掉 →
+ *     判成干净 → 续扫从 OSC 体内开始。
+ *   - OSC 体内可以再嵌 ESC(`\x1b]8;;u\x1b[36m…\x07`):此时尾部那个 ESC 自己匹配得好好的,
+ *     越界的却是更外层的 OSC 起点,所以每个 OSC 起点都得单独查。
+ * 非 OSC 的四种分支查尾部一个就够 —— 参数/中间字节类里都没有 ESC,被劈开的序列必然
+ * 一直伸到 prev 末尾。
+ *
+ * 任一命中就整段重扫 —— 宁可慢一帧,不许折行结果与全量分叉。代价是每帧 O(prev 中的
+ * OSC 数 + 1)次粘性匹配,不是 O(全文)。
+ */
+function _boundaryClean(prev, t) {
+  const n = prev.length;
+  const c = prev.charCodeAt(n - 1);
+  if (c >= 0xd800 && c <= 0xdbff) {
+    const d = t.charCodeAt(n);
+    if (d >= 0xdc00 && d <= 0xdfff) return false; // 低代理项跟着走,不能劈
+  }
+  // 匹配不到 = t 上也没有终止符。文本变长只会让序列变长、不会凭空造出序列,
+  // 故此时 prev 上的那个 ESC 同样是裸 ESC,续扫从它后面起是对的,不必重扫。
+  for (let at = prev.indexOf('\x1b]'); at !== -1; at = prev.indexOf('\x1b]', at + 2)) {
+    ESC_SEQ_RE.lastIndex = at;
+    const m = ESC_SEQ_RE.exec(t);
+    if (m && at + m[0].length > n) return false;
+  }
+  const tail = prev.lastIndexOf('\x1b');
+  if (tail >= 0) {
+    ESC_SEQ_RE.lastIndex = tail;
+    const m = ESC_SEQ_RE.exec(t);
+    if (m && tail + m[0].length > n) return false;
+  }
+  return true;
+}
+
+/**
+ * 增量折行 —— 给「每帧对**累积全文**折行」的调用点用(流式正文每帧多几百字,
+ * 全量重折让一轮答复变成 O(N²))。
+ *
+ * `state` 是上一帧的返回值原样传回;`text` **以旧文本为前缀**(流式追加)时只扫新增
+ * 尾巴,已完成的行与跨行 SGR 状态原地续用,结果与 `wrapCell(text, cols)` 逐字节相同
+ * —— 它们跑的是同一个 `_scan`。
+ *
+ * **state 是一次性的**:续扫走的是原地改写 `state.run` 的 `_scan`,所以传进来续过一次
+ * 之后,那个 state 就与「扫到 state.text.length 为止」的状态不再对应,再拿它推演别的
+ * 文本会静默给出错结果(不是报错)。要比较多个分支(换列宽会怎样 / 重新折一遍核对),
+ * 每一支都得各自从**同一份未消费的 state** 出发。
+ *
+ * 文本被替换 / 缩短 / 列宽变化(rewind、换 turn、缩窗)时安全退回全量:prefix 校验
+ * 不过就重扫,不猜。
+ *
+ * @param {{text:string,cols:number,run:object}|null} state
+ * @param {string} text
+ * @param {number} cols
+ * @returns {{lines:string[], state:{text:string,cols:number,run:object}}}
+ */
+function wrapCellIncremental(state, text, cols) {
+  const t = String(text == null ? '' : text);
+  const cap = Math.max(0, Math.floor(Number(cols) || 0));
+  const resumable =
+    cap > 0 &&
+    state &&
+    state.run &&
+    state.cols === cap &&
+    t.length >= state.text.length &&
+    t.startsWith(state.text) &&
+    _boundaryClean(state.text, t);
+  if (resumable) {
+    const run = state.run;
+    _scan(t, state.text.length, run);
+    return { lines: run.rows.concat(run.acc), state: { text: t, cols: cap, run } };
+  }
+  if (cap <= 0) {
+    const lines = t.split('\n');
+    return { lines, state: { text: t, cols: cap, run: null } };
+  }
+  const run = _newRun(cap);
+  _scan(t, 0, run);
+  return { lines: run.rows.concat(run.acc), state: { text: t, cols: cap, run } };
 }
 
 /**
@@ -362,6 +492,7 @@ function fitBorder(width, opts = {}) {
 
 module.exports = {
   wrapCell,
+  wrapCellIncremental,
   visualRows,
   visualRowsUnwrapped,
   clipCell,

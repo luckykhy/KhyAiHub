@@ -10,6 +10,15 @@
  * 4. 粗体用于工具名称和斜杠命令
  *
  * 参考：[DESIGN-ARCH-081] Phase 1: 配色与主题系统
+ *
+ * 美学标准落地载体：[DESIGN-FE-012] khy-os 软件美学标准
+ * （docs/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.md）。
+ * 本文件是 TUI/CLI 端的美学语义令牌真源，对应机器可读清单
+ * docs/10_规范/registry/AESTHETICS-TOKENS.json 的 tui 面。SEMANTIC 的 7 个
+ * token 即标准 §3.1 的 canonical 语义名（accent / muted / success / warn /
+ * danger / border / focus）；canonical `warning` 在 TUI 的本地名是 `warn`、
+ * `text-muted` 是 `muted`、`text-secondary` 是 `textSecondary`。取值以本文件为准，
+ * 标准不固化 TUI 取值。
  */
 
 const CC_COLORS = Object.freeze({
@@ -51,9 +60,13 @@ const CC_COLORS = Object.freeze({
   link: '#00B4B4',           // 超链接（下划线）
 
   // 品牌色（橙色，低饱和度）
-  brand: '#C97557',          // CC/Khy 橙色品牌色
-  brandLight: '#D89878',     // 亮色
-  brandDark: '#A85E3F',      // 暗色
+  // Khy 品牌色：琥珀族（真源 delivery/brand/khy-brand-geometry.js 的 PALETTE）。
+  // 旧的 CC/Khy 橙色品牌色 #C97557 已收拢进同一族 —— TUI 此前是五端里唯一的暖色，
+  // 现在它是品牌色本身，不再是「另一支橙色」。
+  // 暗色终端上 brand #f0a868 对 #171920 约 8.78:1，亮色端用 brandDark #9c4116。
+  brand: '#f0a868', // CC/Khy 品牌色（琥珀）
+  brandLight: '#ffc078', // 亮色
+  brandDark: '#9c4116', // 暗色
   secondary: '#6366F1',      // 紫蓝色（分割线/标签页）
 });
 
