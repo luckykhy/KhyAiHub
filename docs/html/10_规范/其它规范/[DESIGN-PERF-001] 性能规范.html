@@ -63,8 +63,11 @@
 );</code></pre>
 <h3 id="3-3-缓存策略">3.3 缓存策略<a class="anchor" href="#3-3-缓存策略" aria-label="锚点">#</a></h3>
 <p><strong>HTTP 缓存</strong>：</p>
-<pre><code class="language-nginx"><span class="hljs-comment"># 静态资源缓存 1 年</span>
-<span class="hljs-section">location</span> <span class="hljs-regexp">~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$</span> {
+<pre><code class="language-nginx">&lt;!-- IMPL-STATUS: <span class="hljs-attribute">todo</span> --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: <span class="hljs-number">2026</span>-<span class="hljs-number">10</span>-<span class="hljs-number">18</span> · DOCS-<span class="hljs-number">005</span> 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
+<span class="hljs-comment"># 静态资源缓存 1 年</span>
+location <span class="hljs-regexp">~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$</span> {
   <span class="hljs-attribute">expires</span> <span class="hljs-number">1y</span>;
   <span class="hljs-attribute">add_header</span> Cache-Control <span class="hljs-string">&quot;public, immutable&quot;</span>;
 }

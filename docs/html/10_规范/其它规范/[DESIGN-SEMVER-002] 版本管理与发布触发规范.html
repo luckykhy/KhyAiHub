@@ -48,6 +48,12 @@
 <ul><li>仅改文档、注释、测试、CI 配置、<code>.gitignore</code>；</li><li>仅内部重构且<strong>对外可观测行为不变</strong>（无新增/变更/移除的公开 API 与 CLI 用法）；</li><li>仅同步上游依赖小版本（除非它改变了本包对外行为）；</li><li><strong>工作区尚未收口</strong>（<code>git status</code> 有未提交的业务改动）——此时 bump 只会制造</li></ul>
 <p>「版本号先跳、内容后到」的空版本。</p>
 <p><strong>一次提交只做一步</strong>：bump 与功能改动<strong>不放进同一个 commit</strong>。<br>依据 <code>SOURCING-006</code> 的落地纪律「标记 → 迁移 → 收口，一次提交只做一步」，<br>使 <code>git revert</code> 能单独回滚版本号而不牵连业务代码。</p>
+<h4 id="t4-开发态批次收口-2026-10-10-增设-默认关">T4 · 开发态批次收口（2026-10-10 增设，默认关）<a class="anchor" href="#t4-开发态批次收口-2026-10-10-增设-默认关" aria-label="锚点">#</a></h4>
+<p>上面三条「不 bump」的情形描述的是<strong>发布纪律</strong>——版本号是给用户看的，不能为一次<br>文档订正就跳一位。但 AI 迭代期的大半工作恰是这三类（测试接线、守卫修订、文档销账），<br>结果版本号长期不动，「现在跑到哪了」只能靠 git log 数。</p>
+<p><strong>T4 触发</strong>：版本态为 <code>dev</code>（<code>docs/10_规范/registry/VERSION-MODE.json</code> 的 <code>mode</code>）<br><strong>且</strong>一个 AI 工作批次已收口（该批次的改动已提交或已在同一个待提交集合里）→ <strong>PATCH+1</strong>。</p>
+<table><thead><tr><th>约束</th><th>理由</th></tr></thead><tbody><tr><td><strong>默认关</strong>：<code>mode</code> 为 <code>release</code> 或未显式进入开发态时，T4 不生效</td><td>不破坏上面三条对正式开发的保护；自动 bump 必须是显式选择</td></tr><tr><td><strong>粒度是「批次」不是「commit」</strong>：一个批次一笔 bump</td><td>这次 48 个提交若按 commit bump 就是 48 个版本号，批次级才可读</td></tr><tr><td><strong>仍遵守「一次提交只做一步」</strong>：bump 单独成 commit</td><td>与上面同一条纪律一致，<code>git revert</code> 仍能单独回滚版本号</td></tr><tr><td><strong>CHANGELOG 必须同步</strong>：自动 bump 时由 <code>changelog-new.js</code> 插入 stub 段</td><td>否则 <code>changelog-new --check</code> 立刻红；stub 段需人工补一句话摘要</td></tr><tr><td><strong>v 前缀仍只属于 tag</strong>：T4 只动版本字段，永远写纯数字</td><td>R-2 不变；「切换为 v1」是打 tag，不是改字段格式</td></tr></tbody></table>
+<p>执行面：<code>node scripts/release/version-mode.js bump</code>（开发态）/ <code>release &lt;X.Y.Z&gt;</code>（进发布态）<br>/ <code>back</code>（回开发态）/ <code>status</code>（看当前态）。</p>
+<blockquote><p><strong>这条是规则修订，不是新开一门。</strong> 它只在一处放宽了 R-1（开发态下允许为<br>文档/测试/CI 类工作 bump），且用 <code>mode</code> 闸门把放宽面限制在显式进入开发态之后。<br>R-1 的其余部分、R-2 的命名规范、R-3/R-4 的推送与自动触发<strong>一律未动</strong>。</p></blockquote>
 <h3 id="2-2-r-2-版本号命名与递增规范">2.2 R-2 版本号命名与递增规范<a class="anchor" href="#2-2-r-2-版本号命名与递增规范" aria-label="锚点">#</a></h3>
 <p><strong>命名</strong>：严格 SemVer <strong><code>X.Y.Z</code></strong>，<strong>三位数字，禁止前导 <code>v</code>、禁止预发布后缀、禁止构建元数据</strong>。</p>
 <pre><code>✓ 1.1.15   1.2.0   2.0.0
@@ -57,6 +63,11 @@
 <blockquote><p>该约定<strong>与守卫同源</strong>：<code>scripts/ci/check-version-sync.js</code> 的 <code>isSemver()</code> 拒绝 <code>abc</code> /<br><code>v1.0</code> / <code>1.0..</code>。规则不得比守卫更宽（否则守卫绿而规则红），也不得更窄到拦下守卫放行的合法值。</p></blockquote>
 <p><strong>递增</strong>（<code>MAJOR.MINOR.PATCH</code>，逐位独立，不得跳位）：</p>
 <table><thead><tr><th>位</th><th>何时 +1</th><th>归零规则</th></tr></thead><tbody><tr><td><strong>MAJOR</strong></td><td>对外契约破坏性变更（CLI 命令移除/改名、API 响应结构变更、数据格式不兼容）</td><td>MINOR、PATCH 归零</td></tr><tr><td><strong>MINOR</strong></td><td>向后兼容的功能新增</td><td>PATCH 归零</td></tr><tr><td><strong>PATCH</strong></td><td>向后兼容的缺陷修复</td><td>—</td></tr></tbody></table>
+<h4 id="r-2a-minor-major-递增必须由人点头-2026-10-10-增设">R-2a · MINOR / MAJOR 递增必须由人点头（2026-10-10 增设）<a class="anchor" href="#r-2a-minor-major-递增必须由人点头-2026-10-10-增设" aria-label="锚点">#</a></h4>
+<p><strong>AI 不得自行决定工程版本的 MINOR 或 MAJOR 递增。</strong> 需要往前推小版本或大版本时，<br>AI <strong>必须主动询问</strong>：给出判据（命中了 T1 还是 T2）、影响面（哪些对外契约/CLI/数据格式<br>受影响）、建议递增到几，然后等人明示。</p>
+<table><thead><tr><th>档</th><th>谁决定</th><th>依据</th></tr></thead><tbody><tr><td><strong>PATCH</strong>（开发态批次 bump）</td><td>AI 可自行</td><td>T4 已预授权；纯数字、语义中立，猜错代价只是号跳快一格</td></tr><tr><td><strong>MINOR / MAJOR</strong></td><td><strong>必须人点头</strong></td><td>二者携带对外语义——MINOR 宣称&quot;有新功能&quot;，MAJOR 宣称&quot;有破坏性变更&quot;。AI 猜错的代价不是号难看，而是<strong>版本号对用户说谎</strong>：把内部重构宣成功能新增，或把破坏性变更藏进 MINOR</td></tr></tbody></table>
+<p><strong>执行面</strong>：<code>node scripts/release/version-mode.js bump --minor|--major --approved-by &lt;人&gt;</code>。<br>缺 <code>--approved-by</code> 时脚本<strong>直接拒绝执行</strong>并在错误信息里说明为什么——把「AI 该问人」<br>从一条文档约定变成工具层的硬闸（与 <code>check-commit-message.js</code> 拦 AI 署名同一思路：<br>判据放在会执行的地方，不放在人的记忆里）。</p>
+<blockquote><p>这条不改变 R-1 的 T1/T2/T3 判定本身——<strong>判据仍由 AI 按 CHANGELOG 段位机械得出</strong>。<br>它只约束「判定成立之后谁有权落笔」：T1/T2 判出来是 MINOR/MAJOR，AI 提案，人批准。</p></blockquote>
 <p><strong>三条轨道独立递增，组间不联动</strong>（依据 <code>PROCESS-002</code>）：<br>G1 主包 / G2 ai-backend / G3 浏览器 UI <strong>各自按自己的变更性质递增</strong>，<br><strong>禁止为了&quot;看起来整齐&quot;把三条轨道对齐成同一版本号</strong> —— G2、G3 与 G1 刻意不同。</p>
 <p><strong>bump 的落点（G1 必改 3 处，不能只改 1 处）</strong>：</p>
 <pre><code>pyproject.toml                      # pip 单一真源
@@ -68,7 +79,10 @@ services/backend/package.json       # khy --version 上报值</code></pre>
 <p><strong>推送分层：<code>main</code> 推代码，<code>vX.Y.Z</code> 推发布。两者是不同事件，不可互相替代。</strong></p>
 <table><thead><tr><th>目标</th><th>推什么</th><th>由谁触发</th><th>前置条件</th></tr></thead><tbody><tr><td><strong>GitHub <code>main</code></strong></td><td>业务提交（不含版本号）</td><td><strong>人工</strong>（受 <code>PROCESS-001</code> 约束：AI 不得自动 push，须用户明确点头）</td><td>本地 <code>npm run check:structure</code> 全绿</td></tr><tr><td><strong>Gitee <code>main</code></strong></td><td>镜像同步</td><td><strong>自动</strong>（<code>sync-gitee.yml</code>，见 2.4 A2）</td><td>上一步成功</td></tr><tr><td><strong>GitHub <code>vX.Y.Z</code> tag</strong></td><td>版本发布</td><td><strong>自动</strong>（打 tag 即触发 <code>dual-channel-release.yml</code>）</td><td>2.4 的 A1 全部满足</td></tr><tr><td><strong>Gitee tag</strong></td><td>镜像同步</td><td><strong>自动</strong>（同上 A2，<code>tags</code> 纳入后）</td><td>tag 已推 GitHub</td></tr></tbody></table>
 <p><strong>如何推（标准动作，三条命令）</strong>：</p>
-<pre><code class="language-bash"><span class="hljs-comment"># 1) 版本收口：CHANGELOG 段 + bump G1 三源</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：24 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 1) 版本收口：CHANGELOG 段 + bump G1 三源</span>
 node scripts/release/changelog-new.js 1.2.0
 <span class="hljs-comment"># 编辑三处版本号 → 见 2.2 的落点</span>
 
