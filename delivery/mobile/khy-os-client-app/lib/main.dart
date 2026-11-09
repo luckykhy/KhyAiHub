@@ -117,6 +117,16 @@ class _KhyOsHomeState extends ConsumerState<KhyOsHome>
   final KhyOsApi _api = KhyOsApi();
   bool _isLoading = true;
 
+  /// 文件管理器的状态句柄。
+  ///
+  /// AI 悬浮按钮放在**外层** Scaffold：外层是 `extendBody: true`（内容延伸到底栏
+  /// 之下），内层 Scaffold 的 FAB 会被压在玻璃底栏底下——真机上验证过，按钮根本不显示。
+  final GlobalKey<FileManagerScreenState> _fileManagerKey =
+      GlobalKey<FileManagerScreenState>();
+
+  /// AI 助手按钮是否可见（由文件管理器回报，AI 关掉时要把入口也收掉）。
+  bool _assistantVisible = false;
+
   // 选中瞬间的一次性过冲（§5 spring 1→1.12→1），不循环。
   late final AnimationController _tabPulse = AnimationController(
     vsync: this,
@@ -240,7 +250,12 @@ class _KhyOsHomeState extends ConsumerState<KhyOsHome>
     final screens = [
       // 文件管理器是主界面：浏览、复制、移动、删除、重命名、压缩解压、搜索、
       // 书签、存储分析都在这里，AI 只是嵌在各操作环节里的可选增强。
-      const FileManagerScreen(),
+      FileManagerScreen(
+        key: _fileManagerKey,
+        onAssistantVisibilityChanged: (bool visible) {
+          if (mounted) setState(() => _assistantVisible = visible);
+        },
+      ),
       ChatScreenNew(api: _api),
       // 原来是 SkillsScreenNew（一个技能网格）。换成工具与智能体总览：
       // 技能只是能力的一种，而用户真正问的是"这 App 到底能干什么、谁干的、
@@ -283,6 +298,13 @@ class _KhyOsHomeState extends ConsumerState<KhyOsHome>
           ),
         ],
       ),
+      floatingActionButton: _tabIndex == 0 && _assistantVisible
+          ? FloatingActionButton.small(
+              onPressed: () => _fileManagerKey.currentState?.openAiPanel(),
+              tooltip: 'AI 助手',
+              child: const Icon(Icons.auto_awesome),
+            )
+          : null,
       bottomNavigationBar: _GlassNavBar(
         child: NavigationBar(
           selectedIndex: _tabIndex,
