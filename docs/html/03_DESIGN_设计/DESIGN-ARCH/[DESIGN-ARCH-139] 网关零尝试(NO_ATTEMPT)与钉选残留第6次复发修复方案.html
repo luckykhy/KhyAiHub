@@ -80,7 +80,10 @@
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>只把 .env 改回 auto 就收工</strong></td><td>这正是前 5 次「修复」的全部内容 —— 第 6 次已经发生。改值不改机制 = 必复发</td></tr><tr><td>把「跳过」改成「失败」来凑记录</td><td>strict 跳过如果记成真实失败（非 virtualSkip）会毒化熔断与健康度统计，把路由问题变成可用性问题。必须用 <code>virtualSkip:true</code> 同型留痕</td></tr><tr><td>让自动解钉静默执行</td><td>用户钉选是有意的配置意愿，无声吞掉违反 RUNTIME-002（状态透明）。解钉必须 emitStatus + 留痕 + 可查</td></tr><tr><td>在 <code>:3875</code> 只加一行 emitStatus 就当修完</td><td>状态行转瞬即逝、不可存留；失败信封才是可交付的观测面。留痕必须进 <code>attempts</code></td></tr><tr><td>为「诊断更准」重写 <code>_resolveCode</code> 的优先级表</td><td>136 方案刚定的兜底位语义经过对齐验证；本提案只在兜底位的<strong>hint 内容</strong>上做增量，不动判码顺序</td></tr><tr><td>用进程重启来「清除钉选」</td><td>env 是从 .env 文件读的，重启读回同样的值 —— 治标都不算</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 单测（新增文件用 node:test，落地即绿）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
+<span class="hljs-comment"># 单测（新增文件用 node:test，落地即绿）</span>
 node --<span class="hljs-built_in">test</span> services/backend/tests/gateway/&lt;新测试文件&gt;.test.js
 <span class="hljs-comment"># 既有信封套件零回归（jest 风格 —— 本机无 jest，走影子跑纪律，见提案技能 §8.2）</span>
 node --<span class="hljs-built_in">test</span> services/backend/tests/gateway/cliFailureEnvelope.test.js   <span class="hljs-comment"># 预期仍 exit=1(jest 全局缺失)，以影子跑 27 条为准</span>

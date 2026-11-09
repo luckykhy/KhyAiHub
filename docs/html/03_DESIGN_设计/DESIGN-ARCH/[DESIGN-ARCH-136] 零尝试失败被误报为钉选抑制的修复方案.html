@@ -116,7 +116,7 @@ GATEWAY_PREFERRED_STRICT=true</code></pre>
 <pre><code>⚠ 钉选残留：GATEWAY_PREFERRED_ADAPTER=api 但该通道当前不可用
    这会让每次请求都失败在首选通道上（若 STRICT=true 还会抑制回退）
    处置：khy provider use &lt;key&gt;  或  把 GATEWAY_PREFERRED_ADAPTER 设为 auto</code></pre>
-<blockquote><p>⚠ <strong>不新增 env 开关</strong> —— <code>check-tui-gates.js:32</code> 的 <code>MAX_GATES = 220</code> 是<strong>只降不升</strong>的棘轮。本项并入既有 <code>khy gateway status</code> 输出即可，零新门。</p></blockquote>
+<blockquote><p>⚠ <strong>不新增 env 开关</strong> —— <code>check-tui-gates.js</code> 的 <code>MAX_GATES = 237</code> 是<strong>只降不升</strong>的棘轮。本项并入既有 <code>khy gateway status</code> 输出即可，零新门。</p></blockquote>
 <hr>
 <h2 id="4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）<a class="anchor" href="#4-实施分期-每期独立可回滚" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>期</th><th>改动</th><th>回滚</th><th>依赖</th></tr></thead><tbody><tr><td><strong>第 1 期</strong></td><td><code>cliFailureEnvelope.js</code>：<code>_resolveRouting</code> 增 <code>unresolved</code>/<code>attempted</code>；<code>_resolveCode</code> 增 <code>NO_ATTEMPT</code>；新增 2 条 <code>TITLES</code>/<code>HINTS</code></td><td>单文件 revert</td><td>无</td></tr><tr><td><strong>第 2 期</strong></td><td><code>aiChatCore.js:3103-3129</code> 覆盖策略 + 叶子 <code>_diagnosticRank</code></td><td>单处 revert</td><td>第 1 期（需 <code>attempted</code> 字段）</td></tr><tr><td><strong>第 3 期</strong></td><td><code>khy gateway status</code> 增钉选健康检查</td><td>单处 revert</td><td>无</td></tr><tr><td><strong>第 0 期</strong>&lt;br&gt;（用户侧，即刻）</td><td>把 <code>.env:51-52</code> 改为 <code>auto</code> / <code>false</code></td><td>改回</td><td>无 —— <strong>但见 §6 反模式第 2 条：这不解决复发</strong></td></tr></tbody></table>
