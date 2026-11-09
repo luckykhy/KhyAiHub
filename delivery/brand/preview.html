@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Khy OS 品牌预览</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;background:#0d0c0b;color:#e8e4de;font-family:"Microsoft YaHei","Segoe UI",system-ui,sans-serif;padding:32px 36px 60px}
+  h1{font-size:24px;margin:0 0 6px}
+  .lead{color:#9c958c;font-size:14px;max-width:900px;line-height:1.7;margin:0 0 30px}
+  h2{font-size:15px;letter-spacing:.08em;color:#f0a868;margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid #2a2622}
+  .grid{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end}
+  .tile{border-radius:20px;display:flex;align-items:center;justify-content:center}
+  .ink{background:#14110e}.paper{background:#f6f2ec}
+  .cap{color:#8d877f;font-size:12px;text-align:center;margin-top:8px}
+  .sw{display:flex;align-items:center;gap:12px;min-width:210px}
+  .chip{width:52px;height:52px;border-radius:12px;border:1px solid #ffffff1a;flex:none}
+  .sw-t b{display:block;font-size:13px}.sw-t code{font-size:12px;color:#f0a868}.sw-t span{display:block;font-size:11px;color:#8d877f;margin-top:2px}
+  table{border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  td,th{border-bottom:1px solid #262220;padding:6px 16px 6px 0;text-align:left}
+  th{color:#f0a868;font-weight:600}
+  pre{background:#14110e;border:1px solid #262220;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12px;line-height:1.15;color:#f0a868}
+  .lockup{display:flex;align-items:center;gap:16px}
+  .rules{color:#b8b1a8;font-size:13px;line-height:1.9}
+  .rules b{color:#e8e4de}
+  .badge{display:inline-block;border:1px solid #3a332d;border-radius:999px;padding:2px 10px;font-size:11px;color:#9c958c;margin-right:6px}
+</style></head><body>
+<h1>Khy OS 品牌预览 · 内核环</h1>
+<p class="lead">
+  形态语义：四段弧叶 = 四条主张（订阅套利 / 随身性 / 本土化 / 私有与便携）；中心菱形 = 内核（kernel / runtime）；
+  内核上刻一道 K 形负槽 = 品牌字母（可发现，但不主导读感）。
+  配色：墨黑 + 琥珀橙 —— 刻意避开 2023 年后 AI 产品的「蓝→紫→品红」通用渐变。
+  几何真源：<code>delivery/brand/khy-brand-geometry.js</code>，本图与全部产物由
+  <code>node scripts/brand/build-brand-assets.js</code> 生成。
+</p>
+
+<h2>01 · 主标（墨底 / 纸底）</h2>
+<div class="grid">
+  <div><div class="tile ink" style="width:150px;height:150px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="140" height="140" role="img" aria-label="Khy OS"><title>Khy OS</title><defs><linearGradient id="khyAmber" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E2703A"/></linearGradient></defs><g fill="url(#khyAmber)"><path d="M 101.532 69.945 A 38 38 0 0 1 69.945 101.532 L 61.647 90.897 A 27 27 0 0 0 88.854 74.55 Z"/><path d="M 58.055 101.532 A 38 38 0 0 1 26.468 69.945 L 37.103 61.647 A 27 27 0 0 0 53.45 88.854 Z"/><path d="M 26.468 58.055 A 38 38 0 0 1 58.055 26.468 L 66.353 37.103 A 27 27 0 0 0 39.146 53.45 Z"/><path d="M 69.945 26.468 A 38 38 0 0 1 101.532 58.055 L 90.897 66.353 A 27 27 0 0 0 74.55 39.146 Z"/></g><g fill="url(#khyAmber)"><path d="M 64 45 L 83 64 L 64 83 L 45 64 Z M 56 74 L 60 74 L 60 54 L 56 54 Z M 60 66.75 L 70 59.5 L 70 54 L 60 61.25 Z M 60 66.75 L 70 74 L 70 68.5 L 60 61.25 Z" fill-rule="evenodd"/></g></svg></div><div class="cap">墨底 · 琥珀渐变</div></div>
+  <div><div class="tile paper" style="width:150px;height:150px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="140" height="140" role="img" aria-label="Khy OS"><title>Khy OS</title><defs><linearGradient id="khyAmber" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E2703A"/></linearGradient></defs><g fill="url(#khyAmber)"><path d="M 101.532 69.945 A 38 38 0 0 1 69.945 101.532 L 61.647 90.897 A 27 27 0 0 0 88.854 74.55 Z"/><path d="M 58.055 101.532 A 38 38 0 0 1 26.468 69.945 L 37.103 61.647 A 27 27 0 0 0 53.45 88.854 Z"/><path d="M 26.468 58.055 A 38 38 0 0 1 58.055 26.468 L 66.353 37.103 A 27 27 0 0 0 39.146 53.45 Z"/><path d="M 69.945 26.468 A 38 38 0 0 1 101.532 58.055 L 90.897 66.353 A 27 27 0 0 0 74.55 39.146 Z"/></g><g fill="url(#khyAmber)"><path d="M 64 45 L 83 64 L 64 83 L 45 64 Z M 56 74 L 60 74 L 60 54 L 56 54 Z M 60 66.75 L 70 59.5 L 70 54 L 60 61.25 Z M 60 66.75 L 70 74 L 70 68.5 L 60 61.25 Z" fill-rule="evenodd"/></g></svg></div><div class="cap">纸底 · 琥珀渐变</div></div>
+  <div><div class="tile" style="width:150px;height:150px;background:#14110e"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="140" height="140" role="img" aria-label="Khy OS"><title>Khy OS</title><g fill="#F6F2EC"><path d="M 101.532 69.945 A 38 38 0 0 1 69.945 101.532 L 61.647 90.897 A 27 27 0 0 0 88.854 74.55 Z"/><path d="M 58.055 101.532 A 38 38 0 0 1 26.468 69.945 L 37.103 61.647 A 27 27 0 0 0 53.45 88.854 Z"/><path d="M 26.468 58.055 A 38 38 0 0 1 58.055 26.468 L 66.353 37.103 A 27 27 0 0 0 39.146 53.45 Z"/><path d="M 69.945 26.468 A 38 38 0 0 1 101.532 58.055 L 90.897 66.353 A 27 27 0 0 0 74.55 39.146 Z"/></g><g fill="#F6F2EC"><path d="M 64 45 L 83 64 L 64 83 L 45 64 Z M 56 74 L 60 74 L 60 54 L 56 54 Z M 60 66.75 L 70 59.5 L 70 54 L 60 61.25 Z M 60 66.75 L 70 74 L 70 68.5 L 60 61.25 Z" fill-rule="evenodd"/></g></svg></div><div class="cap">墨底 · 纸白单色</div></div>
+</div>
+
+<h2>02 · 应用图标（各尺寸，真实像素）</h2>
+<div class="grid">
+<div><div class="tile" style="width:128px;height:128px;background:transparent"><img src="png/khy-os-icon-512.png" width="128" height="128" alt=""></div><div class="cap">512px</div></div>
+<div><div class="tile" style="width:128px;height:128px;background:transparent"><img src="png/khy-os-icon-128.png" width="128" height="128" alt=""></div><div class="cap">128px</div></div>
+<div><div class="tile" style="width:64px;height:64px;background:transparent"><img src="png/khy-os-icon-64.png" width="64" height="64" alt=""></div><div class="cap">64px</div></div>
+<div><div class="tile" style="width:48px;height:48px;background:transparent"><img src="png/khy-os-icon-48.png" width="48" height="48" alt=""></div><div class="cap">48px</div></div>
+<div><div class="tile" style="width:32px;height:32px;background:transparent"><img src="png/khy-os-icon-32.png" width="32" height="32" alt=""></div><div class="cap">32px</div></div>
+<div><div class="tile" style="width:16px;height:16px;background:transparent"><img src="png/khy-os-icon-16.png" width="16" height="16" alt=""></div><div class="cap">16px</div></div>
+</div>
+
+<h2>03 · favicon（16 / 32，紧凑几何）</h2>
+<div class="grid">
+<div><div class="tile" style="width:64px;height:64px;background:#14110e"><img src="png/khy-os-favicon-32.png" width="32" height="32" alt=""></div><div class="cap">32px</div></div>
+<div><div class="tile" style="width:64px;height:64px;background:#14110e"><img src="png/khy-os-favicon-16.png" width="16" height="16" alt=""></div><div class="cap">16px</div></div>
+</div>
+
+<h2>04 · 锁定组合（标 + 字标）</h2>
+<div class="grid">
+  <div><div class="tile paper" style="width:420px;height:150px"><img src="svg/khy-os-lockup.svg" width="360" alt=""></div><div class="cap">彩色版（字标为墨黑，用于浅底）</div></div>
+  <div><div class="tile ink" style="width:420px;height:150px"><img src="svg/khy-os-lockup-mono-paper.svg" width="360" alt=""></div><div class="cap">单色纸白版（用于深底与单色印刷）</div></div>
+</div>
+
+<h2>05 · TUI 终端内的点阵标记</h2>
+<div class="grid"><pre>    ██  █    
+  █████ ███  
+ ███     ███ 
+ ██   █   ██ 
+██   ███   ██
+    █ ███  ██
+ █ ██  ███ █ 
+██  █ ███    
+██   ███   ██
+ ██   █   ██ 
+ ███     ███ 
+  ███ █████  
+    █  ██    </pre></div>
+
+<h2>06 · 调色板与文本安全值</h2>
+<div class="grid">
+<div class="sw"><div class="chip" style="background:#FFC078"></div><div class="sw-t"><b>amber-300</b><code>#FFC078</code><span>图形渐变亮端</span></div></div>
+<div class="sw"><div class="chip" style="background:#F0A868"></div><div class="sw-t"><b>amber-400</b><code>#F0A868</code><span>暗底上的文本安全值（对 #14110E 9.41:1）</span></div></div>
+<div class="sw"><div class="chip" style="background:#E2703A"></div><div class="sw-t"><b>amber-500</b><code>#E2703A</code><span>图形主色 / 渐变暗端</span></div></div>
+<div class="sw"><div class="chip" style="background:#C2551F"></div><div class="sw-t"><b>amber-600</b><code>#C2551F</code><span>浅底上的 UI 强调（对白底 4.55:1）</span></div></div>
+<div class="sw"><div class="chip" style="background:#9C4116"></div><div class="sw-t"><b>amber-700</b><code>#9C4116</code><span>浅底上的文本安全值（对白底 6.60:1）</span></div></div>
+<div class="sw"><div class="chip" style="background:#14110E"></div><div class="sw-t"><b>ink</b><code>#14110E</code><span>品牌底板 / 负形</span></div></div>
+<div class="sw"><div class="chip" style="background:#F6F2EC"></div><div class="sw-t"><b>paper</b><code>#F6F2EC</code><span>纸底</span></div></div>
+</div>
+<table>
+  <tr><th>端</th><th>accent（亮）</th><th>accent（暗）</th><th>说明</th></tr>
+  <tr><td>Web</td><td>#9C4116</td><td>#F0A868</td><td>--khy-primary</td></tr>
+  <tr><td>桌面端</td><td>#9C4116</td><td>#F0A868</td><td>--color-brand</td></tr>
+  <tr><td>移动端</td><td>—</td><td>#F0A868</td><td>AppColors.primary（深空底）</td></tr>
+  <tr><td>TUI</td><td>—</td><td>#F0A868</td><td>ccTheme brand</td></tr>
+  <tr><td>khyquant</td><td colspan="2">#1890ff（保持金融蓝）</td><td>独立项目，红色/绿色另有 A 股涨跌语义</td></tr>
+</table>
+
+<h2>07 · 使用禁区</h2>
+<div class="rules">
+  <p><span class="badge">禁止</span>不要把主标改成蓝紫品红渐变 —— 那是 AI 行业的通用色，一屏之下全是同一个模子。</p>
+  <p><span class="badge">禁止</span>不要给主标加描边、投影或外发光；它在 16px 下必须仍然读得出「四段环 + 中心核」。</p>
+  <p><span class="badge">禁止</span>不要把 K 槽单独拿出来当字标用 —— 它是<b>负形的一部分</b>，脱离内核就不再是这枚标记。</p>
+  <p><span class="badge">禁止</span>不要在纸底上直接用 amber-300/400（对比度 1.4–2.0，不达文字门槛）。</p>
+  <p><span class="badge">必须</span>品牌块底色统一用墨黑 <code>#14110E</code>；主标在墨底与纸底都用同一枚琥珀渐变。</p>
+  <p><span class="badge">必须</span>≥48px 用完整几何（含 K 槽）；≤32px 用紧凑几何（实心内核、无 K 槽）。</p>
+</div>
+</body></html>

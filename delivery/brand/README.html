@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>Khy OS 品牌资产包（内核环） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>brand<span class="sep">›</span>Khy OS 品牌资产包（内核环）</div>
+      <header class="hero reveal"><h1>Khy OS 品牌资产包（内核环）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-品牌资产包-内核环">Khy OS 品牌资产包（内核环）</a></li><li class="lvl-2"><a href="#1-这枚标记是什么">1. 这枚标记是什么</a></li><li class="lvl-3"><a href="#为什么不是-字母-k">为什么不是「字母 K」</a></li><li class="lvl-2"><a href="#2-资产清单">2. 资产清单</a></li><li class="lvl-3"><a href="#各端落点">各端落点</a></li><li class="lvl-2"><a href="#3-配色与对比度-全部为实测值-wcag-2-2">3. 配色与对比度（全部为实测值，WCAG 2.2）</a></li><li class="lvl-3"><a href="#五端-accent-同步取值">五端 accent 同步取值</a></li><li class="lvl-2"><a href="#4-使用禁区">4. 使用禁区</a></li><li class="lvl-2"><a href="#5-商标注册的待办-人来做">5. 商标注册的待办（人来做）</a></li><li class="lvl-3"><a href="#字标轮廓化-已完成-2026-10-25">字标轮廓化（已完成，2026-10-25）</a></li><li class="lvl-2"><a href="#6-变更记录">6. 变更记录</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-品牌资产包-内核环">Khy OS 品牌资产包（内核环）<a class="anchor" href="#khy-os-品牌资产包-内核环" aria-label="锚点">#</a></h1>
+<blockquote><p>单一真源：<a href="khy-brand-geometry.js"><code>khy-brand-geometry.js</code></a>（几何 + 配色，纯叶子、零 IO）。<br>构建脚本：<code>node scripts/brand/build-brand-assets.js</code> —— 改形状只改真源，然后重跑构建；<br><strong>不要手改</strong> <code>svg/</code> <code>png/</code> <code>icon/</code> 与 <code>runtime/node/backend/src/cli/tui/brandPixelArt.js</code>（生成物会被覆盖）。<br>预览页：<a href="preview.html"><code>preview.html</code></a>（浏览器直接打开；与资产同源生成，不会出现「文档里的图是旧的」）。</p></blockquote>
+<hr>
+<h2 id="1-这枚标记是什么">1. 这枚标记是什么<a class="anchor" href="#1-这枚标记是什么" aria-label="锚点">#</a></h2>
+<p><strong>「内核环」</strong> —— 四段弧叶围成一枚光圈，中心一枚菱形内核，内核上刻一道 K 形负槽。</p>
+<table><thead><tr><th>元素</th><th>语义</th><th>对应真源</th></tr></thead><tbody><tr><td>四段弧叶</td><td>四条主张：订阅套利 / 随身性 / 本土化 / 私有与便携</td><td><code>runtime/node/backend/src/constants/positioning.js</code> 的 <code>POSITIONING.claims</code></td></tr><tr><td>中心菱形</td><td>内核：kernel / runtime（模型调用被当作系统调用统一收口的那一层）</td><td>同上 <code>POSITIONING.os.layers</code></td></tr><tr><td>内核上的 K 负槽</td><td>品牌字母 —— <strong>可发现，但不主导读感</strong></td><td>—</td></tr><tr><td>墨黑底 + 琥珀橙</td><td>品牌气质：本地、私密、终端、工程</td><td>见 §3</td></tr></tbody></table>
+<h3 id="为什么不是-字母-k">为什么不是「字母 K」<a class="anchor" href="#为什么不是-字母-k" aria-label="锚点">#</a></h3>
+<p>2026-10-25 之前，五端各画各的：Web 排版一个字母 K、APK 是 <code>Text('K')</code>、桌面端一个 <code>icon.ico</code>、<br>TUI 另有一枚 13×9 像素四叶草、CC 模式是 <code>✳ Khy</code> 字标 —— 同一进程里先后出现三种品牌样子，<br>正是 <code>[DESIGN-ARCH-134]</code> §1.1 B3 登记的病灶。</p>
+<p>设计阶段实测过三条路线并被否决：</p>
+<ol><li><strong>通用四叶草 + 排版体 K</strong> —— 四叶草是 2020 年代视觉通货膨胀区，且与仓内旧像素四叶草撞形；</li></ol>
+<p>更关键的是，<strong>任何排版体 K（无论装在什么容器里）读感都是「字母 K」</strong>，与原始诉求正面冲突。</p>
+<ol><li><strong>四臂旋排的光圈 / 旋核</strong> —— 四臂旋转对称在形制上过于接近卐形，不采用。</li><li><strong>蓝→紫→品红渐变</strong> —— 2023 年后 AI 产品的通用色系，一屏之下全是同一个模子。</li></ol>
+<p>最终路线：<strong>抽象几何主体（光圈 + 内核）+ 藏在负形里的字母</strong>。字母不再是主体，而是内核上的一道刻痕。</p>
+<hr>
+<h2 id="2-资产清单">2. 资产清单<a class="anchor" href="#2-资产清单" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>用途</th></tr></thead><tbody><tr><td><code>svg/khy-kernel-mark.svg</code></td><td>主标（琥珀渐变）</td></tr><tr><td><code>svg/khy-kernel-mark-mono-ink.svg</code> / <code>-mono-paper.svg</code></td><td>单色版（单色印刷 / 浅底 / 深底）</td></tr><tr><td><code>svg/khy-os-lockup.svg</code></td><td>横向锁定组合：标 + 字标「khy OS」</td></tr><tr><td><code>svg/khy-os-lockup-mono-ink.svg</code> / <code>-mono-paper.svg</code></td><td>锁定组合的单色版</td></tr><tr><td><code>svg/khy-os-wordmark-outlined.svg</code> / <code>-paper.svg</code></td><td><strong>字标单独图样</strong>（文字商标申请用，已轮廓化）</td></tr><tr><td><code>svg/khy-os-filing-mark.svg</code></td><td><strong>图形单独图样</strong>（图形商标申请用，黑色 + 留白）</td></tr><tr><td><code>svg/khy-os-app-icon.svg</code></td><td>应用图标（墨黑圆角底 + 标）</td></tr><tr><td><code>svg/khy-os-app-icon-maskable.svg</code></td><td>Android 自适应图标（铺满底 + 安全区内的标）</td></tr><tr><td><code>svg/khy-os-favicon.svg</code></td><td>favicon（<strong>紧凑几何</strong>：实心内核、无 K 槽）</td></tr><tr><td><code>png/khy-os-icon-{16…512}.png</code></td><td>应用图标位图</td></tr><tr><td><code>png/khy-os-mark-{16…512}.png</code></td><td>透明底主标位图</td></tr><tr><td><code>png/khy-os-favicon-{16,32}.png</code></td><td>favicon 位图</td></tr><tr><td><code>icon/khy-os.ico</code></td><td>多尺寸 ICO（16/24/32/48/64/128/256）</td></tr><tr><td><code>khy-brand-tokens.json</code></td><td>五端品牌令牌取值（机器可读）</td></tr><tr><td><code>khy-brand-wordmark.js</code></td><td>字标的<strong>矢量轮廓</strong>（生成物，见下）</td></tr><tr><td><code>preview.html</code></td><td>品牌预览页（与资产同源生成）</td></tr><tr><td><code>filing.html</code></td><td><strong>商标申请图样页</strong>：图形 / 文字 / 组合三件分开排在白底上</td></tr></tbody></table>
+<h3 id="各端落点">各端落点<a class="anchor" href="#各端落点" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>端</th><th>落点</th><th>形式</th></tr></thead><tbody><tr><td>Web</td><td><code>delivery/web/ai-frontend/src/components/KhyMark.vue</code>（主标）/ <code>KhyLogo.vue</code>（品牌块）</td><td>内联 SVG（可换色）</td></tr><tr><td>Web</td><td><code>delivery/web/ai-frontend/public/favicon.svg</code>、<code>favicon-32.png</code>、<code>apple-touch-icon.png</code></td><td>静态资源</td></tr><tr><td>桌面端</td><td><code>apps/khyos-desktop/src/renderer/components/ui/BrandMark.tsx</code>（主标）/ <code>TitleBar.tsx</code>（标题栏品牌块）</td><td>内联 SVG</td></tr><tr><td>桌面端</td><td><code>apps/khyos-desktop/{resources/icon,public}/icon.ico</code>、<code>launcher/khyos.ico</code></td><td>多尺寸 ICO</td></tr><tr><td>移动端</td><td><code>delivery/mobile/khy-os-client-app/lib/ui/widgets/khy_brand_mark.dart</code>（主标 + 品牌块）</td><td>PNG 资源（<code>assets/brand/</code>）</td></tr><tr><td>移动端</td><td><code>.../android/app/src/main/res/mipmap-*/ic_launcher{,_foreground}.png</code></td><td>各密度 + 自适应前景</td></tr><tr><td>TUI</td><td><code>runtime/node/backend/src/cli/tui/logoArt.js</code> → <code>brandPixelArt.js</code>（生成物）</td><td>13×13 字符点阵 + 三档明暗</td></tr></tbody></table>
+<p><strong>副本与漂移</strong>：Web / 桌面端 / TUI 三处都持有路径数据的副本（跨目录 import 真源会让 dev 与 build<br>行为不一致），由测试锁住：</p>
+<ul><li><code>delivery/web/ai-frontend/src/components/__tests__/KhyMark.contract.test.js</code></li><li><code>apps/khyos-desktop/tests/brandMark.test.cjs</code></li><li><code>runtime/node/backend/tests/cli/tui/logoArt.test.js</code></li></ul>
+<hr>
+<h2 id="3-配色与对比度-全部为实测值-wcag-2-2">3. 配色与对比度（全部为实测值，WCAG 2.2）<a class="anchor" href="#3-配色与对比度-全部为实测值-wcag-2-2" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>令牌</th><th>值</th><th>用途</th><th>实测对比度</th></tr></thead><tbody><tr><td>amber-300</td><td><code>#FFC078</code></td><td>图形渐变亮端</td><td>装饰用，不作文字色</td></tr><tr><td>amber-400</td><td><code>#F0A868</code></td><td><strong>暗底上的文本安全琥珀</strong></td><td>对 <code>#14110E</code> 9.41:1；对 <code>#171920</code> 8.78:1；对 <code>#0A0E1C</code> 9.62:1</td></tr><tr><td>amber-500</td><td><code>#E2703A</code></td><td>图形主色 / 渐变暗端</td><td>对白底 3.18:1（够 UI 图形门槛）</td></tr><tr><td>amber-600</td><td><code>#C2551F</code></td><td>浅底上的 UI 强调</td><td>对白底 4.55:1</td></tr><tr><td>amber-700</td><td><code>#9C4116</code></td><td><strong>浅底上的文本安全琥珀</strong></td><td>对白底 6.60:1；对 <code>#F6F2EC</code> 5.92:1；对 <code>#f6f7f9</code> 6.16:1</td></tr><tr><td>ink</td><td><code>#14110E</code></td><td>品牌底板 / 负形</td><td>对 paper 18.81:1</td></tr><tr><td>paper</td><td><code>#F6F2EC</code></td><td>纸底</td><td>—</td></tr></tbody></table>
+<h3 id="五端-accent-同步取值">五端 accent 同步取值<a class="anchor" href="#五端-accent-同步取值" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>端</th><th>亮</th><th>暗</th><th>令牌名</th></tr></thead><tbody><tr><td>Web</td><td><code>#9c4116</code></td><td><code>#f0a868</code></td><td><code>--khy-primary</code></td></tr><tr><td>桌面端</td><td><code>#9c4116</code></td><td><code>#f0a868</code></td><td><code>--color-brand</code> / <code>--color-primary</code></td></tr><tr><td>移动端</td><td>—（深空底）</td><td><code>#f0a868</code></td><td><code>AppColors.primary</code></td></tr><tr><td>TUI</td><td>—（暗终端）</td><td><code>#f0a868</code></td><td><code>ccTheme</code> 的 <code>brand</code></td></tr><tr><td>khyquant</td><td><code>#1890ff</code></td><td>—</td><td><strong>保持金融蓝</strong>：它是独立项目，红色/绿色另有 A 股涨跌语义，不随平台品牌迁移</td></tr></tbody></table>
+<p>登记于 <code>docs/10_规范/registry/AESTHETICS-TOKENS.json</code> 的 <code>color.accent</code>（平台基准 = Web）。</p>
+<hr>
+<h2 id="4-使用禁区">4. 使用禁区<a class="anchor" href="#4-使用禁区" aria-label="锚点">#</a></h2>
+<ul><li><strong>不要</strong>把主标换成蓝→紫→品红渐变。那是 AI 行业的通用色，一屏之下全是同一个模子。</li><li><strong>不要</strong>给主标加描边、投影或外发光。它在 16px 下必须仍然读得出「四段环 + 中心核」。</li><li><strong>不要</strong>把 K 槽单独拿出来当字标用 —— 它是负形的一部分，脱离内核就不再是这枚标记。</li><li><strong>不要</strong>在纸底上直接用 amber-300 / amber-400（对比度 1.4–2.0，不达文字门槛）。</li><li><strong>必须</strong>：品牌块底色统一用墨黑 <code>#14110E</code>；主标在墨底与纸底都用同一枚琥珀渐变。</li><li><strong>必须</strong>：≥48px 用完整几何（含 K 槽）；≤32px 用紧凑几何（实心内核、无 K 槽）。</li></ul>
+<hr>
+<h2 id="5-商标注册的待办-人来做">5. 商标注册的待办（人来做）<a class="anchor" href="#5-商标注册的待办-人来做" aria-label="锚点">#</a></h2>
+<p>本包是<strong>设计</strong>交付物，不等于<strong>注册</strong>。图形与文字<strong>分开申请</strong>的两件图样已备好<br>（<code>svg/khy-os-filing-mark.svg</code> 图形 / <code>svg/khy-os-wordmark-outlined.svg</code> 文字，<br>白底排版见 <code>filing.html</code>），剩余步骤仍需人工完成：</p>
+<ol><li><strong>近似检索</strong>（图形商标需按维也纳编码做图形近似检索）：<ul><li>官方：中国商标网 <a href="https://sbj.cnipa.gov.cn/" target="_blank" rel="noopener">https://sbj.cnipa.gov.cn/</a>（综合查询 / 近似查询 / 图形查询；数据有 3–6 个月盲期，仅供参考）</li><li>第三方：阿里云商标检索 <a href="https://tm.aliyun.com/" target="_blank" rel="noopener">https://tm.aliyun.com/</a>、标库网 <a href="https://www.tmkoo.com/" target="_blank" rel="noopener">https://www.tmkoo.com/</a></li></ul></li><li><strong>类别建议</strong>（按《类似商品和服务区分表》）：第 9 类（可下载软件 / 应用软件）、</li></ol>
+<p>第 42 类（SaaS / 平台服务）、第 35 类（零售/销售服务）为本产品主战场；<br>   若做硬件或周边再议第 14/16 类。</p>
+<ol><li><strong>申请拆分</strong>：建议 <strong>图形商标（内核环）+ 文字商标（khy / khy OS / KHYOS）分别申请</strong> ——</li></ol>
+<p>图形单独申请才能覆盖「字母变体」，文字商标则覆盖拼写保护。组合图样只作整体保护。</p>
+<ol><li><strong>留档</strong>：把本目录的 <code>svg/</code>、<code>filing.html</code> 与本文件一起归档，作为申请时的图样来源。</li><li><del>递交前把字标转轮廓</del> —— <strong>已做完</strong>（见下）。</li></ol>
+<h3 id="字标轮廓化-已完成-2026-10-25">字标轮廓化（已完成，2026-10-25）<a class="anchor" href="#字标轮廓化-已完成-2026-10-25" aria-label="锚点">#</a></h3>
+<p>原先锁定组合里的字标是 <code>&lt;text font-family=&quot;…&quot;&gt;</code>：递交方机器上缺字体就会走样。<br>现由 <code>scripts/brand/convert-wordmark-to-outlines.js</code> 解析本机 TrueType 字体<br>（<code>segoeuib.ttf</code>）的 <code>cmap</code>/<code>loca</code>/<code>glyf</code> 三张表，取出字形轮廓并转成 SVG 二次贝塞尔路径，<br>产出 <code>delivery/brand/khy-brand-wordmark.js</code>（生成物）。<br><strong>所有锁定组合与字标图样里已无 <code>&lt;text&gt;</code> 元素</strong> —— 任何机器打开都一样，可直接递交。</p>
+<blockquote><p>字体本身仍受其授权约束（本包只取字形轮廓作为图形数据，不分发字体文件）。若正式申请<br>要求与自有字体完全一致，用品牌自有字体重跑一次该脚本即可（<code>--font &lt;路径&gt;</code>）。</p></blockquote>
+<hr>
+<h2 id="6-变更记录">6. 变更记录<a class="anchor" href="#6-变更记录" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>变更</th><th>依据</th></tr></thead><tbody><tr><td>2026-10-25</td><td>设立品牌资产包，五端统一到「内核环」主标与琥珀族</td><td>人选定方向：<strong>内核四瓣 · 琥珀橙 · 资产包 + 落地 + 五端令牌统一</strong>；明确否决「蓝→紫→品红渐变」</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><span></span><a class="next" href="../../delivery/channel/khyquant/frontend/README.html"><div class="dir">下一篇 →</div><div class="ttl">KhyQuant Frontend</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="delivery/brand/README.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
