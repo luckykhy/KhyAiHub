@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-FE-013] 前端状态传达契约.md -->
+<title>[DESIGN-FE-013] 前端状态传达契约 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-FE<span class="sep">›</span>[DESIGN-FE-013] 前端状态传达契约</div>
+      <header class="hero reveal"><h1>[DESIGN-FE-013] 前端状态传达契约</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-fe-013-前端状态传达契约">[DESIGN-FE-013] 前端状态传达契约</a></li><li class="lvl-2"><a href="#1-前端在替谁传达什么">1. 前端在替谁传达什么</a></li><li class="lvl-2"><a href="#2-为什么现在传达不到位-四条根因-不是泛泛而谈">2. 为什么现在传达不到位（四条根因，不是泛泛而谈）</a></li><li class="lvl-3"><a href="#2-1-失败被降级成了空态-事实断言被换成了空断言">2.1 失败被降级成了空态 —— 事实断言被换成了空断言</a></li><li class="lvl-3"><a href="#2-2-等待没有终点-长等待链路恰恰是-没有进度信号-的那几条">2.2 等待没有终点 —— 长等待链路恰恰是「没有进度信号」的那几条</a></li><li class="lvl-3"><a href="#2-3-终态没有收口-未完成-和-已完成-在数据层不可区分">2.3 终态没有收口 —— 「未完成」和「已完成」在数据层不可区分</a></li><li class="lvl-3"><a href="#2-4-守卫在关键位置覆盖不足或根本没有断言">2.4 守卫在关键位置覆盖不足或根本没有断言</a></li><li class="lvl-2"><a href="#3-传达口径-照着做即可">3. 传达口径（照着做即可）</a></li><li class="lvl-3"><a href="#3-1-等待态-目标-已等待-可中断">3.1 等待态：目标 + 已等待 + 可中断</a></li><li class="lvl-3"><a href="#3-2-空态-失败不可被空态代偿">3.2 空态：失败不可被空态代偿</a></li><li class="lvl-3"><a href="#3-3-结果-完成-失败-未知-必须三态">3.3 结果：完成 / 失败 / 未知 必须三态</a></li><li class="lvl-3"><a href="#3-4-错误文案-问题-原因-修复">3.4 错误文案：`{问题}：{原因}，{修复}`</a></li><li class="lvl-3"><a href="#3-5-无入站活动的长传输-按体积自适应-不套用入站重置">3.5 无入站活动的长传输：按体积自适应，不套用入站重置</a></li><li class="lvl-3"><a href="#3-6-全局等待指示-先承认它不知道-再谈接线">3.6 全局等待指示：先承认它不知道，再谈接线</a></li><li class="lvl-2"><a href="#4-三条边界-哪些不用改">4. 三条边界（哪些不用改）</a></li><li class="lvl-2"><a href="#5-视觉侧的两条硬约束-状态看不看得见">5. 视觉侧的两条硬约束（状态看不看得见）</a></li><li class="lvl-3"><a href="#5-1-前景色不得绑到背景令牌">5.1 前景色不得绑到背景令牌</a></li><li class="lvl-3"><a href="#5-2-状态色一律收口到-khy-success-warning-danger-带-fallback-不许写死品牌色">5.2 状态色一律收口到 `--khy-success/-warning/-danger`（带 fallback，不许写死品牌色）</a></li><li class="lvl-3"><a href="#5-3-语义图标的-stroke-不得写死-当前-无任何断言-改动须补网">5.3 语义图标的 stroke 不得写死（当前**无任何断言**，改动须补网）</a></li><li class="lvl-2"><a href="#6-守卫与测试-本轮实跑记录">6. 守卫与测试：本轮实跑记录</a></li><li class="lvl-3"><a href="#6-1-守卫修复的-顺序-不可颠倒">6.1 守卫修复的**顺序**（不可颠倒）</a></li><li class="lvl-3"><a href="#6-2-文档必须订正的三处陈述-与仓库事实相反">6.2 文档必须订正的三处陈述（与仓库事实相反）</a></li><li class="lvl-3"><a href="#6-3-本文的引用勘误记录">6.3 本文的引用勘误记录</a></li><li class="lvl-2"><a href="#7-缺口表-只降不升">7. 缺口表（只降不升）</a></li><li class="lvl-2"><a href="#8-一页速查-写新页面时照抄">8. 一页速查（写新页面时照抄）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：7 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。</p></blockquote>
+<h1 id="design-fe-013-前端状态传达契约">[DESIGN-FE-013] 前端状态传达契约<a class="anchor" href="#design-fe-013-前端状态传达契约" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>定位</strong>：本文是前端「界面上的每一句话必须对外说对」的单一真源。它不重新发明 AGENTS.md 工程规则 2（<code>RUNTIME-002</code>），而是把那六条规则在<strong>浏览器 UI 上</strong>落成可执行口径，并把规则 2 此前在 <code>.vue</code> 模板上的覆盖缺口堵上。</p>
+<p><strong>本文与既有规范的关系</strong>：</p>
+<ul><li>规则本身（状态透明、动作+目标+进度）仍是 <code>AGENTS.md</code> 工程规则 2 与 2.1–2.6 的正文。本文不降低它，只规定<strong>前端怎么落地</strong>。</li><li>视觉侧（令牌、色值、对比度、间距、动效）见 <code>[DESIGN-FE-001]</code> / <code>[DESIGN-FE-004]</code> / <code>[DESIGN-FE-012]</code>；本文只在 §5 规定「状态色与前景色不得取错令牌」，因为它直接影响「这条状态看不看得见」。</li><li>组件 API 形态见 <code>[DESIGN-FE-002]</code>；测试形态见 <code>[DESIGN-FE-009]</code>。</li></ul>
+<p><strong>写法约定</strong>：本文每条规则都带 <code>路径:行号</code> 的落点。<strong>凡本文与代码现状冲突，以代码为准并登记进 §7 缺口表</strong>——缺口只降不升。</p>
+<p><strong>本轮实测状态（阅读本文前请先看这一段）</strong>：本文的静态检查结论由本轮实跑得出（命令与输出见 §6）；<br><strong>所有 vitest 断言本轮均未跑通</strong>（pnpm store 残缺，<code>npm run test:frontend</code> 无法原样执行），<br>凡涉及测试是否转红的判断一律标注「读断言源码得出，未跑」。</p></blockquote>
+<hr>
+<h2 id="1-前端在替谁传达什么">1. 前端在替谁传达什么<a class="anchor" href="#1-前端在替谁传达什么" aria-label="锚点">#</a></h2>
+<p>界面是人与机器之间唯一那条通道。机器侧有五类事实，前端每一刻都在替它说话：</p>
+<table><thead><tr><th>事实</th><th>用户需要知道</th><th>现状失败形态（本文要治的）</th></tr></thead><tbody><tr><td><strong>机器状态</strong></td><td>我在做什么、对什么、走到哪</td><td>枚举词上屏：<code>思考中</code> / <code>聆听中</code> / <code>启动中</code></td></tr><tr><td><strong>进度</strong></td><td>已经等多久、还剩多少、死了没有</td><td>静态句子覆盖整个 turn；顶条只在 axios 请求时出现</td></tr><tr><td><strong>错误</strong></td><td>什么失败、为什么、我能做什么</td><td><code>catch {}</code> 吞掉 → 用「暂无…」空态断言机器事实</td></tr><tr><td><strong>结果确定性</strong></td><td>这件事到底成没成</td><td><code>success !== false</code> → 未标注即绿勾「完成」</td></tr><tr><td><strong>意图</strong></td><td>界面此刻在做什么动作、落点在哪</td><td>失败提示写「刷新本页」但页面上没有刷新按钮</td></tr></tbody></table>
+<p><strong>一句话</strong>：前端不是把机器状态「显示出来」，而是<strong>对用户的判断负责</strong>。显示一个枚举值不需要负责，宣称「暂无模型」需要。</p>
+<hr>
+<h2 id="2-为什么现在传达不到位-四条根因-不是泛泛而谈">2. 为什么现在传达不到位（四条根因，不是泛泛而谈）<a class="anchor" href="#2-为什么现在传达不到位-四条根因-不是泛泛而谈" aria-label="锚点">#</a></h2>
+<h3 id="2-1-失败被降级成了空态-事实断言被换成了空断言">2.1 失败被降级成了空态 —— 事实断言被换成了空断言<a class="anchor" href="#2-1-失败被降级成了空态-事实断言被换成了空断言" aria-label="锚点">#</a></h3>
+<p>仓内已有一个正确抽象 <code>src/api/loadError.js</code>（<code>useLoadError</code> / <code>describeLoadError</code> / <code>loadInto</code>），<br>但它只被 <strong>5 个消费点</strong>使用：</p>
+<pre><code>$ grep -rln &quot;useLoadError\|LoadErrorBanner\|loadInto&quot; src
+src/api/loadError.js
+src/api/loadError.test.js                                  # 测试
+src/components/LoadErrorBanner.vue
+src/components/__tests__/componentContract.wiring.test.js   # 测试
+src/composables/useGatewayBilling.js
+src/composables/useProxies.egress.wiring.test.js             # 测试
+src/composables/useProxies.js
+src/views/admin/Pricing.vue
+src/views/admin/UsageLogs.vue
+src/views/ProxyManagement.vue</code></pre>
+<p>10 个命中里 3 个是测试文件，<strong>实际消费点 5 个</strong>（<code>useGatewayBilling</code> / <code>useProxies</code> / <code>Pricing</code> / <code>UsageLogs</code> / <code>ProxyManagement</code>）。<br>其余列表读取全部是「catch 里写成空集合」：</p>
+<ul><li><code>src/views/AIChat.vue:2120-2122</code> 的 <code>} catch { /* no models available */ }</code> → 模板 <code>:831-837</code> 渲染 <code>暂无可用模型：确认对应适配器已本地安装并登录</code></li><li><code>src/composables/useGateway.js:127-137 / :334-337 / :390-397</code> 三处 <code>catch { … = [] }</code> → <code>AIGateway.vue:603-609</code> / <code>:703-713</code> 渲染「还没有可用模型 / 先接入供应商 Key」</li><li><code>src/views/Marketplace.vue:307-311</code>（<code>reload()</code> 无 catch）→ <code>:36-41</code> 渲染「插件市场还空着」</li><li><code>src/views/admin/AIDashboard.vue:394-401</code> 的 <code>Promise.allSettled</code> → <code>:62</code> 渲染「健康广播器尚未就绪」、<code>:319-336</code> 待办计数折成 <code>0</code></li></ul>
+<p><strong>后果</strong>：后端 500 / 401 / 网络失败时，界面用一句<strong>确定的</strong>话描述<strong>不确定</strong>的机器事实，并把用户导向一个无用动作（去装适配器、去接 Key、去导入规范）。</p>
+<h3 id="2-2-等待没有终点-长等待链路恰恰是-没有进度信号-的那几条">2.2 等待没有终点 —— 长等待链路恰恰是「没有进度信号」的那几条<a class="anchor" href="#2-2-等待没有终点-长等待链路恰恰是-没有进度信号-的那几条" aria-label="锚点">#</a></h3>
+<p><code>src/composables/useGlobalLoading.js:11-14</code> 只合并两个信号（<code>httpPending</code> 计数器 + <code>routeLoading</code> 布尔），<br>而 <code>httpStart/httpDone</code> 的调用方<strong>只有</strong> <code>src/api/request.js</code>（<code>:4</code> import，<code>:82/:91/:98/:114/:134</code> 全部在 axios 拦截器内）。</p>
+<p>于是<strong>等待最久的三条链路全绕过计数器</strong>：附件上传（<code>AIChat.vue:1839</code> 走 <code>authedFetch</code>）、<br>流式生成（<code>AIChat.vue:3422</code> 走 <code>authedFetch</code> + <code>stream: true</code>）、<br>终端 WebSocket（<code>src/views/KhyOsTerminal.vue:129</code> 裸 <code>new WebSocket</code>）。<br><code>GlobalProgressBar.vue</code> 在这些时刻根本不出现。</p>
+<p>更严重的是流式生成<strong>自身也没有看门狗</strong>：<code>AIChat.vue:3445-3446</code> 的 <code>while (!streamDone) { const chunk = await reader.read(); … }</code><br>没有任何超时分支，<code>authedFetch.js:74</code> 对 <code>stream: true</code> 把内部超时置 0。<br>同文件 <code>:2373</code> 的 WS 路径<strong>有</strong> 60s 空闲看门狗（<code>VITE_AI_WS_IDLE_TIMEOUT_MS</code>）——同一页两条链路，一条有、一条没有。</p>
+<p>而状态标签 <code>AIChat.vue:3939-3943</code> 是一句编译期常量：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> loadingStatusText = <span class="hljs-title function_">computed</span>(<span class="hljs-function">() =&gt;</span>
+  transportMode.<span class="hljs-property">value</span> === <span class="hljs-string">&#x27;ws&#x27;</span>
+    ? <span class="hljs-string">&#x27;AI 输出通道已建立（WebSocket），正在接收增量内容&#x27;</span>
+    : <span class="hljs-string">&#x27;AI 输出通道已建立（HTTP 流式），正在接收增量内容&#x27;</span>
+);</code></pre>
+<p>它会在流已死的情况下<strong>永远说下去</strong>，且说的与事实相反。</p>
+<h3 id="2-3-终态没有收口-未完成-和-已完成-在数据层不可区分">2.3 终态没有收口 —— 「未完成」和「已完成」在数据层不可区分<a class="anchor" href="#2-3-终态没有收口-未完成-和-已完成-在数据层不可区分" aria-label="锚点">#</a></h3>
+<p><code>AIChat.vue:2543</code> 把工具步骤置为 <code>status: 'running'</code>，<code>:2561-2572</code> 只在<strong>收到配对 <code>tool_result</code></strong> 时改终态。<br><code>runAssistantTurn</code> 的 <code>finally</code>（<code>:3617-3626</code>）不做任何 running→终态收口，历史恢复 <code>:2751</code> 的 <code>steps: m.steps || []</code> 也原样带回。</p>
+<p><strong>orphan 清理在全仓不存在</strong>——非测试文件里 <code>'running'</code> 的命中共 6 处：<br><code>AIChat.vue:501</code>（模板 <code>v-if=&quot;step.status === 'running'&quot;</code>）、<br><code>AIChat.vue:2543</code>（置 running）、<br><code>AIChat.vue:2561</code>（配对判定 <code>if (s.status !== 'running') continue;</code>）、<br><code>aiChatEventUtils.js:243</code>（注释）、<br><code>aiChatEventUtils.js:258</code>（进度统计）、<br><code>useDaemonHealth.js:60</code>（daemon 状态字面量，与本条无关）。<br>六处里<strong>没有一处是收口</strong>。</p>
+<p>叠加 <code>aiChatEventUtils.js:163</code> / <code>AIChat.vue:2554</code> 的判据 <code>payload?.success !== false</code><br>（详见 §3.3 R-1：<strong>这个判据在前端其实是空转的，真正的兜底在后端</strong>）。</p>
+<h3 id="2-4-守卫在关键位置覆盖不足或根本没有断言">2.4 守卫在关键位置覆盖不足或根本没有断言<a class="anchor" href="#2-4-守卫在关键位置覆盖不足或根本没有断言" aria-label="锚点">#</a></h3>
+<p>本轮实跑（完整命令与输出见 §6）：</p>
+<pre><code>$ node scripts/ci/check-agent-rules.js delivery/web/ai-frontend/src
+Summary: 0 error(s), 2 warning(s) across 198 file(s) scanned.</code></pre>
+<p>198 个前端文件、0 error。<strong>病因要说准</strong>——不是「<code>.vue</code> 模板不在扫描面上」：</p>
+<table><thead><tr><th>现象</th><th>真相</th></tr></thead><tbody><tr><td><code>CODE_EXTS</code> 含 <code>.vue</code>，脚本读全文</td><td><code>.vue</code> <strong>是</strong>被扫的</td></tr><tr><td><code>&lt;span&gt;处理中…&lt;/span&gt;</code> 不报</td><td><strong>纯文本节点不在判定面上</strong>——<code>STATUS_CONTEXT_HINTS</code>（<code>:169-178</code>）要求同一行出现 <code>console.log</code> / <code>status:</code> / <code>label=</code> 等上下文</td></tr><tr><td><code>&lt;el-option label=&quot;处理中&quot; /&gt;</code> <strong>会报</strong></td><td><code>label=</code> 命中 <code>STATUS_CONTEXT_HINTS</code> 第 7 条正则 `/(?:^</td></tr><tr><td>本轮实跑的两条 warning</td><td><code>useWxBinding.js:264</code>（<code>status: 'connecting'</code>）与 <code>KhyOsDesktop.vue:40</code>（模板 `v-if=&quot;connecting</td></tr></tbody></table>
+<p>所以真实缺口是两条，且<strong>必须按顺序修</strong>（见 §6.1）：</p>
+<ol><li><strong>词表只覆盖 6 个 token</strong>（<code>scripts/ci/check-agent-rules.js:146-153</code>）：</li></ol>
+<p><code>正在工作 / 处理中 / 尝试连接 / loading / processing / connecting</code>。<br>   AGENTS.md 规则 2 正文列的「加载中」「请稍候」等<strong>不在表内</strong>。</p>
+<ol><li><strong>纯文本节点不在判定面上</strong>。放宽 <code>STATUS_CONTEXT_HINTS</code> 会扩大覆盖，</li></ol>
+<p><strong>但守卫里没有实现 AGENTS.md 规则 2 的枚举/i18n 例外豁免</strong>——判定块 <code>:586-603</code> 的逃逸口只有<br>   <code>hasStatusDetail</code>（进度信号）与 <code>isLikelyUserFacingStatusLine</code>（上下文提示）两个。<br>   不先补豁免就放宽上下文，<code>§4</code> 边界 1 承诺的「枚举标签不算违规」会立刻破约。</p>
+<ol><li><strong>vitest 侧</strong>：本轮实跑确认</li></ol>
+<p><code>src/__tests__/a11yContract.test.js:150-170</code> 的「表单输入元素应有 label 关联或 aria-label」<br>   整个 <code>it</code> 体只有 <code>console.warn</code>，<strong>没有任何 <code>expect</code></strong>——永远通过。<br>   <code>src/__tests__/designTokenCompliance.test.js:140</code> <code>const BASELINE = 999;</code>。<br>   <strong>本轮未跑通任何 vitest 断言</strong>（见文首），这两个数字只有读断言源码可得。</p>
+<hr>
+<h2 id="3-传达口径-照着做即可">3. 传达口径（照着做即可）<a class="anchor" href="#3-传达口径-照着做即可" aria-label="锚点">#</a></h2>
+<h3 id="3-1-等待态-目标-已等待-可中断">3.1 等待态：目标 + 已等待 + 可中断<a class="anchor" href="#3-1-等待态-目标-已等待-可中断" aria-label="锚点">#</a></h3>
+<p>任何用户会盯着看的等待，界面上必须同时存在三个量：</p>
+<table><thead><tr><th>量</th><th>形态</th><th>反例 → 正例</th></tr></thead><tbody><tr><td><strong>目标</strong></td><td>具体到对象/动作，不是类目词</td><td><code>思考中…</code> → <code>分析：定位 AIChat.vue:3445 的读循环</code></td></tr><tr><td><strong>已等待</strong></td><td>秒数，活的，随时间自增</td><td><code>正在接收增量内容</code> → <code>已等待 12s · 最后事件 14:03:11</code></td></tr><tr><td><strong>可中断</strong></td><td>有超时且超时后有出路</td><td>无超时、无重试按钮</td></tr></tbody></table>
+<p><strong>规则 W-1（流式读取必须有空闲看门狗）</strong></p>
+<p>任何 <code>reader.read()</code> / <code>onmessage</code> 循环必须有一个<strong>按入站数据重置</strong>的空闲计时器（AGENTS.md 规则 3 的前端形态）：</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 无界等待，流死了也永远转</span>
+<span class="hljs-keyword">while</span> (!streamDone) {
+  <span class="hljs-keyword">const</span> chunk = <span class="hljs-keyword">await</span> reader.<span class="hljs-title function_">read</span>();
+  streamDone = chunk.<span class="hljs-property">done</span>;
+  <span class="hljs-keyword">if</span> (streamDone) <span class="hljs-keyword">break</span>;
+  <span class="hljs-title function_">handle</span>(chunk);
+}</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Correct — 每收到一个字节重装，超时后如实说明</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">IDLE_LIMIT_MS</span> = <span class="hljs-number">60_000</span>;   <span class="hljs-comment">// 与 WS 侧 AIChat.vue:2373 同口径，来源须走 env</span>
+<span class="hljs-keyword">let</span> lastActivity = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+<span class="hljs-keyword">let</span> lastEventLabel = <span class="hljs-string">&#x27;(尚未收到事件)&#x27;</span>;
+<span class="hljs-keyword">let</span> idleTimer = <span class="hljs-built_in">setTimeout</span>(onIdle, <span class="hljs-variable constant_">IDLE_LIMIT_MS</span>);
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">onIdle</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">const</span> waited = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">round</span>((<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - lastActivity) / <span class="hljs-number">1000</span>);
+  <span class="hljs-built_in">clearTimeout</span>(idleTimer);
+  <span class="hljs-comment">// 注意：此处是 throw 不是 reject —— 该循环嵌在 runAssistantTurn 的</span>
+  <span class="hljs-comment">// 重试结构里（AIChat.vue:3475 `if (attempt &lt; SSE_MAX_RETRIES) continue;`），</span>
+  <span class="hljs-comment">// 不是独立 Promise 边界，没有可调用的 reject。</span>
+  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(
+    <span class="hljs-string">`已 <span class="hljs-subst">${waited}</span>s 未收到任何数据（最后事件：<span class="hljs-subst">${lastEventLabel}</span>），读取已中断，可点「重试」`</span>,
+  );
+}
+
+<span class="hljs-keyword">while</span> (!streamDone) {
+  <span class="hljs-keyword">const</span> chunk = <span class="hljs-keyword">await</span> reader.<span class="hljs-title function_">read</span>();   <span class="hljs-comment">// 读之前已装计时器；取消路径必须 clearTimeout</span>
+  <span class="hljs-built_in">clearTimeout</span>(idleTimer);
+  lastActivity = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+  <span class="hljs-keyword">if</span> (chunk.<span class="hljs-property">done</span>) { streamDone = <span class="hljs-literal">true</span>; <span class="hljs-keyword">break</span>; }
+  <span class="hljs-keyword">const</span> events = <span class="hljs-title function_">parseEvents</span>(chunk);
+  <span class="hljs-keyword">if</span> (events.<span class="hljs-property">length</span>) lastEventLabel = events[events.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>].<span class="hljs-property">type</span>;
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> e <span class="hljs-keyword">of</span> events) <span class="hljs-title function_">handle</span>(e);
+  idleTimer = <span class="hljs-built_in">setTimeout</span>(onIdle, <span class="hljs-variable constant_">IDLE_LIMIT_MS</span>);
+}</code></pre>
+<p><strong>W-1 与 R-2 的耦合（不可分开实施）</strong>：循环内 <code>handleStreamEvent</code>（<code>AIChat.vue:3458</code>）会把 <code>running</code> 步骤<br>写进 <code>assistantMessage.steps</code>。中途 <code>throw</code> 后外层 <code>finally</code>（<code>:3617-3626</code>）已把 <code>loading.value = false</code>，<br><strong>orphan running 步骤就永远留在界面上</strong>。<br>因此：<strong>W-1 的任何 throw 路径必须保证 R-2 的 <code>settleOrphanSteps</code> 已在其上游可达</strong><br>（同一 <code>finally</code>，或 <code>catch</code> 里先收口再抛）。只做 W-1 不做 R-2，会把「永久转圈」从数据问题变成必然结果。</p>
+<p>计时器阈值从 env 读（<code>readTimeoutEnv('VITE_AI_STREAM_IDLE_TIMEOUT_MS', 60000)</code>），不得字面量写死——<br>这是 <code>RUNTIME-001</code> 的前端延伸。</p>
+<p><strong>规则 W-2（等待文案必须带已等待秒数）</strong></p>
+<p>状态文案不得是编译期常量。至少这样写：</p>
+<pre><code class="language-vue">&lt;!-- ✗ Wrong：一句会永远说下去的话 --&gt;
+&lt;span&gt;{{ loadingStatusText }}&lt;/span&gt;
+
+&lt;!-- ✓ Right：目标 + 计时 + 最后事件 --&gt;
+&lt;span&gt;
+  {{ transportLabel }} · 已等待 {{ waitSeconds }}s · 最后事件 {{ lastEventAt }}
+&lt;/span&gt;</code></pre>
+<p><strong>规则 W-3（重试耗尽必须有终态）</strong></p>
+<p>任何「自动重连 N 次」的逻辑耗尽后，状态<strong>不得</strong>继续描述那个已经停止的动作，并须给出人工出路：</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong</span>
+<span class="hljs-keyword">if</span> (attempts &lt; <span class="hljs-variable constant_">MAX</span>) <span class="hljs-built_in">setTimeout</span>(retry, delay);   <span class="hljs-comment">// 超限后静默放弃，UI 仍说「正在尝试」</span></code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Correct</span>
+<span class="hljs-keyword">if</span> (attempts &lt; <span class="hljs-variable constant_">MAX</span>) {
+  <span class="hljs-built_in">setTimeout</span>(retry, delay);
+} <span class="hljs-keyword">else</span> {
+  state.<span class="hljs-property">value</span> = <span class="hljs-string">&#x27;failed&#x27;</span>;   <span class="hljs-comment">// 终态：文案改为「已停止自动重试，请点此重试」</span>
+}</code></pre>
+<p>适用范围至少含：</p>
+<ul><li><code>src/composables/useDaemonHealth.js</code>：<code>MAX_RESTART_ATTEMPTS = 3</code> 定义在 <code>:21</code>，耗尽判断在 <code>:54</code></li></ul>
+<p>（<code>if (reconnectAttempts.value &gt;= MAX_RESTART_ATTEMPTS) return;</code>），<br>  之后只置 <code>connectionStatus = 'disconnected'</code>，无「已放弃」态。</p>
+<ul><li><code>src/composables/useAIMonitor.js</code>：<code>MAX_RECONNECT_ATTEMPTS = 10</code> 定义在 <code>:15</code>，耗尽分支在 <code>:74-78</code>，</li></ul>
+<p>静默放弃且 <code>reconnectAttempts</code> 从不上屏。</p>
+<p><strong>规则 W-4（连接关闭必须收口，不许只在「就绪」态改写）</strong></p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 只覆盖 ready，启动中断时状态永远停在「启动中」</span>
+ws.<span class="hljs-property">onclose</span> = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">if</span> (!manualClose &amp;&amp; status.<span class="hljs-property">value</span> === <span class="hljs-string">&#x27;ready&#x27;</span>) status.<span class="hljs-property">value</span> = <span class="hljs-string">&#x27;exited&#x27;</span>;
+};</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — 任何非人工关闭都要落到终局，并在终端里留一行</span>
+ws.<span class="hljs-property">onclose</span> = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">if</span> (manualClose) <span class="hljs-keyword">return</span>;
+  connecting.<span class="hljs-property">value</span> = <span class="hljs-literal">false</span>;
+  authed = <span class="hljs-literal">false</span>;
+  <span class="hljs-keyword">const</span> wasBooting = status.<span class="hljs-property">value</span> === <span class="hljs-string">&#x27;booting&#x27;</span>;
+  status.<span class="hljs-property">value</span> = wasBooting ? <span class="hljs-string">&#x27;error&#x27;</span> : <span class="hljs-string">&#x27;exited&#x27;</span>;
+  <span class="hljs-title function_">writeLine</span>(wasBooting
+    ? <span class="hljs-string">&#x27;启动中断：连接在内核就绪前断开，查看启动日志后点「重新连接」&#x27;</span>
+    : <span class="hljs-string">&#x27;连接已断开。点击「重新连接」继续。&#x27;</span>);
+};</code></pre>
+<p>同时：<code>status !== 'ready'</code> 时用户键入被丢弃（<code>KhyOsTerminal.vue:273</code>），必须给出提示，不得静默吞掉按键。</p>
+<h3 id="3-2-空态-失败不可被空态代偿">3.2 空态：失败不可被空态代偿<a class="anchor" href="#3-2-空态-失败不可被空态代偿" aria-label="锚点">#</a></h3>
+<p><strong>规则 E-1（列表读取失败必须落到 loadError，禁止 catch 成空集合）</strong></p>
+<p>仓内已有正确抽象，<strong>不许再造第二个</strong>。新增或修改任何列表读取，一律走：</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 把失败写成「机器上什么都没有」</span>
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">fetchCatalog</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">try</span> { catalogEdges.<span class="hljs-property">value</span> = <span class="hljs-keyword">await</span> request.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/api/gateway/edges&#x27;</span>); }
+  <span class="hljs-keyword">catch</span> { catalogEdges.<span class="hljs-property">value</span> = []; }
+}
+
+<span class="hljs-comment">// ✓ Right — 失败被记录，成功被清空，视图据此分流</span>
+<span class="hljs-keyword">const</span> loadError = <span class="hljs-title function_">useLoadError</span>();
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">fetchCatalog</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">loadInto</span>(<span class="hljs-string">&#x27;网关拓扑&#x27;</span>, loadError, <span class="hljs-title function_">async</span> () =&gt; {
+    catalogEdges.<span class="hljs-property">value</span> = <span class="hljs-keyword">await</span> request.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/api/gateway/edges&#x27;</span>);
+  });
+}</code></pre>
+<p><strong>规则 E-2（空态与失败态在模板里互斥，失败优先；加载遮罩期间不得渲染空态）</strong></p>
+<pre><code class="language-vue">&lt;!-- ✗ Wrong — 失败与空态同形；且加载遮罩期间空态已经渲染出来，与 v-loading 并存 --&gt;
+&lt;KhyEmpty v-if=&quot;!modelGroups.length&quot; title=&quot;暂无可用模型&quot; description=&quot;确认适配器已本地安装并登录&quot; /&gt;</code></pre>
+<pre><code class="language-vue">&lt;!-- ✓ Right — 三态分流：失败 / 加载中 / 真空 --&gt;
+&lt;!-- 注意条件要覆盖全部 v-loading 的信号：AIChat.vue:830 是
+     v-loading=&quot;modelsLoading || overridesBusy&quot;，漏掉 overridesBusy
+     会让遮罩期间空态闪回来，正是本规则要治的病。 --&gt;
+&lt;LoadErrorBanner v-if=&quot;loadError&quot; :message=&quot;loadError&quot;&gt;
+  &lt;template #action&gt;&lt;el-button size=&quot;small&quot; @click=&quot;loadModels&quot;&gt;重试&lt;/el-button&gt;&lt;/template&gt;
+&lt;/LoadErrorBanner&gt;
+&lt;KhyEmpty
+  v-else-if=&quot;!modelsLoading &amp;&amp; !overridesBusy &amp;&amp; !modelGroups.length&quot;
+  title=&quot;暂无可用模型&quot;
+  description=&quot;确认对应适配器已本地安装并登录，模型会自动出现在这里。&quot;
+/&gt;</code></pre>
+<p><code>LoadErrorBanner.vue:2-8</code> 当前只有 <code>:title</code>，<strong>没有 <code>#action</code> 插槽</strong>——按本规则需要补一个可选 <code>action</code> 插槽承载重试按钮。</p>
+<p><strong>规则 E-3（计数不得由失败折成 0）</strong></p>
+<p>待办数、健康分、调用数这类<strong>计数</strong>在请求失败时显示 <code>—</code>，不显示 <code>0</code>。「0」是一个关于机器的断言，失败时你没有资格断言。</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong</span>
+<span class="hljs-keyword">const</span> pendingTotal = pendingUserCount + pendingPaymentCount + expiredKeyCount;   <span class="hljs-comment">// 失败时全是 0</span></code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — 每个来源带自己的失败标记</span>
+<span class="hljs-keyword">const</span> pendingTotal = <span class="hljs-title function_">computed</span>(<span class="hljs-function">() =&gt;</span>
+  sources.<span class="hljs-title function_">some</span>(<span class="hljs-function">(<span class="hljs-params">s</span>) =&gt;</span> s.<span class="hljs-property">failed</span>) ? <span class="hljs-literal">null</span> : sources.<span class="hljs-title function_">reduce</span>(<span class="hljs-function">(<span class="hljs-params">a, s</span>) =&gt;</span> a + s.<span class="hljs-property">count</span>, <span class="hljs-number">0</span>),
+);</code></pre>
+<p>模板：<code>{{ pendingTotal === null ? '—' : pendingTotal }}</code>，且 <code>null</code> 时整块挂一条告警说明「后端未响应，计数不可得」。</p>
+<p><strong>规则 E-4（用户可见行为的变更须被登记）</strong></p>
+<p>E-2 会让 AIChat 的模型面板在失败时<strong>从「暂无可用模型」变红条</strong>（<code>AIChat.vue:831-837</code>）。<br>这是修正，但它是<strong>用户可见的行为变更</strong>，须登记进 §7 缺口表以便截图与说明同步。</p>
+<h3 id="3-3-结果-完成-失败-未知-必须三态">3.3 结果：完成 / 失败 / 未知 必须三态<a class="anchor" href="#3-3-结果-完成-失败-未知-必须三态" aria-label="锚点">#</a></h3>
+<p><strong>规则 R-1（<code>success</code> 缺失即未知 —— 但落点在后端，前端单改无效）</strong></p>
+<p><strong>本规则是本文唯一一条「不改后端就等于没做」的规则。</strong> 事实：</p>
+<pre><code class="language-js"><span class="hljs-comment">// runtime/node/backend/src/bridge/aiChatConsumer.js:133-141</span>
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (t === <span class="hljs-string">&#x27;tool_result&#x27;</span>) {
+  <span class="hljs-keyword">const</span> success =
+    <span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">success</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>
+      ? chunk.<span class="hljs-property">success</span>
+      : <span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">isError</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>
+        ? !chunk.<span class="hljs-property">isError</span>
+        : <span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">is_error</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>
+          ? !chunk.<span class="hljs-property">is_error</span>
+          : <span class="hljs-literal">true</span>;                       <span class="hljs-comment">// ← 三个字段都缺时兜底成 true</span>
+  <span class="hljs-title function_">broadcast</span>({ <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;chunk_tool_result&#x27;</span>, …, success, … });</code></pre>
+<p>后端已经把「缺失」补成了 <code>true</code>。因此 WS/SSE 桥接路径上，<br>前端无论怎么写 <code>settleStatus</code>，收到的 <code>success</code> 永远是 <code>true</code>，<code>unknown</code> 分支<strong>永不进入</strong>。</p>
+<p><strong>而另一条通道口径相反</strong>：</p>
+<pre><code class="language-js"><span class="hljs-comment">// runtime/node/backend/src/cli/aiRequestParsers.js:403-415</span>
+<span class="hljs-keyword">let</span> normalizedSuccess;
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">success</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>)      normalizedSuccess = chunk.<span class="hljs-property">success</span>;
+<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">isError</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>)  normalizedSuccess = !chunk.<span class="hljs-property">isError</span>;
+<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> chunk.<span class="hljs-property">is_error</span> === <span class="hljs-string">&#x27;boolean&#x27;</span>) normalizedSuccess = !chunk.<span class="hljs-property">is_error</span>;
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> normalizedSuccess === <span class="hljs-string">&#x27;boolean&#x27;</span>) {       <span class="hljs-comment">// ← undefined 时整个字段被省略</span>
+  normalizedChunk = { ...normalizedChunk, <span class="hljs-attr">success</span>: normalizedSuccess };
+}</code></pre>
+<p>这不是「跨通道可能碰巧缺字段」的假设，而是<strong>仓内两个具体函数的现存分歧</strong>。</p>
+<p><strong>正确落点（前后端联动）</strong>：</p>
+<ol><li><strong>后端</strong>：<code>aiChatConsumer.js:140</code> 的 <code>: true</code> 改为「三个字段都缺时<strong>不广播 <code>success</code> 字段</strong>」，</li></ol>
+<p>与 <code>aiRequestParsers.js</code> 的 <code>undefined → 省略</code> 对齐。</p>
+<ol><li><strong>前端</strong>：</li></ol>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 后端已兜底成 true，本分支永不进入</span>
+<span class="hljs-keyword">const</span> ok = payload?.<span class="hljs-property">success</span> !== <span class="hljs-literal">false</span>;</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — 必须在后端 (1) 落地之后才有效</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">settleStatus</span>(<span class="hljs-params">payload</span>) {
+  <span class="hljs-keyword">if</span> (payload?.<span class="hljs-property">success</span> === <span class="hljs-literal">true</span>)  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;ok&#x27;</span>;       <span class="hljs-comment">// 完成 ✓</span>
+  <span class="hljs-keyword">if</span> (payload?.<span class="hljs-property">success</span> === <span class="hljs-literal">false</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;error&#x27;</span>;   <span class="hljs-comment">// 失败 ✗</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;unknown&#x27;</span>;                                  <span class="hljs-comment">// 字段缺失</span>
+}</code></pre>
+<p><strong>顺序不可颠倒</strong>：先改后端再改前端。若同时改，所有不带该字段的适配器步骤会<strong>集体翻成灰色「结果未返回」</strong>——<br>这是全聊天页的用户可见大退步。须按 §7 G-18 记录的顺序分两次提交，中间保持 <code>settleStatus</code> 的 <code>unknown</code> 分支<br>先只打日志、不上 UI，灰度确认无大面积翻灰后再渲染。</p>
+<p><strong>规则 R-2（<code>unknown</code> 文案必须满足规则 2.2 三维，且模板要显示出来）</strong></p>
+<p>引入第三态就引入了一条新文案，它<strong>必须</strong>自己满足本文所引的规则 2.2，否则本文自相矛盾：</p>
+<table><thead><tr><th>维度</th><th>要求</th><th>落实</th></tr></thead><tbody><tr><td>问题</td><td>说清发生了什么</td><td><code>工具结果未返回</code></td></tr><tr><td>原因</td><td>说清为什么</td><td><code>原因：&lt;s.note&gt;</code>，如「可能因中断/超时」（由 R-3 的 <code>settleOrphanSteps</code> 写入）</td></tr><tr><td>修复</td><td>给出用户能做的动作</td><td><code>重新生成，或查看运行日志</code></td></tr></tbody></table>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 三维全缺，本文自己造了一条违规文案</span>
+{ <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;unknown&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;结果未返回&#x27;</span> }</code></pre>
+<pre><code class="language-vue">&lt;!-- ✓ Right — 模板必须把 note 与动作渲染出来，note 缺失时降级为「原因未标注」 --&gt;
+&lt;span class=&quot;step-step__status&quot; data-tone=&quot;neutral&quot;&gt;
+  ? 结果未返回（原因：{{ step.note || '原因未标注' }}）· 重新生成
+&lt;/span&gt;</code></pre>
+<p><strong>规则 R-3（<code>running</code> 必须有 orphan 收口）</strong></p>
+<p>进入 <code>running</code> 的步骤，只能由配对结果改终态，或由<strong>兜底收口函数</strong>改终态。<br>任何 turn 结束时都要跑一次（<code>runAssistantTurn</code> 的 <code>finally</code> 与历史载入处各一次）：</p>
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">settleOrphanSteps</span>(<span class="hljs-params">steps, reason</span>) {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> s <span class="hljs-keyword">of</span> steps) {
+    <span class="hljs-keyword">if</span> (s.<span class="hljs-property">status</span> !== <span class="hljs-string">&#x27;running&#x27;</span>) <span class="hljs-keyword">continue</span>;
+    s.<span class="hljs-property">status</span> = <span class="hljs-string">&#x27;unknown&#x27;</span>;
+    s.<span class="hljs-property">startedAt</span> ??= <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - (s.<span class="hljs-property">durationMs</span> || <span class="hljs-number">0</span>);
+    s.<span class="hljs-property">durationMs</span> = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - s.<span class="hljs-property">startedAt</span>;
+    s.<span class="hljs-property">note</span> = reason;   <span class="hljs-comment">// 例如 &#x27;可能因中断/超时&#x27; —— R-2 的文案要读它</span>
+  }
+}</code></pre>
+<p>每个步骤记 <code>startedAt</code> / <code>endedAt</code> 并渲染耗时——「转圈 4 分钟」和「转圈 4 秒」是两种完全不同的情况。</p>
+<p><strong>规则 R-4（进度摘要不得出现会倒退的分数）</strong></p>
+<p><code>summarizeToolProgress</code>（<code>aiChatEventUtils.js:249-271</code>）当前用「已到达步骤数」当分母，<br>新步骤到达时分母变大，读数会倒退（<code>1/1 → 1/2 → 2/3</code>）。</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — total 随到达增长，读数看起来在倒退（aiChatEventUtils.js:266）</span>
+<span class="hljs-keyword">const</span> parts = [<span class="hljs-string">`工具 <span class="hljs-subst">${done}</span>/<span class="hljs-subst">${total}</span>`</span>];</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — 已完成数 + 进行中数，不编造分母</span>
+<span class="hljs-keyword">const</span> parts = [<span class="hljs-string">`已完成 <span class="hljs-subst">${done}</span> 个`</span>];
+<span class="hljs-keyword">if</span> (running &gt; <span class="hljs-number">0</span>) parts.<span class="hljs-title function_">push</span>(<span class="hljs-string">`<span class="hljs-subst">${running}</span> 个进行中`</span>);
+<span class="hljs-keyword">if</span> (failed &gt; <span class="hljs-number">0</span>) parts.<span class="hljs-title function_">push</span>(<span class="hljs-string">`<span class="hljs-subst">${failed}</span> 个失败`</span>);</code></pre>
+<p>只有当后端<strong>明确给出计划步数</strong>时才允许 <code>n/m</code>，否则禁止写分数。</p>
+<p><strong>规则 R-4 的既有测试影响面（必读）</strong>：</p>
+<p><code>src/views/aiChatEventUtils.toolEvents.test.js</code> 会对本规则的改动转红，两条断言：</p>
+<table><thead><tr><th>位置</th><th>现断言</th><th>R-4 落地后</th></tr></thead><tbody><tr><td><code>:229</code></td><td><code>assert.match(p.label, /工具 2\/3/);</code></td><td><strong>必红</strong></td></tr><tr><td><code>:238</code></td><td><code>assert.equal(p.label, '工具 2/2');</code></td><td><strong>必红</strong></td></tr><tr><td><code>:248</code></td><td><code>assert.match(p.label, /1 失败/)</code></td><td>仍绿</td></tr><tr><td><code>:249</code></td><td><code>assert.match(p.label, /1 进行中/)</code></td><td><strong>必红</strong>（<code>进行中</code> 改成 <code>个进行中</code>）</td></tr></tbody></table>
+<p>该文件 <code>:5</code> <code>import { test } from 'vitest'</code> 却 <code>:6</code> <code>import assert from 'node:assert/strict'</code>，<br><strong>混了双 runner</strong>——所以 <code>node --test</code> 跑不到它，只有 vitest 跑得到。<br><code>AGENTS.md</code> 规则 8（<code>PROCESS-008</code>）管的是「新增拦截型机制的阶段」，<strong>管不了「按本文做会打红既有测试」</strong>。<br>落地 R-4 的同一个提交里必须同步改这三条断言。</p>
+<h3 id="3-4-错误文案-问题-原因-修复">3.4 错误文案：<code>{问题}：{原因}，{修复}</code><a class="anchor" href="#3-4-错误文案-问题-原因-修复" aria-label="锚点">#</a></h3>
+<p><strong>规则 X-1（三维缺一不可，且修复必须是用户能做的动作）</strong></p>
+<pre><code>✗  保存失败
+✗  请重试或检查连接
+✓  保存调度配置失败 (500)：后端返回内部错误，请稍后重试；若持续失败运行 khy doctor</code></pre>
+<p><code>catch {}</code> <strong>不接错误对象</strong>等于把「原因」这一维直接丢掉：</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 三维全缺，连 err 都没接</span>
+<span class="hljs-keyword">try</span> { <span class="hljs-keyword">await</span> pool.<span class="hljs-title function_">updateScheduling</span>(s); <span class="hljs-title function_">showSuccess</span>(<span class="hljs-string">&#x27;已保存&#x27;</span>); }
+<span class="hljs-keyword">catch</span> { <span class="hljs-title function_">showError</span>(<span class="hljs-string">&#x27;保存失败&#x27;</span>); }
+
+<span class="hljs-comment">// ✓ Right</span>
+<span class="hljs-keyword">try</span> { <span class="hljs-keyword">await</span> pool.<span class="hljs-title function_">updateScheduling</span>(s); <span class="hljs-title function_">showSuccess</span>(<span class="hljs-string">&#x27;调度配置已保存&#x27;</span>); }
+<span class="hljs-keyword">catch</span> (err) { <span class="hljs-title function_">showError</span>(<span class="hljs-string">`保存调度配置失败：<span class="hljs-subst">${describeFailure(err)}</span>，请稍后重试`</span>); }</code></pre>
+<p>存量至少 11 处须逐个改：<code>AccountPool.vue:547/:578</code>、<code>GuiEvalTasks.vue:206</code>、<code>WebFrontendEvalTasks.vue:207</code>、<br><code>AIChat.vue:1419/:1435</code>、<code>Marketplace.vue:489</code>、<code>PromptLibrary.vue:380/:389/:403</code>、<code>ProxyManagement.vue:799</code>。</p>
+<p><strong>规则 X-2（修复建议不得与原因矛盾，且必须有落点）</strong></p>
+<p><code>src/api/loadError.js:31</code> 把 <code>fix = '请稍后重试'</code> 作为<strong>所有分支</strong>的固定尾巴拼在句末，导致：</p>
+<ul><li>401 → 「登录已失效，请重新登录，<strong>请稍后重试</strong>」（自相矛盾）</li><li>403 → 「当前账号没有权限访问，<strong>请稍后重试</strong>」（把无权限用户指向一个永远无效的动作）</li></ul>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong — 统一尾巴</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">describeLoadError</span>(<span class="hljs-params">err, subject, fix = <span class="hljs-string">&#x27;请稍后重试&#x27;</span></span>) { … <span class="hljs-keyword">return</span> <span class="hljs-string">`<span class="hljs-subst">${subject}</span>加载失败：<span class="hljs-subst">${reason}</span>，<span class="hljs-subst">${fix}</span>`</span>; }</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — fix 由状态码决定，且都指向页面上真实存在的动作</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">FIX_BY_STATUS</span> = {
+  <span class="hljs-number">401</span>: <span class="hljs-string">&#x27;点右上角头像退出后重新登录&#x27;</span>,
+  <span class="hljs-number">403</span>: <span class="hljs-string">&#x27;联系平台管理员开通该页面的权限&#x27;</span>,
+  <span class="hljs-number">429</span>: <span class="hljs-string">&#x27;稍后重试，或减少请求频率&#x27;</span>,
+  <span class="hljs-comment">// 404 不设条目：其修复动作与 401/403/429 不同类，走兜底</span>
+};
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">describeLoadError</span>(<span class="hljs-params">err, subject, fix</span>) {
+  <span class="hljs-keyword">const</span> s = <span class="hljs-title function_">statusOf</span>(err);
+  <span class="hljs-keyword">const</span> tail = fix || <span class="hljs-variable constant_">FIX_BY_STATUS</span>[s] || <span class="hljs-string">&#x27;请稍后重试&#x27;</span>;
+  <span class="hljs-keyword">return</span> <span class="hljs-string">`<span class="hljs-subst">${subject}</span>加载失败：<span class="hljs-subst">${reason}</span>，<span class="hljs-subst">${tail}</span>`</span>;
+}</code></pre>
+<p><strong>X-2 的既有测试影响面（必读）</strong>：<code>src/api/loadError.test.js:29</code> 断言<br><code>expect(msg).toContain('请稍后重试')</code>（404 分支）。当前 <code>FIX_BY_STATUS</code> 无 404 条目 → 落到兜底 → 仍绿，<br><strong>但这是运气不是设计</strong>：实现者只要顺手给 404 补一条，<code>loadError.test.js:29</code> 立刻红。<br>规则：<code>FIX_BY_STATUS</code> 必须为 <code>describeLoadError</code> 的<strong>每个已有分支保留可达路径</strong>，<br>任何新增条目都要同步检查 <code>loadError.test.js</code>。</p>
+<p><strong>规则 X-3（无权限文案必须面向人）——落点被镜像约束挡住，须另开覆盖表</strong></p>
+<p><code>classifyKhyError.mjs:13</code> 的 <code>PERMISSION_DENIED.hint</code> 是「该操作需要你显式授权，重新执行并选择允许」，<br>这是给 AI 智能体写的工具授权说明，<strong>人无法执行「重新执行并选择允许」</strong>。<br>而 <code>notify.js:136-142</code> 的 <code>_formatToast</code> 会把它原样拼进给人看的 toast：</p>
+<pre><code>[error] PERMISSION_DENIED · &lt;axios 英文原文&gt;（提示：该操作需要你显式授权，重新执行并选择允许）</code></pre>
+<p><strong>不能直接改 <code>classifyKhyError.mjs</code></strong>——该文件 <code>:1-4</code> 的头注释明文写着：</p>
+<blockquote><p><code>MIRRORS platform/packages/shared/src/errorEnvelope.js:STATUS_TABLE,… 与 apps/ai-mobile/src/utils/classifyKhyError.mjs 内容应保持一致；改动两边要同步。</code></p></blockquote>
+<p>改 <code>PERMISSION_DENIED.hint</code> 会破镜像并牵动 mobile。正确落点：</p>
+<ol><li>在 <strong>前端另开一张面向人的覆盖表</strong>（建议 <code>src/api/notify.js</code> 内一张 <code>USER_FACING_HINTS</code>），</li></ol>
+<p>按 code 覆盖 hint，不动 <code>classifyKhyError.mjs</code>；</p>
+<ol><li>4xx/5xx 的 <code>message</code> 用中文覆盖 axios 原文；</li><li><strong>注意回流</strong>：<code>notify.js:149-159</code> 的 <code>deriveErrorMessage</code> 是 <code>loadError.js:33</code> 的下游，</li></ol>
+<p>改 <code>_formatToast</code> 的 hint 会<strong>回流进所有 loadError 文案</strong>，影响 Pricing / UsageLogs / ProxyManagement<br>   三个已在用的视图。故覆盖表必须挂在 <code>deriveErrorMessage</code> 这一层（页面 toast 与 loadError 共用），<br>   并把这三个视图的文案变化登记进 §7。</p>
+<p><strong>规则 X-4（错误页必须留下可上报的识别码）</strong></p>
+<p><code>src/router/index.js:602-610</code> 的 <code>router.onError((error, to) =&gt; { … router.replace('/500'); })</code><br>（<code>:610</code> 是 <code>router.replace('/500')</code>）把 <code>error</code> 直接丢弃，<br><code>src/views/ServerError.vue:5-8</code> 只留一句泛化描述并让用户去翻浏览器控制台。</p>
+<p>路由层须把 <code>error.message</code> 与 <code>to.fullPath</code> 通过 router state 带到 <code>/500</code>，页面展示之（并提供「复制错误信息」）。<br>同理 <code>src/router/index.js:546</code> 的 403 拦截须把被拦路径带进 query 并回显——<code>Forbidden.vue</code> 全文无 <code>route</code> 引用，<br>「返回上一页」用 <code>router.back()</code> 会把用户弹回那个管理员页再被守卫弹回 403，每次点击还多压一条历史。</p>
+<h3 id="3-5-无入站活动的长传输-按体积自适应-不套用入站重置">3.5 无入站活动的长传输：按体积自适应，不套用入站重置<a class="anchor" href="#3-5-无入站活动的长传输-按体积自适应-不套用入站重置" aria-label="锚点">#</a></h3>
+<p><strong>规则 U-1（无进度回传的上传必须按体积自适应超时，且失败文案不得是机器原文）</strong></p>
+<p><code>AIChat.vue:1839</code> 的上传走 <code>authedFetch</code> 默认 <strong>固定墙钟 30s</strong>（<code>authedFetch.js:19</code><br><code>DEFAULT_TIMEOUT = Number(import.meta.env.VITE_AI_HTTP_TIMEOUT_MS) || 30000</code>），<br>经 <code>authedFetch.js:17</code> 的 <code>import { createAuthHeaders, fetchWithTimeout } from '@khy/ui-shared'</code><br>引入 <code>runtime/substrate/platform/packages/ui-shared/src/http/fetchWithTimeout.js:22-28</code><br>（<strong>注意：不在 <code>src/api/</code> 下，照错路径找会落空</strong>）。<br>超时抛 <code>new DOMException('timeout', 'AbortError')</code>，被 <code>AIChat.vue:1877-1879</code> 原样取 <code>err.message</code> 展示——<br>用户看到的就是「timeout」三个字母。</p>
+<p>固定墙钟本身就是 <code>AGENTS.md</code> 规则 3（<code>RUNTIME-003</code>）的违规形态：稍大的文件<strong>必然</strong>被中止，<br>且该计时器<strong>没有字节活动重置机制</strong>。</p>
+<pre><code class="language-js"><span class="hljs-comment">// ✗ Wrong</span>
+<span class="hljs-keyword">catch</span> (err) {
+  <span class="hljs-keyword">const</span> reason = err?.<span class="hljs-property">message</span> || <span class="hljs-string">&#x27;网络错误&#x27;</span>;   <span class="hljs-comment">// → 「timeout」</span>
+  <span class="hljs-title function_">showError</span>(<span class="hljs-string">`「<span class="hljs-subst">${file.name}</span>」上传失败：<span class="hljs-subst">${reason}</span>`</span>);
+}</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ✓ Right — 分类 + 体积 + 可执行的下一步</span>
+<span class="hljs-keyword">catch</span> (err) {
+  <span class="hljs-keyword">const</span> kind = err?.<span class="hljs-property">name</span> === <span class="hljs-string">&#x27;AbortError&#x27;</span> ? <span class="hljs-string">&#x27;超时&#x27;</span> : <span class="hljs-string">&#x27;网络中断&#x27;</span>;
+  <span class="hljs-title function_">showError</span>(
+    <span class="hljs-string">`「<span class="hljs-subst">${file.name}</span>」（<span class="hljs-subst">${formatSize(file.size)}</span>）上传失败：<span class="hljs-subst">${kind}</span>，`</span>
+    + (kind === <span class="hljs-string">&#x27;超时&#x27;</span>
+      ? <span class="hljs-string">&#x27;文件可能超过单次上传上限，请压缩后重试或改用链接引用&#x27;</span>
+      : <span class="hljs-string">&#x27;请检查后端服务是否在线后重试&#x27;</span>),
+  );
+}</code></pre>
+<p>超时阈值按 <code>Content-Length</code> 自适应（例如 <code>max(30s, size / 256KB/s)</code>），而不是留一个固定的 30s。</p>
+<p>上传的 chip 不得写「上传中（N）…」：<code>AIChat.vue:1832</code> 是<strong>串行</strong> <code>for (const file of files)</code>，<br>N 是并发计数，恒为 1，用户看不出还剩几个。改为「第 i/N 个 · name · 大小 / 已用 Xs」。</p>
+<h3 id="3-6-全局等待指示-先承认它不知道-再谈接线">3.6 全局等待指示：先承认它不知道，再谈接线<a class="anchor" href="#3-6-全局等待指示-先承认它不知道-再谈接线" aria-label="锚点">#</a></h3>
+<p><strong>规则 P-1（先选 (b) 降级，(a) 接线是独立工程）</strong></p>
+<p><code>GlobalProgressBar.vue:21-25</code> 用 <code>role=&quot;progressbar&quot;</code> + <code>:aria-valuenow=&quot;Math.round(width)&quot;</code><br>播报一个<strong>与任何真实测量无关</strong>的百分比——该文件 <code>:5-11</code> 的设计注释自己写明<br>「它并不知道任意请求的真实百分比」「不虚报完成、也不跳 100」「它的职责是『有活在干』，不是『精确报数』」。</p>
+<p><strong>必须先认清 (b) 的边界</strong>：(b) 只改 <code>role</code> 与 <code>aria-valuenow</code>（<code>:21-25</code>），<strong>不动 <code>usePacedProgress</code>，<br>也不改视觉上的 1%/160ms 步进</strong>。所以：</p>
+<ul><li>✅ (b) 能修的：不再向辅助技术播报一个假百分比。</li><li>❌ (b) <strong>修不了</strong>的：视力用户看到的仍是编造读数。</li></ul>
+<p>§2.2 抱怨的「等待没有终点」一点没解决——<strong>别把它当成 (b) 的功劳</strong>。</p>
+<p><strong>路径 (b)（本轮要求的最小可交付）</strong>：<br><code>role=&quot;progressbar&quot;</code> → <code>role=&quot;status&quot;</code>，删 <code>:aria-valuenow</code>，加<br><code>aria-valuetext=&quot;正在等待后端响应&quot;</code>，并在条旁以文字标明在等哪条链路。</p>
+<p><strong>路径 (a)（接线，需独立排期，13 个接入点）</strong>：</p>
+<table><thead><tr><th>类型</th><th>位置（本轮 `grep -rn &quot;new WebSocket\</th><th>EventSource\</th><th>fetch(&quot; src/` 实测）</th></tr></thead><tbody><tr><td>WebSocket ×7</td><td><code>KhyFloatBall.vue:462</code>、<code>:615</code>、<code>services/crossPlatform/shared/wsClientCore.js:190</code>、<code>views/admin/TrafficMonitor/index.vue:246</code>、<code>AIChat.vue:3230</code>、<code>KhyOsDesktop.vue:201</code>、<code>KhyOsTerminal.vue:129</code></td><td></td><td></td></tr><tr><td>EventSource ×3</td><td><code>useAIMonitor.js:47</code>、<code>useConfigSync.js:219</code>、<code>useGateway.js:80</code></td><td></td><td></td></tr><tr><td>裸 fetch ×2</td><td><code>main.js:27</code>、<code>:128</code></td><td></td><td></td></tr><tr><td>另加</td><td><code>authedFetch</code> 的全部调用点（上传、流式、工作流 SSE…）</td><td></td><td></td></tr></tbody></table>
+<p><strong>⚠ (a) 的硬约束</strong>：<code>httpStart/httpDone</code> <strong>必须成对</strong>。<br><code>request.js:104-108</code> 的注释明写这个计数器对不平衡极其敏感<br>（「both the original error's httpDone AND the retry's response httpDone fire,<br>leaving httpPending stuck at +1」）。<br><strong>漏配一处 → <code>GlobalProgressBar</code> 永久卡住不消，比原问题更严重。</strong><br>所以 (a) 不是「顺手包一层」，须配套：(i) 逐点列出 start/done 的对称位置；<br>(ii) 每个接入点加一条「计数器最终回到 0」的自检；(iii) 一次只接一条链路，接完验收再接下一条。</p>
+<hr>
+<h2 id="4-三条边界-哪些不用改">4. 三条边界（哪些不用改）<a class="anchor" href="#4-三条边界-哪些不用改" aria-label="锚点">#</a></h2>
+<ol><li><strong>枚举标签不算违规</strong>。<code>AGENTS.md</code> 规则 2 例外条款仍然有效：<code>&lt;option&gt;</code> 内容、options 数组的 <code>label</code> 字段、</li></ol>
+<p>i18n 翻译键、状态解析正则、数据库 ENUM 值——它们是<strong>数据</strong>，展示前还会被代码进一步处理。<br>   本文不扩大规则 2 的覆盖面。<br>   <strong>⚠ 但这条边界当前在守卫里没有兑现</strong>：<code>check-agent-rules.js:586-603</code> 的判定块没有枚举/i18n 豁免。<br>   §6.1 要求放宽扫描面<strong>之前</strong>必须先补这个豁免，否则 §4 边界 1 会破约。</p>
+<ol><li><strong>组件内部不套校验</strong>。本文的所有规则都作用在<strong>用户可见的呈现</strong>与<strong>系统边界</strong>上，不要求给纯内部函数加状态文案。</li><li><strong>阶段治理的适用范围</strong>。<code>AGENTS.md</code> 规则 8（<code>PROCESS-008</code>）六条红线管的是</li></ol>
+<p><strong>「新增拦截型机制」不得直进 S3</strong>。本文<strong>新增</strong>的检查（新对比度计算、<code>checkCrossEnd</code> 的 null 分流 info 化）<br>   一律从 S1 观察者起步、只记录不阻断。但 §6.1 对 <code>check-agent-rules.js</code> 词表与上下文的改动是<br>   <strong>给既有机制扩面</strong>、不是新机制，落在 <code>PROCESS-008</code> 六条红线之外——<strong>它不需要重新走阶段</strong>，<br>   但扩面后新命中的行仍应先按 warning 观察一段时间。</p>
+<hr>
+<h2 id="5-视觉侧的两条硬约束-状态看不看得见">5. 视觉侧的两条硬约束（状态看不看得见）<a class="anchor" href="#5-视觉侧的两条硬约束-状态看不看得见" aria-label="锚点">#</a></h2>
+<h3 id="5-1-前景色不得绑到背景令牌">5.1 前景色不得绑到背景令牌<a class="anchor" href="#5-1-前景色不得绑到背景令牌" aria-label="锚点">#</a></h3>
+<p><code>src/views/Markdown.vue:874-875</code>：</p>
+<pre><code class="language-css">:<span class="hljs-built_in">global</span>(html.dark) .md-preview { <span class="hljs-attr">--md-fg</span>: <span class="hljs-built_in">var</span>(--khy-md-bg); … }</code></pre>
+<p><code>--khy-md-bg</code> 是<strong>代码块背景</strong>令牌（<code>newapi-theme.css:253</code> 暗色 <code>#161b22</code>），<br>而承载面是 <code>Markdown.vue:704</code> 的 <code>background: var(--el-bg-color, var(--khy-white));</code><br>→ <code>newapi-theme.css:191</code> <code>--el-bg-color: var(--khy-bg-main)</code> → 暗色 <code>:259</code> <code>#161b26</code>。</p>
+<p><strong>正文色 = 面板底色</strong>。方案初稿的 WCAG 实算是相对亮度 1.00:1（同路径浅色 14.71:1）——<br><strong>该数字本轮未复算</strong>（复核只核了色值来源：<code>:253 #161b22</code>、<code>:259 #161b26</code>、<code>:94-96</code> 三色均已核对）。<br>落地时须先复算再改。</p>
+<p>规则：<strong>正文色只能绑语义文本令牌</strong>（<code>--khy-text-main</code> / <code>--khy-text-strong</code>），不得绑任何 <code>*-bg</code> / <code>*-surface</code>。</p>
+<p><strong>副作用须登记</strong>：改色后整块 Markdown 预览的暗色前景色会变——这正是意图，<br>但 <code>evidence/03_图片/</code> 里的相关截图会过期，触发 <code>AGENTS.md</code> 规则 9（<code>PROCESS-010</code>）的 C-MAT1/C-MAT2。</p>
+<h3 id="5-2-状态色一律收口到-khy-success-warning-danger-带-fallback-不许写死品牌色">5.2 状态色一律收口到 <code>--khy-success/-warning/-danger</code>（带 fallback，不许写死品牌色）<a class="anchor" href="#5-2-状态色一律收口到-khy-success-warning-danger-带-fallback-不许写死品牌色" aria-label="锚点">#</a></h3>
+<p>仓内目前并存三套状态色：</p>
+<table><thead><tr><th>来源</th><th>绿</th><th>琥珀</th><th>红</th></tr></thead><tbody><tr><td><code>newapi-theme.css:94-96</code> <code>--khy-*</code></td><td><code>#059669</code></td><td><code>#d97706</code></td><td><code>#dc2626</code></td></tr><tr><td>Element Plus 默认（未被重映射）</td><td><code>#67c23a</code></td><td><code>#e6a23c</code></td><td><code>#f56c6c</code></td></tr><tr><td><code>ui-shared/board/TaskCard.vue:154-157</code> / <code>TaskBoard.vue:270-273</code></td><td><code>--el-color-success</code></td><td><code>--el-color-warning</code></td><td><code>--el-color-danger</code></td></tr></tbody></table>
+<p><code>grep -n 'el-color-success\|el-color-warning\|el-color-danger' src/styles/newapi-theme.css</code> = <strong>0 命中</strong><br>（该文件只重映射了 <code>--el-color-primary</code> 与 text/bg/border/fill）。<br>而 TaskBoard 通过 <code>@khy/ui-shared/board/TaskBoard</code> 真实渲染在 ai-frontend 里（<code>src/views/admin/TaskBoard.vue:28</code>），<br>于是同屏出现两种绿、两种琥珀、两种红。且 TaskCard 的淡底 <code>--el-color-*-light-9</code> 未被重映射。</p>
+<p>规则：</p>
+<ol><li><code>ui-shared/board/*</code> 的状态色改引 <code>--khy-success/-warning/-danger</code>，<strong>且必须带 fallback</strong>：</li></ol>
+<p><code>var(--khy-success, #059669)</code>。<br>   <strong>不能照字面只写 <code>var(--khy-success)</code></strong>——<code>ui-shared</code> 是 pnpm workspace 共享包<br>   （<code>delivery/web/ai-frontend/node_modules/@khy/ui-shared</code> → <code>runtime/substrate/platform/packages/ui-shared</code>），<br>   而 <strong>khyquant 自己定义了不同的值</strong>：<code>delivery/channel/khyquant/frontend/src/styles/theme.css:12</code><br>   <code>--khy-success: #52c41a</code>。在共享包里写死 ai-frontend 的品牌色，等于让 ui-shared 从「中性层」退化成「某端主题层」。<br>   （爆炸半径有限：<code>grep -rn &quot;ui-shared/board\|TaskBoard\|TaskCard&quot; delivery/channel/khyquant/frontend/src</code><br>   零命中，khyquant 不引用看板组件。）</p>
+<ol><li>在 <code>newapi-theme.css</code> 补 <code>--el-color-*-light-9</code> 的重映射，使 EP 组件与 khy 组件共用同一组值。</li><li>任何 <code>fg/bg</code> 配对必须实算对比度，亮暗各自达标（<code>[DESIGN-FE-012]</code> §3.2 规则③）。</li><li><strong>禁止拿语法高亮色 / 图表色当状态色</strong>：<code>Markdown.vue:1010-1015</code> 的</li></ol>
+<p><code>.md-stat.ok{color:var(--el-color-success, var(--khy-md-green))}</code> 回落值是 GitHub 语法色，属错绑。</p>
+<h3 id="5-3-语义图标的-stroke-不得写死-当前-无任何断言-改动须补网">5.3 语义图标的 stroke 不得写死（当前<strong>无任何断言</strong>，改动须补网）<a class="anchor" href="#5-3-语义图标的-stroke-不得写死-当前-无任何断言-改动须补网" aria-label="锚点">#</a></h3>
+<p><code>KhyIcon.vue:98-104</code> 把 <code>stroke</code> 写成 <code>props.color || 'var(--khy-primary, var(--khy-primary))'</code>。<br>调用方的祖先 <code>color:</code> 对 SVG 的 <code>stroke</code> <strong>表现属性无效</strong>，故：</p>
+<table><thead><tr><th>调用点</th><th>要求</th><th>实际</th></tr></thead><tbody><tr><td><code>admin/WxBinding.vue:48</code> + <code>:468-470</code></td><td><code>--el-color-success</code></td><td>品牌蓝</td></tr><tr><td><code>admin/WxBinding.vue:58</code> + <code>:472-474</code></td><td><code>--el-color-danger</code></td><td>品牌蓝</td></tr><tr><td><code>ServerError.vue:4</code> + <code>:50-52</code></td><td><code>--khy-warning</code></td><td>品牌蓝</td></tr><tr><td><code>Forbidden.vue:4</code> + <code>:47-49</code></td><td><code>--khy-danger</code></td><td>品牌蓝</td></tr></tbody></table>
+<p><strong>扫码成功与扫码失败长得一样。</strong></p>
+<p>规则：<code>stroke</code> 改 <code>currentColor</code>（或由 <code>.khy-icon svg { stroke: … }</code> 从 CSS 变量取值），<br>并按 <code>kind</code> 给 <code>success/warning/error</code> 映射默认语义色，使调用方的 <code>color:</code> 与 <code>color</code> prop <strong>都</strong>生效。</p>
+<p><strong>测试网现状</strong>：<code>src/components/KhyIcon.test.js</code> 全文只有 3 个 <code>it</code><br>（<code>:19</code> 路径数量、<code>:27</code> kind 区分、<code>:35</code> 未知 kind 回退），<strong>没有一条断言 stroke 或 color</strong>。<br>这不是「断言了错的还绿」，是<strong>根本没有断言</strong>——所以改 stroke 不会有测试转红来提示你，<br>也<strong>不会有测试保护你改对</strong>。该文件已用 <code>createSSRApp</code> + <code>renderToString</code> 渲染，<br>加一条「<code>kind='success'</code> 时输出的 svg 带非品牌色的 stroke/currentColor」断言成本很低，<br><strong>改动 stroke 的同一个提交里必须补上</strong>。</p>
+<p>同理 §5.1 的 Markdown 对比度、§5.2 的状态色对比度，全仓无任何对比度测试兜底。</p>
+<hr>
+<h2 id="6-守卫与测试-本轮实跑记录">6. 守卫与测试：本轮实跑记录<a class="anchor" href="#6-守卫与测试-本轮实跑记录" aria-label="锚点">#</a></h2>
+<blockquote><p>以下是我在本轮<strong>实际执行</strong>的命令与输出。<strong>未跑的项一律标注「未跑」</strong>。</p></blockquote>
+<table><thead><tr><th>检查</th><th>命令</th><th>输出</th></tr></thead><tbody><tr><td>规则 1/2/3/4 静态体检</td><td><code>node scripts/ci/check-agent-rules.js delivery/web/ai-frontend/src</code></td><td><code>Summary: 0 error(s), 2 warning(s) across 198 file(s) scanned.</code> — 两条 warning 是 <code>useWxBinding.js:264</code>（<code>status: 'connecting'</code>）与 <code>KhyOsDesktop.vue:40</code>（模板 <code>v-if=&quot;connecting…&quot;</code>，被 <code>STATUS_CONTEXT_HINTS</code> 第 7 条命中）</td></tr><tr><td>美学守卫</td><td><code>node scripts/ci/check-aesthetics.js</code></td><td><code>[aesthetics] checked=59 findings=43 exit=0</code>。按端分计数：<strong><code>surfaces.web=null</code> 12 条 / <code>surfaces.tui=null</code> 31 条</strong>，其余 0 条</td></tr><tr><td>前端测试</td><td><code>npm run test:frontend</code>（= <code>vitest run</code>）</td><td><strong>未能原样执行（未跑）</strong>。本机 pnpm store 残缺：<code>failed to load config from vite.config.js</code> → <code>Cannot find package '@vitejs+plugin-vue@5.2.4…node_modules/vite/index.js'</code>。<strong>本轮未跑通任何 vitest 断言</strong></td></tr><tr><td>WCAG 对比度复算</td><td>—</td><td><strong>未跑</strong>。§5.1 的 1.00:1 / 14.71:1 沿用初稿，本轮只核了色值来源（<code>newapi-theme.css:253</code> <code>#161b22</code>、<code>:259</code> <code>#161b26</code>、<code>:94-96</code> 三色）</td></tr></tbody></table>
+<h3 id="6-1-守卫修复的-顺序-不可颠倒">6.1 守卫修复的<strong>顺序</strong>（不可颠倒）<a class="anchor" href="#6-1-守卫修复的-顺序-不可颠倒" aria-label="锚点">#</a></h3>
+<ol><li><strong>先实现 §4 边界 1 承诺的枚举/i18n 豁免</strong>。</li></ol>
+<p><code>check-agent-rules.js:586-603</code> 的判定块目前没有这个逃逸口，先补上——<br>   否则下一步放宽扫描面就会把 <code>&lt;el-option label=&quot;处理中&quot; /&gt;</code> 这类枚举标签判成违规。</p>
+<ol><li><strong>再补词表</strong>：<code>GENERIC_STATUS_TOKENS</code>（<code>:146-153</code>）补齐 AGENTS.md 规则 2 正文列的含糊词</li></ol>
+<p>（至少「加载中」「正在加载」「请稍候」）。本轮 grep 现状：<code>加载中</code> 0、<code>正在加载</code> 2、<code>请稍候</code> 1、<br>   <code>聆听中</code> 1、<code>思考中</code> 1、<code>启动中</code> 3，共 8 处——补词表后的即期命中面很小，风险主要来自下一步。</p>
+<ol><li><strong>最后放宽 <code>STATUS_CONTEXT_HINTS</code></strong>（<code>:169-178</code>），覆盖纯文本节点。</li></ol>
+<p>注意放宽后 §2.4 的两条 warning 会继续命中，属预期。</p>
+<ol><li><strong>修 <code>a11yContract.test.js:150-170</code></strong>：该 <code>it</code> 全文只有 <code>console.warn</code>，没有任何 <code>expect</code>，永远通过。</li></ol>
+<p>要么补断言（同文件 <code>:87</code> 的 <code>toBeLessThanOrEqual(20)</code> 同款，基线取实测值），要么删掉这条假守卫。</p>
+<ol><li><strong>修 <code>designTokenCompliance.test.js:140</code> 的基线</strong>：<code>BASELINE = 999</code> 已失效。</li></ol>
+<p><strong>取值口径：<code>BASELINE = 实测值 + 明确余量</code>（例如 +2）</strong>，不得直接等于实测值——<br>   零余量棘轮会让下一次任何人写一个 hex 就红，那是噪音不是信号。<br>   <strong>⚠「实测值」本轮无法复现</strong>（vitest 跑不起来），初稿记的「4 个文件」是读断言逻辑推得的，<br>   <strong>落地前必须先修好本机 store 再实测</strong>。<br>   同时给 <code>HEX_RE</code> 加豁免——<code>var(--el-border-color, #dcdfe6)</code> 这类回退位的 hex 不应计入裸 hex，<br>   否则数字对应的是不存在的违规。</p>
+<ol><li><strong><code>check-aesthetics.js:183-186</code> 的 <code>checkCrossEnd</code></strong>：把 <code>surfaces[end] === null</code> 分流为</li></ol>
+<p>「未决，跳过存在性校验」并计为 info。<code>AESTHETICS-TOKENS.json</code> 的 <code>$meta.valueSemantics</code><br>   自己写明 null=未决，而 43 条 warning <strong>全部</strong>是这一类（web 12 + tui 31）——<br>   守门人每天读这份输出只会学会忽略它，真缺口反而看不见。<br>   噪声归零后，剩下的才是真缺口。</p>
+<h3 id="6-2-文档必须订正的三处陈述-与仓库事实相反">6.2 文档必须订正的三处陈述（与仓库事实相反）<a class="anchor" href="#6-2-文档必须订正的三处陈述-与仓库事实相反" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文档</th><th>现写</th><th>事实</th></tr></thead><tbody><tr><td><code>[DESIGN-FE-012]:144</code>、<code>:412</code>、<code>:459</code>、§6 第 6 行</td><td>「<code>check-aesthetics.js</code> 尚未落地（当前不存在）」、「CI 强制依赖 check-aesthetics.js（待落地）」</td><td><strong>文件存在，239 行，在 CI 跑</strong>，<code>node scripts/ci/check-aesthetics.js</code> → <code>[aesthetics] checked=59 findings=43 exit=0</code>。而 `grep -niE &quot;contrast\</td></tr><tr><td><code>[DESIGN-FE-001]:90</code> / <code>:303</code>(G5)、<code>[DESIGN-FE-003]:51</code></td><td>「间距与字号目前没有 token（实测 <code>--khy-space-*</code>、<code>--khy-text-*</code> 不存在）」</td><td><code>newapi-theme.css:108-117</code> 已定义 <code>--khy-space-1..16</code> 共 10 档、<code>:128-131</code> 定义 <code>--khy-text-xs..2xl</code> 共 6 档。真实缺口是<strong>消费率</strong>：<code>grep -rn &quot;khy-space-&quot; --include=&quot;*.vue&quot; src</code> = <strong>0 处</strong>。把缺口改述为「令牌已存在，0 组件消费，收敛方向是组件间距改走令牌」</td></tr><tr><td><code>[DESIGN-FE-004]:47</code> / <code>:226-231</code>、<code>[DESIGN-FE-012]:283</code></td><td>「<code>.mt-8</code> = <code>margin-top: var(--khy-space-2)</code>」「工具类映射到 <code>--khy-space-*</code>」</td><td><code>newapi-theme.css</code> 里 18 处 <code>--khy-space-</code> <strong>全是定义与 self 引用</strong>，无任何 <code>.mt-8</code> 之类工具类。FE-004 六层模型的 Utilities 层在代码中不存在，而文档把它当既有层描述——<strong>错误还被 FE-012 §3.4 转抄复制传播</strong>。标注为「目标态，仓内未落地」</td></tr></tbody></table>
+<h3 id="6-3-本文的引用勘误记录">6.3 本文的引用勘误记录<a class="anchor" href="#6-3-本文的引用勘误记录" aria-label="锚点">#</a></h3>
+<p>本文初稿有若干 grep / 行号 / 路径与仓库事实不符，已在正文中改正，此处留痕以免复查时再踩：</p>
+<table><thead><tr><th>初稿写法</th><th>实际</th></tr></thead><tbody><tr><td><code>AIChat.vue:2121-2123</code> 的 catch</td><td><code>:2120-2122</code></td></tr><tr><td><code>Markdown.vue:703</code> 是 background</td><td><code>:704</code>（<code>:703</code> 是 <code>min-height: 0</code>）</td></tr><tr><td><code>aiChatEventUtils.js:162</code> 的 <code>const ok</code></td><td><code>:163</code></td></tr><tr><td><code>classifyKhyError.mjs:13</code> 是 <code>PERMISSION_DENIED</code></td><td><code>:13</code> <strong>正确</strong>（<code>:11</code> 是 <code>MODULE_NOT_FOUND</code>，<code>:13</code> 才是 <code>PERMISSION_DENIED</code>）</td></tr><tr><td><code>router/index.js:602-609</code> 含 <code>router.replace('/500')</code></td><td>块是 <code>:602-610</code>，<code>router.replace</code> 在 <code>:610</code></td></tr><tr><td><code>MAX_RESTARTART_ATTEMPTS</code></td><td><strong>拼写不存在</strong>。真名 <code>MAX_RESTART_ATTEMPTS</code>，定义 <code>useDaemonHealth.js:21</code>，引用 <code>:54</code></td></tr><tr><td><code>src/api/fetchWithTimeout.js</code></td><td><strong>该路径不存在</strong>。实现在 <code>runtime/substrate/platform/packages/ui-shared/src/http/fetchWithTimeout.js</code>，经 <code>authedFetch.js:17</code> 引入</td></tr><tr><td><code>grep 'running'</code> 只命中 4 处</td><td>非测试文件命中 <strong>6</strong> 处（多 <code>useDaemonHealth.js:60</code>、<code>aiChatEventUtils.js:243</code>），但<strong>结论（无 orphan 清理）成立</strong></td></tr><tr><td>「三处视图用『刷新本页』」</td><td><code>grep -rn &quot;刷新本页&quot; src/</code> 只有 <strong>1 处</strong>：<code>UserHome.vue:487</code>（文案来源，非 alert 渲染块 <code>:28-35/:71-78</code>）</td></tr><tr><td>aesthetics 43 条「全部是 web」</td><td>web 12 / tui 31</td></tr></tbody></table>
+<hr>
+<h2 id="7-缺口表-只降不升">7. 缺口表（只降不升）<a class="anchor" href="#7-缺口表-只降不升" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>缺口</th><th>落点</th><th>收敛方向</th></tr></thead><tbody><tr><td>G-1</td><td>11 处 <code>catch {}</code> 丢弃错误对象</td><td><code>AccountPool.vue:547/:578</code> 等</td><td>接 <code>err</code> + 三维模板（规则 X-1）</td></tr><tr><td>G-2</td><td><code>check-agent-rules.js</code> 词表与正文不符；<strong>且枚举/i18n 豁免未实现</strong>，与放宽扫描面构成先后依赖</td><td><code>scripts/ci/check-agent-rules.js:146-153</code> / <code>:169-178</code> / <code>:586-603</code></td><td>先补豁免，再补词表，最后放宽上下文</td></tr><tr><td>G-3</td><td><code>a11yContract.test.js</code> 有一条无断言的假守卫</td><td><code>:150-170</code></td><td>补断言或删除</td></tr><tr><td>G-4</td><td><code>designTokenCompliance</code> 基线 999；<strong>且「实测值」本轮无法复现</strong>（vitest 未跑通）</td><td><code>:140</code></td><td>实测 + 明确余量；先修本机 store</td></tr><tr><td>G-5</td><td><code>check-aesthetics.js</code> 43 条全为 null 误报（web 12 / tui 31）</td><td><code>:183-186</code></td><td>null 分流为 info</td></tr><tr><td>G-6</td><td>FE-012 对守卫存在性的陈述与事实相反</td><td><code>FE-012:144/:412/:459</code>、§6 第 6 行</td><td>按 §6.2 订正</td></tr><tr><td>G-7</td><td>FE-001/FE-003 说间距字号无 token</td><td><code>FE-001:90</code>、<code>:303</code>、FE-003:51</td><td>按 §6.2 订正，缺口改述为「0 组件消费」</td></tr><tr><td>G-8</td><td>FE-004 的 Utilities 层不存在但被当现状描述</td><td><code>FE-004:47/:226-231</code>、FE-012:283</td><td>标注为目标态</td></tr><tr><td>G-9</td><td><code>--khy-space-*</code> 定义了 10 档、0 组件消费</td><td><code>newapi-theme.css:108-117</code></td><td>组件间距改走令牌</td></tr><tr><td>G-10</td><td><code>Markdown.vue</code> 间距字号大量使用标度外的值（14/10/6/5px、12.5/13.5px）</td><td><code>:710/:764/:775/:786/:789/:850</code></td><td>归到最近档或补档</td></tr><tr><td>G-11</td><td>动效令牌 <code>--khy-duration-*</code>/<code>--khy-easing-*</code> 定义了 0 处使用，全是字面时长</td><td><code>newapi-theme.css:523/:501-512</code></td><td>替换字面量；<code>khy-fade-in</code> 与卡片 hover 位移纳入现有 reduced-motion 块</td></tr><tr><td>G-12</td><td><code>UserHome.vue:487</code> 的修复建议写「刷新本页」，但页面上没有刷新按钮</td><td><code>UserHome.vue:487</code>（文案来源）</td><td>页头 actions 槽加统一「刷新」按钮</td></tr><tr><td>G-13</td><td>三个品牌组件各用一套尺寸档；<code>KhyIcon</code> 的 <code>small</code> 拼写静默回落到 md</td><td><code>KhyIcon.vue:34/:93</code>、<code>KhyAvatar.vue:4/:19</code>、<code>KhyLogo.vue:8</code></td><td>共享 sm/md/lg；size 加白名单校验</td></tr><tr><td>G-14</td><td><strong>后端 <code>success</code> 兜底</strong>：<code>aiChatConsumer.js:140</code> 的 <code>: true</code> 使前端 R-1 的 <code>unknown</code> 分支永不进入</td><td><code>runtime/node/backend/src/bridge/aiChatConsumer.js:133-141</code></td><td>改为「缺失时不广播该字段」；<strong>必须先于前端 R-1 落地</strong>，见 R-1 的顺序约束</td></tr><tr><td>G-15</td><td><strong>两条通道 <code>success</code> 语义分歧</strong>：<code>aiChatConsumer.js:134</code>（缺失→true）vs <code>aiRequestParsers.js:403-415</code>（缺失→省略）</td><td>同上两处</td><td>统一为「缺失即省略」，前端才有 unknown 可判</td></tr><tr><td>G-16</td><td>R-4 落地会打红既有测试</td><td><code>src/views/aiChatEventUtils.toolEvents.test.js:229/:238/:249</code></td><td>同一提交内同步改这三条断言；该文件混双 runner，只有 vitest 跑得到</td></tr><tr><td>G-17</td><td>X-2 的兜底表无 404 条目时侥幸不挂 <code>loadError.test.js:29</code>，但无保障</td><td><code>src/api/loadError.test.js:29</code></td><td><code>FIX_BY_STATUS</code> 为每个已有分支保留可达路径；新增条目须同步查该测试</td></tr><tr><td>G-18</td><td>R-1 前后端同改会导致所有不带 success 字段的步骤集体翻灰（全聊天页用户可见大退步）</td><td><code>AIChat.vue:2554/:2572</code></td><td>分两次提交：后端先改、<code>unknown</code> 分支先只打日志；灰度确认后再渲染</td></tr><tr><td>G-19</td><td>KhyIcon stroke / 状态色对比度 / Markdown 对比度<strong>无任何测试守卫</strong>（KhyIcon.test.js 只有 3 个 it，无 stroke 断言——是「无断言」不是「假绿」）</td><td><code>src/components/KhyIcon.test.js</code></td><td>改 stroke 的同一提交补断言；对比度归 §6.1 的 check-aesthetics 补实现</td></tr><tr><td>G-20</td><td>§5.1 改色会使 <code>evidence/03_图片/</code> 截图过期</td><td><code>Markdown.vue:874-875</code></td><td>触发规则 9（<code>PROCESS-010</code>）C-MAT1/C-MAT2，改后重拍受影响截图</td></tr><tr><td>G-21</td><td>P-1(a) 的 13 个接入点若配对失败会让进度条永久卡死</td><td><code>request.js:104-108</code> 注释所述</td><td>一次只接一条链路 + 「计数器最终回 0」自检</td></tr><tr><td>G-22</td><td><code>GlobalProgressBar</code> 的 (b) 降级只对 aria 有效，视力用户仍看到编造读数</td><td><code>GlobalProgressBar.vue:5-11</code> 设计注释与 <code>:21-25</code> 的矛盾</td><td>承认 (b) 的边界；要真正解决须走 (a)</td></tr></tbody></table>
+<hr>
+<h2 id="8-一页速查-写新页面时照抄">8. 一页速查（写新页面时照抄）<a class="anchor" href="#8-一页速查-写新页面时照抄" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-comment">// 1. 读列表：走 loadInto，失败被记录</span>
+<span class="hljs-keyword">const</span> loadError = <span class="hljs-title function_">useLoadError</span>();
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">loadInto</span>(<span class="hljs-string">&#x27;用量日志&#x27;</span>, loadError, <span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">list</span>());
+
+<span class="hljs-comment">// 2. 状态文案：动作 + 目标 + 进度，活的</span>
+<span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">span</span>&gt;</span>{{ actionLabel }} {{ target }} · 已等待 {{ waitSeconds }}s<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span></span>
+
+<span class="hljs-comment">// 3. 错误文案：问题 + 原因 + 修复，修复必须是用户能做的动作</span>
+<span class="hljs-title function_">showError</span>(<span class="hljs-string">`保存调度配置失败：<span class="hljs-subst">${describeFailure(err)}</span>，请稍后重试`</span>);
+
+<span class="hljs-comment">// 4. 三态结果：缺 success 即未知，不用 `!x.error` 反推成功</span>
+<span class="hljs-comment">//    ⚠ 后端 aiChatConsumer.js:140 兜底成 true 之前，这条是空转的</span>
+<span class="hljs-keyword">const</span> st = payload?.<span class="hljs-property">success</span> === <span class="hljs-literal">true</span> ? <span class="hljs-string">&#x27;ok&#x27;</span> : payload?.<span class="hljs-property">success</span> === <span class="hljs-literal">false</span> ? <span class="hljs-string">&#x27;error&#x27;</span> : <span class="hljs-string">&#x27;unknown&#x27;</span>;
+
+<span class="hljs-comment">// 5. 超时：有入站活动的链路（流式 / WS / SSE）按入站字节重置，不写固定墙钟；</span>
+<span class="hljs-comment">//    ⚠ 无入站活动的链路（上传等）走 U-1 的体积自适应，不受本条约束</span>
+<span class="hljs-built_in">clearTimeout</span>(timer); lastActivity = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>(); timer = <span class="hljs-built_in">setTimeout</span>(onIdle, <span class="hljs-variable constant_">LIMIT</span>);
+
+<span class="hljs-comment">// 6. 状态色：只用 --khy-success/-warning/-danger（共享包内须带 fallback），正文只用 --khy-text-*</span></code></pre>
+<table><thead><tr><th>别抄（现状）</th><th>抄（目标）</th></tr></thead><tbody><tr><td><code>status: '正在连接'</code></td><td><code>正在连接 PostgreSQL (127.0.0.1:5432)，第 2/3 次</code></td></tr><tr><td><code>showError('保存失败')</code></td><td><code>保存调度配置失败 (500)：后端内部错误，请稍后重试</code></td></tr><tr><td><code>catch {} → value = []</code></td><td><code>await loadInto('网关拓扑', loadError, loader)</code></td></tr><tr><td><code>&lt;KhyEmpty v-if=&quot;!list.length&quot;&gt;</code></td><td><code>&lt;LoadErrorBanner v-if=&quot;loadError&quot;&gt;</code> + <code>v-else-if=&quot;!loading &amp;&amp; !list.length&quot;</code>（<strong><code>loading</code> 要覆盖 v-loading 的全部信号</strong>）</td></tr><tr><td><code>const ok = p.success !== false</code></td><td>三态 <code>ok / error / unknown</code>（<strong>且先改后端兜底</strong>）</td></tr><tr><td><code>结果未返回</code></td><td><code>结果未返回（原因：可能因中断/超时）· 重新生成</code></td></tr><tr><td><code>工具 ${done}/${total}</code></td><td><code>已完成 ${done} 个 · 1 个进行中</code>（<strong>同提交改 <code>toolEvents.test.js:229/:238/:249</code></strong>）</td></tr><tr><td>「登录已失效，请重新登录，请稍后重试」</td><td>「登录已失效，点右上角头像退出后重新登录」</td></tr><tr><td>「该操作需要你显式授权，重新执行并选择允许」</td><td>「无权限访问该页面，请联系平台管理员开通」（<strong>前端覆盖表，不改 <code>classifyKhyError.mjs</code></strong>）</td></tr><tr><td><code>role=&quot;progressbar&quot; :aria-valuenow=&quot;width&quot;</code></td><td><code>role=&quot;status&quot; aria-valuetext=&quot;正在等待后端响应&quot;</code></td></tr><tr><td><code>v-if=&quot;status === 'running'&quot;</code> 永久转圈</td><td><code>finally</code> 里跑一次 <code>settleOrphanSteps</code> + 渲染耗时</td></tr><tr><td><code>showError(\</code>「${f.name}」上传失败：timeout\<code>)</code></td><td>「…上传失败：超时，文件可能超过单次上传上限，请压缩后重试」</td></tr><tr><td><code>--md-fg: var(--khy-md-bg)</code></td><td><code>--md-fg: var(--khy-text-main)</code>（正文永不绑背景令牌）</td></tr><tr><td>`stroke: color \</td><td>\</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-FE-012] khy-os 软件美学标准</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-FE/00_INDEX_DESIGN-FE-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-FE</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-FE/[DESIGN-FE-013] 前端状态传达契约.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

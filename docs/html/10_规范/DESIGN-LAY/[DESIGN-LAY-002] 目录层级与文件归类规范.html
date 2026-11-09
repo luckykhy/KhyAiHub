@@ -26,6 +26,8 @@
       <header class="hero reveal"><h1>[DESIGN-LAY-002] 目录层级与文件归类规范</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-002-目录层级与文件归类规范">[DESIGN-LAY-002] 目录层级与文件归类规范</a></li><li class="lvl-2"><a href="#1-红线">1. 红线</a></li><li class="lvl-2"><a href="#2-第-4-轴-可见性-pub-int-prv">2. 第 4 轴：可见性（PUB / INT / PRV）</a></li><li class="lvl-3"><a href="#2-1-三档定义">2.1 三档定义</a></li><li class="lvl-3"><a href="#2-2-判定四问">2.2 判定四问</a></li><li class="lvl-3"><a href="#2-3-现状登记">2.3 现状登记</a></li><li class="lvl-2"><a href="#3-前缀用法裁定">3. `_` 前缀用法裁定</a></li><li class="lvl-3"><a href="#3-1-交付物-vs-过程态工具-落点判据">3.1 交付物 vs 过程态工具 —— 落点判据</a></li><li class="lvl-2"><a href="#4-分层-命名风格映射">4. 分层 → 命名风格映射</a></li><li class="lvl-2"><a href="#5-文件归类标准">5. 文件归类标准</a></li><li class="lvl-2"><a href="#6-典型目录树-示例-非强制格式">6. 典型目录树（示例，非强制格式）</a></li><li class="lvl-2"><a href="#7-反例-正例">7. 反例 → 正例</a></li><li class="lvl-2"><a href="#8-冲突裁决-存量矛盾三条">8. 冲突裁决（存量矛盾三条）</a></li><li class="lvl-2"><a href="#9-校验-守卫">9. 校验（守卫）</a></li><li class="lvl-2"><a href="#10-例外与豁免">10. 例外与豁免</a></li><li class="lvl-2"><a href="#11-版本历史">11. 版本历史</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：12 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。</p></blockquote>
 <h1 id="design-lay-002-目录层级与文件归类规范">[DESIGN-LAY-002] 目录层级与文件归类规范<a class="anchor" href="#design-lay-002-目录层级与文件归类规范" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: LAYOUT-001 -->
 <blockquote><p><strong>定位</strong>：管「新文件该放哪个目录、叫什么名、属于谁可见」。层级模型本身（L0–L6 与依赖边）真源在 <code>[DESIGN-LAY-005]</code>，本文<strong>只补它留下的四个空白</strong>：可见性轴、分层命名映射、文件归类、完整树示例。</p>
