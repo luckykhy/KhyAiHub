@@ -170,6 +170,12 @@ const api = {
 
   // ── Agent 扩展条目（命令/钩子/技能/子智能体/记忆）— agentItemStore 正门 ──
   agentList: (kind: string) => ipcRenderer.invoke('agent:list', kind),
+
+  // ── khy 斜杠命令面：清单（slash:list，与终端注册表同源）与执行（slash:run）──
+  // 通道名与 main/index.ts 的 ipcMain.handle 字面量配对（desktopUiContract D6）。
+  slashList: () => ipcRenderer.invoke('slash:list'),
+  slashRun: (cmd: string, args?: string) => ipcRenderer.invoke('slash:run', cmd, args || ''),
+
   agentCreate: (kind: string, input: { name: string; description?: string; content?: string }) =>
     ipcRenderer.invoke('agent:create', kind, input),
   agentSetEnabled: (kind: string, id: string, enabled: boolean) =>
@@ -191,6 +197,10 @@ const api = {
 
   // ── 审查面板：只读 Git 状态（main 侧 git status --porcelain -z --branch）──
   gitStatus: () => ipcRenderer.invoke('git:status'),
+  // ── Git 分支：列表（只读）与切换/新建（写操作，渲染层先做确认）──
+  gitBranchList: () => ipcRenderer.invoke('git:branchList'),
+  gitBranchSwitch: (branch: string, opts?: { create?: boolean; force?: boolean }) =>
+    ipcRenderer.invoke('git:branchSwitch', branch, opts),
 
   // Token 用量（后端 tokenUsageService 真源，经 host 桥 CH-2）
   getTokenUsage: () => ipcRenderer.invoke('token:usage'),
@@ -204,8 +214,33 @@ const api = {
   listModels: () => ipcRenderer.invoke('models:list'),
   // 运行中后台任务计数（P3-6①：host 在途 ai.generate 集合，Composer 按钮数据源）
   backgroundStatus: () => ipcRenderer.invoke('background:status'),
+  // 任务监控快照（窗口菜单 → 任务监控）：host 在跑会话/工具 + 文件真源队列，只读
+  taskMonitorSnapshot: () => ipcRenderer.invoke('taskMonitor:snapshot'),
   // 电脑控制安全闸生效状态（host env 实读，ZC-ALIGN-002 I11）
   desktopGateGet: () => ipcRenderer.invoke('desktopGate:get'),
+
+  // ── 开发环境（khy devenv 同源；通道名与 main 的 env:* handle 配对，desktopUiContract D6）──
+  // 六组经 host 桥（CH-2）直调后端 dependency 门面；envLastScan 由 main 直读数据家快照。
+  envCatalog: () => ipcRenderer.invoke('env:catalog'),
+  envScan: () => ipcRenderer.invoke('env:scan'),
+  envInstall: (depId: string, version?: string) => ipcRenderer.invoke('env:install', { depId, version }),
+  // 清单以字符串透传（main/host 都不解析执行文件内容，校验在后端 previewImport/applyImport）
+  envImportPreview: (manifestJson: string) => ipcRenderer.invoke('env:importPreview', manifestJson),
+  envImportApply: (manifestJson: string) => ipcRenderer.invoke('env:importApply', manifestJson),
+  // main 先取 host 生成的 manifest，再弹系统保存框落盘（渲染层不传路径）
+  envExport: () => ipcRenderer.invoke('env:export'),
+  envLastScan: () => ipcRenderer.invoke('env:lastScan'),
+  // 扫描/安装/导入的进行中进度与收尾（host env.progress / env.jobDone → main 广播）
+  onEnvProgress: (cb: (payload: { jobId?: string; progress?: string; items?: unknown[] }) => void) => {
+    const listener = (_e: unknown, payload: unknown) => cb((payload || {}) as { jobId?: string; progress?: string; items?: unknown[] })
+    ipcRenderer.on('env:progress', listener)
+    return () => ipcRenderer.removeListener('env:progress', listener)
+  },
+  onEnvJobDone: (cb: (payload: { jobId?: string; state?: string; result?: unknown; error?: string }) => void) => {
+    const listener = (_e: unknown, payload: unknown) => cb((payload || {}) as { jobId?: string; state?: string; result?: unknown; error?: string })
+    ipcRenderer.on('env:jobDone', listener)
+    return () => ipcRenderer.removeListener('env:jobDone', listener)
+  },
 
   // ── 真终端 PTY（[DESIGN-ARCH-176] A3）：通道名与 main/index.ts 的 pty:* handle 配对（D6）──
   ptyCreate: (opts?: { cols?: number; rows?: number; cwd?: string }) => ipcRenderer.invoke('pty:create', opts || {}),

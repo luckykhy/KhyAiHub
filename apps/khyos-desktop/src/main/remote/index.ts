@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-272-E952F4T5
 // 移动端远程控制（Web Remote Control）在主进程的接线层。
 //
 // 分工：协议/HTTP/WS/配对全在后端 `runtime/node/backend/src/webRemoteControl/`
