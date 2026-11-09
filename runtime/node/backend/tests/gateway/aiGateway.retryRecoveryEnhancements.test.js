@@ -10,54 +10,8 @@
  * Uses preferredAdapter to control which adapter is tried first.
  */
 
-function createAdapterEntry(key, generateImpl, options = {}) {
-  const {
-    available = true,
-    enabled = true,
-    detail = 'ok',
-    refreshCredential,
-  } = options;
-
-  const generate = jest.fn(generateImpl);
-  const entry = {
-    key,
-    enabled,
-    available,
-    priority: 1,
-    adapter: {
-      detect: () => available,
-      getStatus: () => ({ name: key, available, detail }),
-      generate,
-    },
-    _generateMock: generate,
-  };
-  if (refreshCredential) {
-    entry.adapter.refreshCredential = jest.fn(refreshCredential);
-  }
-  return entry;
-}
-
-// Keep these tests hermetic: at request time the gateway's default-model
-// fallback reads the user's real .khy/model_overrides.json via
-// modelCuration.getAdapterOverride('api'); when the user has configured an
-// api defaultModel (e.g. 'api:sensenova:...'), the 'api' adapter is routed
-// into the pool-based multi-key branch instead of the standard single-key
-// flow, changing the retry semantics under test. Stub the curation lookup on
-// the CURRENT module instance (must be re-applied after jest.resetModules()).
-function neutralizeCuratedDefaultModel() {
-  const modelCuration = require('../../src/services/gateway/modelCuration');
-  modelCuration.getAdapterOverride = () => null;
-}
-
-// Keep these tests hermetic on the write side too: the gateway records every
-// adapter attempt into the real .khy/gateway/cache_economy.json via
-// cacheEconomyStore.record(); without this stub, test adapter keys (e.g.
-// 'fallback') would leak into the user's persistent store on every run.
-// Must be re-applied after jest.resetModules().
-function neutralizeCacheEconomyStore() {
-  const cacheEconomyStore = require('../../src/services/gateway/cacheEconomyStore');
-  cacheEconomyStore.record = () => {};
-}
+const rh = require('./_gatewayRetryHarness');
+const { createAdapterEntry } = rh;
 
 // Env keys used by the three enhancements
 const ENV_KEYS = [
@@ -83,33 +37,15 @@ describe('Gateway retry/recovery enhancements integration', () => {
     jest.resetModules();
     jest.restoreAllMocks();
 
-    // Save env
-    ENV_KEYS.forEach(k => { savedEnv[k] = process.env[k]; });
-    // Clear env for deterministic tests
-    ENV_KEYS.forEach(k => { delete process.env[k]; });
+    Object.assign(savedEnv, rh.saveAndClearEnv(ENV_KEYS));
 
-    gateway = require('../../src/services/gateway/aiGateway');
-    gateway._initialized = true;
-    gateway._initPromise = null;
-    gateway._adapters = [];
-    gateway._lastRefreshTime = Date.now();
-    gateway._adapterFailures = {};
-    gateway._adapterLastError = {};
-    gateway._requestLog = {};
-    gateway._localAdapters = new Set();
-    gateway._serializedAdapterKeys = new Set();
-    gateway.refreshAdapters = async () => {};
-    gateway._enforceRateLimit = async () => {};
-    neutralizeCuratedDefaultModel();
-    neutralizeCacheEconomyStore();
+    gateway = rh.resetGatewayForTest();
+    rh.neutralizeCuratedDefaultModel();
+    rh.neutralizeCacheEconomyStore({ verdict: false });
   });
 
   afterEach(() => {
-    // Restore env
-    ENV_KEYS.forEach(k => {
-      if (savedEnv[k] === undefined) delete process.env[k];
-      else process.env[k] = savedEnv[k];
-    });
+    rh.restoreEnv(ENV_KEYS, savedEnv);
     jest.restoreAllMocks();
   });
 

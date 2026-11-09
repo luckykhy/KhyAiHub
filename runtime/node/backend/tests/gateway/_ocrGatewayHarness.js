@@ -263,6 +263,192 @@ function imagesStripped(finalImages) {
   return Array.isArray(finalImages) ? finalImages.length === 0 : !finalImages;
 }
 
+// ── OCR 兜底接线族共用脚手架 ────────────────────────────────────────────────────────
+// 六个 imageOcr*Wiring 文件曾各自复制同一套「三键 env 沙箱 + 关旁路门 + 占位图数组 +
+// 单适配器接线 + DI 桩」,是 SOURCING-005 存量重复最大的一块(duplicationGuard 按 4 有效行
+// 起报,这套脚手架每份 6~8 行)。此处收进参数化工厂,各文件只留自己的 _detail/_details 差异。
+const OCR_FALLBACK_ENV_KEYS = ['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL'];
+// 关掉会额外发起 adapter 调用/改变路由的旁路门,保留 OCR 兜底主路径默认行为。
+const OCR_FALLBACK_ENV_OFF = { KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' };
+
+// 返回 { env, beforeAll, afterAll };node:test 侧直接 before(beforeAll) / after(afterAll)。
+function makeOcrFallbackSandbox() {
+  const env = envSandbox(OCR_FALLBACK_ENV_KEYS);
+  return {
+    env,
+    beforeAll: () => { env.save(); env.set(OCR_FALLBACK_ENV_OFF); },
+    afterAll: () => env.restore(),
+  };
+}
+
+// n 张占位图(内容无关紧要,真实 OCR 被 DI 桩取代;数量才是多数接线测试的关键)。
+function placeholders(n) {
+  return Array.from({ length: n }, () => ({ base64: 'ZmFrZQ==', mimeType: 'image/png' }));
+}
+
+// 「纯文本模型 + 无视觉候选」接线反复要的一对占位兄弟模型(钉住 switch-model 级联走文本位)。
+const TEXT_ONLY_SIBLINGS = ['text-only-sibling-a', 'text-only-sibling-b'];
+
+// DI 桩:注入 OCR 明细提取器 + 兄弟模型收集器(各文件原本逐份复制同一对键)。
+function stubOcrDeps(genLeaf, extractImageOcrDetails, siblings) {
+  genLeaf.setAiGatewayGenerateMethodDeps({
+    extractImageOcrDetails,
+    collectProviderSiblingModels: siblings ? () => siblings : () => [],
+  });
+}
+
+// 单适配器接线:wire() 现场造记录句柄并返回,测试体直接读返回值的 finalPrompt/finalImages。
+function makeWire({ content = '已据识别文本作答', describeFails = false } = {}) {
+  return () => {
+    const rec = makeRecordingAdapter({ content, captureImages: true, describe: true, describeFails });
+    wireSingle(rec);
+    return rec;
+  };
+}
+
+// ── 真图 OCR 夹具(RealImage 族共用) ──────────────────────────────────────────────────
+// 六个 *RealImage 文件曾各自复制同一套「探 python/tesseract → mkdtemp → PIL 渲图 → 读 base64
+// → 先证真读得出目标词 → after 清目录」,duplicationGuard 每份报 2~3 条。收进一处后各文件只留
+// 自己的目标词正则与 env 差异。
+// 返回 { b64, skipped, reads, cleanup };reads(text) 判真 tesseract 是否确实读出目标词。
+function makeRealOcrFixture({ prefix, text = 'INVOICE 1234', match = /INVOICE/i, size = [520, 180], xy = [30, 50], fontSize = 72, blank = null } = {}) {
+  const state = { b64: null, blankB64: null, skipped: true, _tmpDir: null, _text: null };
+  state.reads = () => {
+    if (state.skipped || !state.b64) return false;
+    const d = realExtractImageOcrDetails([{ base64: state.b64, mimeType: 'image/png' }]);
+    return d.length > 0 && match.test(d.map((x) => x.text).join(' '));
+  };
+  state.setup = () => {
+    const py = findPython();
+    if (!py || !haveTesseractLang()) return; // 缺 tesseract/字库 → skipped,测试体各自 t.skip
+    state._tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+    const pngPath = path.join(state._tmpDir, 'invoice.png');
+    const r = renderPng(py, {
+      outPath: pngPath,
+      size,
+      bg: [255, 255, 255],
+      texts: [{ xy, text, fill: [0, 0, 0] }],
+      fontSize,
+    });
+    if (r.missingPil || !r.exists) return;
+    state.b64 = fs.readFileSync(pngPath).toString('base64');
+    // blank:同目录再渲一张无字彩块(OCR 读空那侧的对照组)。
+    if (blank) {
+      const blankPng = path.join(state._tmpDir, 'blank.png');
+      const rb = renderPng(py, { outPath: blankPng, size: blank.size || [200, 120], bg: blank.bg || [40, 90, 160], texts: [] });
+      if (!rb.missingPil && rb.exists) state.blankB64 = fs.readFileSync(blankPng).toString('base64');
+    }
+    state._text = text;
+    state.skipped = false;
+  };
+  state.cleanup = () => {
+    if (state._tmpDir) { try { fs.rmSync(state._tmpDir, { recursive: true, force: true }); } catch { /* ignore */ } }
+  };
+  state.images = () => [{ base64: state.b64, mimeType: 'image/png' }];
+  state.blankImages = () => [{ base64: state.blankB64, mimeType: 'image/png' }];
+  return state;
+}
+
+// 救援网 / prep 期的固定 env 姿态:关视觉级联与 GLM pin,不留钉选视觉模型。
+// 四条 *RealImage 文件原本逐份写这四行,收进一处。
+function pinRescueEnv(env) {
+  env.set({
+    KHY_VISION_FALLBACK_CASCADE: 'off',
+    KHY_GLM_VISION_MODEL: 'off',
+    KHY_VISION_INTERMEDIATE_MESSAGE: 'off',
+    KHY_VISION_FALLBACK_MODEL: undefined,
+    KHY_VISION_OCR_FALLBACK: undefined, // OCR 功能门开(默认)
+  });
+}
+
+// 真 OCR 提取器 DI 桩(RealImage 族一律走生产镜像 extractor,不用假明细)。
+function stubRealOcr(genLeaf) {
+  genLeaf.setAiGatewayGenerateMethodDeps({
+    extractImageOcrDetails: realExtractImageOcrDetails,
+    collectProviderSiblingModels: () => [],
+  });
+}
+
+// 双适配器接线:视觉位 404 拒图 → 触发 post-failure 救援网,文本位记录并承接剥图后的续跑。
+// 五个 *Wiring 文件(post-failure 族)原本各写一份 `let rec; function wire(){…}`。
+function makeCascadeWire({ content = '已作答', captureImages = true } = {}) {
+  return () => {
+    const rec = makeRecordingAdapter({ content, captureImages });
+    wireCascade(makeRejectAdapter(), rec);
+    return rec;
+  };
+}
+
+// 收集 onChunk 里的 assistant_message(闭合/提示类断言用);四个 vision*RealImage 原本各写一份。
+function makeMessageCapture(runner) {
+  return async (extra) => {
+    const msgs = [];
+    const res = await runner.run(Object.assign({}, extra, {
+      onChunk: (c) => { if (c && c.type === 'assistant_message' && c.content) msgs.push(String(c.content)); },
+    }));
+    return { res, msgs };
+  };
+}
+
+// 「图片文本 金额 100」那条固定 OCR 明细的工厂:语言 / 方向 / 分辨率三条正交轴各自只覆盖
+// 一个字段,其余字段钉成基线。三个 imageOcr*Wiring 文件原本各抄一份同构的 _detail。
+// 基线只含前四个文件都写了的字段;upscaledFactor 由分辨率那条用例自己加(原文件也没有该键)。
+function ocrDetail(overrides = {}) {
+  return [{
+    text: '图片文本 金额 100',
+    confidence: 90,
+    needsAiFallback: false,
+    truncated: false,
+    lang: 'eng',
+    requestedLang: 'eng',
+    ...overrides,
+  }];
+}
+
+// 桩 OCR 明细 + 双适配器接线 + 跑一次,三步合一句。三个 post-failure *Wiring 文件的每个用例
+// 都是这三行打头(duplicationGuard 把它们并成 10 条 finding);成功与否由调用方用 node:assert 判,
+// 这里不做断言,只交回 { res, rec }。
+function makeRescueRun({ genLeaf, runner, content = '已作答', captureImages = true }) {
+  const wire = makeCascadeWire({ content, captureImages });
+  return async (ocrDetails, extra) => {
+    stubOcrDeps(genLeaf, () => ocrDetails);
+    const rec = wire();
+    return { res: await runner.run(extra), rec };
+  };
+}
+
+// 「发票 金额 100」那条固定 OCR 明细(救援网成功分支要用的样例文本),原先三份文件各抄一遍。
+const OCR_TEXT_DETAIL = [{
+  text: '发票 金额 100', confidence: 90, needsAiFallback: false, truncated: false,
+  lang: 'chi_sim', requestedLang: 'chi_sim', orientationCorrected: 0, upscaledFactor: 0,
+}];
+
+// after 里还原 DI 桩(否则同进程后续文件会带着真 tesseract 提取器跑)。
+function unstubOcr(genLeaf) {
+  genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: undefined, collectProviderSiblingModels: undefined });
+}
+
+// RealImage 族的整段 before/after 生命周期:env.save → 渲图 → 救援网 env 姿态 → 真 OCR 桩,
+// after 侧反向拆掉。测试体只剩「缺依赖就 t.skip」与自己的门开关与断言。
+// 若调用方要额外的 env 姿态,用 beforeSetup 钩子(在 pinRescueEnv 之后、stub 之前跑)。
+function makeRealOcrLifecycle({ env, genLeaf, fx, pin = true, beforeSetup = null }) {
+  return {
+    beforeAll: () => {
+      env.save();
+      if (beforeSetup) beforeSetup();
+      fx.setup();
+      if (fx.skipped) return;
+      if (pin) pinRescueEnv(env);
+      stubRealOcr(genLeaf);
+    },
+    afterAll: () => {
+      env.restore();
+      unstubOcr(genLeaf);
+      fx.cleanup();
+    },
+  };
+}
+
 module.exports = {
   gw,
   DEFAULT_IMG,
@@ -280,6 +466,23 @@ module.exports = {
   makeRunner,
   envSandbox,
   imagesStripped,
+  OCR_FALLBACK_ENV_KEYS,
+  OCR_FALLBACK_ENV_OFF,
+  makeOcrFallbackSandbox,
+  placeholders,
+  TEXT_ONLY_SIBLINGS,
+  stubOcrDeps,
+  makeWire,
+  makeRealOcrFixture,
+  pinRescueEnv,
+  stubRealOcr,
+  unstubOcr,
+  makeRealOcrLifecycle,
+  makeCascadeWire,
+  makeRescueRun,
+  makeMessageCapture,
+  OCR_TEXT_DETAIL,
+  ocrDetail,
   os,
   fs,
   path,

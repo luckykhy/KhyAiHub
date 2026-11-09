@@ -21,47 +21,22 @@ const BE = require('path').resolve(__dirname, '..', '..');
 const genLeaf = require(BE + '/src/services/gateway/aiGatewayGenerateMethod');
 const h = require('./_ocrGatewayHarness');
 
-const env = h.envSandbox(['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL']);
+const { env, beforeAll, afterAll } = h.makeOcrFallbackSandbox();
 const runner = h.makeRunner({ prompt: '请识别这些图片里的信息', model: 'text-only-model', tag: 'ocrres' });
-
-const imgs = (n) => Array.from({ length: n }, () => ({ base64: 'ZmFrZQ==', mimeType: 'image/png' }));
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已据识别文本作答', captureImages: true, describe: true });
-  h.wireSingle(rec);
-}
+const wire = h.makeWire();
 
 // DI:一条明细,upscaledFactor=放大倍数(>1 表示 docHelper 已放大后才识别成功)。
-function _detail(upscaledFactor) {
-  return [{
-    text: '图片文本 金额 100',
-    confidence: 90,
-    needsAiFallback: false,
-    truncated: false,
-    lang: 'eng',
-    requestedLang: 'eng',
-    orientationCorrected: 0,
-    upscaledFactor,
-  }];
-}
+const _detail = (upscaledFactor) => h.ocrDetail({ orientationCorrected: 0, upscaledFactor });
 
 describe('OCR 兜底低分辨率自动放大诚实告诫接线(纯文本模型 + 小图放大 + 无视觉候选)', () => {
-  before(() => {
-    env.save();
-    env.set({ KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' });
-  });
-
-  after(() => env.restore());
+  before(beforeAll);
+  after(afterAll);
 
   test('低分辨率图被放大:upscaledFactor=2 → 注入放大诚实告诫(桥闭合:放大事实不再无声)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail(2),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail(2), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true, '应成功作答');
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:非视觉模型永不收到裸图');
@@ -71,13 +46,10 @@ describe('OCR 兜底低分辨率自动放大诚实告诫接线(纯文本模型 +
   });
 
   test('未放大:upscaledFactor=0 → 绝不注入告诫(无误报,逐字节回退)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail(0),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail(0), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages));
@@ -89,13 +61,10 @@ describe('OCR 兜底低分辨率自动放大诚实告诫接线(纯文本模型 +
     const saved = process.env.KHY_OCR_UPSCALE;
     process.env.KHY_OCR_UPSCALE = 'off';
     try {
-      genLeaf.setAiGatewayGenerateMethodDeps({
-        extractImageOcrDetails: () => _detail(2),
-        collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-      });
-      wire();
+      h.stubOcrDeps(genLeaf, () => _detail(2), h.TEXT_ONLY_SIBLINGS);
+      const rec = wire();
 
-      const res = await runner.run({ images: imgs(1) });
+      const res = await runner.run({ images: h.placeholders(1) });
 
       assert.equal(res.success, true);
       assert.match(rec.finalPrompt || '', /图片文本/, 'OCR 文本仍注入');

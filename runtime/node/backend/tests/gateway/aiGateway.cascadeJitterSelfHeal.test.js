@@ -15,52 +15,8 @@
  * legacy single-pass behavior.
  */
 
-function createAdapterEntry(key, generateImpl, options = {}) {
-  const {
-    available = true,
-    enabled = true,
-    detail = 'ok',
-  } = options;
-
-  const generate = jest.fn(generateImpl);
-  return {
-    key,
-    enabled,
-    available,
-    priority: 1,
-    adapter: {
-      detect: () => available,
-      getStatus: () => ({ name: key, available, detail }),
-      generate,
-    },
-    _generateMock: generate,
-  };
-}
-
-// Keep these tests hermetic: at request time the gateway's default-model
-// fallback reads the user's real .khy/model_overrides.json via
-// modelCuration.getAdapterOverride('api'); stub the curation lookup on the
-// CURRENT module instance (must be re-applied after jest.resetModules()).
-function neutralizeCuratedDefaultModel() {
-  const modelCuration = require('../../src/services/gateway/modelCuration');
-  modelCuration.getAdapterOverride = () => null;
-}
-
-// Keep default-route ranking hermetic: _assessDefaultRouteCandidate consults
-// cacheEconomyStore.getVerdict() backed by the user's real store. Also stub
-// record() so test adapters never pollute it.
-function neutralizeCacheEconomyStore() {
-  const cacheEconomyStore = require('../../src/services/gateway/cacheEconomyStore');
-  cacheEconomyStore.getVerdict = () => 'insufficient_data';
-  cacheEconomyStore.record = () => {};
-}
-
-// Keep the 'api' adapter off the pool-based branch (see aiGateway.retryBudget
-// test for the rationale) so unknown test keys use the standard single-key flow.
-function neutralizeApiKeyPool() {
-  const apiKeyPool = require('../../src/services/apiKeyPool');
-  apiKeyPool.init = () => { throw new Error('apiKeyPool disabled for hermetic jitter-round tests'); };
-}
+const rh = require('./_gatewayRetryHarness');
+const { createAdapterEntry } = rh;
 
 const ENV_KEYS = [
   'GATEWAY_MAX_TOTAL_ATTEMPTS',
@@ -94,35 +50,20 @@ describe('Gateway transient network-jitter whole-cascade self-heal', () => {
     jest.resetModules();
     jest.restoreAllMocks();
 
-    ENV_KEYS.forEach((k) => { savedEnv[k] = process.env[k]; });
-    ENV_KEYS.forEach((k) => { delete process.env[k]; });
+    Object.assign(savedEnv, rh.saveAndClearEnv(ENV_KEYS));
     // These tests exercise the within-request jitter self-heal rounds in
     // isolation; the network-resume wait (KHY_GATEWAY_NETWORK_RESUME) is tested
     // separately in aiGateway.networkResume.test.js, so keep it off here.
     process.env.KHY_GATEWAY_NETWORK_RESUME = '0';
 
-    gateway = require('../../src/services/gateway/aiGateway');
-    gateway._initialized = true;
-    gateway._initPromise = null;
-    gateway._adapters = [];
-    gateway._lastRefreshTime = Date.now();
-    gateway._adapterFailures = {};
-    gateway._adapterLastError = {};
-    gateway._requestLog = {};
-    gateway._localAdapters = new Set();
-    gateway._serializedAdapterKeys = new Set();
-    gateway.refreshAdapters = async () => {};
-    gateway._enforceRateLimit = async () => {};
-    neutralizeCuratedDefaultModel();
-    neutralizeCacheEconomyStore();
-    neutralizeApiKeyPool();
+    gateway = rh.resetGatewayForTest();
+    rh.neutralizeCuratedDefaultModel();
+    rh.neutralizeCacheEconomyStore();
+    rh.neutralizeApiKeyPool('apiKeyPool disabled for hermetic jitter-round tests');
   });
 
   afterEach(() => {
-    ENV_KEYS.forEach((k) => {
-      if (savedEnv[k] === undefined) delete process.env[k];
-      else process.env[k] = savedEnv[k];
-    });
+    rh.restoreEnv(ENV_KEYS, savedEnv);
     jest.restoreAllMocks();
   });
 

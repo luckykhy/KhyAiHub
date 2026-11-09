@@ -20,45 +20,22 @@ const BE = require('path').resolve(__dirname, '..', '..');
 const genLeaf = require(BE + '/src/services/gateway/aiGatewayGenerateMethod');
 const h = require('./_ocrGatewayHarness');
 
-const env = h.envSandbox(['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL']);
+const { env, beforeAll, afterAll } = h.makeOcrFallbackSandbox();
 const runner = h.makeRunner({ prompt: '请识别这些图片里的信息', model: 'text-only-model', tag: 'ocrlang' });
-
-const imgs = (n) => Array.from({ length: n }, () => ({ base64: 'ZmFrZQ==', mimeType: 'image/png' }));
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已据识别文本作答', captureImages: true, describe: true });
-  h.wireSingle(rec);
-}
+const wire = h.makeWire();
 
 // DI:一条明细,lang=生效语言,requestedLang=原始请求(含未装语言时二者不同)。
-function _detail(requestedLang, lang) {
-  return [{
-    text: '图片文本 金额 100',
-    confidence: 90,
-    needsAiFallback: false,
-    truncated: false,
-    lang,
-    requestedLang,
-  }];
-}
+const _detail = (requestedLang, lang) => h.ocrDetail({ lang, requestedLang });
 
 describe('OCR 兜底语言包可用性诚实告诫接线(纯文本模型 + 缺语言包 + 无视觉候选)', () => {
-  before(() => {
-    env.save();
-    env.set({ KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' });
-  });
-
-  after(() => env.restore());
+  before(beforeAll);
+  after(afterAll);
 
   test('语言被窄化:请求 jpn+eng、生效仅 eng → 注入语言包缺失告诫(桥闭合:被吞语言不再无声)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail('jpn+eng', 'eng'),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail('jpn+eng', 'eng'), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true, '应成功作答');
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:非视觉模型永不收到裸图');
@@ -68,13 +45,10 @@ describe('OCR 兜底语言包可用性诚实告诫接线(纯文本模型 + 缺�
   });
 
   test('无窄化:请求==生效(chi_sim+eng 都装)→ 绝不注入告诫(无误报,逐字节回退)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail('chi_sim+eng', 'chi_sim+eng'),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail('chi_sim+eng', 'chi_sim+eng'), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages));
@@ -86,13 +60,10 @@ describe('OCR 兜底语言包可用性诚实告诫接线(纯文本模型 + 缺�
     const saved = process.env.KHY_OCR_LANGUAGE_NOTICE;
     process.env.KHY_OCR_LANGUAGE_NOTICE = 'off';
     try {
-      genLeaf.setAiGatewayGenerateMethodDeps({
-        extractImageOcrDetails: () => _detail('jpn+eng', 'eng'),
-        collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-      });
-      wire();
+      h.stubOcrDeps(genLeaf, () => _detail('jpn+eng', 'eng'), h.TEXT_ONLY_SIBLINGS);
+      const rec = wire();
 
-      const res = await runner.run({ images: imgs(1) });
+      const res = await runner.run({ images: h.placeholders(1) });
 
       assert.equal(res.success, true);
       assert.match(rec.finalPrompt || '', /图片文本/, 'OCR 文本仍注入');

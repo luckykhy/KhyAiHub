@@ -20,46 +20,23 @@ const BE = require('path').resolve(__dirname, '..', '..');
 const genLeaf = require(BE + '/src/services/gateway/aiGatewayGenerateMethod');
 const h = require('./_ocrGatewayHarness');
 
-const env = h.envSandbox(['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL']);
+const { env, beforeAll, afterAll } = h.makeOcrFallbackSandbox();
 const runner = h.makeRunner({ prompt: '请识别这些图片里的信息', model: 'text-only-model', tag: 'ocrorient' });
-
-const imgs = (n) => Array.from({ length: n }, () => ({ base64: 'ZmFrZQ==', mimeType: 'image/png' }));
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已据识别文本作答', captureImages: true, describe: true });
-  h.wireSingle(rec);
-}
+const wire = h.makeWire();
 
 // DI:一条明细,orientationCorrected=旋正角度(>0 表示 docHelper 已旋正后才识别成功)。
-function _detail(orientationCorrected) {
-  return [{
-    text: '图片文本 金额 100',
-    confidence: 90,
-    needsAiFallback: false,
-    truncated: false,
-    lang: 'eng',
-    requestedLang: 'eng',
-    orientationCorrected,
-  }];
-}
+// 原文件的明细里没有 upscaledFactor 键,故此处只覆盖 orientationCorrected。
+const _detail = (orientationCorrected) => h.ocrDetail({ orientationCorrected });
 
 describe('OCR 兜底方向自动校正诚实告诫接线(纯文本模型 + 旋转图旋正 + 无视觉候选)', () => {
-  before(() => {
-    env.save();
-    env.set({ KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' });
-  });
-
-  after(() => env.restore());
+  before(beforeAll);
+  after(afterAll);
 
   test('旋转图被旋正:orientationCorrected=90 → 注入方向校正告诫(桥闭合:旋正事实不再无声)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail(90),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail(90), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true, '应成功作答');
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:非视觉模型永不收到裸图');
@@ -69,13 +46,10 @@ describe('OCR 兜底方向自动校正诚实告诫接线(纯文本模型 + 旋�
   });
 
   test('未旋正:orientationCorrected=0 → 绝不注入告诫(无误报,逐字节回退)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detail(0),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detail(0), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages));
@@ -87,13 +61,10 @@ describe('OCR 兜底方向自动校正诚实告诫接线(纯文本模型 + 旋�
     const saved = process.env.KHY_OCR_AUTO_ORIENT;
     process.env.KHY_OCR_AUTO_ORIENT = 'off';
     try {
-      genLeaf.setAiGatewayGenerateMethodDeps({
-        extractImageOcrDetails: () => _detail(90),
-        collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-      });
-      wire();
+      h.stubOcrDeps(genLeaf, () => _detail(90), h.TEXT_ONLY_SIBLINGS);
+      const rec = wire();
 
-      const res = await runner.run({ images: imgs(1) });
+      const res = await runner.run({ images: h.placeholders(1) });
 
       assert.equal(res.success, true);
       assert.match(rec.finalPrompt || '', /图片文本/, 'OCR 文本仍注入');

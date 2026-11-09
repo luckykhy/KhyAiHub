@@ -97,7 +97,7 @@ describe('customerQuotaEnforcer', () => {
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
     expect(out.status).toBe(403);
-    expect(out.code).toBe('customer_disabled');
+    expect(out.code).toBe('FORBIDDEN');
     expect(out.message).toContain('cus_test1');
     expect(out.message).toContain('已被停用');
   });
@@ -112,7 +112,7 @@ describe('customerQuotaEnforcer', () => {
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
     expect(out.status).toBe(429);
-    expect(out.code).toBe('monthly_requests_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
     expect(out.used).toBe(10);
     expect(out.limit).toBe(10);
     expect(out.message).toContain('10/10');
@@ -129,7 +129,7 @@ describe('customerQuotaEnforcer', () => {
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
     expect(out.status).toBe(429);
-    expect(out.code).toBe('monthly_tokens_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
     expect(out.used).toBe(1100);
     expect(out.limit).toBe(1000);
     expect(out.message).toContain('1100/1000');
@@ -145,7 +145,7 @@ describe('customerQuotaEnforcer', () => {
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
     expect(out.status).toBe(429);
-    expect(out.code).toBe('monthly_budget_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
     expect(out.message).toContain('¥55.50');
     expect(out.message).toContain('¥50.00');
   });
@@ -185,7 +185,7 @@ describe('customerQuotaEnforcer', () => {
     // Quota gate now trips on the 3rd request (2 used >= limit 2).
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
-    expect(out.code).toBe('monthly_requests_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
 
     // Persistence survives an in-memory cache reset (write-through) and
     // lands in the gateway-owned file, never the ai-backend peer file.
@@ -211,7 +211,7 @@ describe('customerQuotaEnforcer', () => {
     expect(usage.requests).toBe(10);
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
-    expect(out.code).toBe('monthly_requests_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
     expect(out.used).toBe(10);
   });
 
@@ -226,7 +226,7 @@ describe('customerQuotaEnforcer', () => {
     });
     const out = enforcer.enforce(CUSTOMER_TOKEN);
     expect(out.allowed).toBe(false);
-    expect(out.code).toBe('monthly_budget_exceeded');
+    expect(out.code).toBe('CREDITS_EXHAUSTED');
   });
 
   test('negative quota values warn and are treated as unlimited', () => {
@@ -245,10 +245,82 @@ describe('customerQuotaEnforcer', () => {
     }
   });
 
-  test('enforce fails open when stores are unreadable', () => {
-    // No store files at all — resolution finds nothing, request passes.
+  test('unresolvable token is quota-exempt (no customer → internal channel)', () => {
+    // No store files at all — resolution finds nothing, request passes. This is
+    // the documented internal-channel exemption, NOT the internal-error path:
+    // the name it used to carry ("fails open when stores are unreadable")
+    // described a catch branch this never entered, which is why that branch had
+    // no coverage at all. The two cases are asserted separately below.
     enforcer._resetForTest();
     const out = enforcer.enforce('khy-anything');
     expect(out.allowed).toBe(true);
+  });
+
+  // Both store reads and resolveCustomerByToken swallow their own failures, so
+  // the catch in enforce() is unreachable by corrupting the stores. A date whose
+  // first accessor throws is the one deterministic way to get an internal error
+  // past the try boundary.
+  const explodingDate = {
+    getFullYear() {
+      throw new Error('injected: month key unavailable');
+    },
+  };
+
+  test('unreadable (corrupt) store is refused, not treated as an exempt channel', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    delete process.env.KHY_QUOTA_FAIL_OPEN;
+    try {
+      writeStores({ customers: [baseCustomer()], managedTokens: managed });
+      // Present but unparseable — the exact shape a half-written or truncated
+      // store takes. Before this check every managed customer silently resolved
+      // to "no customer" and was served for free.
+      fs.writeFileSync(path.join(tmpDir, 'ai_gateway_customers.json'), '{ truncated', 'utf-8');
+      enforcer._resetForTest();
+      const out = enforcer.enforce(CUSTOMER_TOKEN);
+      expect(out.allowed).toBe(false);
+      expect(out.code).toBe('SERVICE_UNAVAILABLE');
+      expect(out.details.reason).toBe('customer_store_unreadable');
+      // The paths belong in the operator log, never in the response body.
+      expect(out.message).not.toMatch(/[A-Za-z]:\\|\/home\/|\/Users\//);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ai_gateway_customers.json'));
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  test('internal error fails CLOSED by default (KHY_QUOTA_FAIL_OPEN unset)', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    delete process.env.KHY_QUOTA_FAIL_OPEN;
+    try {
+      writeStores({ customers: [baseCustomer()], managedTokens: managed });
+      const out = enforcer.enforce(CUSTOMER_TOKEN, explodingDate);
+      expect(out.allowed).toBe(false);
+      expect(out.status).toBe(503);
+      expect(out.code).toBe('SERVICE_UNAVAILABLE');
+      expect(out.details.reason).toBe('quota_check_failed');
+      // DESIGN-API-002 §5: the response carries no internal paths or env knobs —
+      // the operator hint goes to the log, not to the caller.
+      expect(out.message).not.toContain('KHY_QUOTA_FAIL_OPEN');
+      expect(out.message).not.toMatch(/[A-Za-z]:\\|\/home\/|\/Users\//);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('KHY_QUOTA_FAIL_OPEN')
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  test('KHY_QUOTA_FAIL_OPEN=true restores the availability-first behaviour', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    process.env.KHY_QUOTA_FAIL_OPEN = 'true';
+    try {
+      writeStores({ customers: [baseCustomer()], managedTokens: managed });
+      const out = enforcer.enforce(CUSTOMER_TOKEN, explodingDate);
+      expect(out.allowed).toBe(true);
+      expect(out.customer).toBe(null);
+    } finally {
+      delete process.env.KHY_QUOTA_FAIL_OPEN;
+      warnSpy.mockRestore();
+    }
   });
 });

@@ -24,17 +24,9 @@ const BE = require('path').resolve(__dirname, '..', '..');
 const genLeaf = require(BE + '/src/services/gateway/aiGatewayGenerateMethod');
 const h = require('./_ocrGatewayHarness');
 
-const env = h.envSandbox(['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL']);
+const { env, beforeAll, afterAll } = h.makeOcrFallbackSandbox();
 const runner = h.makeRunner({ prompt: '请识别这些图片里的信息', model: 'text-only-model', tag: 'ocrcov' });
-
-// 发送 n 张图片(内容无关紧要,真实 OCR 被 DI 桩取代;数量才是本测试的关键)。
-const imgs = (n) => Array.from({ length: n }, () => ({ base64: 'ZmFrZQ==', mimeType: 'image/png' }));
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已据识别文本作答', captureImages: true, describe: true });
-  h.wireSingle(rec);
-}
+const wire = h.makeWire();
 
 // DI:返回 count 条「有文字」的 OCR 明细(模拟 maxImages 截断后仅 count 张产出文本)。
 function _detailsWithText(count) {
@@ -46,21 +38,14 @@ function _detailsWithText(count) {
 }
 
 describe('OCR 兜底覆盖率诚实告诫接线(纯文本模型 + 多图 + 无视觉候选)', () => {
-  before(() => {
-    env.save();
-    env.set({ KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' });
-  });
-
-  after(() => env.restore());
+  before(beforeAll);
+  after(afterAll);
 
   test('超单次上限:发 5 张、仅 3 张有文本 → 注入 omitted 覆盖告诫(桥闭合:被丢的图不再无声)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detailsWithText(3), // 模拟 slice(0,3) 后 3 张有文字
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detailsWithText(3), h.TEXT_ONLY_SIBLINGS); // 模拟 slice(0,3) 后 3 张有文字
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(5) });
+    const res = await runner.run({ images: h.placeholders(5) });
 
     assert.equal(res.success, true, '应成功作答');
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:非视觉模型永不收到裸图');
@@ -71,13 +56,10 @@ describe('OCR 兜底覆盖率诚实告诫接线(纯文本模型 + 多图 + 无�
   });
 
   test('部分读不出:发 3 张、仅 2 张有文本 → 注入 unreadable 覆盖告诫', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detailsWithText(2), // 3 张里 1 张读不出
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detailsWithText(2), h.TEXT_ONLY_SIBLINGS); // 3 张里 1 张读不出
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(3) });
+    const res = await runner.run({ images: h.placeholders(3) });
 
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages));
@@ -86,13 +68,10 @@ describe('OCR 兜底覆盖率诚实告诫接线(纯文本模型 + 多图 + 无�
   });
 
   test('干净单图:发 1 张、1 张有文本 → 绝不注入覆盖告诫(无误报,逐字节回退)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => _detailsWithText(1),
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => _detailsWithText(1), h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
-    const res = await runner.run({ images: imgs(1) });
+    const res = await runner.run({ images: h.placeholders(1) });
 
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages));
@@ -104,13 +83,10 @@ describe('OCR 兜底覆盖率诚实告诫接线(纯文本模型 + 多图 + 无�
     const saved = process.env.KHY_OCR_COVERAGE_NOTICE;
     process.env.KHY_OCR_COVERAGE_NOTICE = 'off';
     try {
-      genLeaf.setAiGatewayGenerateMethodDeps({
-        extractImageOcrDetails: () => _detailsWithText(3),
-        collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-      });
-      wire();
+      h.stubOcrDeps(genLeaf, () => _detailsWithText(3), h.TEXT_ONLY_SIBLINGS);
+      const rec = wire();
 
-      const res = await runner.run({ images: imgs(5) });
+      const res = await runner.run({ images: h.placeholders(5) });
 
       assert.equal(res.success, true);
       assert.match(rec.finalPrompt || '', /图片1文本/, 'OCR 文本仍注入');
