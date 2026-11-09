@@ -33,6 +33,7 @@ describe('aiGateway stability regressions', () => {
   let originalProcessFailoverCandidates;
   let originalNetworkResume;
   let originalManualRelayNoAutoFallback;
+  let originalDelegationApproval;
 
   beforeEach(() => {
     jest.resetModules();
@@ -49,6 +50,7 @@ describe('aiGateway stability regressions', () => {
     originalProcessFailoverCandidates = process.env.GATEWAY_PROCESS_FAILOVER_CANDIDATES;
     originalNetworkResume = process.env.KHY_GATEWAY_NETWORK_RESUME;
     originalManualRelayNoAutoFallback = process.env.KHY_MANUAL_RELAY_NO_AUTO_FALLBACK;
+    originalDelegationApproval = process.env.KHY_DELEGATION_APPROVAL;
 
     pluginChain.executeBeforeRequest = async (ctx) => ctx;
     pluginChain.executeAfterResponse = async (ctx) => ctx;
@@ -70,6 +72,12 @@ describe('aiGateway stability regressions', () => {
     delete process.env.GATEWAY_PROCESS_FAILOVER_CANDIDATES;
     delete process.env.KHY_MANUAL_RELAY_NO_AUTO_FALLBACK;
     process.env.KHY_GATEWAY_NETWORK_RESUME = 'false';
+    // 本文件测的是**网关**的失败路径（进程失败、排队超时、看门狗），不是外部委派闸。
+    // 委派闸（services/gateway/delegationGate，默认 ask、无交互通道即拒绝）会把
+    // claude/codex/opencode 这类外部 key 的请求挡在闸前，于是被测的分支根本没跑到，
+    // 失败原因会变成 delegation_denied 而不是它要断言的那种失败。
+    // 这里按闸自己的回滚开关放行（KHY_DELEGATION_APPROVAL=allow），把闸关在本文件之外。
+    process.env.KHY_DELEGATION_APPROVAL = 'allow';
   });
 
   afterEach(() => {
@@ -105,6 +113,11 @@ describe('aiGateway stability regressions', () => {
       delete process.env.KHY_MANUAL_RELAY_NO_AUTO_FALLBACK;
     } else {
       process.env.KHY_MANUAL_RELAY_NO_AUTO_FALLBACK = originalManualRelayNoAutoFallback;
+    }
+    if (originalDelegationApproval === undefined) {
+      delete process.env.KHY_DELEGATION_APPROVAL;
+    } else {
+      process.env.KHY_DELEGATION_APPROVAL = originalDelegationApproval;
     }
     delete process.env.KHY_GATEWAY_DEBUG_PROMPT_FILE;
 

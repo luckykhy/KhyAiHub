@@ -228,18 +228,21 @@ describe('config handler', () => {
     });
   });
 
+  // 2026-10-04 bc43302f 起这行输出就是中文「配置文件：」（CLAUDE.md §五：面向用户的
+  // 字符串用中文），而这两条断言一直钉英文 'Config file:'，从此常红。改断言不改产品
+  // 行为——文案本身就是项目约定要的那个。
   test('list prints model config table', async () => {
     await handleConfig('set', ['model.default', 'custom/test-model']);
     await handleConfig('list', []);
     expect(printTable).toHaveBeenCalled();
-    expect(printInfo).toHaveBeenCalledWith(expect.stringContaining('Config file:'));
+    expect(printInfo).toHaveBeenCalledWith(expect.stringContaining('配置文件：'));
   });
 
   test('show behaves as list alias', async () => {
     await handleConfig('set', ['model.default', 'custom/test-model']);
     await handleConfig('show', []);
     expect(printTable).toHaveBeenCalled();
-    expect(printInfo).toHaveBeenCalledWith(expect.stringContaining('Config file:'));
+    expect(printInfo).toHaveBeenCalledWith(expect.stringContaining('配置文件：'));
     expect(printError).not.toHaveBeenCalled();
   });
 

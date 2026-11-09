@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * aiManagementServer.apiRouteDispatch.test.js — 守护 marketplace / plugins 路由可达性。
+ * aiManagementServer.apiRouteDispatch.test.js — 守护 marketplace / plugins /
+ * eco-markets 路由可达性。
  *
  * 病灶（web UI 报错根因）：前端 SPA 经 useMarketplace.js 调用 /api/marketplace*
  * 与 /api/plugins*，但守护进程 aiManagementServer 的手写 routeRequest 分发器原本
@@ -55,7 +56,17 @@ test('plugins 子应用可达：未鉴权请求 → 401，绝非 404（接线在
   }
 });
 
+test('eco-markets 子应用可达：未鉴权请求 → 401，绝非 404（接线在位）', async () => {
+  const app = __test__.getEcoMarketsApp();
+  for (const p of ['/api/eco-markets', '/api/eco-markets/zcode']) {
+    const code = await probe(app, p);
+    assert.notStrictEqual(code, 404, `${p} 不应 404（路由器未接入）`);
+    assert.strictEqual(code, 401, `${p} 应被鉴权拦为 401`);
+  }
+});
+
 test('惰性 getter 幂等：重复调用返回同一缓存子应用实例', () => {
   assert.strictEqual(__test__.getMarketplaceApp(), __test__.getMarketplaceApp());
   assert.strictEqual(__test__.getPluginsApp(), __test__.getPluginsApp());
+  assert.strictEqual(__test__.getEcoMarketsApp(), __test__.getEcoMarketsApp());
 });

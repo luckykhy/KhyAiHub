@@ -25,7 +25,9 @@ const HW_PATH = require.resolve('../../src/services/hardwareProfileService');
 const FOOTPRINT_DELAY_MS = 3500;
 
 // 门控驱动的排程形状(真源:serviceLifecyclePolicy 的 cli-startup/khy 条目)。
-const KHY_GATE_DELAYS = [300, 3500, 5000];
+// 300 → 1500:gatewayWarmup 挪出「首帧已现、用户已能打字」的窗口([DESIGN-PERF-003]
+// §6.0,见该条目 note);形状锁随之对齐真源,防的仍是「零新增门控条目」。
+const KHY_GATE_DELAYS = [1500, 3500, 5000];
 
 // [DESIGN-ARCH-180] 结算 timer:固定落在门控表最大 delay + 1s 缓冲,用于等所有一次性
 // 启动 timer 销毁之后再采样驻留资源 —— 在启动窗口内采样会把尚未 firing 的 timer 误报成
@@ -55,9 +57,12 @@ function mkCleanupSpy() {
 
 /**
  * 跑一次 khy 模式的排程,只触发体积自检那条。
+ * B5 分片适配:runner 的清理动作改为 setImmediate 串联(片间让出事件循环),
+ * 同步 fn() 只跑第一片 —— 这里逐轮 drain 到链尾,断言的仍是
+ * 「全部动作都被调用」的同一契约。
  * @returns {{ calls: string[], scheduled: Array<{delay:number}>, timers: unknown[] }}
  */
-function runKhyFootprint() {
+async function runKhyFootprint() {
   const spy = mkCleanupSpy();
   const prevCleanup = require.cache[CLEANUP_PATH];
   const prevHw = require.cache[HW_PATH];
@@ -83,6 +88,10 @@ function runKhyFootprint() {
     const target = scheduled.find((s) => s.delay === FOOTPRINT_DELAY_MS);
     assert.ok(target, `khy 模式应有 +${FOOTPRINT_DELAY_MS}ms 的体积自检排程`);
     target.fn();
+    // 链长固定(4 动作 + 自检),16 轮 drain 上限远超链长,只为防未来加片时漏数。
+    for (let i = 0; i < 16; i += 1) {
+      await new Promise((res) => setImmediate(res));
+    }
   } finally {
     global.setTimeout = realSetTimeout;
     if (prevCleanup === undefined) delete require.cache[CLEANUP_PATH];
@@ -97,31 +106,31 @@ function runKhyFootprint() {
 const countOf = (calls, name) => calls.filter((n) => n === name).length;
 
 describe('prefetch / khy 轻量模式体积自检', () => {
-  test('轻量模式裁 training 与训练隔离区(第二批缺口)', () => {
-    const { calls } = runKhyFootprint();
+  test('轻量模式裁 training 与训练隔离区(第二批缺口)', async () => {
+    const { calls } = await runKhyFootprint();
     // 这两条就是 2026-09-29 补的接线;拆掉它们必须让本用例变红。
     assert.ok(countOf(calls, 'trimTrainingData') > 0, 'khy 模式必须裁 training');
     assert.ok(countOf(calls, 'trimQuarantine') > 0, 'khy 模式必须裁训练隔离区');
   });
 
-  test('第一批(日志/审计滚动)不被第二批挤掉,且自检仍报一次', () => {
-    const { calls } = runKhyFootprint();
+  test('第一批(日志/审计滚动)不被第二批挤掉,且自检仍报一次', async () => {
+    const { calls } = await runKhyFootprint();
     assert.ok(countOf(calls, 'cleanRuntimeLogs') > 0);
     assert.ok(countOf(calls, 'cleanTraceAudit') > 0);
     assert.equal(countOf(calls, 'assessRuntimeFootprint'), 1);
   });
 
-  test('轻量模式该轻的地方仍然轻:不起完整 runCleanup / 周期清理', () => {
-    const { calls } = runKhyFootprint();
+  test('轻量模式该轻的地方仍然轻:不起完整 runCleanup / 周期清理', async () => {
+    const { calls } = await runKhyFootprint();
     assert.equal(countOf(calls, 'runCleanup'), 0, 'khy 模式不得跑完整 runCleanup');
     assert.equal(countOf(calls, 'startPeriodicCleanup'), 0, 'khy 模式不得起周期 timer');
   });
 
-  test('khy 启动排程形状锁定(零新增门控)', () => {
+  test('khy 启动排程形状锁定(零新增门控)', async () => {
     // TUI 门控已顶格,零余量 ⇒ 这批改动不许新增任何 KHY_* 排程条目。
     // 形状变了就先在这里报,而不是等 check-tui-gates 在别处变红。
     // 结算 timer(见文件头 SETTLE_DELAY_MS)不收门,从形状里剔除后单独断言其存在。
-    const { scheduled } = runKhyFootprint();
+    const { scheduled } = await runKhyFootprint();
     assert.deepEqual(
       scheduled.map((s) => s.delay).filter((d) => d !== SETTLE_DELAY_MS),
       KHY_GATE_DELAYS,
