@@ -130,15 +130,29 @@ function main() {
       console.warn('[json-schema] .khy/ 不存在，跳过校验');
       return 0;
     }
-    if (isGitIgnored('.khy')) {
-      console.warn('[json-schema] .khy/ 被 .gitignore 覆盖（入仓文件 0 个）— 运行期状态不由 pr 门判定，跳过。');
+    // 跳过判据必须落在**实际扫描根**上。数据家自 W9'（2026-10-02）从仓库根
+    // `.khy/` 迁到 `works/data/khy/`，但这里仍按旧路径 `.khy` 判忽略；旧路径一旦
+    // 不存在（正确的仓库状态：根上不该有 `.khy/`），`git check-ignore .khy` 就不再
+    // 命中目录型模式 `.khy/`，跳过失效 → 去走 gitignore 的运行期树 → 撞上悬挂
+    // junction 崩溃。按 khyDir 判，恢复「运行期状态不由 pr 门判定」的设计。
+    const khyRel = path.relative(ROOT, khyDir).split(path.sep).join('/');
+    if (isGitIgnored(khyRel)) {
+      console.warn(`[json-schema] ${khyRel}/ 被 .gitignore 覆盖（入仓文件 0 个）— 运行期状态不由 pr 门判定，跳过。`);
       console.warn('[json-schema] 注意：COMMS-002 登记的 paths 是 scripts/ci/json-schemas/** 与 runtime/node/backend/src/contracts/**，与本执行器实际扫描范围不一致，属待修缺陷。');
       return 0;
     }
     function walk(dir) {
       for (const entry of fs.readdirSync(dir)) {
         const full = path.join(dir, entry);
-        const stat = fs.statSync(full);
+        let stat;
+        try {
+          stat = fs.statSync(full);
+        } catch {
+          // 悬挂符号链接 / 读不到的条目：跳过，不让一次 stat 失败掀翻整个 walk。
+          // 数据家里有 W9' 迁移留下的 junction（目标目录可能尚未创建），
+          // 这不是 schema 违规，不该把校验器打成崩溃。
+          continue;
+        }
         if (stat.isDirectory()) {
           if (entry === 'node_modules' || entry.startsWith('.')) continue;
           walk(full);
