@@ -175,9 +175,16 @@ function _printStatus(c, data) {
       : t.claimed_by
         ? c.dim(' [本机占用]')
         : '';
+    // doing/review 才有「开工面」可言：todo 未开工是常态，done 必然开过工。
+    const startTag =
+      t.status === 'doing' || t.status === 'review'
+        ? t.start === 'started'
+          ? c.dim(' [已开工]')
+          : c.yellow(' [自称开工]')
+        : '';
     console.log(
       `  ${t.id} [${t.status}] ${_typeLabel(t.type)} P${String(t.priority || '?').replace(/^P/, '')}  ` +
-        `${String(t.title || '').slice(0, 36)}${arrow}${held}`
+        `${String(t.title || '').slice(0, 36)}${arrow}${held}${startTag}`
     );
   }
 
@@ -216,7 +223,8 @@ function _evidenceLine(ev) {
     return '';
   }
   return `open Bug ${ev.openBugs} · P0/P1 待办 ${ev.todoP01} · P2/P3 待办 ${ev.todoP23} · `
-    + `待验证 Bug ${ev.pendingVerify} · 待验收任务 ${ev.reviewTasks} · 过期租约 ${ev.staleClaims}`;
+    + `待验证 Bug ${ev.pendingVerify} · 待验收任务 ${ev.reviewTasks} · 过期租约 ${ev.staleClaims}`
+    + ` · 无占用 doing ${ev.unclaimedDoing}`;
 }
 
 /** 依 CLI 选择解析出 (kind, mapping, label, itemId)。 */
@@ -830,6 +838,17 @@ function _applyState(kind, itemId, newState, flags) {
     }
   }
 
+  // 开工戳只在**这一处**盖：过了上方的 scope_guard 门，才配拥有开工时刻。
+  // 把「状态改成 doing」与「开工被系统见证」变成同一件事 —— 否则 doing 仍然
+  // 只是一句自述，和 2026-11-04 之前一样不可复算。
+  if (kind === 'task' && from === 'todo' && newState === 'doing') {
+    Object.assign(item, H.stampStart(item, H.machineId()));
+  } else if (kind === 'task' && from === 'doing' && newState === 'todo') {
+    // 打回 = 本次开工作废。留着旧戳会让下一次开工的「开工后活动」从上次算起，
+    // 把中途停滞洗成连续开工。
+    H.clearStart(item);
+  }
+
   item.status = newState;
   item.updated = H.today();
   // 任何状态迁移都是「所有权转移」：清掉占用/租约，避免 stale claim 停在
@@ -837,7 +856,7 @@ function _applyState(kind, itemId, newState, flags) {
   H.clearClaim(item);
 
   // `--evidence`：把证据目录**写进任务**，让存证与任务产生可检索的绑定。
-  // 此前 `.khy/feedback/` 下 52 个目录零个被引用（本仓曾 grep `feedback` 命中 0 次），
+  // 此前 `works/data/khy/feedback/` 下 52 个目录零个被引用（本仓曾 grep `feedback` 命中 0 次），
   // 就是因为目录名手工拼、任务里无处声明。
   if (kind === 'task' && flags.evidence) {
     item.evidence = String(flags.evidence).trim();
@@ -866,13 +885,25 @@ function _applyState(kind, itemId, newState, flags) {
     item.notes.push(`${H.today()}: ${flags.note}`);
   }
 
-  H.saveJson(file, doc.data);
-
-  // ROADMAP.md 同步（仅任务）：把表格行里的状态列改写为新状态。
+  // ROADMAP.md 同步（仅任务）必须**先于**落盘：机读真源（PROGRESS.json）与人读
+  // 真源（ROADMAP.md）由同一条命令维护，同步失败仍落 JSON 就是 `hq verify` 里
+  // 「T-XXX 在 ROADMAP.md 中没有可同步的状态行」的成因 —— 2026-10-21 的 T-030
+  // 即由此产生：done 只活在 JSON 里，verify 从此恒 1 error，而 verify 不进任何门。
   let synced = null;
   if (kind === 'task') {
     synced = _syncRoadmap(p.roadmap, itemId, newState);
+    if (synced !== true) {
+      return {
+        ok: false,
+        roadmapSyncFailed: true,
+        from,
+        to: newState,
+        error: _roadmapSyncError(item, itemId, from, newState, p.roadmap, synced),
+      };
+    }
   }
+
+  H.saveJson(file, doc.data);
 
   H.log(`${kind} ${itemId} ${from} -> ${newState}${flags.note ? ' | ' + flags.note : ''}`, p.root);
   return { ok: true, from, to: newState, synced, item };
@@ -881,8 +912,9 @@ function _applyState(kind, itemId, newState, flags) {
 /**
  * 同步 ROADMAP.md 的状态列。
  *
- * `null` = 文件不可读；`false` = 文件可读但没找到该任务的行；`true` = 已改写。
- * 区分这三态很重要：原 Python 版把「文件不存在」也归成「未找到行」，会掩盖真实故障。
+ * `null` = 文件不可读；`false` = 文件可读但没找到该任务的行；`true` = 已改写
+ * （含行已在目标状态、无需改写的同态写入）。区分这三态很重要：原 Python 版把
+ * 「文件不存在」也归成「未找到行」，会掩盖真实故障。
  */
 function _syncRoadmap(roadmapFile, taskId, newState) {
   let text;
@@ -898,7 +930,10 @@ function _syncRoadmap(roadmapFile, taskId, newState) {
   );
   const out = text.replace(re, (_m, head) => `${head}| ${newState} |`);
   if (out === text) {
-    return false;
+    // 「行已在目标状态」与「行不存在」必须分开：前者两份真源已然一致，后者才是
+    // `hq verify` 报的分叉。合并成 false 会让调用方「同步失败即拒绝落盘」误杀
+    // 同态重写（如 ROADMAP 已 todo、doing→todo 打回，hqStartGate 实测用例）。
+    return re.test(text) ? true : false;
   }
   try {
     require('fs').writeFileSync(roadmapFile, out, 'utf-8');
@@ -906,6 +941,29 @@ function _syncRoadmap(roadmapFile, taskId, newState) {
   } catch {
     return null;
   }
+}
+
+/**
+ * ROADMAP 同步失败时的拒绝理由（问题 + 修复建议，RUNTIME-002.2）。
+ *
+ * 两份真源分叉没有「先写一边、回头再补」这个选项：只活在 PROGRESS.json 里的状态
+ * 会被 `hq verify` 判成 error，而 verify 不进任何门 —— 红灯无到期日。所以在写入
+ * 前就拦下，并把要补的那一行按任务自身字段拼好，人复制即可。
+ */
+function _roadmapSyncError(item, itemId, from, newState, roadmapFile, synced) {
+  const cmd = `khy hq task set ${itemId} ${newState}`;
+  if (synced === null) {
+    return [
+      `${itemId} 状态未迁移：ROADMAP.md 不可读，状态列无从同步。`,
+      `  修复：确认 ${roadmapFile} 存在且可读（关闭正占用它的编辑器），再重跑 ${cmd}。`,
+    ].join('\n');
+  }
+  return [
+    `${itemId} 状态未迁移：ROADMAP.md 中没有可同步的表格行，机读真源与人读真源不允许分叉。`,
+    `  修复：在 ${roadmapFile} 的对应分节表格补一行，再重跑 ${cmd}：`,
+    `    | ${itemId} | ${item.title || '标题'} | ${item.type || '类型'} | ${item.priority || '优先级'} | ${from} |`,
+    `  状态列先填 ${from} 即可，同步会自动改写为 ${newState}（行格式约束见 ROADMAP.md 首节）。`,
+  ].join('\n');
 }
 
 async function cmdBugSet(ctx, positional, flags) {
@@ -952,6 +1010,14 @@ async function cmdTaskSet(ctx, positional, flags) {
       process.exitCode = 1;
       return true;
     }
+    // ROADMAP 未同步的拒绝同理是多行处方（补哪一行、怎么重跑），不走单行方言。
+    if (r.roadmapSyncFailed) {
+      console.log(c.red(`[REFUSED] ${itemId} ${r.from} -> ${r.to} 被拒：ROADMAP.md 未同步`));
+      console.log('');
+      console.log(r.error);
+      process.exitCode = 1;
+      return true;
+    }
     _say(ctx, 'err', `[ERROR] ${r.error}`);
     if (r.illegal) {
       console.log(c.dim('  合法迁移一览: khy hq states'));
@@ -959,13 +1025,7 @@ async function cmdTaskSet(ctx, positional, flags) {
     process.exitCode = 1;
     return true;
   }
-  const tail =
-    r.synced === false
-      ? '  (提示：ROADMAP.md 中未找到可同步的表格行)'
-      : r.synced === null
-        ? '  (提示：ROADMAP.md 不可读，未同步)'
-        : '';
-  console.log(c.green(`[OK] ${itemId} ${r.from} -> ${r.to}`) + tail);
+  console.log(c.green(`[OK] ${itemId} ${r.from} -> ${r.to}`));
   if (r.to === 'done' && r.item && r.item.acceptance_audit) {
     const au = r.item.acceptance_audit;
     const cnt = au.counts || {};
@@ -1434,22 +1494,37 @@ function _deliveryReport(flags) {
 
 function _deliveryVerdict(delivery) {
   if (!delivery.ok) {
-    return { status: 'unknown', reason: delivery.reason, gaps: [] };
+    return { status: 'unknown', reason: delivery.reason, gaps: [], unknowns: [] };
   }
   const rep = delivery.report || {};
   const counts = rep.counts || {};
-  const gaps = (Array.isArray(rep.results) ? rep.results : [])
+  const list = Array.isArray(rep.results) ? rep.results : [];
+  // UNKNOWN 只折成一个数，等于告诉人「有东西没测」却不给名字 —— 而记分板的 detail
+  // 本来就写着为什么测不了。逐条带出来，读数才可下手。
+  const gaps = list
     .filter((r) => r && r.status === 'GAP')
     .map((r) => `${r.id} ${r.title}`);
+  const unknowns = list
+    .filter((r) => r && r.status === 'UNKNOWN')
+    .map((r) => ({ id: r.id, title: r.title, detail: r.detail || '' }));
   const gap = Number(counts.GAP) || 0;
   const unk = Number(counts.UNKNOWN) || 0;
+  // GAP 与未测同时存在时两句都要出现：早先的三元在有 GAP 时把未测整个吞掉。
+  const reasons = [];
+  if (gap) {
+    reasons.push(`${gap} 项 GAP`);
+  }
+  if (unk) {
+    reasons.push(`${unk} 项未测（见下方清单）`);
+  }
   return {
     status: gap ? 'gap' : (unk ? 'unknown' : 'pass'),
     at: rep.at || null,
     source: rep.source || null,
     counts: { PASS: counts.PASS || 0, PARTIAL: counts.PARTIAL || 0, GAP: gap, UNKNOWN: unk },
     gaps,
-    reason: gap ? `${gap} 项 GAP` : (unk ? `${unk} 项未测` : ''),
+    unknowns,
+    reason: reasons.join(' · '),
   };
 }
 
@@ -1470,6 +1545,35 @@ function _combineVerdict(taskVerdict, deliveryVerdict, withDelivery) {
 }
 
 /**
+ * done 任务的存证裁决与当下复算的偏差读数，无偏差返回空串。
+ *
+ * 存证 verdict 是 `PROGRESS.json` 里一句可手改的字符串，只读它等于让「项目面绿色」
+ * 脱离运行记录独立存在。这里只把偏差**报出来**，不改裁决 —— done 是当时过的门，
+ * 不因今天的证据漂移被撤销（复盘读数见 acceptanceVerdict.recordFreshness 三条失效）。
+ */
+function _storedVerdictDrift(task, audit, recomputed, evidenceName) {
+  const id = (task && task.id) || '?';
+  const name = String(evidenceName || '').trim();
+  // 存证根 `works/data/` 不入仓：换一台协作机必然读不到证据。这与「证据对不上」
+  // 是两回事，分开措辞 —— 否则漂移告警在新机器上全量误报，读数只剩本机态。
+  if (name && H.EVIDENCE_NAME_RE.test(name) && !fs.existsSync(path.join(H.feedbackDir(), name))) {
+    return `${id}: 存证裁决 ${audit.verdict} 本机无法复算（无存证目录 works/data/khy/feedback/${name}/）—— 记录未随仓库分发`;
+  }
+  const storedTotal = Number(audit.total);
+  const nowTotal = Number(recomputed.counts && recomputed.counts.total);
+  const countsDiffer = Number.isFinite(storedTotal) && storedTotal > 0
+    && Number.isFinite(nowTotal) && nowTotal > 0 && storedTotal !== nowTotal;
+  if (recomputed.verdict === audit.verdict) {
+    if (!countsDiffer) {
+      return '';
+    }
+    return `${id}: 存证裁决 ${audit.verdict}（${storedTotal} 条判据），当前任务 ${nowTotal} 条 —— 判据集合已变，存证对不上现在的任务`;
+  }
+  const why = (recomputed.blockers && recomputed.blockers[0]) || '无详情';
+  return `${id}: 存证裁决 ${audit.verdict}，当下复算 ${recomputed.verdict} —— ${why}`;
+}
+
+/**
  * `khy hq close` —— 把「项目结束了吗」变成一个可复算的读数。
  *
  * 两条轴分开报，绝不合并成一个布尔：
@@ -1483,6 +1587,7 @@ async function cmdClose(ctx, positional, flags) {
   const c = _chalk();
   const runner = require('../acceptanceRunner');
   const verdictMod = require('../acceptanceVerdict');
+  const startMod = require('../startVerdict');
   const p = H.paths(null);
   const doc = H.readJsonSafe(p.progress);
   if (!doc.ok) {
@@ -1506,10 +1611,13 @@ async function cmdClose(ctx, positional, flags) {
 
   const rows = [];
   const blockers = [];
+  const drifts = [];
   for (const t of tasks) {
     const status = String((t && t.status) || '');
+    const st = startMod.evaluateStart(t);
+    const startCell = { start: st.verdict, startSource: st.source, startReason: st.reasons[0] || '' };
     if (status !== 'done' && status !== 'review') {
-      rows.push({ id: t && t.id, status, verdict: 'open' });
+      rows.push(Object.assign({ id: t && t.id, status, verdict: 'open' }, startCell));
       continue;
     }
     const name = String((t && t.evidence) || '').trim();
@@ -1532,21 +1640,46 @@ async function cmdClose(ctx, positional, flags) {
     // done 是**已作出的决定**（当时过的门），不是「证据永远新鲜」：
     // 项目收盘若按 24h 保鲜重算，任何做完一天的项目都会自动退回 unknown。
     // 仍按判据定义（checkHash）与路径漂移校验，但不再按时间让它过期。
-    const acc = status === 'done' && t.acceptance_audit && t.acceptance_audit.verdict
-      ? {
-        verdict: t.acceptance_audit.verdict,
-        source: t.acceptance_audit.source || 'audit',
-        counts: t.acceptance_audit.counts || null,
-        blockers: [],
+    // 存证 verdict 仍作行裁决（不改裁决语义），但必须复算一次比对 —— 只认账本里
+    // 那句字符串，等于让 done 可以脱离运行记录独立存在。
+    const recomputed = verdictMod.evaluateAcceptance(
+      t,
+      records,
+      status === 'done' ? Object.assign({}, ctxFor, { maxAgeMs: Infinity }) : ctxFor,
+      H.splitAcceptance
+    );
+    let acc = recomputed;
+    if (status === 'done' && t.acceptance_audit) {
+      const audit = t.acceptance_audit;
+      // Gate-written blocks always carry verdict (see _gateReviewToDone); a block
+      // without it cannot be compared against a recompute at all, so the missing
+      // field is itself the drift and the row falls back to the recomputed verdict.
+      if (audit.verdict) {
+        acc = {
+          verdict: audit.verdict,
+          source: audit.source || 'audit',
+          counts: audit.counts || null,
+          blockers: [],
+        };
+        const drift = _storedVerdictDrift(t, audit, recomputed, name);
+        if (drift) {
+          drifts.push(drift);
+        }
+      } else {
+        drifts.push(
+          `${t && t.id}: 存证审计块缺 verdict（at ${audit.at || '未知'}）—— 无法与当下复算比对，行裁决落回复算 ${recomputed.verdict}`
+        );
       }
-      : verdictMod.evaluateAcceptance(
-        t,
-        records,
-        status === 'done' ? Object.assign({}, ctxFor, { maxAgeMs: Infinity }) : ctxFor,
-        H.splitAcceptance
-      );
-    rows.push({ id: t && t.id, status, verdict: acc.verdict, source: acc.source, counts: acc.counts });
-    if (acc.verdict === 'failed') {
+    }
+    rows.push(Object.assign(
+      { id: t && t.id, status, verdict: acc.verdict, source: acc.source, counts: acc.counts },
+      startCell
+    ));
+    // When the row verdict comes from the stored audit its blockers stay empty on
+    // purpose (drift is reported separately); when it comes from the recompute its
+    // blockers are exactly why the row is not done, and legacy's total blocker is
+    // partial -- filtering on failed alone used to drop it silently.
+    if (acc.verdict === 'failed' || acc === recomputed) {
       for (const b of acc.blockers) {
         blockers.push(`${t && t.id}: ${b}`);
       }
@@ -1554,6 +1687,9 @@ async function cmdClose(ctx, positional, flags) {
   }
 
   const rollup = verdictMod.rollupTasks(rows);
+  // 开工面单独汇总，且**不**并入总裁决：任务没做完已经由 partial 表达，
+  // 「开工不可证实」是另一件事 —— 它说的是数据可信度，不是项目进度。
+  const startRollup = startMod.rollupStarts(rows);
   const taskVerdict = rollup.verdict;
   const counts = rollup.counts;
   if (counts.unknown) {
@@ -1577,7 +1713,11 @@ async function cmdClose(ctx, positional, flags) {
     deliveryVerdict: delivery.status,
     delivery,
     counts,
+    startVerdict: startRollup.verdict,
+    startCounts: startRollup.counts,
     blockers,
+    // done 存证裁决 vs 当下复算的偏差，只记录不改裁决 —— 见 _storedVerdictDrift
+    drifts,
     tasks: rows,
   };
   const reportsDir = process.env.KHY_REPORTS_DIR && String(process.env.KHY_REPORTS_DIR).trim()
@@ -1599,6 +1739,10 @@ async function cmdClose(ctx, positional, flags) {
     const color = (v) => (v === 'done' ? c.green(v) : v === 'failed' || v === 'gap' ? c.red(v) : c.yellow(v));
     console.log(c.bold(`\n  项目收盘 · HEAD ${snap.head ? snap.head.slice(0, 8) : '未知'} · 脏 ${snap.dirtyCount == null ? '未知' : snap.dirtyCount}\n`));
     console.log(`  任务面   ${color(taskVerdict)}  done ${counts.done} · partial ${counts.partial} · unknown ${counts.unknown} · failed ${counts.failed} · 未结 ${counts.open} / 共 ${counts.total}`);
+    const sc = startRollup.counts;
+    const startColor = (v) =>
+      (v === 'started' ? c.green(v) : v === 'declared' ? c.yellow(v) : v === 'not-started' ? c.dim(v) : c.red(v));
+    console.log(`  开工面   ${startColor(startRollup.verdict)}  已开工 ${sc.started} · 自称 ${sc.declared} · 未开工 ${sc['not-started']} · 算不出 ${sc.unknown} / 共 ${sc.total}`);
     const dline = delivery.ok
       ? `${delivery.status}${delivery.reason ? `（${delivery.reason}）` : ''} · 来源 ${delivery.source}${delivery.at ? ` · ${delivery.at}` : ''}`
       : `unknown（${delivery.reason}）`;
@@ -1611,11 +1755,41 @@ async function cmdClose(ctx, positional, flags) {
         console.log(c.dim(`  - ${r.id} ${r.status} → ${r.verdict}${r.source ? `（${r.source}）` : ''}`));
       }
     }
+    // 自称开工：doing/review 却没有系统开工见证。这不是「没干活」，是「干了也无从证实」，
+    // 所以只报不拦 —— 拦它会把存量任务全卡死，而真相是缺数据，不是缺活。
+    const unprovenStarts = rows.filter(
+      (r) => (r.status === 'doing' || r.status === 'review') && r.start !== 'started'
+    );
+    if (unprovenStarts.length) {
+      console.log('');
+      console.log(c.yellow(`  开工存疑 ${unprovenStarts.length} 条（doing/review 但系统无法证实开工）：`));
+      for (const r of unprovenStarts) {
+        console.log(c.dim(`    - ${r.id} ${r.start} · ${r.startReason}`));
+      }
+    }
+    // 存证裁决漂移：只报不改 —— done 是当时过的门，收盘读数不该替它翻案，
+    // 但「账本说绿的证据已经对不上」必须留下痕迹。
+    if (drifts.length) {
+      console.log('');
+      console.log(c.yellow(`  存证漂移 ${drifts.length} 条（done 的裁决与当下复算不一致，只报不改裁决）：`));
+      for (const d of drifts) {
+        console.log(c.dim(`    - ${d}`));
+      }
+    }
     if (delivery.gaps && delivery.gaps.length) {
       console.log('');
       console.log(c.red(`  交付 GAP ${delivery.gaps.length} 项：`));
       for (const g of delivery.gaps) {
         console.log(c.dim(`    - ${g}`));
+      }
+    }
+    // UNKNOWN 与 GAP 是两件事：GAP 是「测了、不合格」，UNKNOWN 是「这次没量」。
+    // 只给个数会让人以为「没报错就没事」；detail 里的原因才是能下手的东西。
+    if (delivery.unknowns && delivery.unknowns.length) {
+      console.log('');
+      console.log(c.yellow(`  交付未测 ${delivery.unknowns.length} 项（记分板判为 UNKNOWN —— 没量，不等于没问题）：`));
+      for (const u of delivery.unknowns) {
+        console.log(c.dim(`    - ${u.id} ${u.title}${u.detail ? ` —— ${u.detail}` : ''}`));
       }
     }
     console.log('');
@@ -1884,7 +2058,7 @@ function _help(c) {
   console.log(c.dim('    khy hq bug new "标题" [--severity P1] [--domain cli]'));
   console.log(c.dim('    khy hq bug set BUG-001 pending_verify [--root-cause "…"] [--fix "…"]'));
   console.log(c.dim('    khy hq bug note BUG-001 [--note "…"] [--root-cause "…"] [--fix "…"]'));
-  console.log(c.dim('    khy hq task set T-002 doing                      开工前需已声明 scope_guard'));
+  console.log(c.dim('    khy hq task set T-002 doing                      开工前需已声明 scope_guard；系统在此盖 started_at'));
   console.log(c.dim('    khy hq task note T-002 --scope "不改 XX"         追加边界（每条一次调用）'));
   console.log(c.dim('    khy hq task set T-002 review [--evidence <名称>] [--note "…"]'));
   console.log(c.dim('    khy hq task set T-002 done [--note "…"]        需验收清算通过才放行'));
@@ -1986,6 +2160,7 @@ module.exports = {
   _applyState,
   _applyNote,
   _describeWriteError,
+  _deliveryVerdict,
   [MANIFEST_EXPORT_KEY]: {
     name: 'hq',
     description: '任务/Bug 状态真源操作面（works/record/ai/hq/）：状态总览、下一步提示词、状态机迁移',

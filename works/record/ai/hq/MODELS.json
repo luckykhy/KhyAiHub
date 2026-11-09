@@ -37,11 +37,29 @@
       "id": "opencode",
       "display": "OpenCode",
       "entry": "<PORTABLE_ROOT>\\bin\\opencode.cmd",
-      "strengths": [],
-      "strengths_note": "待填写：实际使用后把它的强项任务类型加进 strengths",
+      "strengths": [
+        "quality"
+      ],
+      "strengths_note": "实测：作为被指挥方与配置消费方均可用；khy 侧对接（发现层/Key 池/配置解析）经 T-030 契约测试锁定",
       "domains": [],
-      "distilled": [],
-      "notes": ""
+      "distilled": [
+        {
+          "date": "2026-10-21",
+          "what": "v2.0.32 service 严重内存泄漏（实测 ~265MB/分钟，10 分钟 300MB→2.5GB）叠加请求挂起后的紧密重试空转（~150% CPU 无网络连接），会把 15.8GB 内存榨干导致系统级卡死，表象是『TUI 连不上模型』",
+          "went_to": "Scripts\\maintenance\\opencode-watchdog.ps1（4 规则：旧版残留/空转 service/挂死 run/内存泄漏，杀后自动补拉 service，TUI 自动重连）+ 计划任务 khy-opencode-watchdog 每 5 分钟"
+        },
+        {
+          "date": "2026-10-21",
+          "what": "opencode 免费渠道的死模型会长期挂在发现层：静态清单必须与 zenRetiredModels 台账联动过滤，否则用户选中上游已 401/410 的 id 才在调用时炸",
+          "went_to": "runtime/node/backend/src/services/freeModelChannels.js 与 services/gateway/builtinProviderConfig.js 内聚台账过滤（门 KHY_ZEN_RETIRED_FILTER）+ tests/services/opencodeFreeChannels.test.js 18 用例锁定（T-030）"
+        },
+        {
+          "date": "2026-10-21",
+          "what": "opencode 配置解析的生效面：用户级 XDG_CONFIG_HOME 指向 Tools/opencode/xdg 时生效配置是那里（经 opencode 自身 XDG 解析），~/.config 与 Tools/config 是历史遗留副本；khy 侧必须解析到同一文件",
+          "went_to": "runtime/node/backend/src/services/domain/network/externalApps/opencodeAdapter.js configPath 改 XDG 优先于便携 + _portableConfigPath 改 .portable 标记上溯（硬编码级数在布局迁移后静默错位）"
+        }
+      ],
+      "notes": "v2 CLI：顶层 -m/--model 已移除，一次性指定模型用 `opencode run --model provider/model`；免费模型走内置 opencode provider（opencode/<id>，免登录）。已废弃 id（2026-10-09 实测）：mimo-v2.5-free/deepseek-v4-flash-free（401）、exo-free（410）、muse-spark-*-contributor-free（403 地区）。当前目录 10 项见 T-030 与 docs/opencode-provider-keys.md。"
     },
     {
       "id": "qodercli",

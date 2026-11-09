@@ -15,7 +15,7 @@
 |----|------|--------|
 | cli | CLI 层（REPL/路由/TUI/handler） | 3 |
 | gateway | AI 网关（多供应商/熔断/转移） | 0 |
-| services | 服务层（审计/IM 通道/统计/训练） | 4 |
+| services | 服务层（审计/IM 通道/统计/训练） | 5 |
 | kernel | 手写 C 内核 | 0 |
 | frontend | ai-frontend (Vue3) | 3 |
 | khyquant | 量化交易终端 | 0 |
@@ -41,6 +41,7 @@
 | T-002 | 全量跑 check-agent-rules.js 清零硬编码端点与含糊状态文本 | quality | P2 | todo |
 | T-003 | auditLog 幂等去重与 getModuleStats 前缀过滤补单测 | quality | P2 | todo |
 | T-021 | toolUseLoopCore.js 拆分批次 C1-C3：顶层叶子外迁 + runToolUseLoop 阶段拆解 | refactor | P2 | doing |
+| T-030 | opencode 免费渠道稳定化与对接核验：发现层/Key 池台账过滤 + 配置解析修复 + 18 用例契约测试 | quality | P1 | done |
 ## cross（跨域/仓库级）
 
 | ID | 标题 | 类型 | 优先级 | 状态 |

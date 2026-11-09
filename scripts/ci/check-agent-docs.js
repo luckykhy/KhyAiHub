@@ -6,19 +6,21 @@
  * -------------------
  * 仓库根与子目录里散布着多份「AI 指令文件」（AGENTS.md / CLAUDE.md / khy.md /
  * .github/copilot-instructions.md …）。它们的作者默认「写进去就会被
- * AI 读到」，但运行时的读取方 `instructionFileService.js` 有**分层字符预算**，超限
- * **静默截断**（`readFileSafe` 只 slice，不报错）：
+ * AI 读到」，但运行时的读取方有**分层字符预算**（`readFileSafe` 超限 slice，
+ * 并在注入文本里留 `[TRUNCATED]` 标记；总预算耗尽另留 `[BUDGET]` 标记）：
  *
  *   tier=own     khy.md / KHY.md            MAX_FILE_CHARS    = 8000 / 文件
- *   tier=compat  CLAUDE.md / AGENTS.md …    MAX_FILE_CHARS    = 8000 / 文件
+ *   tier=compat  CLAUDE.md / AGENTS.md …    无预算：prompts.js 全量注入，不截断
  *   tier=eco     copilot / .cursorrules…    ECO_MAX_FILE_CHARS= 4000 / 文件
  *   合并总预算                              MAX_TOTAL_CHARS   = 24000
  *   eco 层总预算                            ECO_MAX_TOTAL_CHARS = 8000
  *
- * 后果：`AGENTS.md` 的「工程规则（强制）」节（RUNTIME-001~004 的语义真源）位于
- * 第 265 行之后，而 8000 字符截断点落在第 226 行 —— **AI 被要求遵守一份它读不到的规则**。
+ * 后果：超出 own / eco 预算的规则**到不了 AI 面前** —— 作者以为立了规矩，模型从未
+ * 收到（截断与丢弃都在注入文本里留标记，可被本脚本计量）。compat 档经实测
+ * **不设预算、全文注入**（`[DESIGN-DOC-002]` §1.2 曾据错误前提报出「AGENTS.md
+ * 只见 35.3%」，实测为假），故 D1 只对 own / eco 两档生效，详见 checkBudget 注释。
  *
- * 本脚本把这些「写了但到不了」的静默失效变成可判定的 finding。
+ * 本脚本把这些「写了但到不了」的失效变成可判定的 finding。
  *
  * 纪律（与仓库既有守卫一致）
  * -------------------------
@@ -58,10 +60,10 @@ const path = require('path');
 const RULE_ID = 'DOCS-003';
 const REGISTRY_REL = path.join('docs', '10_规范', 'registry', 'RULES-REGISTRY.json');
 const LAYOUT_REL = path.join('scripts', 'ci', 'check-repo-layout.js');
-const IFS_REL = path.join('services', 'backend', 'src', 'services', 'instructionFileService.js');
-const ECO_REL = path.join('services', 'backend', 'src', 'services', 'instructionEcosystemRegistry.js');
+const IFS_REL = path.join('runtime', 'node', 'backend', 'src', 'services', 'instructionFileService.js');
+const ECO_REL = path.join('runtime', 'node', 'backend', 'src', 'services', 'instructionEcosystemRegistry.js');
 /** compat 层（`CLAUDE.md`/`AGENTS.md`）的真实读取方 —— 它**没有**字符预算。 */
-const PROMPTS_REL = path.join('services', 'backend', 'src', 'constants', 'prompts.js');
+const PROMPTS_REL = path.join('runtime', 'node', 'backend', 'src', 'constants', 'prompts.js');
 
 // 扫描时跳过的目录：构建产物 / 依赖 / 本机缓存 / 外部调研克隆
 const SKIP_DIRS = new Set([
@@ -96,9 +98,16 @@ if (!repoRoot) {
 
 // ── 常量真源：全部从源码读，不硬编码 ────────────────────────────────────────
 function readBudgets() {
+  // A missing truth file must fail loudly: the L1/L2 merge into runtime/node/backend
+  // broke these paths once and pick() silently kept fallbacks that happened to equal
+  // the real constants — the guard judged with a ruler nobody had re-read.
   const read = (rel) => {
     const abs = path.join(repoRoot, rel);
-    return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : '';
+    if (!fs.existsSync(abs)) {
+      console.error(`预算真源不存在：${rel}（${abs}）—— 仓库结构可能又变了，请先更新本脚本头部的 *_REL 路径常量。`);
+      process.exit(2);
+    }
+    return fs.readFileSync(abs, 'utf8');
   };
   const ifs = read(IFS_REL);
   const eco = read(ECO_REL);

@@ -32,6 +32,8 @@ const path = require('path');
 // 本文件只在 review→done 的写入路径上把它们拼起来，不复制判定逻辑。
 const acceptanceVerdict = require('./acceptanceVerdict');
 const acceptanceRunner = require('./acceptanceRunner');
+// 开工裁决：与完成裁决对称的纯叶子。判「真的开工了吗」只看任务自身字段。
+const startVerdict = require('./startVerdict');
 
 // ── 路径解析 ──────────────────────────────────────────────────────
 
@@ -68,11 +70,11 @@ function hqDir(env = process.env) {
  * 解析验收存证根，允许 `KHY_FEEDBACK_DIR` 覆盖。
  *
  * 与 `hqDir()` 同一条纪律：**测试注入点必须真的生效**。验收清算会在
- * `.khy/feedback/<name>/` 下找 `acceptance.md`，若没有覆盖点，任何对该判据的
+ * `works/data/khy/feedback/<name>/` 下找 `acceptance.md`，若没有覆盖点，任何对该判据的
  * 单测/反向验证都会写进真实存证目录、污染真实数据 —— 那样测试就只能靠
  * 「事后删除」兜底，而删除本身就是一次污染。故显式给一个覆盖点。
  *
- * 未设或为空则用仓内默认 `.khy/feedback/`。绝不读盘、绝不抛。
+ * 未设或为空则用仓内默认 `works/data/khy/feedback/`。绝不读盘、绝不抛。
  */
 function feedbackDir(env = process.env) {
   const override = env && env.KHY_FEEDBACK_DIR;
@@ -127,7 +129,7 @@ const BUG_STATES = ['open', 'in_progress', 'pending_verify', 'closed', 'wontfix'
 /**
  * `evidence` 字段的命名约定：`<task-id>-<slug>`，小写字母/数字/`.`/`_`/`-`。
  *
- * 为什么要有约定：2026-09-23 实测 `.khy/feedback/` 下 52 个存证目录**三种前缀混用**
+ * 为什么要有约定：2026-09-23 实测 `works/data/khy/feedback/` 下 52 个存证目录**三种前缀混用**
  * （`BUG-116-…` / `2026-09-18-…` / `g69-…`），无法把目录映射回任务 ⇒
  * 存证质量很高但**实际不可检索**。约定只对**新声明 `evidence` 的条目**生效，
  * 存量目录一律不追溯、不改名（同 `cod/conf/size` 的「出现即校验」范式）。
@@ -333,6 +335,32 @@ function clearClaim(item) {
   return item;
 }
 
+/**
+ * 开工戳（同 `stampClaim` 的纯函数契约，便于单测注入时钟）。
+ *
+ * `start_note_count` 是**基线**，不是计数：开工那一刻备注有几条，之后每多一条
+ * 就是一条系统看得见的活动记录。不记基线的话，存量里几十条旧备注会让任何
+ * 一条刚翻成 doing 的任务立刻「看起来干了很多」。
+ */
+function stampStart(item, machine, now = new Date()) {
+  const next = Object.assign({}, item);
+  next.started_at = isoLocal(now);
+  next.started_by = machine;
+  next.start_note_count = Array.isArray(item && item.notes) ? item.notes.length : 0;
+  return next;
+}
+
+/** 清除开工三字段（原地修改并返回）——打回 todo 即本次开工作废。 */
+function clearStart(item) {
+  if (!item || typeof item !== 'object') {
+    return item;
+  }
+  delete item.started_at;
+  delete item.started_by;
+  delete item.start_note_count;
+  return item;
+}
+
 // ── 载入与选取 ───────────────────────────────────────────────────
 
 /** 载入 Bug 档与任务档（含各自顶层容器字段）。 */
@@ -442,6 +470,18 @@ function pickNext(bugsDoc, progressDoc, me, now = new Date(), opts = {}) {
   const reviewTasks = tasks.filter((t) => t && t.status === 'review');
   const staleTasks = tasks.filter((t) => t && t.status === 'doing' && t.claimed_by && leaseExpired(t));
   const staleBugs = bugs.filter((b) => b && b.status === 'in_progress' && b.claimed_by && leaseExpired(b));
+  // `doing` is a self-reported status anybody can type into PROGRESS.json, so the
+  // scheduling core must not read it as "somebody is on it". Without a claim there
+  // is no machine accountable for the item — such entries used to be invisible to
+  // pickNext entirely and sat for weeks with only `khy hq verify` mentioning them
+  // (measured 2026-11-06: T-020/T-021/T-027). The claim field is the criterion, not
+  // started_at: the stamp only exists since 2026-11-04 and legacy entries cannot be
+  // back-filled (a fake stamp is worse than none), so keying on it would miss every
+  // legacy row. started_at is still required here so the sanctioned start path
+  // (`task set <id> doing` stamps it, handlers/hq.js) is not reported as unproven.
+  const unclaimedDoing = tasks.filter(
+    (t) => t && t.status === 'doing' && !t.claimed_by && !t.started_at
+  );
 
   const openBugs = bugs.filter((b) => b && b.status === 'open' && available(b));
   const todos = tasks.filter((t) => t && t.status === 'todo' && available(t));
@@ -449,13 +489,17 @@ function pickNext(bugsDoc, progressDoc, me, now = new Date(), opts = {}) {
     pendingVerify: pendingVerify.length,
     reviewTasks: reviewTasks.length,
     staleClaims: staleTasks.length + staleBugs.length,
+    unclaimedDoing: unclaimedDoing.length,
     openBugs: openBugs.length,
     todoP01: todos.filter((t) => severityKey(t.priority) <= 1).length,
     todoP23: todos.filter((t) => severityKey(t.priority) > 1).length,
   };
 
   // G0 健康 · 瓶颈解锁：闭环未合不算新活（显式 skipHealth 除外）
-  if (!opts.skipHealth && (pendingVerify.length || reviewTasks.length || staleTasks.length || staleBugs.length)) {
+  if (
+    !opts.skipHealth
+    && (pendingVerify.length || reviewTasks.length || staleTasks.length || staleBugs.length || unclaimedDoing.length)
+  ) {
     const items = [
       ...pendingVerify.map((b) => ({
         kind: 'bug', item: b,
@@ -473,6 +517,11 @@ function pickNext(bugsDoc, progressDoc, me, now = new Date(), opts = {}) {
         howto: sameMachine(t.claimed_by, me)
           ? `khy hq release ${t.id}，或领回后重新开工`
           : `与 ${t.claimed_by} 确认是否仍在进行；该机器 khy hq renew ${t.id} 续租，或 khy hq release --expired 清理`,
+      })),
+      ...unclaimedDoing.map((t) => ({
+        kind: 'task', item: t,
+        reason: 'doing 但无占用（claimed_by 为空）、无开工戳（started_at 为空）—— 自称开工，系统无法证实',
+        howto: `仍在做：khy hq next --task ${t.id} 领取占用；已停滞：khy hq task set ${t.id} todo 打回`,
       })),
       ...staleBugs.map((b) => ({
         kind: 'bug', item: b,
@@ -571,6 +620,10 @@ function buildStatus(root, env = process.env) {
       claimed_by: t.claimed_by || null,
       lease_expires: t.lease_expires || null,
       held_by_other: heldByOther(t, me),
+      // 开工面（已开工/自称/未开工/算不出）—— status 说「它自称在 doing」，
+      // start 说「系统能不能证实」。两者分开，才能看见挂着的假开工。
+      start: startVerdict.evaluateStart(t).verdict,
+      started_at: t.started_at || null,
     })),
     model_routing: models.map((m) => ({
       id: m.id,
@@ -822,6 +875,17 @@ function validateTask(task) {
   if (task.criteria !== undefined) {
     errs.push(...validateCriteria(task.criteria));
   }
+  // 开工戳：可选，出现即校验。不可解析的时刻会让开工裁决静默退化成 declared，
+  // 那正是「看起来有戳、其实算不出」的假象，必须报出来。
+  if (task.started_at !== undefined && !parseIso(task.started_at)) {
+    errs.push(`started_at 无法解析: ${JSON.stringify(task.started_at)}（应为 YYYY-MM-DDTHH:mm:ss）`);
+  }
+  if (task.start_note_count !== undefined) {
+    const n = Number(task.start_note_count);
+    if (!Number.isInteger(n) || n < 0) {
+      errs.push(`start_note_count 应为非负整数: ${JSON.stringify(task.start_note_count)}`);
+    }
+  }
   return errs;
 }
 
@@ -830,7 +894,7 @@ function validateTask(task) {
 // 背景（2026-09-23 取证）：`review → done` 长期是一个**裸箭头** ——
 // `TASK_TRANSITIONS.review = ['done', 'doing']`，`validateTask` 不检查任何证据。
 // 后果实测：`T-023`（P1）卡在 review 3 天无人动；13 条 Bug 中 3 条 `pending_verify`
-// 的 `notes` 为 0 条（进入待验证时零留痕）；`.khy/feedback/` 下 52 个存证目录
+// 的 `notes` 为 0 条（进入待验证时零留痕）；`works/data/khy/feedback/` 下 52 个存证目录
 // **零个被引用过**（本文件全文 grep `feedback` 曾命中 0 次）。
 //
 // 设计裁决（沿用本文件「写入路径约束」一节已写明的立场）：
@@ -930,6 +994,23 @@ function auditAcceptanceQuality(task) {
 }
 
 /**
+ * Known subproject roots, with the names they had before the 2026-10 layout
+ * migration (`services/backend` → `runtime/node/backend`).
+ *
+ * Two consumers: `remapLegacyRoot` re-resolves a pre-migration prefix against
+ * the current root, and `findFileByName` deep-scans the current root — its files
+ * sit below the repo-root sweep's shallow depth limit, so without the extra pass
+ * a file moved there looks like "仓内零命中".
+ *
+ * Paths relative to a subproject cwd are resolved from the acceptance's own
+ * `(cwd: ...)` / `（... 下运行）` declaration instead of by mounting every token
+ * under the root: `runtime/node/backend/.ai/MAP.md` is a tracked file, so blind
+ * mounting would silently resolve a stale `.ai/MAP.md` reference (T-004) and
+ * mask a real finding.
+ */
+const SUBPROJECT_ROOTS = [{ now: 'runtime/node/backend', was: ['services/backend'] }];
+
+/**
  * 相对路径判据的**失效检测**：`acceptance` 里提到的仓内路径是否真的存在。
  *
  * 这是 2026-09-23 取证里最便宜也最有价值的一条。实测：`T-020` / `T-021` 的
@@ -942,7 +1023,11 @@ function auditAcceptanceQuality(task) {
  * 只检查「像仓内路径」的 token（含 `/` 且带扩展名），并且：
  *   - 只核对**首个 token**，因为 `acceptance` 里的中文说明会与后续 token 粘连；
  *   - 检查失败是 warning（不阻断），因为文档改名是正常操作，
- *     我们只是要求「路标搬走时有人知道」。
+ *     我们只是要求「路标搬走时有人知道」；
+ *   - 解析基准有三类（仓库根 / acceptance 行内 `(cwd: <dir>)` 声明的子项目目录 /
+ *     2026-10 布局迁移前的旧子项目根前缀），逐个试过仍不存在才判失效 ——
+ *     只按仓库根解析会把确实存在的文件报成不存在（2026-11-06 实测 14 条
+ *     finding 里 13 条如此，告警因此失去信号价值）。
  *
  * @param {object} task
  * @param {string} repoRoot
@@ -958,6 +1043,24 @@ function auditAcceptancePaths(task, repoRoot) {
   // 段间用 `/` 连接。中文只可能出现在路径**前后**，不可能出现在段内，故天然截断。
   const SEG = '[A-Za-z0-9_.-]+';
   const re = new RegExp(`(${SEG}(?:\\/${SEG})+\\.(?:js|mjs|cjs|ts|vue|py|md|json|html))`, 'g');
+  // A token may be written from the repo root, from a cwd the acceptance declares
+  // (`(cwd: runtime/node/backend)`, or the prose form `（runtime/node/backend
+  // 下运行）` that existing acceptances use), or with a pre-2026-10 subproject
+  // prefix. Try each declared base and the remapped root before declaring a path
+  // missing — repo-root-only resolution reported 13 of 14 findings against files
+  // that do exist.
+  const bases = [repoRoot];
+  const cwdRe = new RegExp(
+    `[(（]\\s*(?:cwd:\\s*(${SEG}(?:\\/${SEG})+)|(${SEG}(?:\\/${SEG})+)\\s*下运行)\\s*[)）]`,
+    'g'
+  );
+  let cm;
+  while ((cm = cwdRe.exec(acc)) !== null) {
+    const dir = cm[1] || cm[2];
+    if (dir) {
+      bases.push(path.join(repoRoot, dir));
+    }
+  }
   const seen = new Set();
   let m;
   while ((m = re.exec(acc)) !== null) {
@@ -971,8 +1074,8 @@ function auditAcceptancePaths(task, repoRoot) {
     }
     // `[MGMT-PLAN-008]` 这类方括号编号不在字符类里，但路径前若紧跟 `[` 说明是文档编号，
     // 仍按真实文件核对即可（编号属于文件名的一部分，已在 SEG 内）。
-    const abs = path.join(repoRoot, ref);
-    if (fs.existsSync(abs)) {
+    const candidates = [ref, remapLegacyRoot(ref)].filter(Boolean);
+    if (candidates.some((c) => bases.some((b) => fs.existsSync(path.join(b, c))))) {
       continue;
     }
     // 给一个「是不是改名了」的提示：按 basename 在仓内浅层搜同名不同路径
@@ -986,6 +1089,22 @@ function auditAcceptancePaths(task, repoRoot) {
 }
 
 /**
+ * Swap a pre-migration subproject prefix for its current root, so acceptance
+ * paths written before the 2026-10 layout move (`services/backend/...`) still
+ * resolve. Returns null when the ref does not start with a known legacy root.
+ */
+function remapLegacyRoot(ref) {
+  for (const root of SUBPROJECT_ROOTS) {
+    for (const was of root.was) {
+      if (ref === was || ref.startsWith(was + '/')) {
+        return root.now + ref.slice(was.length);
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * 按文件名在仓内浅层搜索（限深度、跳过 node_modules/.git/.khy 等）。
  * 目的单一：给「路径失效」的告警补一条「是不是改名了」的线索。
  * fail-soft —— 任何读盘失败都当「没找到」，绝不抛。
@@ -993,8 +1112,8 @@ function auditAcceptancePaths(task, repoRoot) {
 function findFileByName(repoRoot, basename, maxDepth) {
   const hits = [];
   const SKIP = new Set(['node_modules', '.git', '.khy', '.khyos', '.khyquant', 'dist', 'build', '_产物']);
-  const walk = (dir, depth) => {
-    if (depth > maxDepth || hits.length >= 5) {
+  const walk = (dir, depth, limit) => {
+    if (depth > limit || hits.length >= 5) {
       return;
     }
     let entries = [];
@@ -1014,16 +1133,29 @@ function findFileByName(repoRoot, basename, maxDepth) {
       if (e.isFile() && e.name === basename) {
         hits.push(path.relative(repoRoot, full).split(path.sep).join('/'));
       } else if (e.isDirectory()) {
-        walk(full, depth + 1);
+        walk(full, depth + 1, limit);
       }
     }
   };
-  walk(repoRoot, 0);
-  return hits;
+  walk(repoRoot, 0, maxDepth);
+  // The repo-root sweep stays shallow on purpose: a full-depth sweep of this repo
+  // costs ~1.5s per missing path (measured 2026-11-06, depth 9). The 2026-10
+  // migration moved whole trees under runtime/node/backend, below the shallow
+  // limit, so give the known roots a bounded deep pass of their own — otherwise
+  // "仓内零命中" claims the file is nowhere while it sits in the new layout.
+  for (const root of SUBPROJECT_ROOTS) {
+    if (hits.length >= 5) {
+      break;
+    }
+    walk(path.join(repoRoot, root.now), 0, maxDepth + 5);
+  }
+  // Both sweeps read the known roots' top level; dedupe so the hint lists each
+  // candidate once.
+  return [...new Set(hits)];
 }
 
 /**
- * 校验一条验收清算记录（`.khy/feedback/<evidence>/acceptance.md`）是否成立。
+ * 校验一条验收清算记录（`works/data/khy/feedback/<evidence>/acceptance.md`）是否成立。
  *
  * 格式（简单到可用 grep 核对，不让「逐条勾选」退化成人肉仪式）：
  *
@@ -1293,6 +1425,92 @@ function collectWorktreeChanges(repoRoot) {
 }
 
 /**
+ * done 任务的完成态复算（与 `hq.js` cmdClose 对 done 的读法逐字一致）。
+ *
+ * 为什么单列一个函数：`done` 在迁移表里没有出边，验收门只在 `review -> done`
+ * 那一刻跑过一次。存量里有若干条 done 早于当前 `acceptance_audit` 形状（无
+ * verdict、无 `acceptance.jsonl`、散文判据还指向已搬走的路径），今天复算一条
+ * 也回不到 done，而它们**永远不会再被门复检**。`khy hq verify` 此前对此一言不发，
+ * 于是「账本体检全绿」与「done 不可复算」可以同时成立。
+ *
+ * `maxAgeMs: Infinity` 是刻意的：done 是当时已作出的决定，不因今天的 24h 保鲜
+ * 退回 unknown；仍校 checkHash 与路径漂移（见 acceptanceVerdict.recordFreshness）。
+ *
+ * @param {object} task
+ * @param {string} repoRoot
+ * @param {string} fbRoot 存证根
+ * @param {{head?: Map, fp?: Map}} [caches] 跨任务复用 git 子进程结果
+ * @returns {object} acceptanceVerdict 的任务级裁决
+ */
+function recomputeDoneAcceptance(task, repoRoot, fbRoot, caches) {
+  const ca = caches && typeof caches === 'object' ? caches : {};
+  const name = String((task && task.evidence) || '').trim();
+  let records = [];
+  if (name && EVIDENCE_NAME_RE.test(name)) {
+    records = acceptanceRunner.readRunRecords(path.join(fbRoot, name));
+  }
+  const head = acceptanceRunner.currentHead(repoRoot);
+  for (const rec of records) {
+    if (!rec || !rec.head) {
+      continue;
+    }
+    if (!(ca.head instanceof Map)) {
+      ca.head = new Map();
+    }
+    if (!ca.head.has(rec.head)) {
+      ca.head.set(rec.head, acceptanceRunner.headStillAncestor(repoRoot, rec.head, head));
+    }
+    rec.headStillAncestor = ca.head.get(rec.head);
+  }
+  if (!(ca.fp instanceof Map)) {
+    ca.fp = new Map();
+  }
+  const fpFor = (rec) => {
+    const key = Array.isArray(rec && rec.paths) ? rec.paths.join('\n') : '';
+    if (!ca.fp.has(key)) {
+      ca.fp.set(key, acceptanceRunner.pathsFingerprint(repoRoot, rec && rec.paths));
+    }
+    return ca.fp.get(key);
+  };
+  return acceptanceVerdict.evaluateAcceptance(
+    task,
+    records,
+    { now: Date.now(), maxAgeMs: Infinity, fingerprintFor: fpFor },
+    splitAcceptance
+  );
+}
+
+/**
+ * done 不可复算时的补救处方，按裁决来源分流 —— 不能一律写「--scaffold 再 --run」。
+ *
+ * 2026-11-07 实测：存量 9 条 done 的 acceptance 散文里**零反引号命令**，脚手架只能
+ * 拆出 manual 判据，而 manual 判据的结果必须由人签名（`--by`）。照「--run」做到底
+ * 也只会得到 0 条记录、裁决仍是 partial，却把 1 条 legacy 阻断摊成 N 条「未验证」
+ * （沙箱复现见存证 `remedy-probe.txt`）。所以处方必须写明「这一步要人签字」，
+ * 而不是给两条命令让人自己撞墙。
+ *
+ * @param {string} id 任务 ID
+ * @param {object} acc recomputeDoneAcceptance 的裁决
+ * @returns {string}
+ */
+function _doneRemedy(id, acc) {
+  if (acc.source === 'none') {
+    return (
+      `既无 criteria[] 也无 acceptance —— 没有完成定义就没有完成判定；` +
+      `先补 acceptance，再 khy hq accept ${id} --scaffold`
+    );
+  }
+  if (acc.source === 'legacy') {
+    return (
+      '判据来自 acceptance 散文、PASS 系写的人自述，机器无法复算；补救须人签名：' +
+      `khy hq accept ${id} --scaffold 拆出判据，` +
+      `再 khy hq accept ${id} --run --manual "C1=pass,…" --by <签名人>`
+    );
+  }
+  return `缺运行记录或证据已失效：khy hq accept ${id} --run`;
+}
+
+/**
  * 校验整套数据（Bug 档 + 任务档 + ROADMAP 同步 + 模型档案 + 模板注册表）。
  * 这是原 `hq_check.py meta` 组的等价物，但**只作为 `khy hq verify` 的只读体检**，
  * 不进 `scripts/ci/` ⇒ 不需要门引用（避免 `check-wiring.js` 判孤儿）。
@@ -1331,6 +1549,12 @@ function validateDataset(root, env = process.env) {
   for (const d of dupTasks) {
     errors.push(`任务 ID 重复: ${d}`);
   }
+  // done 任务验收路径的事后复核计数：全绿时给一条 ✓，让「复核跑过了」可见，
+  // 而不是「没报就是没问题」—— 后者与「没跑」在输出上无法区分。
+  let doneCount = 0;
+  let donePathOk = 0;
+  // done 复算要跑 git 子进程（HEAD 祖先 + 路径指纹），跨任务缓存同一批
+  const doneCaches = {};
 
   let roadmap = '';
   try {
@@ -1378,7 +1602,31 @@ function validateDataset(root, env = process.env) {
     // 判据自身是否还成立：acceptance 引用的仓内路径是否存在（改名/搬家检测）。
     // 2026-09-23 新增 —— 实测 T-011/T-012/T-016/T-020/T-021 共 5 条任务的
     // acceptance 引用了不存在（或已改名）的路径，其中 2 条因此停滞 4 天。
-    warnings.push(...auditAcceptancePaths(t, repoRoot));
+    //
+    // For a `done` task the acceptance string *is* the definition of done, so a
+    // dead path there means the done claim itself has gone stale — but as a plain
+    // warning it is indistinguishable from a todo task's stale reference, and
+    // nothing ties it back to the done status. 2026-11-06 `khy hq verify` printed
+    // 14 acceptance-path warnings while T-024 (done) claimed in its own criterion 4
+    // "auditAcceptancePaths 全量 0 告警"; the contradiction reproduced on every run
+    // with no finding naming it. Escalate for done only, so the re-verification is
+    // actionable instead of decorative.
+    const accPathFindings = auditAcceptancePaths(t, repoRoot);
+    if (t.status === 'done') {
+      doneCount += 1;
+      if (accPathFindings.length) {
+        for (const finding of accPathFindings) {
+          errors.push(
+            `${finding} —— 该任务已 done，验收判据引用的路径已失效：` +
+              '把 acceptance 改指现存文件，或打回 review 重新验收'
+          );
+        }
+      } else {
+        donePathOk += 1;
+      }
+    } else {
+      warnings.push(...accPathFindings);
+    }
     // `doing` 任务是否还活着：占用缺失 / 租约过期。
     // 2026-09-23 新增 —— 实测 T-020/T-021 声称 doing 却无 claimed_by、无 lease_expires，
     // 挂 4 天无人知。此处**只 warning 不 error**：doing 无占用可能是本机刚开工还没写回，
@@ -1386,10 +1634,29 @@ function validateDataset(root, env = process.env) {
     if ((t.status === 'doing' || t.status === 'review') && !t.claimed_by) {
       warnings.push(`${t.id} 状态为 ${t.status} 但无占用（claimed_by 为空）—— 无法判断是「有人在做」还是「已停滞」`);
     }
+    // 开工时刻同理：doing 是个可以随手写的状态，不是「开工」的证据。
+    // 存量条目没有 started_at 属预期（字段 2026-11-04 才有），不追溯补盖 —— 假戳比没戳更坏。
+    if ((t.status === 'doing' || t.status === 'review') && !t.started_at) {
+      warnings.push(`${t.id} 状态为 ${t.status} 但无 started_at —— 自称开工，系统无法证实开工时刻`);
+    }
     if (t.claimed_by && t.lease_expires) {
       const exp = parseIso(t.lease_expires);
       if (exp && exp.getTime() < Date.now()) {
         warnings.push(`${t.id} 的租约已于 ${t.lease_expires} 过期，但仍挂在 ${t.status} —— 可被他人接管，或应释放`);
+      }
+    }
+    // done 的完成态还能不能被机器复算。done 是终态、门只跑过一次，所以这条
+    // 告警是「历史 done 是否可复核」的唯一自动探针 —— 没有它，存量 done 全部
+    // 复算为 partial 也无人知晓（2026-11-06 实测 9/9）。
+    // 只 warning 不 error：补跑要人签名（`--by`），AI 代签就是伪造验收；
+    // 存量不追溯补盖，与 started_at 同理 —— 假戳比没戳更坏。
+    if (t.status === 'done') {
+      const acc = recomputeDoneAcceptance(t, repoRoot, feedbackDir(env), doneCaches);
+      if (acc.verdict !== 'done') {
+        warnings.push(
+          `${t.id} 已 done 但完成态不可复算（复算 ${acc.verdict}，${acc.counts.passed}/${acc.counts.required} required 通过）` +
+            ` —— ${_doneRemedy(t.id, acc)}`
+        );
       }
     }
   }
@@ -1400,6 +1667,9 @@ function validateDataset(root, env = process.env) {
   }
   if (!errors.some((e) => e.startsWith('任务') || /^T-/.test(e))) {
     checks.push(`${tasks.length} 条任务 ID/枚举/状态行全部一致`);
+  }
+  if (doneCount && donePathOk === doneCount) {
+    checks.push(`${doneCount} 条 done 任务的验收判据路径复核通过（done 事后复核）`);
   }
 
   // ── Bug ──
@@ -1593,6 +1863,9 @@ module.exports = {
   heldByOther,
   stampClaim,
   clearClaim,
+  stampStart,
+  clearStart,
+  startVerdict,
   // 选取
   loadAll,
   findItem,

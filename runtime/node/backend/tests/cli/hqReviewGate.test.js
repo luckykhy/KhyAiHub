@@ -486,6 +486,159 @@ test('E2E 全部判据通过 → 放行落盘 done 且裁决入账（防「一�
   }
 });
 
+// ── close：done 存证裁决必须复算（2026-11-05 补）─────────────────
+//
+// `khy hq close` 曾对带 `acceptance_audit.verdict` 的 done 任务直接采信账本里那句
+// 字符串，连它自己注释里承诺的 checkHash / 路径漂移校验一起跳过。账本是可手改的
+// JSON，「项目面绿色」于是能脱离运行记录存在。修法是只报不改裁决：仍是 done，
+// 但漂移必须留痕，且不能混进 blockers（否则从 warning 变成拦截）。
+
+test('E2E close 复算 done 的存证裁决：证据漂移只报不改裁决', () => {
+  const env = newSandboxEnv();
+  try {
+    const t = STRUCT5({ id: 'T-DRIFT', status: 'done', evidence: 'T-DRIFT-e2e' });
+    // 新版门写入的形状（handlers/hq.js 的 acceptance_audit）：声称 5 条判据全过
+    t.acceptance_audit = {
+      at: '2026-11-05',
+      verdict: 'done',
+      source: 'criteria',
+      counts: { total: 5, required: 5, passed: 5, failed: 0, unresolved: 0 },
+      total: 5,
+      verdicts: t.criteria.map((c) => `pass:${c.desc}`),
+    };
+    // 留一条 todo 让项目面落在 partial —— 退出码由它决定，与漂移无关
+    fs.writeFileSync(
+      path.join(env.hq, 'PROGRESS.json'),
+      JSON.stringify({ tasks: [t, { id: 'T-OPEN', status: 'todo' }] }, null, 2) + '\n',
+      'utf8'
+    );
+    // 运行记录与存证矛盾：C1 已 FAIL —— 当下复算不可能是 done
+    writeRecords(env.fb, 'T-DRIFT-e2e', t, (rec) =>
+      (rec.id === 'C1' ? Object.assign({}, rec, { result: 'fail', reason: 'exit=1（期望 0）' }) : rec)
+    );
+
+    const reports = path.join(env.root, 'reports');
+    const r = runCli(
+      ['hq', 'close', '--json'],
+      Object.assign({ KHY_REPORTS_DIR: reports }, env.env),
+      env.root
+    );
+    assert.strictEqual(r.code, 0, `漂移只报不拦；输出：\n${r.output}`);
+
+    const rep = JSON.parse(fs.readFileSync(path.join(reports, 'PROJECT-STATUS.json'), 'utf8'));
+    const row = rep.tasks.find((x) => x.id === 'T-DRIFT');
+    assert.strictEqual(row.verdict, 'done', '存证裁决不因漂移被推翻');
+    assert.ok(Array.isArray(rep.drifts) && rep.drifts.length === 1, JSON.stringify(rep.drifts));
+    assert.ok(rep.drifts[0].includes('当下复算 failed'), rep.drifts[0]);
+    assert.ok(!rep.blockers.some((b) => String(b).includes('存证裁决')), JSON.stringify(rep.blockers));
+  } finally {
+    fs.rmSync(env.root, { recursive: true, force: true });
+  }
+});
+
+// ── close：存量 audit 块缺 verdict 必须报漂移，legacy 阻断必须进报告（2026-11-06 补）──
+//
+// 存量 4 个 acceptance_audit 块（T-023/T-024/T-029/T-030）是门改形状前的手写形态：
+// 只有 at/total/verdicts，没有 verdict。漂移分支曾要求 verdict 才进，这条安全网于是
+// 对最需要它的 done 任务整段静默；blockers 通道又只收 failed，recomputed 给 legacy 的
+// partial + 「机器无法复算」总阻断被一并丢弃 —— 报告 drifts/blockers 双空。
+
+test('E2E close 对缺 verdict 的存量 audit 块报漂移，legacy 阻断不再被丢弃', () => {
+  const env = newSandboxEnv();
+  try {
+    const p = path.join(env.hq, 'PROGRESS.json');
+    const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+    // 存量形态：done + 散文 acceptance + 手写 audit 块（无 verdict）
+    const t = d.tasks.find((x) => x.id === 'T-023');
+    t.status = 'done';
+    delete t.criteria;
+    t.acceptance_audit = { at: '2026-09-23', total: 5, verdicts: ['PASS:1) 甲'] };
+    fs.writeFileSync(p, JSON.stringify({ tasks: [t] }, null, 2) + '\n', 'utf8');
+
+    const reports = path.join(env.root, 'reports');
+    const r = runCli(['hq', 'close', '--json'], Object.assign({ KHY_REPORTS_DIR: reports }, env.env), env.root);
+    assert.strictEqual(r.code, 0, `只报不拦；输出：\n${r.output}`);
+
+    const rep = JSON.parse(fs.readFileSync(path.join(reports, 'PROJECT-STATUS.json'), 'utf8'));
+    const row = rep.tasks.find((x) => x.id === 'T-023');
+    assert.strictEqual(row.verdict, 'partial', '缺 verdict 时行裁决落回复算值');
+    assert.ok(rep.drifts.some((x) => /T-023.*缺 verdict/.test(x)), JSON.stringify(rep.drifts));
+    assert.ok(
+      rep.blockers.some((b) => /T-023.*legacy-markdown-acceptance/.test(b)),
+      `legacy 总阻断必须进 close 报告；实际：${JSON.stringify(rep.blockers)}`
+    );
+  } finally {
+    fs.rmSync(env.root, { recursive: true, force: true });
+  }
+});
+
+// ── verify：done 的完成态必须可复算（2026-11-06 补，2026-11-07 补处分流）──────
+//
+// done 在迁移表里没有出边，验收门只在 `review -> done` 那一刻跑过一次。存量 9 条
+// done 早于当前 `acceptance_audit` 形状（无 verdict、无 `acceptance.jsonl`、散文
+// 判据还指向已搬走的路径），今天复算一条也回不到 done，而它们**永远不会再被门
+// 复检**。`khy hq verify` 此前对此一言不发 —— 「账本体检全绿」与「done 不可复算」
+// 可以同时成立。修法是 verify 增开 done 复算段：只 warning 不 error（补跑要人签名
+// `--by`，AI 代签就是伪造验收）。
+//
+// 2026-11-07 第二轮：处方按裁决来源分流。存量 9 条的 acceptance 散文里零反引号命令
+// （实测 9/9），脚手架只能拆出 manual 判据，照「--scaffold 再 --run」做到底也是
+// 0 条记录、裁决仍 partial，只把 1 条 legacy 阻断摊成 N 条「未验证」。所以 legacy
+// 分支必须写明「要人签名」，structured 分支才给 `--run`。
+
+test('E2E verify 报出不可复算的 done，放行可复算的那条', () => {
+  const env = newSandboxEnv();
+  try {
+    const p = path.join(env.hq, 'PROGRESS.json');
+    const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+    // T-023 保持存量形态：散文 acceptance、无 criteria[]、存证目录里只有人手写的 md
+    const legacy = d.tasks.find((x) => x.id === 'T-023');
+    mkEvidence(env.fb, legacy.evidence, { 'acceptance.md': '# 手写清算\n' });
+    // T-030 摆成过了门的形态：结构化判据 + 系统写下的运行记录
+    const gated = d.tasks.find((x) => x.id === 'T-030');
+    gated.criteria = STRUCT5({ id: gated.id }).criteria;
+    writeRecords(env.fb, gated.evidence, gated);
+    // T-029 摆成「有判据、没记录」：结构化但缺运行记录，处方应当只要 --run、不要人签名
+    const noRun = d.tasks.find((x) => x.id === 'T-029');
+    noRun.criteria = STRUCT5({ id: noRun.id }).criteria;
+    // T-007 摆成「连完成定义都没有」：无 criteria[] 也无 acceptance → source=none
+    const none = d.tasks.find((x) => x.id === 'T-007');
+    delete none.criteria;
+    delete none.acceptance;
+    fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n', 'utf8');
+
+    const r = runCli(['hq', 'verify', '--json'], env.env, env.root);
+    // 退出码由 ROADMAP 不同步等既有 error 决定，与本条无关；只断言告警内容
+    const rep = JSON.parse(r.output);
+    const legacyHit = rep.warnings.find((w) => w.startsWith('T-023 ') && /不可复算/.test(w));
+    assert.ok(legacyHit, `应报出 T-023 不可复算；实际告警：\n${r.output}`);
+    assert.ok(legacyHit.includes('0/5'), legacyHit);
+    assert.ok(legacyHit.includes('khy hq accept T-023 --scaffold'), legacyHit);
+    assert.ok(legacyHit.includes('khy hq accept T-023 --run'), legacyHit);
+    // 散文无反引号命令 → 只能拆出人工判据 → 处方必须点明要人签名
+    assert.ok(legacyHit.includes('--manual'), legacyHit);
+    assert.ok(legacyHit.includes('--by <签名人>'), legacyHit);
+
+    const noRunHit = rep.warnings.find((w) => w.startsWith('T-029 ') && /不可复算/.test(w));
+    assert.ok(noRunHit, `应报出 T-029 不可复算；实际告警：\n${r.output}`);
+    assert.ok(noRunHit.includes('khy hq accept T-029 --run'), noRunHit);
+    assert.ok(!noRunHit.includes('--by'), `有判据只缺记录不该要人签名：${noRunHit}`);
+
+    const noneHit = rep.warnings.find((w) => w.startsWith('T-007 ') && /不可复算/.test(w));
+    assert.ok(noneHit, `应报出 T-007 不可复算；实际告警：\n${r.output}`);
+    assert.ok(noneHit.includes('没有完成定义'), noneHit);
+    assert.ok(noneHit.includes('khy hq accept T-007 --scaffold'), noneHit);
+    assert.ok(!noneHit.includes('--by'), `连定义都没有，谈不上签名：${noneHit}`);
+
+    assert.ok(
+      !rep.warnings.some((w) => w.startsWith('T-030 ') && /不可复算/.test(w)),
+      `过了门的 done 不该被报；实际告警：\n${r.output}`
+    );
+  } finally {
+    fs.rmSync(env.root, { recursive: true, force: true });
+  }
+});
+
 test('E2E accept 生成的未填模板必须过不了门（防「生成即完成」的形式主义）', () => {
   const env = newSandboxEnv();
   try {
@@ -544,6 +697,139 @@ test('auditAcceptancePaths 抓不存在路径、放过真实路径、不被中�
   assert.deepStrictEqual(cn, [], JSON.stringify(cn));
 });
 
+// ── 纯逻辑：布局迁移后的三类路径写法（2026-11-06 断点）──────────────
+//
+// 2026-10 布局迁移（services/backend → runtime/node/backend）后，只按仓库根
+// 解析把 14 条 finding 里的 13 条指向了确实存在的文件。三类合法写法都必须
+// 放过：子项目 cwd 相对（prose 形式）、迁移前旧根前缀、显式 (cwd: ...) 声明。
+
+test('auditAcceptancePaths 按声明 cwd / 旧布局根二次解析，真阳性不放过', () => {
+  // prose 声明：「（runtime/node/backend 下运行）」+ 子项目相对路径
+  const subRel = H.auditAcceptancePaths(
+    {
+      id: 'T-998',
+      acceptance:
+        'node --test tests/services/opencodeFreeChannels.test.js 18/18 通过（runtime/node/backend 下运行）',
+    },
+    REPO
+  );
+  assert.deepStrictEqual(subRel, [], JSON.stringify(subRel));
+
+  // 迁移前旧根前缀：services/backend/... → runtime/node/backend/...
+  const legacy = H.auditAcceptancePaths(
+    { id: 'T-998', acceptance: '4) 终点：services/backend/src/cli/replSession.js ≤800 行' },
+    REPO
+  );
+  assert.deepStrictEqual(legacy, [], JSON.stringify(legacy));
+
+  // 显式机读声明：路径只在被声明的 cwd 下存在（仓库根无 hq/ 目录）
+  const declared = H.auditAcceptancePaths(
+    { id: 'T-998', acceptance: '核对 hq/ROADMAP.md 的状态行 (cwd: works/record/ai)' },
+    REPO
+  );
+  assert.deepStrictEqual(declared, [], JSON.stringify(declared));
+
+  // 真阳性仍须报：.ai/MAP.md 确系改名，仓内另有两个同名文件但都不在仓库根，
+  // 按旧行为给「疑似改名」线索而不是静默放过。
+  const renamed = H.auditAcceptancePaths(
+    { id: 'T-004', acceptance: '.ai/MAP.md 目录树与仓库现状一致' },
+    REPO
+  );
+  assert.strictEqual(renamed.length, 1, JSON.stringify(renamed));
+  assert.ok(/works\/record\/ai\/MAP\.md/.test(renamed[0]), renamed[0]);
+
+  // 真缺失仍须报
+  const gone = H.auditAcceptancePaths(
+    { id: 'T-998', acceptance: '改 services/backend/src/nope/notHere.js' },
+    REPO
+  );
+  assert.strictEqual(gone.length, 1, JSON.stringify(gone));
+});
+
+// ── 纯逻辑：done 任务的验收路径失效必须升为 error ──────────────────
+//
+// 2026-11-06 断点：`review -> done` 的门只在翻转瞬间跑一次，通过后没有任何
+// 门禁级事后复核。实测 T-024（done）自称判据 4「auditAcceptancePaths 全量 0
+// 告警」，而同一次 verify 报出 14 条 acceptance 路径 warning —— 泛化 warning
+// 分不出「这条 finding 属于一条已 done 的任务」，error 与 warning 各自独立
+// 呈现，矛盾每次跑都复现，却没有 finding 把它点名。
+
+/** 最小 HQ 夹具：validateDataset(root) 的 repoRoot = root 上两级，故真实文件放 root 下。 */
+function minimalHq(root, tasks) {
+  const hq = path.join(root, 'hq');
+  fs.mkdirSync(hq, { recursive: true });
+  fs.cpSync(path.join(REAL_HQ, 'prompts'), path.join(hq, 'prompts'), { recursive: true });
+  fs.copyFileSync(path.join(REAL_HQ, 'MODELS.json'), path.join(hq, 'MODELS.json'));
+  fs.writeFileSync(path.join(hq, 'BUGS.json'), JSON.stringify({ bugs: [], next_id: 1 }));
+  fs.writeFileSync(path.join(hq, 'PROGRESS.json'), JSON.stringify({ tasks }));
+  fs.writeFileSync(path.join(root, 'alive.md'), '# 真实文件\n', 'utf8');
+  fs.writeFileSync(
+    path.join(hq, 'ROADMAP.md'),
+    '# ROADMAP\n\n| ID | 标题 | 类型 | 优先级 | 状态 |\n'
+      + tasks.map((t) => `| ${t.id} | ${t.title} | ${t.type} | ${t.priority} | ${t.status} |`).join('\n')
+      + '\n'
+  );
+  return hq;
+}
+
+const T900 = (status, ref) => ({
+  id: 'T-900',
+  title: '夹具',
+  domain: 'cli',
+  type: 'feature',
+  priority: 'P1',
+  status,
+  acceptance: `1) 改 ${ref} 全绿`,
+});
+
+test('validateDataset：done 任务 acceptance 路径失效 → error；todo 同类只 warning', () => {
+  const root = tmpDir();
+  try {
+    const hq = minimalHq(root, [
+      T900('done', 'gone/dead.js'),
+      Object.assign(T900('todo', 'gone/dead.js'), { id: 'T-901' }),
+      Object.assign(T900('done', 'alive.md'), { id: 'T-902' }),
+    ]);
+
+    const r = H.validateDataset(hq, {});
+
+    const doneErrs = r.errors.filter((e) => /T-900/.test(e));
+    assert.strictEqual(doneErrs.length, 1, JSON.stringify(r.errors, null, 2));
+    assert.ok(/该任务已 done/.test(doneErrs[0]), doneErrs[0]);
+    // 处方必须在场：只说「判据失效」不说怎么修，读数就退回不可行动 ——
+    // 那正是断点里「没有任何 finding 把它联系起来」的翻版。
+    assert.ok(/改指现存文件/.test(doneErrs[0]), doneErrs[0]);
+    assert.ok(/打回 review/.test(doneErrs[0]), doneErrs[0]);
+    // todo 的同一条死路径不许被升级 —— 升级会把「路标搬走」变成全表 error，
+    // 那正是原告警只做 warning 的理由（2026-09-23：文档改名是正常操作）。
+    assert.ok(r.warnings.some((w) => /T-901/.test(w)), JSON.stringify(r.warnings));
+    assert.ok(!r.errors.some((e) => /T-901/.test(e)), JSON.stringify(r.errors));
+    // done 但路径仍有效的任务不报
+    assert.ok(!r.errors.some((e) => /T-902/.test(e)), JSON.stringify(r.errors));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('validateDataset：done 任务路径全部仍有效 → 给一条 ✓ 复核读数', () => {
+  const root = tmpDir();
+  try {
+    const hq = minimalHq(root, [
+      Object.assign(T900('done', 'alive.md'), { id: 'T-900' }),
+      Object.assign(T900('done', 'alive.md'), { id: 'T-902' }),
+    ]);
+
+    const r = H.validateDataset(hq, {});
+
+    assert.ok(
+      r.checks.some((c) => /2 条 done 任务的验收判据路径复核通过/.test(c)),
+      JSON.stringify(r.checks)
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // ── 纯逻辑：todo→doing 边界锁（不 spawn，直查 _applyState 同源判据）──
 //
 // E2E 版本需要真实 git 状态，且 `_applyState` 在 handlers 层（有 IO）。
@@ -576,6 +862,8 @@ test('E2E todo→doing 未声明 scope_guard → 拒并指路（边界锁接线�
     assert.notStrictEqual(r.code, 0, `应被拒；输出：\n${r.output}`);
     assert.ok(r.output.includes('scope_guard'), r.output);
     assert.strictEqual(sandboxStatus(env, 'T-001'), 'todo', '被拒时状态必须不变');
+    const t2 = JSON.parse(fs.readFileSync(p, 'utf8')).tasks.find((x) => x.id === 'T-001');
+    assert.strictEqual(t2.started_at, undefined, '没过门就不得有开工戳');
   } finally {
     fs.rmSync(env.root, { recursive: true, force: true });
   }
@@ -613,7 +901,59 @@ test('E2E task note --scope 写入边界后 todo→doing 放行（锁可以被�
     const r2 = runCli(['hq', 'task', 'set', 'T-001', 'doing'], env.env, env.root);
     assert.strictEqual(r2.code, 0, `声明边界后应放行；输出：\n${r2.output}`);
     assert.strictEqual(sandboxStatus(env, 'T-001'), 'doing');
+    const t3 = JSON.parse(fs.readFileSync(p, 'utf8')).tasks.find((x) => x.id === 'T-001');
+    assert.match(t3.started_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, '过门即盖章');
+    assert.strictEqual(typeof t3.start_note_count, 'number', '开工基线入账');
   } finally {
     fs.rmSync(env.root, { recursive: true, force: true });
   }
+});
+
+// ── close 交付面：未测项必须逐条点名（2026-11-05 补）─────────────────
+//
+// `khy hq close` 曾只把交付面的 UNKNOWN 折成一句「N 项未测」，且该句在有 GAP 时
+// 整个不出现；人读到的只有 GAP 清单，未测项的 id/detail 无从下手。判定语义
+// （status 与 _combineVerdict）不变，这里只锁「未测被逐条带出」。
+
+const HQH = require('../../src/cli/handlers/hq.js');
+
+test('交付面裁决：UNKNOWN 逐条带出 id/title/detail，有 GAP 时也不被吞', () => {
+  const v = HQH._deliveryVerdict({
+    ok: true,
+    report: {
+      at: '2026-11-05T00:00:00.000Z',
+      source: 'cache',
+      counts: { PASS: 8, PARTIAL: 0, GAP: 1, UNKNOWN: 2 },
+      results: [
+        { id: 'D1', title: '仓库完整性', status: 'UNKNOWN', detail: '无 git 可用，无法遍历对象库' },
+        { id: 'D2', title: '发布物真实存在', status: 'GAP', detail: 'dist/ 缺 wheel,sdist' },
+        { id: 'D3', title: '新克隆零缺件', status: 'UNKNOWN', detail: '?? = 506 · D = 5' },
+      ],
+    },
+  });
+  assert.strictEqual(v.status, 'gap', '有 GAP 时状态语义不变（两轴判定不并入未测）');
+  assert.deepStrictEqual(v.gaps, ['D2 发布物真实存在']);
+  assert.deepStrictEqual(v.unknowns.map((u) => u.id), ['D1', 'D3']);
+  assert.strictEqual(v.unknowns[0].detail, '无 git 可用，无法遍历对象库', 'detail 是「为什么测不了」的唯一来源');
+  assert.match(v.reason, /1 项 GAP/);
+  assert.match(v.reason, /2 项未测（见下方清单）/, `有 GAP 时未测不得被吞：${v.reason}`);
+});
+
+test('交付面裁决：只有 UNKNOWN 时同样点名；无报告时不伪造清单', () => {
+  const only = HQH._deliveryVerdict({
+    ok: true,
+    report: {
+      counts: { UNKNOWN: 1 },
+      results: [{ id: 'D9', title: '端到端黄金路径', status: 'UNKNOWN', detail: '未接进发布门' }],
+    },
+  });
+  assert.strictEqual(only.status, 'unknown');
+  assert.deepStrictEqual(only.unknowns.map((u) => u.id), ['D9']);
+  assert.match(only.reason, /1 项未测/);
+
+  const missing = HQH._deliveryVerdict({ ok: false, reason: '无缓存报告（加 --run-delivery 现跑）' });
+  assert.strictEqual(missing.status, 'unknown');
+  assert.deepStrictEqual(missing.unknowns, []);
+  assert.deepStrictEqual(missing.gaps, []);
+  assert.strictEqual(missing.reason, '无缓存报告（加 --run-delivery 现跑）');
 });
