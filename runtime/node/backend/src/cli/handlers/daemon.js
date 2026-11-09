@@ -15,6 +15,9 @@
 const dm = require('../../services/daemonManager');
 const sp = require('../../services/sessionPersistence');
 const { foldOutput } = require('../toolDisplayPolicy');
+// 端口真源在 constants/serviceDefaults.js（LAYOUT-008）：帮助文本里的端口
+// 写死一份的话，改端口后这段提示会静默过期。
+const { AI_BACKEND_DEFAULT_PORT } = require('../../constants/serviceDefaults');
 
 /**
  * Handle daemon subcommands.
@@ -180,7 +183,7 @@ function _help(c) {
   console.log('');
   console.log(c.bold('  守护进程管理'));
   console.log('');
-  console.log(c.dim('    /daemon start [--port 9090]   启动守护进程'));
+  console.log(c.dim(`    /daemon start [--port ${AI_BACKEND_DEFAULT_PORT}]   启动守护进程`));
   console.log(c.dim('    /daemon stop                  停止守护进程'));
   console.log(c.dim('    /daemon status                查看运行状态'));
   console.log(c.dim('    /daemon restart               重启守护进程'));

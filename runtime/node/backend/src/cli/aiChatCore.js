@@ -23,6 +23,10 @@ const path = require('path');
 
 const runtime = require('../services/khyUpgradeRuntime');
 
+// 工具面治理单一真源：提示词侧与 wire 侧调同一个函数，保证「提示词广告的工具」与
+// 「本次请求真正发到线上的工具」永远是同一批（修复提示词按全注册表撒谎的根因）。
+const _effectiveToolSurface = require('../services/tool/effectiveToolSurface');
+
 const _chatState = require('./aiChatState');
 const {
   _isContextOverflowFailure,
@@ -1427,8 +1431,20 @@ async function chat(userMessage, opts = {}) {
   // model (e.g. a user-pinned reasoner) still emits a reasoning channel.
   const activeModelForThinking = requestPreferredModel || _getModelInfo().model || '';
   const isNativeThinking = _modelSupportsNativeThinking(activeModelForThinking);
+  const isThinkingVisible = () => !!_chatState.thinkingEnabled;
+  // Prompt-injected reasoning is synthesized below, so it never passes through
+  // effectiveOnChunk's display guard — route it through the same gate here,
+  // otherwise turning thinking display off still showed <think> content.
+  const forwardReasoningChunk = (chunk) => {
+    if (!isThinkingVisible() && chunk && chunk.type === 'thinking') {
+      return;
+    }
+    userOnChunk(chunk);
+  };
   const thinkInterceptedOnChunk =
-    !isNativeThinking && userOnChunk ? _createThinkTagInterceptor(userOnChunk) : userOnChunk;
+    !isNativeThinking && userOnChunk
+      ? _createThinkTagInterceptor(forwardReasoningChunk, { isThinkingVisible })
+      : userOnChunk;
 
   // When display is off, suppress thinking chunks from reaching the UI
   const effectiveOnChunk = thinkInterceptedOnChunk
@@ -1740,14 +1756,14 @@ async function chat(userMessage, opts = {}) {
         });
         const retrieval =
           typeof rag.buildRetrievalContext === 'function'
-            ? rag.buildRetrievalContext(processedMessage, { isFollowUp: false })
+            ? await rag.buildRetrievalContext(processedMessage, { isFollowUp: false })
             : null;
         ragMeta = retrieval?.meta || null;
         if (retrieval && retrieval.used && retrieval.context) {
           ragContext = String(retrieval.context || '').trim();
           onStatus({
             phase: 'init',
-            message: `步骤 3/5: RAG 检索完成 — 已注入 ${ragMeta?.selectedCount || 0} 条上下文`,
+            message: `步骤 3/5: RAG 检索完成 — 已注入 ${ragMeta?.selectedCount || 0} 条上下文${ragMeta?.vectorRerank ? '（嵌入重排）' : ''}`,
             elapsed: Date.now() - startTime,
           });
         } else {
@@ -2116,13 +2132,27 @@ async function chat(userMessage, opts = {}) {
         'Do NOT mention calculation, financial analysis, stock trading, or any specific tool.',
       ].join(' ');
     }
+    // 模型真实上下文窗口（适配器上报为真源）——同时喂给提示词瘦身与工具表 token 预算裁剪。
+    // 两侧必须用同一个数、同一个对象：窗口判错会让「提示词广告的工具」与「wire 上线的工具」
+    // 再次分家。注意必须写在 **chatOpts** 上——baseChatOpts 是 {...opts} 的副本(:1545)，
+    // 而 _gatewayGenerate 收到的是 chatOpts；写在 opts 上到不了 wire（实测踩过）。
+    const _ctxWindow = _resolveModelContextLimit(_guessModelHint(chatOpts));
+    chatOpts._contextWindow = _ctxWindow;
     let sp = await runtime.makeSystemPrompt(getSecurityDir(), _getModelInfo(), [], {
       userMessage,
       taskScale: taskScaleForPrompt,
-      // Resolved model window → lets makeSystemPrompt shrink the static prompt
-      // for short-context (small) models. Cheap cached gateway lookup; 0/unknown
-      // and large windows leave the prompt byte-identical to today.
-      contextWindow: _resolveModelContextLimit(_guessModelHint(chatOpts)),
+      // Model window → shrink the static prompt for short-context (small) models.
+      // 0/unknown and large windows leave the prompt byte-identical to today.
+      contextWindow: _ctxWindow,
+      // 本次请求真实上线的工具（与 wire 同一个治理函数、同一份 chatOpts）→ 提示词只广告
+      // 这些，不再按全注册表 185 个名字命令模型去调线上并不存在的 Agent/Skill/TodoWrite。
+      effectiveToolNames: _effectiveToolSurface.effectiveToolNames(
+        _effectiveToolSurface.computeEffectiveToolDefs(chatOpts)
+      ),
+      // Read-only sub-agents (agentDef.omitClaudeMd, agents/types.js:46) drop
+      // the project-instructions block; the flag arrives on chatOpts from the
+      // AgentTool spawn site.
+      omitProjectInstructions: chatOpts.omitProjectInstructions === true,
     });
     // Let the spinner tick after the (cached but still non-trivial) base
     // prompt assembly before the directive/memory segments run.
@@ -2530,7 +2560,9 @@ async function chat(userMessage, opts = {}) {
         if (_persistNoticeOn) {
           try {
             // 收件箱是可选的(经典 REPL 下无人订阅 ⇒ 返 false)⇒ 回落 onStatus。
-            _persisted = require('./tui/noticeInbox').push(payload.text) === true;
+            // 洋葱下沉：收件箱机制已归位到 utils/terminal/（通用发布订阅，
+            // 与「怎么渲染」无关）。直连逻辑侧，切断逻辑层 → 视觉皮的倒挂边。
+            _persisted = require('../utils/terminal/noticeInbox').push(payload.text) === true;
           } catch {
             /* 收件箱不可用 ⇒ 回落 onStatus */
           }
@@ -5156,8 +5188,10 @@ async function chat(userMessage, opts = {}) {
   // End-of-turn think finalize: if the model left an UNCLOSED <think> tag open
   // (e.g. it buried its answer inside reasoning, or max_tokens snipped the close),
   // fail open so buffered reasoning becomes visible text instead of a blank turn —
-  // but only when NO text ever streamed. Shows a raw reasoning dump is better than
-  // showing nothing. Runs once, after ALL passes, so it sees only the FINAL pass's
+  // but only when NO text ever streamed AND the thinking channel was hidden (when it
+  // was visible the user already read those deltas; re-emitting them as the answer
+  // duplicates the run). Shows a raw reasoning dump is better than showing nothing.
+  // Runs once, after ALL passes, so it sees only the FINAL pass's
   // interceptor state (a mid-loop tool continuation pass may legitimately re-open
   // thinking after the reply already streamed; we must not be fooled by that).
   if (thinkInterceptedOnChunk !== userOnChunk && typeof thinkInterceptedOnChunk.finalize === 'function') {

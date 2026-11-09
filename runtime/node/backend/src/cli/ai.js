@@ -421,22 +421,34 @@ const COT_INJECTION_PROMPT = [
  * Wraps an onChunk callback to intercept <think>...</think> tags from text chunks
  * and re-emit them as { type: 'thinking' } chunks for TUI display.
  *
- * The returned function carries a `finalize()` method that MUST be called once the
- * stream ends. CoT here is prompt-injected (COT_INJECTION_PROMPT), not a native
- * reasoning channel, so the closing tag is never guaranteed: a model can simply
- * forget it, or max_tokens can truncate mid-reasoning. Without finalize() such a
- * turn stays `insideThink` forever and every character lands in the thinking
- * channel — the user sees only "💭 思考 · N 字" and an empty answer, even though
- * the model did reply. finalize() fails OPEN: if the tag never closed and the text
- * channel emitted nothing at all, the buffered content is released as text.
- * Showing raw reasoning is bad; showing a blank turn is worse.
+ * Reasoning deltas are emitted as they arrive; the whole run is also kept aside
+ * as a fail-open copy. CoT here is prompt-injected (COT_INJECTION_PROMPT), not a
+ * native reasoning channel, so the closing tag is never guaranteed: a model can
+ * simply forget it, or max_tokens can truncate mid-reasoning. The returned
+ * function carries a `finalize()` method that MUST be called once the stream
+ * ends. finalize() releases the copy as text only when the tag never closed, no
+ * answer text streamed, AND the thinking channel was not visible — otherwise the
+ * same run would render twice (once as thinking, once as the answer).
+ *
+ * Showing raw reasoning is bad; showing a blank turn is worse; showing it twice
+ * is worst.
  */
-function _createThinkTagInterceptor(originalOnChunk) {
+function _createThinkTagInterceptor(originalOnChunk, options = {}) {
   let insideThink = false;
   let tagBuffer = '';
   let emittedText = false;
+  // Whole reasoning run seen so far. Kept as the fail-open copy only — the live
+  // deltas are emitted as they arrive (see flushThink), never deferred to the
+  // closing tag, because a long <think> block used to leave the UI blank for the
+  // entire reasoning phase and then dump it in one piece.
   let pendingThink = '';
   let lastChunkMeta = null;
+  // Fail-open is only safe when the reasoning was never actually shown: if the
+  // thinking channel is displayed, the user already saw it and re-emitting the
+  // same run as answer text would duplicate it. Caller knows the display state,
+  // the interceptor does not.
+  const isThinkingVisible =
+    typeof options.isThinkingVisible === 'function' ? options.isThinkingVisible : () => true;
   // Models honouring COT_INJECTION_PROMPT emit either the short `<think>` form we
   // ask for or the long `<thinking>` form they were trained on (QWEN does the
   // latter). Recognising only the short form left the whole reasoning block in the
@@ -483,17 +495,16 @@ function _createThinkTagInterceptor(originalOnChunk) {
     function flushThink() {
       if (thinkBuf) {
         pendingThink += thinkBuf;
+        if (originalOnChunk) {
+          originalOnChunk({ ...lastChunkMeta, type: 'thinking', text: thinkBuf });
+        }
         thinkBuf = '';
       }
     }
 
     function commitThink() {
-      if (pendingThink) {
-        if (originalOnChunk) {
-          originalOnChunk({ ...lastChunkMeta, type: 'thinking', text: pendingThink });
-        }
-        pendingThink = '';
-      }
+      // The run is well-formed and already streamed; drop the fail-open copy.
+      pendingThink = '';
     }
 
     while (i < text.length) {
@@ -559,14 +570,14 @@ function _createThinkTagInterceptor(originalOnChunk) {
   interceptedOnChunk.finalize = function finalize() {
     if (insideThink && pendingThink) {
       /**
-       * Stream ended with <think> still open. Fail OPEN: only when the text
-       * channel never emitted anything do we release the buffered reasoning as
-       * text, so the user gets *some* reply. If some text already streamed (the
-       * model answered and then thought again, or emitted partial prose), keep
-       * the reasoning hidden — a blank turn is worse than raw thinking, but
-       * duplicating/interspersing reasoning between real answer text is worse.
+       * Stream ended with <think> still open. Fail OPEN only when the reasoning
+       * was never visible downstream: the deltas were already emitted as they
+       * arrived, so if the user could see them, re-releasing the same run as
+       * answer text would print the reasoning twice. When thinking display is
+       * off (chunks swallowed upstream), the buffer is the only copy the user
+       * would get — there a blank turn is the worse failure.
        */
-      if (!emittedText && originalOnChunk) {
+      if (!emittedText && !isThinkingVisible() && originalOnChunk) {
         originalOnChunk({ ...lastChunkMeta, type: 'text', text: pendingThink });
       }
       pendingThink = '';
@@ -659,6 +670,9 @@ module.exports = {
   resumeLastPersistedSession: _aiSession.resumeLastPersistedSession,
   scopeSession: _aiSession.scopeSession,
   getLiveSessionId: _aiSession.getLiveSessionId,
+  // 会话来源标记（[DESIGN-ARCH-183] §4）：触发点标记 → 落盘时消费。
+  setPendingSessionSource: _aiSession.setPendingSessionSource,
+  clearPendingSessionSource: _aiSession.clearPendingSessionSource,
   autoResumeLastSession: _aiSession.autoResumeLastSession,
   loadProjectMemoryContext: _aiSession.loadProjectMemoryContext,
   setEffort,

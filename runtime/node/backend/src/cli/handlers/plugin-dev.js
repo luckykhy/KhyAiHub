@@ -1473,6 +1473,7 @@ function printPluginHelp() {
   console.log(`    ${chalk.cyan('plugin doctor --json')} 输出机器可读 JSON（适合集成 CI）`);
   console.log(`    ${chalk.cyan('plugin doctor --strict')} warnings 也视为失败（退出码非 0）`);
   console.log(`    ${chalk.cyan('plugin list')}          列出插件并显示质量状态(health/bad)`);
+  console.log(`    ${chalk.cyan('plugin market [eco]')}  查看生态市场快照（静态 + 实时来源 + 已安装）`);
   console.log(`    ${chalk.cyan('plugin link [dir]')}    为本地开发链接插件（符号链接）`);
   console.log(`    ${chalk.cyan('plugin unlink <name>')} 移除开发用的符号链接`);
   console.log('');

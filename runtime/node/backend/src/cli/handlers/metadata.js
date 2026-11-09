@@ -3,7 +3,7 @@
 /**
  * metadata handler — `khy metadata …`
  *
- * 手动生成/校验项目可维护性元数据（`.ai/` 种子文档）。与 agent 自动生成共用
+ * 手动生成/校验项目可维护性元数据（`works/record/ai/` 种子文档）。与 agent 自动生成共用
  * 同一确定性生成器（projectMetadataService），供以下场景：
  *   - 给"AI 自动生成之前就已存在"的老项目补元数据。
  *   - CI/提交前强制门禁：`khy metadata check` 缺元数据时退出非零。
@@ -11,10 +11,10 @@
  *
  *   khy metadata               等同 gen（对当前目录生成，已存在则跳过）
  *   khy metadata gen [--force] [path]
- *   khy metadata refresh [--force] [path]  随项目变化就地更新（非破坏，人工 .ai/ 只刷新派生骨架）
+ *   khy metadata refresh [--force] [path]  随项目变化就地更新（非破坏，人工 works/record/ai/ 只刷新派生骨架）
  *   khy metadata check [path]   缺失或 stale 时退出非零（CI 门禁）
  *   khy metadata show [path]    打印元数据位置与状态
- *   khy metadata link [path]    让 AI 入口文件(AGENTS/CLAUDE/copilot/cursor…)指向 .ai/
+ *   khy metadata link [path]    让 AI 入口文件(AGENTS/CLAUDE/copilot/cursor…)指向 works/record/ai/
  *   khy metadata hook <install|uninstall|status> [path]  装/卸 git pre-commit 自动刷新钩子
  *
  * 别名：meta。
@@ -130,7 +130,7 @@ async function handleMetadata(parsed = {}) {
       printInfo('补齐：khy metadata gen');
     } else {
       printError(
-        `元数据已过期（结构已变更）：${root}/.ai/${status.mode === 'skeleton' ? 'SKELETON.auto.md' : 'MAP.md'}`
+        `元数据已过期（结构已变更）：${root}/works/record/ai/${status.mode === 'skeleton' ? 'SKELETON.auto.md' : 'MAP.md'}`
       );
       printInfo('更新：khy metadata refresh');
     }
@@ -145,7 +145,7 @@ async function handleMetadata(parsed = {}) {
     for (const f of ['MAP.md', 'CONTEXT.yaml', 'GUARDS.md', 'SKELETON.auto.md', '.metahash.json']) {
       const p = path.join(aiDir, f);
       const exists = fs.existsSync(p);
-      console.log(`    ${exists ? '✓' : '✗'} .ai/${f}${exists ? '' : '（缺失）'}`);
+      console.log(`    ${exists ? '✓' : '✗'} works/record/ai/${f}${exists ? '' : '（缺失）'}`);
     }
     if (status.exists) {
       console.log(
@@ -162,7 +162,7 @@ async function handleMetadata(parsed = {}) {
 
   if (sub === 'link') {
     const pointers = require('../../services/metadataPointers');
-    printInfo(`让 AI 入口文件指向 .ai/ → ${root}`);
+    printInfo(`让 AI 入口文件指向 works/record/ai/ → ${root}`);
     const r = pointers.linkAgentPointers(root, { log: (msg) => console.log(`    ${msg}`) });
     if (!r.ok) {
       printError(`未写入：${r.reason || 'unknown'}`);
@@ -180,13 +180,13 @@ async function handleMetadata(parsed = {}) {
     if (!r.written.length && !r.unchanged.length) {
       printWarn('无入口文件被处理（检查 KHY_META_POINTER_TARGETS）。');
     }
-    printInfo('此后 Claude Code/Codex/Cursor/Copilot 等会经各自入口文件读到 .ai/ 种子文档。');
+    printInfo('此后 Claude Code/Codex/Cursor/Copilot 等会经各自入口文件读到 works/record/ai/ 种子文档。');
     return true;
   }
 
   if (sub === 'refresh') {
     const force = options.force === true || args.includes('--force');
-    printInfo(`刷新可维护性元数据 → ${root}/.ai/`);
+    printInfo(`刷新可维护性元数据 → ${root}/works/record/ai/`);
     const result = await svc.refreshProjectMetadata(root, {
       force,
       log: (msg) => console.log(`    ${msg}`),
@@ -214,7 +214,7 @@ async function handleMetadata(parsed = {}) {
 
   // gen（默认）
   const force = options.force === true || args.includes('--force');
-  printInfo(`生成可维护性元数据 → ${root}/.ai/`);
+  printInfo(`生成可维护性元数据 → ${root}/works/record/ai/`);
   const result = await svc.generateProjectMetadata(root, {
     force,
     log: (msg) => console.log(`    ${msg}`),
@@ -256,7 +256,7 @@ function handleHook(args, { printInfo, printSuccess, printError, printWarn }) {
     const r = hookSvc.installHook(startDir);
     if (r.ok) {
       printSuccess(`pre-commit 钩子已${r.action === 'updated' ? '更新' : '安装'}：${r.preCommit}`);
-      printInfo('此后每次 git commit 都会确定性刷新 .ai/ 元数据并自动入暂存——无需 AI。');
+      printInfo('此后每次 git commit 都会确定性刷新 works/record/ai/ 元数据并自动入暂存——无需 AI。');
       return true;
     }
     if (r.action === 'not_a_repo') {
@@ -316,7 +316,7 @@ module.exports = {
   [MANIFEST_EXPORT_KEY]: {
     name: 'metadata',
     aliases: ['meta', '元数据'],
-    description: '项目可维护性元数据（.ai/ 种子文档）：生成/刷新/检查/展示/链接',
+    description: '项目可维护性元数据（works/record/ai/ 种子文档）：生成/刷新/检查/展示/链接',
     usage: 'metadata [gen|refresh|check|show|link|hook|help]',
     subCommands: ['gen', 'refresh', 'check', 'show', 'link', 'hook', 'help'],
     category: 'dev',

@@ -107,15 +107,18 @@ async function handleGatewayConfig(options = {}) {
     process.stdout &&
     process.stdout.isTTY
   );
-  // P1-12: `actions` stays the FULL catalog (same 12 items, same values, same
-  // order) because it is the machine-facing contract of `--json` — downstream
-  // consumers read it. The interactive menu below is a separate, beginner-first
+  // P1-12: `actions` stays the FULL catalog (13 items, same values, same order)
+  // because it is the machine-facing contract of `--json` — downstream consumers
+  // read it. The interactive menu below is a separate, beginner-first
   // presentation built from the same values.
   const actions = [
     { label: '配置网络代理 (Clash/HTTP)', value: 'proxy-config' },
     { label: '设置 CLI 工具桥接 (开/关)', value: 'cli-toggle' },
     { label: '配置 Ollama 本地模型', value: 'ollama-config' },
     { label: '配置 API 中转 (Claude/GPT 中转站)', value: 'relay-api' },
+    // 识图端点与中转是两件事：中转决定「谁回答」，识图端点决定「谁看图片」。
+    // 推理模型没有视觉能力时，图片由这里配的模型描述、再由推理模型作答。
+    { label: '配置识图端点 (视觉模型只当眼睛)', value: 'vision-config' },
     { label: '配置模型厂商 API Key (DeepSeek/Qwen/GLM/豆包等)', value: 'provider-keys' },
     { label: '高级: 模型路由规则（按模型指定走哪条通道）', value: 'routing-policy' },
     { label: '高级: Key 选择策略（多个 Key 之间怎么轮询）', value: 'key-strategy' },
@@ -136,6 +139,7 @@ async function handleGatewayConfig(options = {}) {
     },
     { label: '配置 Ollama 本地模型', value: 'ollama-config' },
     { label: '配置 API 中转 (Claude/GPT 中转站)', value: 'relay-api' },
+    { label: '配置识图端点 (视觉模型只当眼睛)', value: 'vision-config' },
   ];
   const moreActions = [
     { label: '配置网络代理 (Clash/HTTP)', value: 'proxy-config' },
@@ -168,7 +172,7 @@ async function handleGatewayConfig(options = {}) {
             action: 'config',
             interactive: false,
             requiresTTY: true,
-            // menu = 全量目录（12 项，value 与顺序均未变，下游可继续消费）；
+            // menu = 全量目录（13 项，value 与顺序对下游保持只增不改）；
             // menuLayout = 新手视角的呈现顺序（含 JSON 菜单里没有的两个
             // 呈现级入口 free-tier / more）。
             menu: actions,
@@ -665,6 +669,29 @@ async function handleGatewayConfig(options = {}) {
         } catch (e) {
           printError(`测试错误: ${e.message}`);
         }
+      }
+      return;
+    }
+
+    if (action === 'vision-config') {
+      // 经 commandAutoRegistry 分发，**不静态 require ./visionConfigEditor**。
+      // 两条理由：
+      // ① 单一实现：菜单项与 `khy vision config` 走同一个 manifest handler，
+      //    不会出现「菜单里能写、命令行里不能写」两份逻辑。
+      // ② 架构债：visionConfigEditor 依赖 formatters 与管理漏斗，二者都在那个
+      //    200 成员的强连通分量里。gatewayConfigEditor 也在环内，一旦静态 require
+      //    它就多一条回边、把新叶子也拉进环中（archDebtScan 的 R3 棘轮会报新增债）。
+      //    commandAutoRegistry 是运行期按文件名动态加载的，静态扫描看不见这条边。
+      const { dispatch } = require('../commandAutoRegistry');
+      const out = await dispatch('vision', {
+        parsed: { subCommand: 'config', args: [], options: {} },
+        printError,
+        printInfo,
+        printSuccess,
+        printWarn,
+      });
+      if (!out.handled) {
+        printError('识图端点配置入口未能加载（vision 命令未注册）');
       }
       return;
     }

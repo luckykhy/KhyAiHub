@@ -376,7 +376,9 @@ function _resolveGatewayStatusTerminalWidth() {
       return Math.max(33, Math.floor(n));
     }
   }
-  return Math.max(33, Number(require('../tui/effectiveCols').effectiveCols(80)));
+  // 洋葱下沉：终端尺寸真源已从 cli/tui/ 归位到 utils/terminal/（通用能力，
+  // 非视觉皮专属）。直连逻辑侧，切断「逻辑层 → 视觉皮」的倒挂边。
+  return Math.max(33, Number(require('../../utils/terminal/effectiveCols').effectiveCols(80)));
 }
 
 function _buildGatewayStatusColumnWidths() {

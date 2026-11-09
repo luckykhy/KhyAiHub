@@ -30,6 +30,9 @@ const os = require('os');
 const chalk = require('chalk');
 
 const { printError, printInfo, printSuccess, printWarn } = require('../formatters');
+// 端口真源在 constants/serviceDefaults.js（LAYOUT-008）：示例里的端口写死一份的话，
+// 改端口后这段提示会静默过期。
+const { AI_BACKEND_DEFAULT_PORT } = require('../../constants/serviceDefaults');
 
 const DEFAULT_ENTRY_PATH = '/admin/ai-gateway';
 
@@ -95,14 +98,16 @@ function resolveTargetUrl(tokens, options, lanIp) {
 
   // 4) default → management server port + entry path
   let port;
+  // 端口真源在 constants/serviceDefaults.js（LAYOUT-008）；此处不再另写一份字面量。
+  const { AI_BACKEND_DEFAULT_PORT } = require('../../constants/serviceDefaults');
   try {
     const mgmt = require('../../services/aiManagementServer');
     port =
       mgmt.isRunning && mgmt.isRunning() && mgmt.getPort
         ? mgmt.getPort()
-        : parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+        : parseInt(process.env.AI_MGMT_PORT, 10) || AI_BACKEND_DEFAULT_PORT;
   } catch {
-    port = parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+    port = parseInt(process.env.AI_MGMT_PORT, 10) || AI_BACKEND_DEFAULT_PORT;
   }
   const normPath = path.startsWith('/') ? path : `/${path}`;
   return `http://${lanIp}:${port}${normPath}`;
@@ -274,9 +279,9 @@ async function handleMobile(subCommand, args = [], options = {}) {
     printError('未检测到局域网 IPv4 地址。请确认已连接 Wi-Fi/有线网络，或显式指定：');
     // 三条示例是上面 printError 表头的缩进续行,不是独立通知:走 printInfo 会各吃一个
     // 「  i 」信息符(竖排三个 i),且参数前导空格会被挤到子弹之后、破坏嵌套。改走裸 console.log。
-    console.log('    khy mobile <端口>            例如 khy mobile 9090');
-    console.log('    khy mobile <主机:端口>       例如 khy mobile 192.168.1.9:9090');
-    console.log('    khy mobile <完整URL>         例如 khy mobile http://192.168.1.9:9090');
+    console.log(`    khy mobile <端口>            例如 khy mobile ${AI_BACKEND_DEFAULT_PORT}`);
+    console.log(`    khy mobile <主机:端口>       例如 khy mobile 192.168.1.9:${AI_BACKEND_DEFAULT_PORT}`);
+    console.log(`    khy mobile <完整URL>         例如 khy mobile http://192.168.1.9:${AI_BACKEND_DEFAULT_PORT}`);
     return true;
   }
 

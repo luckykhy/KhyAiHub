@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-135-MKYGPSW2
 /**
  * Command Alias Registry
  *
@@ -137,6 +138,12 @@ const ALIAS_MAP = {
   runtimeinstall: { command: 'runtime', subCommand: 'install' },
   验证运行时: { command: 'runtime', subCommand: 'verify' },
   runtimeverify: { command: 'runtime', subCommand: 'verify' },
+
+  // ── 开发环境 (盘点/安装/清单导出导入, handlers/devenv.js 自注册) ──
+  开发环境: { command: 'devenv' },
+  环境管理: { command: 'devenv' },
+  huanjing: { command: 'devenv' },
+  'dev-env': { command: 'devenv' },
 
   // ── 轨迹溯源查看 (DESIGN-ARCH-047) ──
    轨迹: { command: 'trace', subCommand: 'show' },

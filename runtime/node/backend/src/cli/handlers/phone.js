@@ -51,10 +51,10 @@ function _config() {
 
 /**
  * 只读探一眼同机另一条桥（KhyOS ↔ amoon，18765）。**绝不启动它、绝不影响本命令的
- * 成功与否**：读不到就是「未安装」，读到 runtime 但 /health 不通就是「未运行」。
+ * 成功与否**：读不到就是「未安装」，runtime.json 在但 /health 不通就是「未运行」。
  * 那段没跑，`khy phone` 的 8896 通道照样完整可用——这正是两段独立的意思。
  */
-function _probeAmoonSegment() {
+async function _probeAmoonSegment() {
   const fs = require('fs');
   const os = require('os');
   const path = require('path');
@@ -71,6 +71,10 @@ function _probeAmoonSegment() {
   } catch {
     return { installed: true, running: false, error: '没有 runtime.json' };
   }
+  const port = runtime && Number(runtime.port) > 0 ? Number(runtime.port) : 0;
+  if (!port) {
+    return { installed: true, running: false, error: 'runtime.json 里没有端口' };
+  }
   let capability = 'unverified';
   try {
     const cap = JSON.parse(fs.readFileSync(path.join(home, 'capability.json'), 'utf8'));
@@ -80,12 +84,45 @@ function _probeAmoonSegment() {
   } catch {
     /* 没有能力记录就是 unverified，不是错误 */
   }
-  return {
-    installed: true,
-    running: Boolean(runtime && Number(runtime.port) > 0),
-    port: runtime && Number(runtime.port) > 0 ? Number(runtime.port) : undefined,
-    capability,
-  };
+  // runtime.json 只是「曾经启动过」的痕迹，不等于进程还活着。探一次 /health，
+  // 否则会把一个已经死掉的 daemon 说成「运行中」——那正是这套桥一贯要避免的谎报。
+  const health = await _probeLoopbackHealth(port);
+  if (!health.ok) {
+    return {
+      installed: true,
+      running: false,
+      port,
+      capability,
+      error: `runtime.json 在，但 /health 不通（${health.error}）`,
+    };
+  }
+  return { installed: true, running: true, port, capability };
+}
+
+/** 探一次 loopback /health；只认 200，其它（含连不上）一律算不通。 */
+function _probeLoopbackHealth(port) {
+  const http = require('node:http');
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (result) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    const req = http.request(
+      { host: '127.0.0.1', port, path: '/health', method: 'GET', timeout: 2000 },
+      (res) => {
+        res.resume();
+        done({ ok: res.statusCode === 200, error: `HTTP ${res.statusCode}` });
+      },
+    );
+    req.on('timeout', () => {
+      req.destroy();
+      done({ ok: false, error: '超时' });
+    });
+    req.on('error', (err) => done({ ok: false, error: err && err.message ? err.message : '连接失败' }));
+    req.end();
+  });
 }
 
 function _printFailure(res, fallback) {
@@ -119,7 +156,7 @@ async function _status() {
     _printFailure(res, '读不到桥状态。');
     printInfo('可用 khy phone probe 看服务心跳，用 khy phone revive 把桥拉回来。');
     // 8896 这段失败不代表整条链失败：amoon 那段可能仍然健康，如实分开报。
-    printInfo(plan.renderChainText({ amoon: _probeAmoonSegment() }));
+    printInfo(plan.renderChainText({ amoon: await _probeAmoonSegment() }));
     return true;
   }
   printSuccess('手机桥接在线');
@@ -132,7 +169,7 @@ async function _status() {
       tokenError: token.error,
     })
   );
-  printInfo(plan.renderChainText({ amoon: _probeAmoonSegment() }));
+  printInfo(plan.renderChainText({ amoon: await _probeAmoonSegment() }));
   return true;
 }
 
@@ -182,26 +219,44 @@ async function _probe() {
 async function _tools() {
   const bridge = _facade();
   const client = bridge.getPhoneBridgeClient(process.env);
-  // 可用性以桥自报的 ui 字段为准：status.json 每 2s 重写，probe 读它不碰 HTTP。
-  // 读不到桥（未连/未起）时才回落为「未报告」——不再把「没探过」说成「没有」。
+  // 可用性以桥自报的字段为准：probe 读 status.json，不碰 HTTP。读不到桥（未连/未起）
+  // 时才回落为「未报告」——不再把「没探过」说成「没有」。
   const live = await client.probe();
   const uiAvailable = live.ok === true && live.uiAvailable === true;
+  // 助手协同（Amoo 反代）组三态：true=桥报可用；false=桥报 withheld（缺对应 App）；
+  // null=桥没报到（未连/未起/旧版）。null 与 false 必须分开——把「桥没报到」渲染成
+  // 「缺 Amoo App」是另一种说谎，口径与上面 ui 字段对旧版桥的处理一致。
+  const assistantAvailable = live.ok === true ? live.assistantAvailable : null;
+  const relayNames = new Set(bridge.ASSISTANT_RELAY_TOOL_NAMES);
+  const allDefs = bridge.listKhyToolDefinitions();
+  const relayDefs = allDefs.filter((d) => relayNames.has(d.bridgeName));
+  const assistantWithheld = assistantAvailable === false;
   printInfo(
     plan.renderToolListText({
-      tools: bridge.listKhyToolDefinitions(),
+      tools: assistantWithheld
+        ? allDefs.filter((d) => !relayNames.has(d.bridgeName))
+        : allDefs,
       unavailableUiTools: uiAvailable ? [] : bridge.getPhoneBridgeUiTools(),
       unavailableUiReason: uiAvailable ? '' : bridge.ACCESSIBILITY_GAP_REASON,
+      unavailableAssistantTools: assistantWithheld ? relayDefs.map((d) => d.bridgeName) : [],
+      unavailableAssistantReason: assistantWithheld ? bridge.ASSISTANT_GAP_REASON : '',
     })
   );
+  if (live.ok === true && assistantAvailable === null) {
+    // 桥在线但没报这组的状态：如实说「未知」，不据此判断 Amoo 装没装。
+    printInfo(`桥未报告这 ${relayDefs.length} 项的状态（未连/未起），不据此判断 Amoo 装没装。`);
+  }
   return true;
 }
 
 async function _setup() {
   const bridge = _facade();
   const resolved = await bridge.getPhoneBridgeClient(process.env).detectSerial();
+  const fallback = _config();
   printInfo(plan.renderSetupText({
     grants: bridge.listGrants(),
-    serial: resolved.ok === true ? resolved.serial : _config().serial,
+    serial: resolved.ok === true ? resolved.serial : fallback.serial,
+    serialSource: resolved.ok === true ? resolved.serialSource : (fallback.serialSource || 'env'),
   }));
   return true;
 }
@@ -243,6 +298,132 @@ async function _devices() {
   printSuccess(`adb 看到 ${devices.length} 个设备`);
   for (const device of devices) {
     printInfo(`  ${device.serial}（${device.state || '状态未知'}）`);
+  }
+  return true;
+}
+
+/**
+ * 把设备上的文件拉到主机。桥的 HTTP 面只回文本，二进制（图片/视频/音频）只能
+ * 走 adb pull；这条通道是「把手机变成开发机 / 采集各类数据」的基础原语。
+ * @param {object} parsed parsePhoneArgv 的结果
+ * @returns {Promise<boolean>}
+ */
+async function _pull(parsed) {
+  const client = _facade().getPhoneBridgeClient(process.env);
+  const remotePath = String(parsed.remotePath || '');
+  const localPath = parsed.localPath
+    ? String(parsed.localPath)
+    : path.join(process.cwd(), path.basename(remotePath));
+  printInfo(`拉取 ${remotePath} → ${localPath}`);
+  const res = await client.pullFile({ remotePath, localPath });
+  if (!res.ok) {
+    _printFailure(res, '拉取失败。');
+    return true;
+  }
+  const size = Number(res.bytes);
+  printSuccess(
+    `已拉取 ${remotePath} → ${localPath}`
+    + (Number.isFinite(size) ? `（${(size / 1048576).toFixed(1)} MB）` : '')
+  );
+  return true;
+}
+
+/**
+ * 只列清单不下载。视频动辄几百 MB，先看有什么再决定采不采。
+ * @param {object} parsed parsePhoneArgv 的结果
+ * @returns {Promise<boolean>}
+ */
+async function _scan(parsed) {
+  const bridge = _facade();
+  const client = bridge.getPhoneBridgeClient(process.env);
+  const types = Array.isArray(parsed.types) ? parsed.types : [];
+  const since = String(parsed.since || '');
+  printInfo(
+    `枚举 ${parsed.remoteDir}`
+    + (types.length ? `（类型：${types.join('/')}）` : '（类型：全部）')
+    + (since ? `（时间窗：${since}）` : ''),
+  );
+  const res = await client.scanFiles({
+    remoteDir: parsed.remoteDir,
+    types,
+    sinceMs: bridge.parseSince(since),
+  });
+  if (!res.ok) {
+    _printFailure(res, '枚举失败。');
+    return true;
+  }
+  if (res.entries.length === 0) {
+    printWarn('没有符合条件文件（清单为空，见 skipped 原因分类）。');
+  }
+  for (const item of res.entries) {
+    const size = Number(item.bytes);
+    printInfo(
+      `  ${item.type.padEnd(5)} ${(Number.isFinite(size) ? `${(size / 1048576).toFixed(1)} MB` : '大小未知').padStart(10)}`
+      + `  ${item.remotePath}`,
+    );
+  }
+  const counts = Object.entries(res.counts || {}).map(([t, n]) => `${t} ${n}`).join('，') || '无';
+  printSuccess(`可采 ${res.entries.length} 个（${counts}），跳过 ${res.skipped.length} 个`);
+  if (res.sinceUnknown > 0) {
+    printWarn(`${res.sinceUnknown} 个文件没有修改时间（设备无 stat），无法判定时间窗，已一并列入`);
+  }
+  return true;
+}
+
+/**
+ * 把主机文件推到手机。pull 的对向——「手机当开发机」的另一半回路。
+ * @param {object} parsed parsePhoneArgv 的结果
+ * @returns {Promise<boolean>}
+ */
+async function _push(parsed) {
+  const client = _facade().getPhoneBridgeClient(process.env);
+  const localPath = String(parsed.localPath || '');
+  const remotePath = String(parsed.remotePath || '');
+  printInfo(`推送 ${localPath} → ${remotePath}`);
+  const res = await client.pushFile({ localPath, remotePath });
+  if (!res.ok) {
+    _printFailure(res, '推送失败。');
+    return true;
+  }
+  printSuccess(`已推送 ${localPath} → ${remotePath}（${(res.bytes / 1048576).toFixed(1)} MB）`);
+  return true;
+}
+
+/**
+ * 按类型批量采集。枚举 → 筛类型 → 逐个拉 → 落清单；被跳过的也要报出来，
+ * 否则「采完了」这句话是假的。
+ * @param {object} parsed parsePhoneArgv 的结果
+ * @returns {Promise<boolean>}
+ */
+async function _collect(parsed) {
+  const bridge = _facade();
+  const client = bridge.getPhoneBridgeClient(process.env);
+  const types = Array.isArray(parsed.types) ? parsed.types : [];
+  const since = String(parsed.since || '');
+  printInfo(
+    `采集 ${parsed.remoteDir} → ${parsed.localDir}`
+    + (types.length ? `（类型：${types.join('/')}）` : '（类型：全部）')
+    + (since ? `（时间窗：${since}）` : ''),
+  );
+  const res = await client.collectFiles({
+    remoteDir: parsed.remoteDir,
+    localDir: parsed.localDir,
+    types,
+    sinceMs: bridge.parseSince(since),
+  });
+  if (!res.ok) {
+    _printFailure(res, '采集失败。');
+    return true;
+  }
+  const manifest = res.manifest;
+  const counts = Object.entries(manifest.counts || {})
+    .map(([type, n]) => `${type} ${n}`).join('，') || '无';
+  printSuccess(
+    `已采集 ${manifest.files.length} 个文件（${counts}），共 ${(res.totalBytes / 1048576).toFixed(1)} MB`
+    + `，清单：${path.join(parsed.localDir, 'manifest.json')}`,
+  );
+  if (manifest.skipped.length > 0) {
+    printWarn(`跳过 ${manifest.skipped.length} 个（原因见清单 skipped 字段）`);
   }
   return true;
 }
@@ -391,6 +572,14 @@ async function handlePhone(subCommand, args = [], options = {}) {
       return _connect();
     case 'devices':
       return _devices();
+    case 'pull':
+      return _pull(parsed);
+    case 'push':
+      return _push(parsed);
+    case 'collect':
+      return _collect(parsed);
+    case 'scan':
+      return _scan(parsed);
     default:
       return _call(parsed);
   }
@@ -402,7 +591,7 @@ module.exports = {
     name: 'phone',
     aliases: ['手机桥接'],
     description: '调用手机上 StepBridge 的桥接面（状态/工具/调用/授权/恢复）',
-    usage: 'phone [status|ping|probe|tools|call <工具> [json]|setup|revive|connect|devices|help]',
+    usage: 'phone [status|ping|probe|tools|call <工具> [json]|pull <设备路径> [主机路径]|push <主机文件> <设备路径>|collect <设备目录> <主机目录> [类型]|scan <设备目录> [类型] [时间窗]|setup|revive|connect|devices|help]',
     subCommands: plan.ACTIONS,
     category: 'system',
     handler: async (parsed) => handlePhone(parsed.subCommand, parsed.args, parsed.options),

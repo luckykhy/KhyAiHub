@@ -110,6 +110,45 @@ function _isTrivialGreetingSession(messages) {
   return !!last && last.role === 'assistant' && typeof last.content === 'string';
 }
 
+// ── Pending session source ([DESIGN-ARCH-183] §4) ────────────────────────
+// 会话来源（定时任务 / 闲时任务 / 手动会话）在**落库那一刻**标记，写进
+// metadata.source；分组读时直接用，不靠标题猜。
+//
+// 为什么是「pending」而不是参数：会话落盘发生在对话链路内部（_persistLiveSession），
+// 而触发点在链路外部（cron 调度器 / 桌面端 host）。把来源在触发点存一份、下一次
+// 落盘时取走，是唯一不必把来源参数穿过整条 chat 栈的形状。
+//
+// 语义：取走即清（consume），避免同一个来源标记被下一次无关会话继承。
+let _pendingSource = null;
+
+/**
+ * 标记「下一个落盘会话的来源」。
+ * @param {{type?: string, id?: string|number}|null} source
+ *   type: 'automation' | 'offpeak' | 'manual'（未知类型按 manual 处理）
+ */
+function setPendingSessionSource(source) {
+  if (!source || typeof source !== 'object' || !source.type) {
+    _pendingSource = null;
+    return;
+  }
+  _pendingSource = {
+    type: String(source.type),
+    id: source.id === undefined || source.id === null ? '' : String(source.id),
+  };
+}
+
+/** 清掉待写入的来源标记（对话取消 / 非落盘轮次用）。 */
+function clearPendingSessionSource() {
+  _pendingSource = null;
+}
+
+/** 取走待写入的来源标记（取走即清）。 */
+function consumePendingSessionSource() {
+  const src = _pendingSource;
+  _pendingSource = null;
+  return src;
+}
+
 // ── Session ID ──
 
 function _generateSessionId() {
@@ -173,10 +212,14 @@ function _persistLiveSession() {
   try {
     const sp = require('../services/sessionPersistence');
     const info = _deps._getModelInfo();
+    // 来源标记随 metadata 一起进快照（metadata 原样落盘，这里只加一个 source 字段）。
+    const source = consumePendingSessionSource();
+    const metadata = { cwd: process.cwd(), adapter: info.adapter || '' };
+    if (source) metadata.source = source;
     sp.persistSession(_ensureLiveSessionId(), {
       messages: _chatState.messages,
       model: info.model || '',
-      metadata: { cwd: process.cwd(), adapter: info.adapter || '' },
+      metadata,
     });
     return 'persisted';
   } catch {
@@ -1248,6 +1291,9 @@ function scopeSession(sessionId) {
 // ── Exports ──
 module.exports = {
   setAiSessionDeps,
+  setPendingSessionSource,
+  clearPendingSessionSource,
+  consumePendingSessionSource,
   _generateSessionId,
   _ensureLiveSessionId,
   scopeSession,

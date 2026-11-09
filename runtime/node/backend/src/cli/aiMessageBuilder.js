@@ -47,64 +47,14 @@ function setAiMessageBuilderDeps(deps = {}) {
   }
 }
 
-// ── 弱模型核心工具集(按需调用,非跳过)────────────────────────────
-// 弱模型(实测缺原生工具调用 / flash-lite 类)注入过多工具会跑偏。仅保留日常按需最常用
-// 的核心工具(搜索/读/写/改/内容搜索/文件搜索/命令/定位/提问/待办)+ mcp 视觉工具;
-// 其余 160+ 工具不注入,需要时模型仍可调用这些核心工具(如「附近有什么好玩的」→ web_search)。
-const _WEAK_CORE_TOOL_RE = [
-  /^(websearch|web_search|webfetch|web_fetch|webbrowser)$/i,
-  /^(read|readfile|read_file)$/i,
-  /^(write|writefile|write_file)$/i,
-  /^(edit|editfile|edit_file|multiedit)$/i,
-  /^(glob|find_files)$/i,
-  /^(grep|rg)$/i,
-  /^(bash|shell|shellcommand|shell_command|powershell)$/i,
-  /^(open_app|openapp|getlocation|get_location)$/i,
-  /^(askuserquestion|todowrite|todo_write)$/i,
-  /^mcp__/i,
-];
-function _isWeakCoreTool(name) {
-  const n = String(name || '').trim();
-  if (!n) {
-    return false;
-  }
-  return _WEAK_CORE_TOOL_RE.some((re) => re.test(n));
-}
-
-// ── 轻量对话工具集(「一句你好不该背 5.7 万 token 的工具表」)────────────
-// 实测:一句「你好」也无条件注入 160 个工具定义 = 184KB ≈ 57784 token,冷进程构建耗时
-// ~1s。这是打招呼最大的一笔确定性开销,且对招呼毫无用处。核心工具集(上面那套弱模型
-// 已验证的按需集)只有 16 个 ≈ 12144 token,省下约 45k。额外放进 toolSearch(281 字节)
-// 当逃生舱:轻量turn 里模型若真需要别的工具,仍可按关键词检索并在下一轮拿到全量。
-// 只作用于「轻量对话」(招呼/笑话/自我介绍类,见 _isLightweightConversationInput),
-// 且不作用于工具循环的后续轮(_isFollowUp)——那时已确证需要工具,全量注入。
-function _isLightweightConversationTool(name) {
-  const n = String(name || '').trim();
-  if (!n) {
-    return false;
-  }
-  if (/^(toolsearch|tool_search)$/i.test(n)) {
-    return true;
-  }
-  return _isWeakCoreTool(n);
-}
-
-// ── 轻量对话禁用改状态工具(KHY_LIGHT_NO_MUTATING_TOOLS·默认开)──────────────
-// 轻量轮(招呼/笑话/故事/自我介绍)的正确形态是直接文本回复;核心集里的
-// Write/Edit/Bash 会诱导弱模型把「讲个故事」执行成「把故事写进文件」(2026-09
-// 会话 2deaa521:模型把故事写向 Temp 下虚构路径,被路径守卫拒绝后又连带写出
-// 无关文件并虚构任务清单)。轻量轮只保留只读/检索/搜索类工具。真正的写文件
-// 任务不会命中轻量判定(_isLightweightConversationInput 排除编码/执行类输入),
-// 不受影响;门关 → 回到今日核心集(逐字节等价)。
-const _MUTATING_TOOL_RE =
-  /^(write|writefile|write_file|edit|editfile|edit_file|multiedit|bash|shell|shellcommand|shell_command|powershell|cmd|terminal|open_app|openapp|computeruse|desktopcontrol)$/i;
-function _isNonMutatingLightTool(name) {
-  const n = String(name || '').trim();
-  if (!n) {
-    return false;
-  }
-  return !_MUTATING_TOOL_RE.test(n);
-}
+// 工具面治理（弱模型核心集 / 轻量对话集 / 改状态工具剥离 / 问候轮清零 / agent profile /
+// deny / 弱模型 curated / 轻量 curated）的单一真源在 ../services/tool/effectiveToolSurface.js。
+// wire 与系统提示词调同一个函数，杜绝「提示词按全注册表下指令、wire 发另一批工具」。
+// 此处按名再导出，保持既有 module.exports 契约不变。
+const _effectiveToolSurface = require('../services/tool/effectiveToolSurface');
+const _isWeakCoreTool = _effectiveToolSurface.isWeakCoreTool;
+const _isLightweightConversationTool = _effectiveToolSurface.isLightweightConversationTool;
+const _isNonMutatingLightTool = _effectiveToolSurface.isNonMutatingLightTool;
 
 // ── Image save/open helpers ──────────────────────────────────────────
 /**
@@ -321,82 +271,17 @@ async function _gatewayGenerate(
   // top_p is locked by runtime — never allow external override
   const lockedTopP = runtime.lockTopP(userMessage);
 
-  // Inject tool definitions so the model knows what tools are available
+  // Inject tool definitions so the model knows what tools are available.
+  // 治理逻辑（问候轮清零 / agent profile / deny / 弱模型 curated / 轻量 curated）已抽取为
+  // 单一真源叶子 ../services/tool/effectiveToolSurface.js —— wire 与系统提示词调同一个
+  // 函数，杜绝「提示词按全注册表下指令、wire 发另一批工具」的两份真源病。
   let toolDefs;
-  // 轻量对话裁剪的判定要**在构建之前**做:留到构建之后再 filter,160 个工具的
-  // isEnabled() 已经跑完了(python --version×6 / where ffmpeg / where pwsh / git
-  // rev-parse…实测 ~1.4s 阻塞子进程),而其中约 145 个马上就要被丢掉——正是
-  // 「简单打个招呼却做一堆无用的事」。把名字过滤器下推到注册表,这些探测根本不发生。
-  // 下面构建之后的同名 filter 保留为兜底(此时应是空操作),门也仍是同一个
-  // KHY_LIGHT_TOOL_CURATION:关 → 字节回退今日全量注入。
-  let _lightCurate = false;
-  try {
-    const _lightOff = ['0', 'false', 'off', 'no'].includes(
-      String(process.env.KHY_LIGHT_TOOL_CURATION || '')
-        .trim()
-        .toLowerCase()
-    );
-    _lightCurate = Boolean(
-      !_lightOff && opts._lightweightConversation && !opts._isFollowUp && !opts._agentContext
-    );
-  } catch {
-    _lightCurate = false; /* fail-soft: 判定失败 → 全量注入(今日行为) */
-  }
-  // 轻量轮额外剥离改状态工具(Write/Edit/Bash/ComputerUse…);只在轻量裁剪生效时
-  // 参与,门 KHY_LIGHT_NO_MUTATING_TOOLS 默认开,关 → 回到今日核心集。
-  const _lightNoMutatingOn = !['0', 'false', 'off', 'no'].includes(
-    String(process.env.KHY_LIGHT_NO_MUTATING_TOOLS || '')
-      .trim()
-      .toLowerCase()
-  );
-  const _lightNameFilter = _lightCurate
-    ? (name) =>
-        _isLightweightConversationTool(name) &&
-        (!_lightNoMutatingOn || _isNonMutatingLightTool(name))
-    : null;
-  // 首轮纯问候:**一个工具都不注入**(判定在 aiChatCore 的 _pureFirstTurnGreeting 一处做完)。
-  // 与上面的轻量裁剪不是一回事:那是省 token 的优化,核心集里仍留着 Bash/Read/Glob/Grep/
-  // WebSearch/toolSearch,而模型拿到这些就会把一句「你好」当成「先了解一下仓库」的开场,
-  // 真的去跑命令(用户截图里的两个 Bash)。招呼要的只是一句自然回复。这里连注册表都不加载,
-  // isEnabled() 探测不发生,toolSearch 也不在场——模型无从重新拿回工具。
-  const _greetingNoTools = Boolean(
-    opts._pureFirstTurnGreeting && !opts._isFollowUp && !opts._agentContext
-  );
+  let _droppedToolDefs = [];
   let _authzFailed = false;
   try {
-    if (_greetingNoTools) {
-      toolDefs = undefined;
-    } else {
-      const { getToolDefinitions } = require('../services/toolCalling');
-      toolDefs = getToolDefinitions(_lightNameFilter ? { nameFilter: _lightNameFilter } : {});
-      if (process.env.KHY_DEBUG_TOOLS === '1') {
-        console.error(
-          `[DEBUG-PROFILE] BEFORE filter: ${toolDefs.length} defs, CU=${toolDefs.some((t) => (t.name || t.function?.name) === 'ComputerUse')}, DC=${toolDefs.some((t) => (t.name || t.function?.name) === 'DesktopControl')}, toolFilter=${opts._agentContext?.toolFilter || '(none)'}`
-        );
-      }
-      // Apply tool profile filter from agent context (e.g. 'explore' → read-only tools)
-      if (opts._agentContext?.toolFilter) {
-        const { filterToolsByProfile } = require('../tools/toolProfile');
-        const toolsMap = new Map(toolDefs.map((t) => [t.name || t.function?.name, t]));
-        const filtered = filterToolsByProfile(toolsMap, opts._agentContext.toolFilter);
-        const before = toolDefs.length;
-        toolDefs = [...filtered.values()];
-        const after = toolDefs.length;
-        if (process.env.KHY_DEBUG_TOOLS === '1') {
-          console.error(
-            `[DEBUG-PROFILE] _gw profileFilter=${opts._agentContext.toolFilter} ${before}->${after}`
-          );
-          const cu = toolDefs.find((t) => (t.name || t.function?.name) === 'ComputerUse');
-          const dc = toolDefs.find((t) => (t.name || t.function?.name) === 'DesktopControl');
-          console.error(`[DEBUG-PROFILE] After filter: CU=${!!cu} DC=${!!dc}`);
-        }
-      }
-      // Apply disallowedTools denylist as secondary safety layer
-      if (opts._agentContext?.disallowedTools?.length > 0) {
-        const deny = new Set(opts._agentContext.disallowedTools);
-        toolDefs = toolDefs.filter((t) => !deny.has(t.name) && !deny.has(t.function?.name));
-      }
-    }
+    const _surface = _effectiveToolSurface.computeToolSurface(opts);
+    toolDefs = _surface.kept;
+    _droppedToolDefs = Array.isArray(_surface.dropped) ? _surface.dropped : [];
   } catch (err) {
     // [DESIGN-AGENT-002] A2-7: an authorization-scope failure must NOT silently
     // degrade into a usable tool set. Record it and pass NO tools, so the agent
@@ -417,60 +302,6 @@ async function _gatewayGenerate(
     } catch {
       /* ledger is best-effort; must never mask the original failure */
     }
-  }
-
-  // 弱模型按需裁剪(「工具按需调用,而非跳过」):实测缺原生工具调用(text)或小名弱模型
-  // (flash/lite/mini…)拿 172 个工具会跑偏——脑补「系统修复任务」去读 tool_capability.json、
-  // 绕开用户的问题。这里只保留**核心按需工具集**(搜索/读/写/改/搜索/命令/定位/提问/待办 +
-  // mcp 视觉),其余 160+ 不再注入:需要时(如「附近有什么好玩的」)web_search 仍在、按需调用;
-  // 简单问题没有可用工具诱导 → 模型直接作答。原生工具模型不受影响(全量注入)。
-  // 门 KHY_WEAK_TOOL_CURATION(默认开);关 → 字节回退今日全量注入。
-  try {
-    const _curateOff = ['0', 'false', 'off', 'no'].includes(
-      String(process.env.KHY_WEAK_TOOL_CURATION || '')
-        .trim()
-        .toLowerCase()
-    );
-    if (!_curateOff && Array.isArray(toolDefs) && toolDefs.length > 0) {
-      const {
-        modelLacksReliableToolCalling,
-      } = require('../services/gateway/modelToolingCapability');
-      let _measured = null;
-      try {
-        _measured = require('../services/gateway/toolCapabilityStore').getVerdict(
-          opts.preferredModel || ''
-        );
-      } catch {
-        /* store 不可用 → 走名字启发 */
-      }
-      if (modelLacksReliableToolCalling(opts.preferredModel || '', { measured: _measured })) {
-        toolDefs = toolDefs.filter((t) =>
-          _isWeakCoreTool(t.name || (t.function && t.function.name))
-        );
-      }
-    }
-  } catch {
-    /* fail-soft: 裁剪失败 → 全量注入(今日行为) */
-  }
-
-  // 轻量对话裁剪(「简单打个招呼不该做一堆无用的事」)。与上面的弱模型裁剪同理,但触发条件
-  // 是**本轮输入**而非模型能力:招呼/笑话/自我介绍这类轻量turn(scale=small 且命中
-  // _isLightweightConversationInput)注入 160 个工具纯属浪费——省 ~45k token/轮,并让
-  // 模型不被一屏工具表诱导去「找活干」。工具循环的后续轮(_isFollowUp)不裁剪:那时模型
-  // 已经在用工具,砍掉会截断正在进行的工作。门 KHY_LIGHT_TOOL_CURATION(默认开)。
-  // 判定已在构建前完成(_lightCurate)并下推给注册表;这里是兜底,正常情况下不再命中。
-  try {
-    if (_lightCurate && Array.isArray(toolDefs) && toolDefs.length > 0) {
-      toolDefs = toolDefs.filter((t) => {
-        const n = t.name || (t.function && t.function.name);
-        return (
-          _isLightweightConversationTool(n) &&
-          (!_lightNoMutatingOn || _isNonMutatingLightTool(n))
-        );
-      });
-    }
-  } catch {
-    /* fail-soft: 裁剪失败 → 全量注入 */
   }
 
   // Forced-summarization turn (toolUseLoop Fix #3): when the loop asks the model
@@ -884,6 +715,15 @@ async function _gatewayGenerate(
       messages,
       tools: toolDefs,
       _debugToolCount: toolDefs ? toolDefs.length : 0,
+      // 收尾轮信号必须随 options 下发：toolDefs 已置 undefined，但适配器（如
+      // claudeAdapter 直连）需要显式看到 _forceNoTools 才会连兜底池一起不发，
+      // 否则弱模型在收尾轮仍被诱导继续调工具、永远写不出最终答案。
+      _forceNoTools: opts._forceNoTools,
+      // 被工具表预算裁掉的清单。官方 Anthropic 端点用它把裁掉的工具以 name-only
+      // defer_loading 存根补回 wire，让模型仍能经服务端 tool_search 发现它们
+      // （见 _directToolSurface.resolveDirectToolSurface 的官方端点分支）。
+      // 代价已实测：64K 窗口每轮 +13% token；换长会话里「揭示不膨胀」。非官方端点忽略它。
+      _droppedToolDefs,
       structuredMessages,
       // /thinking controls the request, not just display: when off we send no
       // thinking budget and flag thinkingEnabled:false so native-thinking models
