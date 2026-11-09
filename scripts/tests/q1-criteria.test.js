@@ -12,7 +12,11 @@ const registry = require(path.join(repoRoot, 'scripts/ci/check-rules-registry.js
 
 test('Q-1 root-uncatalogued：层级/横切/白名单/README 变体都不算未登记，散落的顶层实体才算', () => {
   const entries = [
-    { name: 'services' },      // LAYERS → 已登记
+    // LAYERS 的键自 2026-10-15 起是路径（`runtime/node`），顶层判定取首段，
+    // 故这里喂顶层名 `runtime` / `delivery` 才对应得上。旧用例喂 `services`，
+    // 那已是搬走前的层名，现在理应被判未登记 —— 故一并作为反例留在下面。
+    { name: 'runtime' },      // LAYERS['runtime/node'] 的首段 → 已登记
+    { name: 'delivery' },      // LAYERS['delivery/channel'] 的首段 → 已登记
     { name: 'docs' },          // CROSSCUTTING → 已登记
     { name: 'build' },         // GENERATED → 已登记
     { name: 'node_modules' },  // 公认非层级
@@ -23,6 +27,18 @@ test('Q-1 root-uncatalogued：层级/横切/白名单/README 变体都不算未�
     { name: 'leftover.py' },   // 未登记（口径洞：非 md/txt 也能抓到）
   ];
   assert.deepStrictEqual(layout.findUncataloguedRootEntries(entries), ['leftover.py', 'stray-thing']);
+});
+
+test('Q-1：方案 P 搬走前的层名不再是已登记顶层目录', () => {
+  // 这条是 layer-registry-stale 的同一件事在 root-uncatalogued 这一侧的镜像：
+  // 名册键改成真实落点后，`services` / `software` / `extensions` / `tools` /
+  // `packaging` / `kernel` / `platform` 这些旧顶层名若有人重建，会立刻被要求
+  // 重新登记 —— 而不会因为「名字在老规范里见过」被静默放行。
+  const offenders = layout.findUncataloguedRootEntries(
+    ['kernel', 'platform', 'services', 'software', 'extensions', 'tools', 'packaging'].map(name => ({ name }))
+  );
+  assert.deepStrictEqual(offenders.sort(),
+    ['extensions', 'kernel', 'packaging', 'platform', 'services', 'software', 'tools']);
 });
 
 test('Q-1：当前真实根上无未登记实体（ROOT_CATALOG 覆盖完整）', () => {
@@ -49,7 +65,15 @@ test('Q-3 debt-ledger：layout.floor-closed-set 行存在且 target 严格小于
   const ledger = JSON.parse(fs.readFileSync(path.join(repoRoot, 'scripts/ci/debt-ledger.json'), 'utf8'));
   const row = ledger.entries.find(e => e.id === 'layout.floor-closed-set');
   assert.ok(row, '缺 layout.floor-closed-set 行');
-  assert.strictEqual(row.target, 10, '终局档位应为 10');
-  assert.ok(typeof row.measured === 'number' && row.measured > row.target, 'measured 须大于 target');
+  // metric 是 root-uncatalogued —— **违规计数**，终局档位是 0（归零）。
+  // 旧断言写的 10 是把「封闭清单下限」与「违规计数目标」混成了一个量，与台账行自身的
+  // metric/target 字段矛盾（台账行一直是 target: 0）。
+  assert.strictEqual(row.target, 0, '违规计数的终局档位应为 0（归零）');
+  // 只降不升的棘轮：未归零时 measured 必须大于 target；已归零（measured === 0）即清偿，
+  // 见台账 _statusMeaning: 'closed（已归零）'。
+  assert.ok(
+    typeof row.measured === 'number' && (row.measured > row.target || row.measured === 0),
+    'measured 须大于 target（已归零则视为清偿）'
+  );
   assert.match(row.measuredAt, /^\d{4}-\d{2}-\d{2}$/, 'measuredAt 须为日期');
 });

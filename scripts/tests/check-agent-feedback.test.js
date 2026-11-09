@@ -9,12 +9,28 @@
  * 判据 `fix-without-repro` 在最常见的改代码路径上永远轮不到。
  *
  * 全部离线：只调纯函数 `detectMode()`，不 spawn、不读盘。
+ *
+ * 2026-11-05 增补：存证定位（`--task` / `KHY_TASK_ID` / 分支名回退）的回归锁。
+ * 定位逻辑本身走纯函数；接线只 spawn 一次，证明 `--task` 真的改变了读取目录，
+ * 而不是被吞掉后继续读 `feedback/adhoc`（与 evidence-storage 测试同法）。
  */
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const cp = require('child_process');
 
-const { detectMode, SCENARIOS } = require('../ci/check-agent-feedback.js');
+const {
+  detectMode,
+  SCENARIOS,
+  resolveEvidenceDir,
+  missingEvidenceNote,
+} = require('../ci/check-agent-feedback.js');
+
+const REPO = path.resolve(__dirname, '..', '..');
+const CHECKER = path.join(REPO, 'scripts', 'ci', 'check-agent-feedback.js');
 
 const HANDLER = 'runtime/node/backend/src/cli/handlers/receipts.js';
 const ROUTE = 'runtime/node/backend/src/routes/export.js';
@@ -106,4 +122,118 @@ test('ambiguous 场景仍留在混合带（本次修复不许顺手抹掉它要�
     path: s.slice(2),
   }));
   assert.equal(detectMode(changes, preset.say).ambiguous, true);
+});
+
+// ── 存证定位：门必须能被指向「本次任务」，而不是恒读 adhoc ─────────────────────
+
+/** 临时存证根；KHY_FEEDBACK_DIR 与 hqStore.feedbackDir() 共用同一个覆盖点。 */
+function withFeedbackRoot(fn) {
+  const prev = process.env.KHY_FEEDBACK_DIR;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fb-locator-'));
+  process.env.KHY_FEEDBACK_DIR = root;
+  try {
+    return fn(root);
+  } finally {
+    if (prev === undefined) delete process.env.KHY_FEEDBACK_DIR;
+    else process.env.KHY_FEEDBACK_DIR = prev;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test('定位优先级：--evidence > --task > 分支回退 > adhoc', () => {
+  withFeedbackRoot((root) => {
+    const explicit = path.join(root, 'by-evidence');
+    assert.deepEqual(resolveEvidenceDir({ explicit, taskId: 'task-A' }), { dir: explicit, locatedBy: 'evidence' });
+    assert.deepEqual(resolveEvidenceDir({ taskId: 'task-A' }), {
+      dir: path.join(root, 'task-A'),
+      locatedBy: 'task',
+    });
+    assert.deepEqual(resolveEvidenceDir({}), { dir: path.join(root, 'adhoc'), locatedBy: 'none' });
+  });
+});
+
+test('任务名只接受目录名：路径分隔与 .. 不得借道', () => {
+  withFeedbackRoot((root) => {
+    for (const bad of ['../evil', 'a/b', '..', '.', '-x']) {
+      assert.deepEqual(
+        resolveEvidenceDir({ taskId: bad }),
+        { dir: path.join(root, 'adhoc'), locatedBy: 'none' },
+        `${bad} 不应被当成任务目录`
+      );
+    }
+  });
+});
+
+test('分支名里的 T-<n> 只在目录真实存在时采用（不猜不存在的任务）', () => {
+  withFeedbackRoot((root) => {
+    assert.equal(resolveEvidenceDir({ branch: 'task/T-031-foo' }).locatedBy, 'none');
+    fs.mkdirSync(path.join(root, 'T-031'));
+    assert.deepEqual(resolveEvidenceDir({ branch: 'task/T-031-foo' }), {
+      dir: path.join(root, 'T-031'),
+      locatedBy: 'branch',
+    });
+    // scenario 演示读自己那份预置存证，不被当前分支劫走
+    assert.equal(resolveEvidenceDir({ branch: 'task/T-031-foo', scenario: 'fix-no-repro' }).locatedBy, 'none');
+  });
+});
+
+test('未定位 / 指错目录的措辞都点明「不是证据缺失」，缺具体文件时不抢话', () => {
+  withFeedbackRoot((root) => {
+    const none = missingEvidenceNote(path.join(root, 'adhoc'), 'none');
+    assert.match(none, /未能定位本次任务的存证目录（不是证据缺失）/);
+    assert.match(none, /--task=<task-id>|KHY_TASK_ID/);
+
+    const wrong = missingEvidenceNote(path.join(root, 'nope'), 'task');
+    assert.match(wrong, /指定的存证目录不存在.*不是证据缺失/);
+
+    const present = path.join(root, 'task-A');
+    fs.mkdirSync(present);
+    assert.equal(missingEvidenceNote(present, 'task'), '');
+  });
+});
+
+test('接线：--task 指向任务目录时门真的从那里读（不再落 adhoc）', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fb-locator-e2e-'));
+  try {
+    const task = path.join(root, 'task-A');
+    fs.mkdirSync(task, { recursive: true });
+    fs.writeFileSync(
+      path.join(task, 'requirement-5q.md'),
+      [
+        '# 需求五问',
+        '### Q1 谁用？',
+        '唯一维护者本人，他在同一台机器上跑 khy 的自动选路；回答来自其原话而非推测。',
+        'source: 「希望把 khyos 的 auto 模式拆成几个模式」',
+        '### Q2 什么时候用？',
+        '每次请求进入网关选路时读取当前档位，并据此决定能力下界与上界，不在别的入口生效。',
+        'source: 「希望把 khyos 的 auto 模式拆成几个模式」',
+        '### Q3 现在的替代做法是什么？',
+        '现状只有一个 auto 档加手工钉渠道，降本与质量无法同时表达，因此必须新增档位。',
+        'source: 「智能路由怎么做」',
+        '### Q4 成功长什么样？',
+        '命令 npm run test:routing-185 全绿，且 khy gateway status 能显示本次档位与原因行。',
+        'source: 「先把现有结论整理成完整设计方案」',
+        '### Q5 不做会怎样？',
+        '不做则四档语义全部落在 auto 内部，降本与质量权衡无处表达，账单读数继续无法归因。',
+        'source: 「自我对抗式实现这个方案」',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const r = cp.spawnSync(
+      process.execPath,
+      [
+        CHECKER,
+        '--files=A:runtime/node/backend/src/services/gateway/routeDemand.js',
+        '--say=帮我新增一个四档模式与智能路由方案',
+        '--task=task-A',
+      ],
+      { cwd: REPO, encoding: 'utf8', env: { ...process.env, KHY_FEEDBACK_DIR: root } }
+    );
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.doesNotMatch(r.stdout, /missing-requirement-5q/, `--task 被吞掉，仍读了 adhoc：\n${r.stdout}`);
+    assert.doesNotMatch(r.stdout, /未能定位本次任务的存证目录/, r.stdout);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

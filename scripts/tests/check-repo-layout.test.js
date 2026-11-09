@@ -17,6 +17,9 @@ const cp = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'ci', 'check-repo-layout.js');
+// 直接 require 守卫取 LAYERS / CROSSCUTTING，而不是在测试里重抄一份目录清单 ——
+// 抄一份就等于给「名册与 fixture 各说各话」留了个新入口，而那正是本次要治的病。
+const layout = require(SCRIPT);
 const tempDirs = [];
 
 after(() => {
@@ -30,20 +33,38 @@ function writeFile(root, relPath, content) {
 }
 
 /**
- * 建一个最小可通过的 fixture 仓库：七个层级目录 + 横切目录都存在，
+ * 建一个最小可通过的 fixture 仓库：把 LAYERS / CROSSCUTTING 里每个登记项都**真的建出来**，
  * docs/ 每个分类目录都有排序首位的索引，根目录只有白名单文件。
  * 各用例在此基础上**只加一处**违规，好让断言指向单一原因。
+ *
+ * 2026-10-15：目录清单改为方案 P 的落点（runtime/ 与 delivery/ 之下的六个层），
+ * 并补 `works/ship` 与 `works/record/evidence` 两个横切。旧清单只建了搬走前的层名，
+ * 于是 fixture 自己就带着「名册登记了、磁盘上没有」的全套违规 ——
+ * 每条用例的 status 断言都因为 layer-registry / layer-registry-stale 而红，
+ * 失败原因与被测规则无关。**登记表加了键，这里必须同步加目录。**
  */
 function makeFixture(mutate) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-layout-'));
   tempDirs.push(root);
 
-  for (const layer of ['kernel', 'platform', 'services', 'apps', 'software', 'extensions', 'tools']) {
-    writeFile(root, `${layer}/.keep`, '');
+  const registered = [
+    ...Object.keys(layout.LAYERS),
+    ...Object.keys(layout.CROSSCUTTING),
+  ];
+  for (const dir of registered) {
+    // delivery/extension/ 与 delivery/extension/tools/ 是**拓展根**，不是普通目录：
+    // 它们下面光秃秃只有一个 .keep 会被 extension-contract 判成「既不是拓展也不是分类目录」。
+    // 故这两个走 writeExtension 造一个合规拓展，其余才用 .keep 占位。
+    if (dir === 'delivery/extension' || dir === 'delivery/extension/tools') continue;
+    writeFile(root, `${dir}/.keep`, '');
   }
-  for (const cross of ['scripts', 'packaging', '_source']) {
-    writeFile(root, `${cross}/.keep`, '');
-  }
+  // L6 = delivery/extension/tools/ 本身是一个**分类目录**，里面放一个合规拓展，
+  // 既让它在磁盘上真实存在，又不触发 extension-contract 的结构性违规。
+  writeFile(root, 'delivery/extension/tools/khy-fixture/khy.extension.json',
+    `${JSON.stringify({ id: 'khy-fixture', name: 'Fixture', version: '1.0.0', kind: 'reference' }, null, 2)}\n`);
+  // L5 = delivery/extension/ 的直接子目录同样是分类目录/拓展（扁平形态），补一个合规拓展。
+  writeFile(root, 'delivery/extension/khy-fixture-flat/khy.extension.json',
+    `${JSON.stringify({ id: 'khy-fixture-flat', name: 'FixtureFlat', version: '1.0.0', kind: 'reference' }, null, 2)}\n`);
 
   writeFile(root, 'README.md', '# fixture\n');
   writeFile(root, 'package.json', JSON.stringify({ name: 'fixture', scripts: { 'check:layout': 'node x.js' } }, null, 2));
@@ -171,7 +192,7 @@ describe('check-repo-layout: 规则命中', () => {
 
   test('layer-registry: 未登记的新顶层目录是 error', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'frontend/index.js', '// 该并入 apps/ 或 software/\n');
+      writeFile(dir, 'frontend/index.js', '// 该并入 apps/ 或 delivery/\n');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 1, stdout);
@@ -182,11 +203,48 @@ describe('check-repo-layout: 规则命中', () => {
   test('layer-registry: 点目录不参与层级体系', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, '.github/workflows/pr-gate.yml', 'name: x\n');
-      writeFile(dir, '.khy/state.json', '{}\n');
+      // 点目录用 `.claude/` 而不是 `.khy/`：`.khy` 是 B8 明令禁止的**影子数据目录**
+      // （check-repo-layout 的 root-shadow-dir 会判红），拿它当「普通点目录」的例子
+      // 会把本用例的失败原因从「层级体系」换成「影子目录」，与被测规则无关。
+      // `.claude` 已在 ROOT_CATALOG 登记（工具根位点），故不会被 root-uncatalogued 拦。
+      writeFile(dir, '.claude/state.json', '{}\n');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
-    assert.doesNotMatch(stdout, /layer-registry/);
+    // 只看**这条规则有没有命中**（finding 的 id），别用 /layer-registry/ 裸匹配：
+    // 守卫的 counts 行恒含 "layer-registry-stale" 这个键，裸匹配会永远命中。
+    assert.doesNotMatch(stdout, /id: layer-registry(?![-a-z])/);
+  });
+
+  // ↓ layer-registry-stale：名册只进不出的那一端。2026-10-15 补的规则。
+  test('layer-registry-stale: 登记了但磁盘上没有的目录是 error（搬走不销账）', () => {
+    const root = makeFixture((dir) => {
+      // 复刻真实事故：L0 被搬进 runtime/boot/ 之后，名册若还写着顶层 kernel/ 就该报。
+      fs.rmSync(path.join(dir, 'runtime', 'boot'), { recursive: true, force: true });
+    });
+    const { status, stdout } = runGuard(root, ['--list=layer-registry-stale']);
+    assert.equal(status, 1, stdout);
+    assert.match(stdout, /layer-registry-stale/);
+    // 须点名死键本身（runtime/boot/kernel），不是它的顶层段 runtime。
+    assert.match(stdout, /· runtime\/boot\/kernel/);
+  });
+
+  test('layer-registry-stale: 登记项齐全时不报（干净 fixture 全绿的另一半）', () => {
+    const root = makeFixture();
+    const { status, stdout } = runGuard(root);
+    assert.equal(status, 0, stdout);
+    // 断言计数为 0 而不是「输出里没有这个 id」—— counts 行永远会列出 id
+    // （该规则无条件计数，「已归零」与「没跑」必须可区分，见 checkLayerRegistry 注释）。
+    assert.match(stdout, /"layer-registry-stale":0/);
+  });
+
+  test('layer-registry-stale: 目录名带斜杠时顶层判定取首段，不误报「未登记」', () => {
+    // 反向回归：键改成路径后，顶层判定必须取首段，否则 runtime/ 与 delivery/
+    // 这两个实际存在的顶层目录会反过来被判成「未登记」。
+    const root = makeFixture();
+    const { status, stdout } = runGuard(root);
+    assert.equal(status, 0, stdout);
+    assert.doesNotMatch(stdout, /未登记在层级清单/);
   });
 });
 

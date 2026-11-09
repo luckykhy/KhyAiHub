@@ -13,8 +13,11 @@
  * （含与正则同行的真 spawn、含除法之后的真 spawn）必须照旧被抓 ——
  * 只断「修完变绿」而不断「真信号仍在」，就分不清「修好」与「修没了」。
  *
- * 刻意**不**对着真实仓库跑：真仓库的状态会随治理进度变化。每个用例建一个临时
- * 仓库当 fixture，用 KHY_DELEGATION_ROOT 把守卫指过去，只注入一处变量。
+ * 刻意**不**对着真实仓库跑 bypass-spawn 的判据边界：真仓库的状态会随治理进度变化。
+ * 唯一例外是 finding 11 `delegation-cascade-ungated` 的零误报用例——它钉的是 2026-10-19
+ * 刚落地的候选池修复（aiMessageBuilder 预检过滤 + aiGatewayGenerateMethod 组装后剔除），
+ * 镜像 fixture 只能证明「长得像真代码的形状绿」，证明不了真代码本身绿，故直接对真仓库断言。
+ * 每个用例建一个临时仓库当 fixture，用 KHY_DELEGATION_ROOT 把守卫指过去，只注入一处变量。
  */
 
 const { describe, test, after } = require('node:test');
@@ -59,6 +62,90 @@ function runGuard(root) {
     timeout: 120000,
   });
   return `${result.stdout || ''}${result.stderr || ''}`;
+}
+
+/**
+ * finding 11 的全绿基线：三处源码各司其职——delegationGate 的外部 key 谓词与剔除纯函数、
+ * 预检自动候选链的排除过滤、组装后的剔除写回。回归用例只在此基线上做一处变化
+ * （删掉预检那条过滤行），以便把「是这个变化导致的红」与「fixture 本身不绿」分开。
+ */
+function makeCascadeFixture() {
+  const root = makeFixture();
+  writeFile(
+    root,
+    'runtime/node/backend/src/services/gateway/delegationGate.js',
+    [
+      "'use strict';",
+      "const EXTERNAL_DELEGATION_ADAPTER_KEYS = ['claude', 'codex'];",
+      'function isExternalDelegationAdapter(key) {',
+      "  return EXTERNAL_DELEGATION_ADAPTER_KEYS.includes(String(key || '').toLowerCase());",
+      '}',
+      "const HUMAN_PIN_APPROVED = 'user-command';",
+      'function stripUnapprovedExternalAdapters(adapters, opts) {',
+      '  if ((opts || {}).delegationApprovedByUser === HUMAN_PIN_APPROVED) {',
+      '    return { kept: adapters, removedKeys: [] };',
+      '  }',
+      '  const removed = adapters.filter((a) => isExternalDelegationAdapter(a && a.key));',
+      '  return { kept: adapters, removedKeys: removed.map((a) => a.key) };',
+      '}',
+      'module.exports = { EXTERNAL_DELEGATION_ADAPTER_KEYS, isExternalDelegationAdapter, stripUnapprovedExternalAdapters };',
+      '',
+    ].join('\n'),
+  );
+  writeFile(
+    root,
+    'runtime/node/backend/src/cli/aiMessageBuilder.js',
+    [
+      "'use strict';",
+      "const { isExternalDelegationAdapter } = require('../services/gateway/delegationGate');",
+      'function build(gw, maxAutoCandidates) {',
+      '  // Auto-pick first operational adapter, skip relay-like adapters for chat by default.',
+      '  const statuses = gw',
+      '    .getStatus()',
+      '    .filter((s) => s.enabled && s.available)',
+      '    .filter((s) => !isExternalDelegationAdapter(s.type))',
+      '    .slice(0, maxAutoCandidates);',
+      '  return statuses;',
+      '}',
+      'module.exports = { build };',
+      '',
+    ].join('\n'),
+  );
+  writeFile(
+    root,
+    'runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js',
+    [
+      "'use strict';",
+      "const delegationGate = require('./delegationGate');",
+      'function generate(options) {',
+      '  let orderedAdapters = collect();',
+      '  const strip = delegationGate.stripUnapprovedExternalAdapters(orderedAdapters, {',
+      '    delegationApprovedByUser: options.delegationApprovedByUser,',
+      '    userPinnedAdapter: options.userPinnedAdapter,',
+      '  });',
+      '  if (strip.removedKeys.length > 0) {',
+      '    orderedAdapters = strip.kept;',
+      '  }',
+      '  return orderedAdapters;',
+      '}',
+      'module.exports = { generate };',
+      '',
+    ].join('\n'),
+  );
+  return root;
+}
+
+/** 抽出输出里 delegation-cascade-ungated 命中的文件（相对路径，去重）。 */
+function cascadeHits(out) {
+  return [
+    ...new Set(
+      out
+        .split('\n')
+        .filter((l) => l.includes('delegation-cascade-ungated'))
+        .map((l) => (l.match(/runtime\/node\/backend\/src\/[^\s:]+/) || [''])[0])
+        .filter(Boolean),
+    ),
+  ];
 }
 
 /** 抽出输出里 delegation-bypass-spawn 命中的文件（相对路径，去重）。 */
@@ -180,5 +267,124 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
       ].join('\n'),
     );
     assert.deepEqual(bypassHits(runGuard(root)), [], '合法抑制未生效');
+  });
+});
+
+describe('check-delegation-boundary: delegation-face-ungated 判据边界', () => {
+  /**
+   * finding 8 的判据是「AgentTool 里把可委派面直接赋给 preferredAdapter」——
+   * 外部适配器只能取自决策结果（d.adapter），直连即绕过三闸门。
+   *
+   * 这条判据原来只认**单引号**（`'codex'`）：把同一个赋值写成双引号或模板字符串
+   * 就绕过去了，而守卫照样绿。一扇能被子串撬开的门，红着等于没红。
+   * 用例把三种引号形态都钉住，同时钉住两头：
+   *   · 注释里的同形文字不得算旁路（解释性文字不是接线）
+   *   · 走决策点的赋值不得算旁路（d.adapter 取自 decideExternalDelegation）
+   */
+  function makeFaceFixture(agentToolBody) {
+    const root = makeFixture();
+    writeFile(
+      root,
+      'runtime/node/backend/src/services/externalAgentDirective.js',
+      [
+        "'use strict';",
+        'const EXTERNAL_AGENTS = {',
+        "  claude: { id: 'claude', delegatable: true },",
+        "  codex: { id: 'codex', delegatable: true },",
+        "  opencode: { id: 'opencode', delegatable: true },",
+        '};',
+        'module.exports = { EXTERNAL_AGENTS };',
+        '',
+      ].join('\n'),
+    );
+    writeFile(
+      root,
+      'runtime/node/backend/src/tools/AgentTool/index.js',
+      [
+        "'use strict';",
+        "const { decideExternalDelegation } = require('../../services/externalAgentDirective');",
+        'function run(d) {',
+        "  let preferredAdapter = '';",
+        '  const decision = decideExternalDelegation(d);',
+        ...agentToolBody,
+        '  return preferredAdapter;',
+        '}',
+        'module.exports = { run };',
+        '',
+      ].join('\n'),
+    );
+    return root;
+  }
+
+  /** 抽出输出里 delegation-face-ungated 命中 AgentTool 的行。 */
+  function faceHits(out) {
+    return out
+      .split('\n')
+      .filter((l) => l.includes('delegation-face-ungated'))
+      .filter((l) => l.includes('tools/AgentTool/index.js'));
+  }
+
+  test('真旁路（单引号）：preferredAdapter = \'codex\' 必须被抓', () => {
+    const root = makeFaceFixture(["  preferredAdapter = 'codex';"]);
+    assert.ok(faceHits(runGuard(root)).length > 0, '单引号直连适配器被漏检');
+  });
+
+  test('双引号旁路：preferredAdapter = "codex" 必须被抓（同一语义、另一种引号）', () => {
+    const root = makeFaceFixture(['  preferredAdapter = "codex";']);
+    assert.ok(faceHits(runGuard(root)).length > 0, '双引号直连适配器被漏检——判据只认单引号，门能被子串撬开');
+  });
+
+  test('模板字符串旁路：preferredAdapter = `codex` 必须被抓', () => {
+    const root = makeFaceFixture(['  preferredAdapter = `codex`;']);
+    assert.ok(faceHits(runGuard(root)).length > 0, '模板字符串直连适配器被漏检');
+  });
+
+  test('注释里的同形文字不得被判为旁路（解释性文字不是接线）', () => {
+    const root = makeFaceFixture(["  // 此前 preferredAdapter = 'codex' 直连适配器，已收掉"]);
+    assert.deepEqual(faceHits(runGuard(root)), [], '注释被误判为旁路');
+  });
+
+  test('块注释里夹的同形文字也不得被判为旁路', () => {
+    const root = makeFaceFixture([
+      '  /*',
+      "   * 历史写法：preferredAdapter = 'codex'",
+      '   */',
+    ]);
+    assert.deepEqual(faceHits(runGuard(root)), [], '块注释被误判为旁路');
+  });
+
+  test('走决策点的赋值不得被判为旁路（d.adapter 取自 decideExternalDelegation）', () => {
+    const root = makeFaceFixture(["  preferredAdapter = decision.adapter || 'claude';"]);
+    assert.deepEqual(faceHits(runGuard(root)), [], '决策结果赋值被误判为旁路');
+  });
+
+  test('真仓库零误报：已收敛到决策点的实现不得被判红', () => {
+    assert.deepEqual(
+      faceHits(runGuard(ROOT)),
+      [],
+      '真仓库里已收敛到 decideExternalDelegation 的实现被误报为「可委派面未过准入」'
+    );
+  });
+});
+
+describe('check-delegation-boundary: delegation-cascade-ungated 判据边界', () => {
+  test('真回归：预检自动候选链删掉外部委派过滤必须被抓', () => {
+    const root = makeCascadeFixture();
+    const f = 'runtime/node/backend/src/cli/aiMessageBuilder.js';
+    const abs = path.join(root, f);
+    const before = fs.readFileSync(abs, 'utf8');
+    // 只做一处变化：删掉候选链里的外部委派过滤行，其余 fixture 保持全绿基线。
+    const after = before.replace(/^.*isExternalDelegationAdapter\(s\.type\).*\n/m, '');
+    assert.notEqual(before, after, 'fixture 基线没有可删除的委派过滤行，用例需同步更新');
+    writeFile(root, f, after);
+    assert.ok(cascadeHits(runGuard(root)).includes(f), '预检候选池的委派过滤被删却未被抓');
+  });
+
+  test('真仓库零误报：已落地的候选池修复不得被判红', () => {
+    assert.deepEqual(
+      cascadeHits(runGuard(ROOT)),
+      [],
+      '真仓库已落地的候选池修复被误报为「自动候选池含未批准的外部委派 key」'
+    );
   });
 });
