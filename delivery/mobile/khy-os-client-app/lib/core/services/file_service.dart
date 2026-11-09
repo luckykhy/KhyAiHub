@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-086-6F52FYG3
 import 'package:flutter/services.dart';
 
 /// Result shape returned by [FileService] methods.
@@ -20,6 +21,37 @@ class FileService {
       return _mapResult(result as Map);
     } catch (_) {
       return {'path': '', 'exists': false};
+    }
+  }
+
+  /// 设置文件工具的工作空间根。null / 空 = 恢复 App 私有目录。
+  ///
+  /// 由界面在切换/新建对话时调用：根是设备级状态而不是每次调用的参数，
+  /// 少传一次就静默落回私有目录，而界面上看不出任何差别。
+  static Future<Map<String, dynamic>> setWorkRoot(String? path) async {
+    try {
+      final result =
+          await _channel.invokeMethod('setWorkRoot', {'path': path ?? ''});
+      return _mapResult(result as Map);
+    } catch (_) {
+      return {'ok': false, 'error': 'channel error'};
+    }
+  }
+
+  /// 用文件管理器打开一个目录。
+  ///
+  /// 返回三种结局，调用方要分别说人话：
+  ///   opened=true                       —— 有 App 接了
+  ///   opened=false, noApp=true          —— 没有任何文件管理器接这个 intent
+  ///   opened=false, noApp=false         —— 起了 Activity 但立刻退（不认目录）
+  /// 不合并成一句"失败"：用户下一步动作完全不同——前者该去装文件管理器，
+  /// 后者该改用复制路径。
+  static Future<Map<String, dynamic>> openDirectory(String path) async {
+    try {
+      final result = await _channel.invokeMethod('openDirectory', {'path': path});
+      return _mapResult(result as Map);
+    } catch (_) {
+      return {'opened': false, 'noApp': false, 'reason': 'channel error'};
     }
   }
 
