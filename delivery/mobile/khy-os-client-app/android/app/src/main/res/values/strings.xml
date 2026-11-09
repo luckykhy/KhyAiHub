@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- khy-canary: Khy-20261101-028-H29CW2JE -->
+<resources>
+    <string name="accessibility_service_description">khy-os AI 助手需要无障碍权限来：模拟点击和滑动、读取屏幕上的 UI 元素、执行全局操作（返回/主页）。此权限仅用于执行您通过 AI 对话请求的操作。</string>
+    <!-- 「选中文字后」菜单里显示的名字。说清拿去干什么，因为那一栏的位置很挤，
+         用户只会看到这一行——写「khy-os」他不知道会发生什么。 -->
+    <string name="process_text_entry_label">用 khy-os 处理…</string>
+</resources>
