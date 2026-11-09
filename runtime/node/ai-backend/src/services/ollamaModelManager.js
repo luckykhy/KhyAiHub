@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 // Endpoint default comes from the single source of truth (which already applies
 // the OLLAMA_HOST env override), so a self-hosted or remapped Ollama is one edit
 // there rather than a literal repeated per consumer.
-const { OLLAMA_HOST } = require('../constants/serviceDefaults');
+const { OLLAMA_HOST, DEFAULT_OLLAMA_PORT } = require('../constants/serviceDefaults');
 const TIMEOUT_MS = 15_000;
 
 // Model recommendations by hardware tier
@@ -59,7 +59,7 @@ function ollamaRequest(method, apiPath, body = null) {
     const url = new URL(apiPath, OLLAMA_HOST);
     const options = {
       hostname: url.hostname,
-      port: url.port || 11434,
+      port: url.port || DEFAULT_OLLAMA_PORT,
       path: url.pathname,
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,7 @@ function pullModel(modelName, onProgress) {
     const req = http.request(
       {
         hostname: url.hostname,
-        port: url.port || 11434,
+        port: url.port || DEFAULT_OLLAMA_PORT,
         path: url.pathname,
         method: 'POST',
         headers: {
