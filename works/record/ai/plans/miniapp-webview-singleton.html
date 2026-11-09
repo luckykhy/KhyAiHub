@@ -195,7 +195,7 @@
 <h2 id="5-关键设计决策">5. 关键设计决策<a class="anchor" href="#5-关键设计决策" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>决策</th><th>选择</th><th>理由</th></tr></thead><tbody><tr><td>Canvas 状态存储位置</td><td>每个进程独立的 Map</td><td>Electron 多进程架构，天然隔离</td></tr><tr><td>webviewId 命名空间</td><td><code>instanceId::miniappId</code></td><td>防止跨实例 ID 冲突</td></tr><tr><td>isDestroyed 检查时机</td><td>acquire/release/prepareExecution</td><td>三处关键生命周期节点</td></tr><tr><td>单例管理器导出方式</td><td>模块级单例</td><td>每个进程一份，无需额外同步</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../works/record/ai/MINIAPP_WEBVIEW_SINGLETON.html"><div class="dir">← 上一篇</div><div class="ttl">小程序 WebView 单例管理规范</div></a><a class="next" href="../../../../works/record/CLAUDE.html"><div class="dir">下一篇 →</div><div class="ttl">Maintainability metadata — read .ai/ first</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/ai/MINIAPP_WEBVIEW_SINGLETON.html"><div class="dir">← 上一篇</div><div class="ttl">小程序 WebView 单例管理规范</div></a><a class="next" href="../../../../works/record/CLAUDE.html"><div class="dir">下一篇 →</div><div class="ttl">Maintainability metadata — read works/record/ai/ first</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
