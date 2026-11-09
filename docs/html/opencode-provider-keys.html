@@ -24,15 +24,15 @@
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>OpenCode Provider &amp; Key 清单</div>
       <header class="hero reveal"><h1>OpenCode Provider &amp; Key 清单</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#opencode-provider-key-清单">OpenCode Provider &amp; Key 清单</a></li><li class="lvl-2"><a href="#1-supxh-免费聚合">1. SupXH（免费聚合）</a></li><li class="lvl-2"><a href="#2-command-code">2. Command Code</a></li><li class="lvl-2"><a href="#3-智谱-glm-coding-plan">3. 智谱 GLM Coding Plan</a></li><li class="lvl-2"><a href="#4-opencode-go">4. OpenCode Go</a></li><li class="lvl-2"><a href="#5-openrouter">5. OpenRouter</a></li><li class="lvl-2"><a href="#6-stepfun-阶跃星辰">6. StepFun（阶跃星辰）</a></li><li class="lvl-2"><a href="#7-sense-nova-商汤">7. Sense Nova（商汤）</a></li><li class="lvl-2"><a href="#8-agnes">8. Agnes</a></li><li class="lvl-2"><a href="#9-opencode-zen-官方免费">9. OpenCode Zen（官方免费）</a></li><li class="lvl-2"><a href="#其他凭据">其他凭据</a></li><li class="lvl-3"><a href="#deepseek-eyes-mcp-本地工具">DeepSeek Eyes（MCP 本地工具）</a></li><li class="lvl-2"><a href="#快速配置指南">快速配置指南</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#opencode-provider-key-清单">OpenCode Provider &amp; Key 清单</a></li><li class="lvl-2"><a href="#1-supxh-免费聚合">1. SupXH（免费聚合）</a></li><li class="lvl-2"><a href="#2-command-code">2. Command Code</a></li><li class="lvl-2"><a href="#3-智谱-glm-coding-plan">3. 智谱 GLM Coding Plan</a></li><li class="lvl-2"><a href="#4-opencode-go">4. OpenCode Go</a></li><li class="lvl-2"><a href="#5-openrouter">5. OpenRouter</a></li><li class="lvl-2"><a href="#6-stepfun-阶跃星辰">6. StepFun（阶跃星辰）</a></li><li class="lvl-2"><a href="#7-sense-nova-商汤">7. Sense Nova（商汤）</a></li><li class="lvl-2"><a href="#8-agnes">8. Agnes</a></li><li class="lvl-2"><a href="#9-opencode-zen-官方免费免登录">9. OpenCode Zen（官方免费免登录）</a></li><li class="lvl-3"><a href="#出口-ip-与配额-2026-10-24-实测">出口 IP 与配额（2026-10-24 实测）</a></li><li class="lvl-2"><a href="#10-requesty-free">10. Requesty Free</a></li><li class="lvl-2"><a href="#11-tierflow-free">11. TierFlow Free</a></li><li class="lvl-2"><a href="#其他凭据">其他凭据</a></li><li class="lvl-3"><a href="#deepseek-eyes-mcp-本地工具">DeepSeek Eyes（MCP 本地工具）</a></li><li class="lvl-2"><a href="#快速配置指南">快速配置指南</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="opencode-provider-key-清单">OpenCode Provider &amp; Key 清单<a class="anchor" href="#opencode-provider-key-清单" aria-label="锚点">#</a></h1>
-<blockquote><p>最后更新：2026-09-08<br>配置文件：<code>D:\Portable\Tools\opencode\xdg\opencode\opencode.json</code><br>用途：在其他电脑快速重建 opencode provider 配置</p></blockquote>
+<blockquote><p>最后更新：2026-10-21<br>生效配置：<code>D:\Portable\Tools\opencode\xdg\opencode\opencode.json</code><br>（经用户级环境变量 <code>XDG_CONFIG_HOME=D:\Portable\Tools\opencode\xdg</code> 生效——opencode 启动时<br>按 XDG 读取该路径，<strong>增删 provider 必须落到这个文件</strong>，改别的副本不生效。<br>注意：<code>C:\Users\25789\.config\opencode\opencode.json</code> 是历史遗留的非生效副本，勿改）<br>用途：在其他电脑快速重建 opencode provider 配置</p></blockquote>
 <hr>
 <h2 id="1-supxh-免费聚合">1. SupXH（免费聚合）<a class="anchor" href="#1-supxh-免费聚合" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://speed44.toter.me/v1</code></td></tr><tr><td>备用地址</td><td><code>https://api.supxh.xin</code></td></tr><tr><td>API Key</td><td><code>{env:SUPXH_API_KEY}</code>（需设置环境变量）</td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr></tbody></table>
 <p><strong>可用模型：</strong></p>
-<ul><li><code>claude-sonnet-4-5</code> — Claude Sonnet 4.5（200K ctx）</li><li><code>claude-opus-4-5</code> — Claude Opus 4.5（200K ctx）</li><li><code>gemini-3-flash</code> — Gemini 3 Flash（1M ctx）</li><li><code>gemini-2.5-pro</code> — Gemini 2.5 Pro（1M ctx）</li><li><code>gemini-3.1-pro</code> — Gemini 3.1 Pro（1M ctx）</li></ul>
+<ul><li><code>claude-sonnet-4-5</code> — Claude Sonnet 4.5（200K ctx）</li><li><code>claude-opus-4-5</code> — Claude Opus 4.5（200K ctx）</li><li><code>gemini-3-flash</code> — Gemini 3 Flash（1M ctx）</li><li><code>gemini-2.5-pro</code> — Gemini 2.5 Pro（1M ctx）</li><li><code>gemini-3.1-pro</code> — Gemini 3.1 Pro（1M ctx）</li><li><code>入梦 Flash</code></li></ul>
 <hr>
 <h2 id="2-command-code">2. Command Code<a class="anchor" href="#2-command-code" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://api.commandcode.ai/provider/v1</code></td></tr><tr><td>API Key</td><td><code>{env:COMMAND_CODE_API_KEY}</code>（需设置环境变量）</td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr></tbody></table>
@@ -69,10 +69,32 @@
 <p><strong>可用模型：</strong></p>
 <ul><li><code>agnes-2.0-flash</code>, <code>agnes-2.5-flash</code>, <code>agnes-2.5-pro-alpha</code></li><li><code>agnes-image-2.0-flash</code>, <code>agnes-image-2.1-flash</code></li><li><code>agnes-video-v2.0</code></li></ul>
 <hr>
-<h2 id="9-opencode-zen-官方免费">9. OpenCode Zen（官方免费）<a class="anchor" href="#9-opencode-zen-官方免费" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://opencode.ai/zen/v1</code></td></tr><tr><td>API Key</td><td><code>public</code></td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr></tbody></table>
+<h2 id="9-opencode-zen-官方免费免登录">9. OpenCode Zen（官方免费免登录）<a class="anchor" href="#9-opencode-zen-官方免费免登录" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://opencode.ai/zen/v1</code></td></tr><tr><td>API Key</td><td>免登录（客户端指纹门控），无需配置 key</td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr><tr><td>模型清单来源</td><td>opencode 内置 <code>opencode</code> provider（<code>opencode/&lt;模型id&gt;</code>），<strong>无需在 opencode.json 中配置</strong></td></tr></tbody></table>
+<p><strong>当前免费模型（2026-10-24 实测上游目录，<code>opencode models</code> 的 <code>opencode/*</code> 项）：</strong></p>
+<ul><li><code>mimo-v2.6-flash-free</code> — MiMo V2.6 Flash（实测可用）</li><li><code>big-pickle</code>（实测可用）</li><li><code>glm-5.3-flash-free</code> — GLM 5.3 Flash</li><li><code>deepseek-v4.1-flash-free</code> — DeepSeek V4.1 Flash</li><li><code>flint-40b-free</code> — 2026-10-24 上游新增</li><li><code>jev-1.13-free</code> — 10-21 曾下线、10-24 上游已恢复</li><li><code>nemotron-3.5-lightning-free</code></li><li><code>nemotron-3.5-super-vl-free</code>（支持图像）</li><li><code>beam-free</code> — 上游仍在目录，但实测 403 地区封锁（见下「出口 IP 与配额」）</li></ul>
+<p><strong>已废弃（勿用；实测 2026-10-09 上游返回 401/410/403）：</strong></p>
+<ul><li><code>mimo-v2.5-free</code> / <code>deepseek-v4-flash-free</code> — 上游 401 not supported</li><li><code>exo-free</code> — 410 ModelDeprecated</li><li><code>ling-3.0-flash-fin-free</code> — 上游不可用</li><li><code>muse-spark-1.2/1.3-contributor-free</code> — 403 地区封锁</li><li><code>minimax-m3.1-flash-free</code> / <code>longcat-2.5-preview-free</code> / <code>nemotron-3-ultra-free</code> — 2026-10-24 上游目录已收</li></ul>
+<blockquote><p>目录里「消失」的 id <strong>不写进废弃台账</strong>：<code>jev-1.13-free</code> 10-21 下线、10-24 回来即证——记成永久废弃会把还能用的模型藏起来。台账只记「目录里挂着但调用会炸」的那批。</p></blockquote>
+<h3 id="出口-ip-与配额-2026-10-24-实测">出口 IP 与配额（2026-10-24 实测）<a class="anchor" href="#出口-ip-与配额-2026-10-24-实测" aria-label="锚点">#</a></h3>
+<p>上游免费层的三道门，khy-os 侧各自对应：</p>
+<table><thead><tr><th>上游现象</th><th>实测响应</th><th>含义</th></tr></thead><tbody><tr><td>裸 curl / 非 opencode UA</td><td><code>403 FreeTierError</code>（can only be used from within OpenCode）</td><td>指纹门控：<code>User-Agent</code> 须是 <code>opencode/&lt;channel&gt;/&lt;version&gt;/&lt;client&gt;</code> 形态</td></tr><tr><td>共享代理 IP</td><td><code>403</code>（abusive traffic from this IP address）</td><td>IP 信誉</td></tr><tr><td>本机 IP、合法 UA</td><td><code>429 FreeUsageLimitError</code>（Free usage limit reached）</td><td><strong>免费配额按出口 IP 计</strong></td></tr></tbody></table>
+<p>推论：<strong>一个 IP 的配额被共享，等于所有人一起被限</strong>。所以免费渠道要「在哪台机器上允许，就在<br>那台机器上用它的机器码和 IP」——服务端代发时，所有用户共用服务端的 IP 与配额。</p>
+<p><strong>khy-os 侧的身份（机器码）</strong>：<code>services/zenIdentity.js</code> 提供<strong>每机一份、跨重启稳定</strong>的身份：</p>
+<ul><li>session id 沿用 opencode <code>Identifier.create</code> 形态 <code>ses_&lt;12 hex&gt;&lt;14 base62&gt;</code>（上游门控拒收非 12 hex 开头）；</li><li>project uuid 为 v4 形态；</li><li>从 <code>KHY_MACHINE_ID</code>（否则 hostname）确定性派生 → 同机恒定、异机相异；</li><li>落盘 <code>&lt;dataHome&gt;/zen_identity.json</code> → <strong>重启不再是「新设备」</strong>（旧实现是进程级随机，每重启换一次）。</li></ul>
+<p><strong>显式覆盖（用户明确指定修改的唯一入口）：</strong></p>
+<table><thead><tr><th>env</th><th>作用</th></tr></thead><tbody><tr><td><code>KHY_ZEN_IDENTITY</code></td><td>主门。默认开；<code>0/false/off/no</code> 关 → 逐字节回退旧的进程级随机行为</td></tr><tr><td><code>KHY_ZEN_SESSION_ID</code></td><td>显式指定 session id</td></tr><tr><td><code>KHY_ZEN_PROJECT_ID</code></td><td>显式指定 project uuid</td></tr><tr><td><code>KHY_ZEN_IDENTITY_FILE</code></td><td>身份落盘路径（对齐 <code>KHY_ZEN_RETIRED_FILE</code> 约定）</td></tr></tbody></table>
+<p><strong>khy-os 侧同步</strong>：免费渠道发现清单 <code>services/freeModelChannels.js</code> 与网关路由种子<br><code>services/gateway/builtinProviderConfig.js</code> 的 opencode-zen 条目均已同步为上述目录；<br>废弃项以 <code>services/zenRetiredModels.js</code> 台账为准（调用撞上 410/401 会自动补录，下次<br>列表刷新即消失）。</p>
+<hr>
+<h2 id="10-requesty-free">10. Requesty Free<a class="anchor" href="#10-requesty-free" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://router.requesty.ai/v1</code></td></tr><tr><td>API Key</td><td><code>{env:REQUESTY_API_KEY}</code>（key 在生效配置 opencode.json 中）</td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr></tbody></table>
 <p><strong>可用模型：</strong></p>
-<ul><li><code>default</code> / <code>list</code>（Agnes 2.0 Flash）</li><li><code>big-pickle</code>（free）</li><li><code>ling-3.0-flash-fin-free</code></li><li><code>mimo-v2.5-free</code></li><li><code>muse-spark-1.2-contributor-free</code></li><li><code>muse-spark-1.3-contributor-free</code></li><li><code>nemotron-3-ultra-free</code></li><li><code>nemotron-3.5-lightning-free</code></li></ul>
+<ul><li><code>nvidia/nemotron-3-ultra-550b-a55b</code> — Nemotron 3 Ultra 550B（免费）</li><li><code>nvidia/nemotron-3-super-120b-a12b</code> — Nemotron 3 Super 120B（免费）</li><li><code>nvidia/nemotron-3.5-lightning-30b-a3b</code> — Nemotron 3.5 Lightning 30B（免费）</li><li><code>nvidia/nemotron-3-nano-omni-30b-a3b-reasoning</code> — Nemotron 3 Nano Omni 30B（免费，支持图像）</li><li><code>nvidia/nemotron-3-nano-30b-a3b</code> — Nemotron 3 Nano 30B（免费）</li><li><code>nvidia/nemotron-3.5-content-safety</code></li><li><code>nvidia/muse-glimmer-30b</code></li><li><code>google/gemma-4-31b-it</code></li><li><code>mistral/leanstral-1-5</code></li><li><code>poolside/laguna-m.1</code> / <code>poolside/laguna-xs.2</code></li><li><code>novita/inclusionai/ling-3.0-tiny</code></li></ul>
+<hr>
+<h2 id="11-tierflow-free">11. TierFlow Free<a class="anchor" href="#11-tierflow-free" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody><tr><td>Base URL</td><td><code>https://tierflow.cn/v1</code></td></tr><tr><td>API Key</td><td><code>{env:TIERFLOW_API_KEY}</code>（key 在生效配置 opencode.json 中）</td></tr><tr><td>API 类型</td><td>OpenAI 兼容</td></tr></tbody></table>
+<p><strong>可用模型：</strong></p>
+<ul><li><code>GLM-5.3-Flash</code> / <code>GLM-5.3-FlashX</code> / <code>GLM-5.3</code></li><li><code>DeepSeek-V4.1-Flash</code></li><li><code>Qwen3.8-Flash</code></li><li><code>tierflow</code> / <code>tierflow_pro</code></li></ul>
 <hr>
 <h2 id="其他凭据">其他凭据<a class="anchor" href="#其他凭据" aria-label="锚点">#</a></h2>
 <h3 id="deepseek-eyes-mcp-本地工具">DeepSeek Eyes（MCP 本地工具）<a class="anchor" href="#deepseek-eyes-mcp-本地工具" aria-label="锚点">#</a></h3>
@@ -99,6 +121,7 @@
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span></code></pre>
 <p>切换模型：在 opencode 中输入 <code>/model</code> 然后选择 <code>provider-id/model-id</code></p>
+<p><strong>v2 CLI 注意（2.0.x）</strong>：顶层 <code>-m/--model</code> 参数已移除；一次性指定模型用<br><code>opencode run --model provider/model &quot;...&quot;</code>（khy-os 的 <code>opencodeInvocation.js</code><br>已按此形状构造调用参数）。</p>
       </article>
       <nav class="pager"><span></span><span></span></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
