@@ -12,7 +12,9 @@ const { join, dirname } = require('node:path');
 const scriptDir = __dirname;
 const protoPath = join(scriptDir, 'public', 'logo-prototypes', 'prototype-C-pulse-diamond.svg');
 const publicDir = join(scriptDir, 'public');
-const androidRes = join(scriptDir, '..', '..', '..', 'apps', 'khy-os-client-app', 'android', 'app', 'src', 'main', 'res');
+// 移动端 Flutter 工程在 delivery/mobile/khy-os-client-app（2026-10 方案 P 从 apps/ 迁入）。
+// scriptDir = <root>/delivery/channel/khyquant/frontend，故上溯三级到 <root>/delivery 再进 mobile。
+const androidRes = join(scriptDir, '..', '..', '..', 'mobile', 'khy-os-client-app', 'android', 'app', 'src', 'main', 'res');
 
 const svgSource = readFileSync(protoPath, 'utf-8');
 

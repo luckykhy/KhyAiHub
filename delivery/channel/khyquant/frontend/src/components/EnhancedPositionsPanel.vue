@@ -538,7 +538,7 @@ defineExpose({
 
 <style scoped>
 .enhanced-positions-panel {
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -548,8 +548,8 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  background: linear-gradient(to bottom, #2a2a2a, var(--khy-gray-900));
-  border-bottom: 1px solid var(--khy-gray-700);
+  background: linear-gradient(to bottom, #2a2a2a, var(--surface-trading-bg));
+  border-bottom: 1px solid var(--surface-trading-border);
   font-weight: 600;
   color: var(--khy-white);
 }
@@ -560,12 +560,12 @@ defineExpose({
 
 :deep(.el-table) {
   background: transparent;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 :deep(.el-table th) {
   background: #2a2a2a;
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
   font-weight: 600;
 }
 
@@ -574,11 +574,11 @@ defineExpose({
 }
 
 :deep(.el-table td) {
-  border-bottom: 1px solid var(--khy-gray-700);
+  border-bottom: 1px solid var(--surface-trading-border);
 }
 
 :deep(.el-table__empty-text) {
-  color: var(--khy-gray-500);
+  color: var(--surface-trading-text-tertiary);
 }
 
 :deep(.long-position) {
@@ -632,7 +632,7 @@ defineExpose({
 }
 
 .summary-row.total-row {
-  border-top: 1px solid var(--khy-gray-600);
+  border-top: 1px solid var(--surface-trading-border-strong);
   padding-top: 12px;
   margin-top: 12px;
 }
@@ -644,7 +644,7 @@ defineExpose({
 }
 
 .summary-item .label {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 .summary-item .value {
@@ -658,7 +658,7 @@ defineExpose({
 }
 
 .close-dialog-content {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 .position-info {
@@ -676,7 +676,7 @@ defineExpose({
 }
 
 .info-row .label {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 .info-row .value {
@@ -699,7 +699,7 @@ defineExpose({
 }
 
 .estimate-item .label {
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 }
 
 .estimate-item .value {
@@ -714,12 +714,12 @@ defineExpose({
 }
 
 :deep(.el-dialog) {
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 }
 
 :deep(.el-dialog__header) {
   background: #2a2a2a;
-  border-bottom: 1px solid var(--khy-gray-700);
+  border-bottom: 1px solid var(--surface-trading-border);
 }
 
 :deep(.el-dialog__title) {
@@ -727,16 +727,16 @@ defineExpose({
 }
 
 :deep(.el-dialog__body) {
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 }
 
 :deep(.el-form-item__label) {
-  color: var(--khy-gray-200);
+  color: var(--surface-trading-text);
 }
 
 :deep(.el-input-number .el-input__inner) {
   background: #2a2a2a;
-  border-color: var(--khy-gray-600);
+  border-color: var(--surface-trading-border-strong);
   color: var(--khy-white);
 }
 </style>
