@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>cli/tui/hooks — TUI 的 React hooks · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>cli<span class="sep">›</span>tui<span class="sep">›</span>hooks<span class="sep">›</span>cli/tui/hooks — TUI 的 React hooks</div>
+      <header class="hero reveal"><h1>cli/tui/hooks — TUI 的 React hooks</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#cli-tui-hooks-tui-的-react-hooks">cli/tui/hooks — TUI 的 React hooks</a></li><li class="lvl-2"><a href="#谁要">谁要</a></li><li class="lvl-2"><a href="#为什么">为什么</a></li><li class="lvl-2"><a href="#里面有什么">里面有什么</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#生命周期">生命周期</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="cli-tui-hooks-tui-的-react-hooks">cli/tui/hooks — TUI 的 React hooks<a class="anchor" href="#cli-tui-hooks-tui-的-react-hooks" aria-label="锚点">#</a></h1>
+<h2 id="谁要">谁要<a class="anchor" href="#谁要" aria-label="锚点">#</a></h2>
+<p>src/cli/tui/ink-components/ 里的组件。</p>
+<h2 id="为什么">为什么<a class="anchor" href="#为什么" aria-label="锚点">#</a></h2>
+<p>把「订阅 / 轮询 / 键盘态」这类跨渲染的状态从组件里抽出来，组件只管画。</p>
+<h2 id="里面有什么">里面有什么<a class="anchor" href="#里面有什么" aria-label="锚点">#</a></h2>
+<ul><li>useCompletions.js —— 补全菜单</li><li>useQueryBridge.js —— 查询与流式结果桥</li><li>usePhoneLinkStatus.js —— 手机链路状态</li></ul>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<ul><li><code>npm run check:tui-gates</code></li><li><code>node --test tests/cli/tui/</code></li></ul>
+<h2 id="生命周期">生命周期<a class="anchor" href="#生命周期" aria-label="锚点">#</a></h2>
+<p>本单元的 <code>khy.module.json</code> 记 <code>lifecycle.stage = staged</code>、<code>provenance = recorded-after-the-fact</code>：代码是直接写进核心域的，没有经过 <code>scripts/quarantine/</code> 缓冲区（判据见 <code>scripts/quarantine/README.md</code>）。单元内仍有源文件缺同名同目录测试，晋级三判据未齐，故不签 stable。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/cli/tui/AGENTS.html"><div class="dir">← 上一篇</div><div class="ttl">AGENTS.md — CC TUI 复刻工程约束</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/cli/tui/ink-components/README.html"><div class="dir">下一篇 →</div><div class="ttl">cli/tui/ink-components — Ink 组件集</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/cli/tui/hooks/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
  * bootLayout — 启动屏帧高的**单一账本**（H1 阶梯）。纯叶子：零 IO、确定性、绝不抛、不读 env。
  *
  * 为什么需要它（[DESIGN-ARCH-134] §3.5）：
- * 启动屏是没有主 UI chrome 的整屏帧 —— 帧高就是它自己的高度。加上品牌块（四叶草 9 行）
+ * 启动屏是没有主 UI chrome 的整屏帧 —— 帧高就是它自己的高度。加上品牌块（内核环点阵 13 行）
  * 之后必须按终端行数分档，否则短终端会撞 H1：ink 在 `outputHeight >= stdout.rows` 时进
  * fullscreen 分支，下一帧走 `clearTerminal + fullStaticOutput + output`
  * （`node_modules/ink/build/ink.js:320` 判定 / `:322-327` 执行）⇒ spinner 每 80ms 一帧 =
@@ -46,17 +46,18 @@ const MIN_CENTER_COLS = 40;
 
 /** 品牌块的五档，降级顺序 F → G → H → I → J（先丢 tagline，再丢整个图形）。 */
 const RUNGS = Object.freeze([
-  { id: 'F', clover: true, wordmark: true, tagline: true },
-  { id: 'G', clover: true, wordmark: true, tagline: false },
-  { id: 'H', clover: false, wordmark: true, tagline: true },
-  { id: 'I', clover: false, wordmark: true, tagline: false },
-  { id: 'J', clover: false, wordmark: false, tagline: false },
+  { id: 'F', mark: true, wordmark: true, tagline: true },
+  { id: 'G', mark: true, wordmark: true, tagline: false },
+  { id: 'H', mark: false, wordmark: true, tagline: true },
+  { id: 'I', mark: false, wordmark: true, tagline: false },
+  { id: 'J', mark: false, wordmark: false, tagline: false },
 ]);
 
-const CLOVER_ROWS = 9; // 与 logoArt.CLOVER_ROWS 同值；不 require 以保持本文件零图形依赖
+/** 品牌图形（内核环点阵）的行数 —— 与 logoArt.MARK_ROWS 同值；不 require 以保持本文件零图形依赖。 */
+const MARK_ROWS = 13;
 
 function brandRowsOf(rung) {
-  return (rung.clover ? CLOVER_ROWS : 0) + (rung.wordmark ? 1 : 0) + (rung.tagline ? 1 : 0);
+  return (rung.mark ? MARK_ROWS : 0) + (rung.wordmark ? 1 : 0) + (rung.tagline ? 1 : 0);
 }
 
 /** 某档的完整帧高（尾部汇总行恒按 1 行预留）。 */
@@ -67,7 +68,7 @@ function frameRowsOf(rung) {
 function describe(rung, center) {
   return {
     rung: rung.id,
-    clover: rung.clover,
+    mark: rung.mark,
     wordmark: rung.wordmark,
     tagline: rung.tagline,
     brandRows: brandRowsOf(rung),
@@ -107,7 +108,7 @@ function plan(input) {
     return describe(RUNGS[RUNGS.length - 1], center);
   } catch {
     // 绝不抛：任何异常都回退到保守缺省（I 档 + 居中）。
-    return { rung: 'I', clover: false, wordmark: true, tagline: false, brandRows: 1, frameRows: 15, center: true };
+    return { rung: 'I', mark: false, wordmark: true, tagline: false, brandRows: 1, frameRows: 15, center: true };
   }
 }
 
@@ -118,7 +119,7 @@ module.exports = {
   PROGRESS_ROWS,
   MIN_CENTER_COLS,
   RUNGS,
-  CLOVER_ROWS,
+  MARK_ROWS,
   plan,
   frameRowsOf,
 };

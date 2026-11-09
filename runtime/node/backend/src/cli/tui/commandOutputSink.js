@@ -96,7 +96,10 @@ function createSink(deps = {}) {
     for (const a of args) {
       line += (line ? ' ' : '') + (typeof a === 'string' ? a : String(a));
     }
-    push(line);
+    // console.log 的语义是「一行 + 换行」：不补 \n 的话，多次调用会粘成一行，
+    // text() 按 \n 拆行时就只剩一条巨行（实测 /help 的百行输出粘成一行后靠 ink
+    // 软换行勉强能看，但行结构全丢）。
+    push(line + '\n');
   };
 
   // formatters 的 printInfo / printWarn / printError / printSuccess /
@@ -138,13 +141,23 @@ function createSink(deps = {}) {
     if (!raw) return '';
     let lines;
     try {
-      lines = raw.split('\n').map((ln) => strip(ln).replace(/\r/g, '').replace(/\s+$/, ''));
+      lines = raw
+        .split('\n')
+        .map((ln) => {
+          const stripped = strip(ln).replace(/\r/g, '').replace(/\s+$/, '');
+          // 纯控制序列行（topicBar 的 OSC 标题写、单独的 CSI）剥完即空 → 整行丢弃，
+          // 不留空行；而 console.log('') 的刻意空行保留（原行本就是空的）。
+          if (ln.trim() === '') return stripped;
+          return stripped.trim() === '' ? null : stripped;
+        })
+        .filter((ln) => ln !== null);
     } catch {
       lines = raw.split('\n');
     }
     while (lines.length && lines[0].trim() === '') lines.shift();
     while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
-    return lines.join('\n').trim();
+    // 只去首尾空行,不做整体 trim —— 行首缩进(帮助卡的 `  khy OS …`)是排版的一部分。
+    return lines.join('\n');
   }
 
   return { restore, text, isLive: () => live };

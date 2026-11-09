@@ -3896,11 +3896,12 @@ const [paramPanel, setParamPanel] = React.useState(null);
         const res = instr.appendQuickMemory(note, { scope });
         if (res && res.success) {
           const where = scope === 'global' ? '全局' : '项目';
+          const warn = res.warning ? `\n⚠ ${res.warning}` : '';
           query.setMessages((m) => [
             ...m,
             {
               role: 'notice',
-              content: `已记入指令文件（${where}）：${res.file}${res.created ? ' (新建)' : ''}`,
+              content: `已记入指令文件（${where}）：${res.file}${res.created ? ' (新建)' : ''}${warn}`,
               timestamp: Date.now(),
             },
           ]);

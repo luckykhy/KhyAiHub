@@ -64,6 +64,27 @@ function slashDescription(cmd) {
   return _slashMeta.get(cmd) || '';
 }
 
+// 类目真源是 commandSchema(getBuiltinSlashCommands 已物化 inferCategory),键含前导 /。
+// 刻意不做 inferCategory('system') 兜底:未登记命令(extras/用户技能/CC 命令)必须
+// 保持「无类」落 default,渲染层才区分得了「在册=有色、未登记=灰」。
+let _slashCategories = null;
+function slashCategory(cmd) {
+  if (_slashCategories === null) {
+    _slashCategories = new Map();
+    try {
+      const list = require('../../../constants/commandSchema').getBuiltinSlashCommands();
+      for (const row of list) {
+        if (row && row.cmd) {
+          _slashCategories.set(row.cmd, row.category);
+        }
+      }
+    } catch {
+      /* schema 不可用 → Map 空,全部落 default */
+    }
+  }
+  return _slashCategories.get(cmd);
+}
+
 function computeSlash(value) {
   if (value.includes('\n') || !value.startsWith('/')) {
     return null;
@@ -124,6 +145,9 @@ function computeSlash(value) {
       value: cmd,
       label: cmd,
       desc: slashDescription(cmd),
+      // 仅一级斜杠命令带类目;slash-sub 与 @file 的 items 一概不加此键,
+      // 渲染层以「无 category 键」为准走旧色。
+      category: slashCategory(cmd) || 'default',
     }));
   } catch {
     items = [];
