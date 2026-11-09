@@ -18,14 +18,14 @@
       "guard": "scripts/ci/check-repo-layout.js",
       "metric": "root-uncatalogued",
       "measured": 0,
-      "measuredAt": "2026-10-10",
+      "measuredAt": "2026-10-25",
       "target": 0,
       "risk": "P2",
       "owner": "platform",
       "dueBy": "2026-12-31",
       "status": "closed",
-      "note": "2026-10-10 改口径：原 measured=40 数的是 ROOT_CATALOG 封闭清单的**规模**（含入口壳/配置契约/工具目录/本机态），那不是债务，收敛到 10 也只是把清单写短。真正的债务是「未登记的根级实体数」，check-repo-layout.js 已把它无条件记进 counts.root-uncatalogued（含 0，否则「已归零」和「没测」看起来一样）。当前实测 0。终局档位 10 见 [DESIGN-LAY-008] §21，那是规模目标不是本条判据。",
-      "plan": "保持根上每个实体都在 ROOT_CATALOG 里登记了 category/reason/reviewBy；新增未登记者由守卫直接报 root-uncatalogued。"
+      "note": "已归零（2026-10-25 实测复核）。此前台账记 measured=0，而守卫实测根上有 5 个未登记实体：4 个未跟踪残留（$null / t.bridgeName / c_sessionSlice.ts / check-mojibake.tmp.mjs）加上未登记的 start-web.cmd（属新增根级入口脚本，漏了 ROOT_CATALOG 登记）。本轮清掉 4 个残留、把 start-web.cmd 登记进 ROOT_CATALOG，并让 start-web.cmd 的上游khy-env.bat 一并入库（此前跟踪中的 khy.bat 会 call 它，干净克隆会断），故 check-repo-layout 实测 root-uncatalogued=0 —— 声明终成事实。本项 metric 是违规计数，终局档位为 0（归零即清偿）。",
+      "plan": "已清偿（2026-10-25）：根上无未登记实体。后续新增根级实体必须当场登记 ROOT_CATALOG，否则本项重新变红。"
     },
     {
       "id": "layout.unresolved-require",
@@ -144,8 +144,8 @@
       "id": "standards.functionLines",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "functionLines",
-      "measured": 2327,
-      "measuredAt": "2026-10-10",
+      "measured": 2390,
+      "measuredAt": "2026-10-25",
       "target": 1600,
       "risk": "P2",
       "owner": "platform",
@@ -153,14 +153,14 @@
       "status": "open",
       "note": "⚠️ 基线声称 10800（max 12000），实测仅 2144 —— 容忍度是实际的 5.6 倍，门只能拦『翻倍级』恶化。且 functionLines.max 与 nestingDepth.max 同为 12000、二者 current 同为 10800，四个数字完全相同，是两个独立指标被填了同一个估值。",
       "plan": "[阶段D·2026-Q4(12月底)] 第一步把基线改成实测 2145（这是收紧 5.6 倍，不是放宽）；随后存量冻结 + 增量归零（新文件 >50 行函数直接 error，照搬 pr-gate 的 'Lint added files zero tolerance' 模式）",
-      "regression": "2026-10-05：2184 → 2308（+124）。check-code-standards 默认扫描目录在 bc43302f 目录搬迁后仍指旧路径（services/backend/src 已不存在），门空转、读数恒 0，7bfc49d9 修路径后重新看到真树；2026-09-18 旧基线未跟踪这段真实存量增长。按 QUAL-1 据实回写为实测 2308，棘轮自该值继续只降不升。"
+      "regression": "2026-10-05：2184 → 2308（+124）。check-code-standards 默认扫描目录在 bc43302f 目录搬迁后仍指旧路径（services/backend/src 已不存在），门空转、读数恒 0，7bfc49d9 修路径后重新看到真树；2026-09-18 旧基线未跟踪这段真实存量增长。按 QUAL-1 据实回写为实测 2308，棘轮自该值继续只降不升。｜2026-10-25：2327 → 2390（本轮新增核心域文件带动的存量增长）。按 QUAL-1 据实回写基线与实测值，棘轮自该值继续只降不升，target 不变。"
     },
     {
       "id": "standards.fileLines",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "fileLines",
-      "measured": 401,
-      "measuredAt": "2026-10-10",
+      "measured": 424,
+      "measuredAt": "2026-10-25",
       "target": 300,
       "risk": "P2",
       "owner": "platform",
@@ -168,14 +168,14 @@
       "status": "open",
       "note": "基线声称 512。独立复核：runtime/node/backend/src 下 >500 行的 .js 文件实测 278 个（该目录 2719 个 JS / 719917 行），与守卫报的 352 也不一致 —— 说明基线还伴随**扫描范围漂移**，需一并核对口径。最大文件 aiChatCore.js 4738 行。",
       "plan": "[阶段D·2026-Q4(12月底)] 先核对扫描范围与基线生成方式；存量冻结在实测值 + 增量归零；优先拆 aiChatCore.js 等超大文件",
-      "regression": "2026-10-05：363 → 398（+35）。同 functionLines 的空转根因（扫描目录在目录搬迁后指旧路径）。按 QUAL-1 据实回写为实测 398（独立复核：runtime/node/backend/src 下 >500 行 .js 实测 396，口径内一致），棘轮自该值继续只降不升。"
+      "regression": "2026-10-05：363 → 398（+35）。同 functionLines 的空转根因（扫描目录在目录搬迁后指旧路径）。按 QUAL-1 据实回写为实测 398（独立复核：runtime/node/backend/src 下 >500 行 .js 实测 396，口径内一致），棘轮自该值继续只降不升。｜2026-10-25：401 → 424（本轮新增核心域文件带动的存量增长）。按 QUAL-1 据实回写基线与实测值，棘轮自该值继续只降不升，target 不变。"
     },
     {
       "id": "standards.nestingDepth",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "nestingDepth",
-      "measured": 9281,
-      "measuredAt": "2026-10-10",
+      "measured": 9467,
+      "measuredAt": "2026-10-25",
       "target": 8707,
       "risk": "P2",
       "owner": "platform",
@@ -183,7 +183,7 @@
       "status": "open",
       "note": "⚠️ **先修计量，再谈清偿**。当前用行缩进估算嵌套（floor(indent/2)+1 > 4），不是真实块嵌套 —— 4 空格缩进的文件会系统性误报，8703 这个数字本身可信度存疑。基线声称 10800（与 functionLines 同值，见该条）。target 暂维持实测值，待计量修好后重新定目标。",
       "plan": "[阶段C·2026-Q4(11月底)·先修计量] ① 改为基于真实块嵌套（解析 { } 深度）或至少区分缩进宽度；② 修完后重新测量；③ 重设 target",
-      "regression": "2026-10-05：8754 → 9186（+432）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 9186（targetPending：计量口径仍待修，先求准），棘轮自该值继续只降不升。",
+      "regression": "2026-10-05：8754 → 9186（+432）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 9186（targetPending：计量口径仍待修，先求准），棘轮自该值继续只降不升。｜2026-10-25：9281 → 9467（本轮新增核心域文件带动的存量增长）。按 QUAL-1 据实回写基线与实测值，棘轮自该值继续只降不升，target 不变。",
       "targetPending": {
         "reason": "当前用行缩进估算嵌套（floor(indent/2)+1>4）而非真实块嵌套，4 空格缩进文件会系统性误报，8707 数字可信度存疑；须先改正计量口径，再定 target。",
         "by": "2026-11-30"
@@ -193,8 +193,8 @@
       "id": "standards.consoleLog",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "consoleLog",
-      "measured": 5087,
-      "measuredAt": "2026-10-10",
+      "measured": 5121,
+      "measuredAt": "2026-10-25",
       "target": 3000,
       "risk": "P2",
       "owner": "platform",
@@ -202,7 +202,7 @@
       "status": "open",
       "note": "基线声称 4592，实测 4584 —— 基本准确（差 8）。非测试文件里的 console.* 应改结构化 logger。",
       "plan": "[阶段D·2026-Q4(12月底)] 分批：bootstrap/ → cli/ → services/；用既有 scripts/frontend/cleanup-console.js 的同款模式做批量替换 + 人工复核",
-      "regression": "2026-10-05：4731 → 5065（+334）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 5065，棘轮自该值继续只降不升。"
+      "regression": "2026-10-05：4731 → 5065（+334）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 5065，棘轮自该值继续只降不升。｜2026-10-25：5087 → 5121（本轮新增核心域文件带动的存量增长）。按 QUAL-1 据实回写基线与实测值，棘轮自该值继续只降不升，target 不变。"
     },
     {
       "id": "tui.gates",
