@@ -364,11 +364,11 @@ npm run build --prefix delivery/web/ai-frontend</code></pre>
 <p><strong>什么时候来这里（症状触发词）：</strong></p>
 <ul><li>a user installs @khy-os/khy-os on a machine with Node &lt; 20 and khy crashes cryptically deep in the backend instead of saying &quot;need Node &gt;= 20&quot; — the pip channel already guards this via check_node, the npm launcher did not</li><li>you raise the minimum Node major: keep MIN_MAJOR in nodeVersionPreflight.js in sync with pip cli.py check_node (major&gt;=20), backend package.json engines, and devenv.js TOOLCHAINS</li><li>you add a platform install hint or a China-mirror branch — extend _platformHint / _isChina, mirroring pip _print_node_install_hint</li><li>the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)</li></ul>
 <p><strong>先读这些文件：</strong></p>
-<ul><li><code>works/ship/npm/scripts/nodeVersionPreflight.js</code></li><li><code>works/ship/npm/test/nodeVersionPreflight.test.js</code></li><li><code>works/ship/npm/bin/khy.js</code></li></ul>
+<ul><li><code>works/ship/npm/bin/khy.js</code></li></ul>
 <p><strong>参考文档：</strong></p>
 <ul><li>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-081] npm 渠道 Node 版本预检.md</li></ul>
 <p><strong>跑这些验证命令（绿灯＝这块没坏）：</strong></p>
-<pre><code class="language-bash">npm run <span class="hljs-built_in">test</span>:one -- works/ship/npm/test/nodeVersionPreflight.test.js</code></pre>
+<pre><code class="language-bash">node --check works/ship/npm/bin/khy.js</code></pre>
 <hr>
 <h3 id="restore-convergence-loop-guard-verifier-after-an-agent-executes-a-restore-move-and-re-probes-did-it-actually-advance-stop-continue-or-escalate-restore-convergence-verifier">Restore Convergence &amp; Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)  <code>restore-convergence-verifier</code><a class="anchor" href="#restore-convergence-loop-guard-verifier-after-an-agent-executes-a-restore-move-and-re-probes-did-it-actually-advance-stop-continue-or-escalate-restore-convergence-verifier" aria-label="锚点">#</a></h3>
 <p><strong>什么时候来这里（症状触发词）：</strong></p>
@@ -685,8 +685,7 @@ npm run <span class="hljs-built_in">test</span>:one -- runtime/node/backend/test
 <ul><li>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-104] 纯文本模型图片 OCR 兜底与低置信诚实告诫.md</li></ul>
 <p><strong>跑这些验证命令（绿灯＝这块没坏）：</strong></p>
 <pre><code class="language-bash">npm run <span class="hljs-built_in">test</span>:one -- runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js
-node --<span class="hljs-built_in">test</span> runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js
-python3 -m unittest tests.unit.test_dochelper_ocr_confidence</code></pre>
+node --<span class="hljs-built_in">test</span> runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js</code></pre>
 <hr>
 <h3 id="text-only-model-image-ocr-fallback-honest-coverage-caveat-orthogonal-to-ocr-fallback-confidence-confidence-is-about-accuracy-of-the-recognized-words-coverage-is-about-completeness-whether-the-injected-ocr-text-actually-covers-all-input-images-closes-the-missing-dimension-gap-where-extractimageocrdetails-does-images-slice-0-maximages-and-silently-drops-images-beyond-the-cap-and-where-some-attempted-images-produce-no-text-so-a-text-only-model-is-told-请据此作答-as-if-it-saw-everything-when-n-3-images-and-unreadable-images-vanished-with-zero-trace-the-textbook-silent-truncation-reads-as-covered-everything-anti-pattern-ocr-fallback-coverage">Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)  <code>ocr-fallback-coverage</code><a class="anchor" href="#text-only-model-image-ocr-fallback-honest-coverage-caveat-orthogonal-to-ocr-fallback-confidence-confidence-is-about-accuracy-of-the-recognized-words-coverage-is-about-completeness-whether-the-injected-ocr-text-actually-covers-all-input-images-closes-the-missing-dimension-gap-where-extractimageocrdetails-does-images-slice-0-maximages-and-silently-drops-images-beyond-the-cap-and-where-some-attempted-images-produce-no-text-so-a-text-only-model-is-told-请据此作答-as-if-it-saw-everything-when-n-3-images-and-unreadable-images-vanished-with-zero-trace-the-textbook-silent-truncation-reads-as-covered-everything-anti-pattern-ocr-fallback-coverage" aria-label="锚点">#</a></h3>
 <p><strong>什么时候来这里（症状触发词）：</strong></p>
@@ -921,7 +920,7 @@ node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.j
 <p><strong>什么时候来这里（症状触发词）：</strong></p>
 <ul><li>you see copy-pasted scaffolding across test files, or want to extract duplicated functions into a shared library: use/extend runtime/node/backend/tests/gateway/_ocrGatewayHarness.js (parameterized factory; migrate reads from module vars to handle fields rec.finalPrompt/finalImages; keep all test bodies/assertions/env-keys/content-strings byte-equivalent)</li><li>you want CI to alert on &gt;3 identical lines: npm run check:duplication (warn) / check:duplication:strict (exit 1 on warn) / check:duplication:gate (hard gate: non-baseline dup → error) / check:duplication:baseline (regenerate .duplication-baseline.json)</li><li>you need to flip stage-1 warn to stage-2 hard gate: change DEFAULT_MODE 'warn'→'gate' in scripts/check-duplication.js, re-run --write-baseline, and fold check:duplication into check:small-model:safety — one reviewable diff</li><li>you need to tune the detector: DEFAULT_MIN_BLOCK (how many lines = duplicate) and isSignificant/COMMENT_LINE_RE/PUNCT_ONLY_RE (skip categories) live in scripts/lib/duplicationGuard.js; DEFAULT_SCOPE (what gets scanned) lives in scripts/check-duplication.js</li></ul>
 <p><strong>先读这些文件：</strong></p>
-<ul><li><code>runtime/node/backend/tests/gateway/_ocrGatewayHarness.js</code></li><li><code>scripts/lib/duplicationGuard.js</code></li><li><code>scripts/ci/check-duplication.js</code></li><li><code>.duplication-baseline.json</code></li><li><code>scripts/tests/duplicationGuard.test.js</code></li><li><code>scripts/tests/check-duplication.test.js</code></li></ul>
+<ul><li><code>runtime/node/backend/tests/gateway/_ocrGatewayHarness.js</code></li><li><code>scripts/lib/duplicationGuard.js</code></li><li><code>scripts/ci/check-duplication.js</code></li><li><code>scripts/ci/duplication-baseline.json</code></li><li><code>scripts/tests/duplicationGuard.test.js</code></li><li><code>scripts/tests/check-duplication.test.js</code></li></ul>
 <p><strong>参考文档：</strong></p>
 <ul><li>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-131] 重复代码检测门与公共测试脚手架.md</li></ul>
 <p><strong>跑这些验证命令（绿灯＝这块没坏）：</strong></p>
@@ -1114,9 +1113,7 @@ npm run docs:verify
 node --check scripts/docs/build_docs_site.js
 node --check scripts/docs/lint_docs_widgets.js
 node --<span class="hljs-built_in">test</span> scripts/docs/build_docs_site.test.js
-node --<span class="hljs-built_in">test</span> scripts/docs/lint_docs_widgets.test.js
-python3 -m unittest tests.unit.test_docs_site_build
-python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py runtime/substrate/platform/khy_platform/docs_site.py</code></pre>
+node --<span class="hljs-built_in">test</span> scripts/docs/lint_docs_widgets.test.js</code></pre>
 <hr>
 <h3 id="google-vertex-ai-端点成形-cli-接线-khy-gateway-vertex-把纯叶子-vertexrequestshaping-的-url-成形能力接到人面前-告诉用户网关表单该填什么-baseurl-端点-鉴权-gateway-vertex-shaping">Google Vertex AI 端点成形 CLI 接线 (khy gateway vertex：把纯叶子 vertexRequestShaping 的 URL 成形能力接到人面前，告诉用户网关表单该填什么 baseUrl/端点/鉴权)  <code>gateway-vertex-shaping</code><a class="anchor" href="#google-vertex-ai-端点成形-cli-接线-khy-gateway-vertex-把纯叶子-vertexrequestshaping-的-url-成形能力接到人面前-告诉用户网关表单该填什么-baseurl-端点-鉴权-gateway-vertex-shaping" aria-label="锚点">#</a></h3>
 <p><strong>什么时候来这里（症状触发词）：</strong></p>
