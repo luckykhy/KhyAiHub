@@ -176,6 +176,7 @@ object VfsBridge {
         "status", "list", "stat", "read", "write", "mkdir", "delete", "rename",
         "copy", "move", "search", "hash", "space", "mounts", "packages", "apkInfo",
         "archiveList", "archiveExtract", "archiveCreate", "analyze",
+        "archiveEncrypt", "archiveDecrypt",
         "watchStart", "watchStop", "watchList",
         "copyStart", "copyCancel", "copyStatus",
     )
@@ -232,6 +233,8 @@ object VfsBridge {
             "archiveList" -> VfsArchive.list(context, call)
             "archiveExtract" -> VfsArchive.extract(context, call)
             "archiveCreate" -> VfsArchive.create(context, call)
+            "archiveEncrypt" -> VfsCrypto.encrypt(context, call)
+            "archiveDecrypt" -> VfsCrypto.decrypt(context, call)
             "analyze" -> VfsAnalyze.analyze(context, call)
             "watchStart" -> VfsWatcher.start(context, call)
             "watchStop" -> VfsWatcher.stop(call)
