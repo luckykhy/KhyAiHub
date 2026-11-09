@@ -17,8 +17,8 @@
       "按时间追加的工作备注"
     ]
   },
-  "next_id": 19,
-  "last_updated": "2026-10-05",
+  "next_id": 23,
+  "last_updated": "2026-10-25",
   "bugs": [
     {
       "id": "BUG-001",
@@ -176,31 +176,34 @@
       "title": "TUI @补全：引用根（@alias/子路径）内文件补全静默失效——useCompletions.js 引用块作用域外的未定义标识符 first，ReferenceError 被 catch 吞成空列表",
       "severity": "P2",
       "domain": "cli",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "useCompletions.js computeFile 的 refRoot 分支（.map 回调内）引用了 143 行第一个 try 块内声明的块级解构变量 first，块外不可见，命中引用根分支必抛 ReferenceError，被外层 catch（entries=[]）吞掉 → @alias/子路径 内补全静默返回空。",
       "fix_summary": "在 refRoot 分支内用 partial.slice(0, partial.indexOf('/')) 重派生别名段（与 143 行 first 同义）。回归测试 tests/cli/tui/useCompletions.refRootRegression.test.js：修复前实测 fail（返回 null）、修复后 pass；复现-修复双相闭环。",
       "created": "2026-09-20",
-      "updated": "2026-09-20",
-      "notes": []
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24 复验 PASS：独立重跑证据 —— BUG-009 tests/cli/tui/useCompletions.refRootRegression.test.js 1/1 绿；BUG-010 tests/cli/tui/uiBridgeRefs.test.js 2/2 绿（uiAdapter.js:60-99 的 hasAppRefs() 门控实测生效）；BUG-011 CcViewStack.js:127 与 :275 已改为 inkRuntime.get() 惰性桥取 Box/Text/useInput，裸标识符 ReferenceError 消除；BUG-013 两个 QUARANTINE 壳在 node --test 下 outputWidthGuard 6/6 绿、caretGeometry 1/1 绿。同时确认工作区另有 8 个 node:test 与 10 个 jest 失败与本 4 条无关（源自工作区在途的 paramPanel/phoneLink 等特性改动）。"
+      ]
     },
     {
       "id": "BUG-010",
       "title": "TUI 统一协议原生覆盖层静默降级：ink App.js uiBridge 接线引用从未定义的 setPermissionRequest，setAppRefs 每次挂载必抛错被吞，_appRefs 恒 null，showConfirmNative/showListNative 永远走 stdin 简化回退而非 PermissionsPrompt/ModelPicker 原生组件",
       "severity": "P2",
       "domain": "cli",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "App.js 挂载 effect 的 bridge.setAppRefs({...}) 载荷引用了文件中从未声明的标识符 setPermissionRequest（组件里只有 setModelPicker/setFormFlow 两个 useState setter），每次挂载必抛 ReferenceError，被 try/catch 吞掉 → setAppRefs 从未执行 → _appRefs 恒 null → hasAppRefs() 恒 false → confirm/list/form 全部静默降级到 stdin 简化回退，原生覆盖层整体不可达。",
       "fix_summary": "载荷移除幻影键，仅传真实存在的 setModelPicker/setFormFlow（接线首次成功，list/form 按设计意图走原生覆盖层）；confirm 未接：原生 PermissionsPrompt 消费统一协议 request 形状（tool_name/input），与 uiBridge 的 {toolName,action,risk} 不同构，形状迁移单独立项；uiBridge.showConfirmNative 自身的 setPermissionRequest 守卫会显式回退 stdin，确认行为不变。新增 tests/cli/tui/uiBridgeRefs.test.js：防幻影键静态守卫 + 接线/回退行为守卫（2/2 绿）。证据：.khy/feedback/bug010-uibridge-refs/ 与 .khy/feedback/repair-plan-20260928/probe-bug010-uibridge.js。",
       "created": "2026-09-20",
-      "updated": "2026-09-28",
+      "updated": "2026-10-24",
       "notes": [
-        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；复现探针实证 payload 引用未声明标识符；全量 tests/cli/tui 1164 例仅 5 个与改动无关的存量失败（改动前基线相同）。"
+        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；复现探针实证 payload 引用未声明标识符；全量 tests/cli/tui 1164 例仅 5 个与改动无关的存量失败（改动前基线相同）。",
+        "2026-10-24 复验 PASS：独立重跑证据 —— BUG-009 tests/cli/tui/useCompletions.refRootRegression.test.js 1/1 绿；BUG-010 tests/cli/tui/uiBridgeRefs.test.js 2/2 绿（uiAdapter.js:60-99 的 hasAppRefs() 门控实测生效）；BUG-011 CcViewStack.js:127 与 :275 已改为 inkRuntime.get() 惰性桥取 Box/Text/useInput，裸标识符 ReferenceError 消除；BUG-013 两个 QUARANTINE 壳在 node --test 下 outputWidthGuard 6/6 绿、caretGeometry 1/1 绿。同时确认工作区另有 8 个 node:test 与 10 个 jest 失败与本 4 条无关（源自工作区在途的 paramPanel/phoneLink 等特性改动）。"
       ]
     },
     {
@@ -208,31 +211,35 @@
       "title": "CcViewStack.js CcTaskCompleteCard 使用未导入的裸 Box/Text（本文件其它组件均走 inkRuntime 惰性桥），渲染即 ReferenceError——CC 模式任务完成卡片潜在崩溃",
       "severity": "P2",
       "domain": "cli",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "CcViewStack.js 的 CcTaskCompleteCard 组件直接用裸 Box/Text（React.createElement(Box,...)），而本文件其它组件一律走 inkRuntime.get() 惰性桥（顶层 .get() 在 loadInk() 前会抛错，ESM 桥接约定）。Box/Text 从未导入，组件一渲染即 ReferenceError——CC 模式任务完成卡片潜在崩溃。",
       "fix_summary": "按本文件既有惰性模式补 const { Box, Text } = inkRuntime.get();（与兄弟组件同款）。eslint no-undef 错误清零；tests/cli/tui 862/862 与 test:tui 435/435 全绿；check-agent-rules 改动文件零违规。",
       "created": "2026-09-20",
-      "updated": "2026-09-20",
-      "notes": []
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24 复验 PASS：独立重跑证据 —— BUG-009 tests/cli/tui/useCompletions.refRootRegression.test.js 1/1 绿；BUG-010 tests/cli/tui/uiBridgeRefs.test.js 2/2 绿（uiAdapter.js:60-99 的 hasAppRefs() 门控实测生效）；BUG-011 CcViewStack.js:127 与 :275 已改为 inkRuntime.get() 惰性桥取 Box/Text/useInput，裸标识符 ReferenceError 消除；BUG-013 两个 QUARANTINE 壳在 node --test 下 outputWidthGuard 6/6 绿、caretGeometry 1/1 绿。同时确认工作区另有 8 个 node:test 与 10 个 jest 失败与本 4 条无关（源自工作区在途的 paramPanel/phoneLink 等特性改动）。"
+      ]
     },
     {
       "id": "BUG-012",
       "title": "TUI 底部状态行宽度预算溢出：windsurf 停用回退等长警告使状态行超过终端列数，闭合括号被挤到下一行形成残影字符（实测 ~125 列窗口两次复现；最大化/半屏重绘正常）——statusPanel/footerLayout 未把网关警告纳入宽度预算或截断",
       "severity": "P2",
       "domain": "cli",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "FooterBar(ink) 的网关警告段（⟲ 通道已停用回退…）是 height:1 单行页脚里唯一可变长的段，无任何宽度预算；代码注释声称「截断保护」但从未实现。~125 列窗口下长警告把行尾挤出终端列数，闭合括号折行留残影。classic 侧 footerLayout.js 有 displayWidth 预算，ink 侧 FooterBar 没有。",
       "fix_summary": "新增纯叶子 src/cli/tui/footerWidthBudget.js（判定收敛：full → 按预算截断带省略号 → ⟲<通道名> 短标 → 整段让位），FooterBar 改为段表渲染（左右各段纯文本先收集、按 formatters.displayWidth 实测宽），App 经 effectiveCols 口径把列宽经 cols prop 传入（遵守「叶子不自读 process.stdout.columns」契约，effectiveCols.test.js 19/19 绿）；cols 未传（PreviewLayout 等旁路）逐字节回退旧行为。新增 tests/cli/tui/footerWidthBudget.test.js 6/6 绿。",
       "created": "2026-09-20",
-      "updated": "2026-09-28",
+      "updated": "2026-10-25",
       "notes": [
-        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；落点 FooterBar.js 段表化 + 纯叶子预算；修复过程中发现并纠正叶子相对路径笔误（../../formatters → ../formatters），该错误曾使预算静默回退 .length 口径。"
+        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；落点 FooterBar.js 段表化 + 纯叶子预算；修复过程中发现并纠正叶子相对路径笔误（../../formatters → ../formatters），该错误曾使预算静默回退 .length 口径。",
+        "2026-10-25 复验 PASS：node --test tests/cli/tui/footerWidthBudget.test.js → # pass 6 / # fail 0。",
+        "复验要点：纯叶子 footerWidthBudget.js 的判定收敛（full → 按预算截断带省略号 → ⟲<通道名> 短标 → 整段让位）在实测列宽下成立；页脚不再把闭合括号挤出终端列数。"
       ]
     },
     {
@@ -240,34 +247,38 @@
       "title": "两个 QUARANTINE 占位测试壳用 jest 的 describe/it/expect 全局，在 node --test 下未定义，每次 test:node 运行必报 ReferenceError 失败（tests/cli/tui/__tests__/outputWidthGuard.test.js、tests/cli/tui/ink-components/caretGeometry.test.js——DEBT.md §六 登记本该是零影响空壳）",
       "severity": "P3",
       "domain": "packaging",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "2026-09-12 隔离处理写壳时用了 jest 的 describe/it/expect 全局。node --test 没有这些全局 → 壳文件每次 test:node 都 ReferenceError 失败，与 QUARANTINE『保持可解析、不误报』的初衷相反。",
       "fix_summary": "两个壳改为 node:test 风格（require('node:test') 的 describe/it + node:assert）。jest.config 的 node:test 标记探测自动将其移出 jest；node:test 下各 1 个恒真占位。复跑 tests/cli/tui 递归全套 937/937 全绿（修复前 935/937）。",
       "created": "2026-09-20",
-      "updated": "2026-09-20",
-      "notes": []
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24 复验 PASS：独立重跑证据 —— BUG-009 tests/cli/tui/useCompletions.refRootRegression.test.js 1/1 绿；BUG-010 tests/cli/tui/uiBridgeRefs.test.js 2/2 绿（uiAdapter.js:60-99 的 hasAppRefs() 门控实测生效）；BUG-011 CcViewStack.js:127 与 :275 已改为 inkRuntime.get() 惰性桥取 Box/Text/useInput，裸标识符 ReferenceError 消除；BUG-013 两个 QUARANTINE 壳在 node --test 下 outputWidthGuard 6/6 绿、caretGeometry 1/1 绿。同时确认工作区另有 8 个 node:test 与 10 个 jest 失败与本 4 条无关（源自工作区在途的 paramPanel/phoneLink 等特性改动）。"
+      ]
     },
     {
       "id": "BUG-014",
       "title": "工具调用能力判定系统性偏「不支持」：判据把无定论读成不支持，产生 gpt-4o→text 类假阴性，且假阴性自我焊死无法被现实纠正",
       "severity": "P1",
       "domain": "gateway",
-      "status": "pending_verify",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "",
       "fix_summary": "判定链三处收口：modelToolingCapability 拆成 wire 侧(shouldStripUpstreamTools·只认正面证据)与提示词侧(modelLacksReliableToolCalling·保留名字启发)；capabilityModelKey 新增 routeKey；toolCapabilityStore 新增 route: 通道分区（独立 TTL）。存证见 .khy/feedback/toolcall-capability-falseneg-20260923/。",
       "created": "2026-09-23",
-      "updated": "2026-09-23",
+      "updated": "2026-10-25",
       "notes": [
         "2026-09-23: P0+P1+P2 已实现并验证（node:test 265/265、jest 115/115、门禁全绿）。P0:env 名单键规范化（路由 id 与裸名同键）+ 提示文案收口 stripToolsNotice。P1:探测器判据改为只认显式调用语法（复用 toolCallParser.hasExplicitToolCallSyntax）、截断→unknown、maxTokens 64→256、新增 A/B 对照组分离 route-rejects-tools。P2:wire 侧只认正面证据（未知一律先发，名字启发退出 wire 判定）、新增 routeKey 通道身份与 route: 分区记忆、两处 400 链在重试成功后记忆通道拒收、CLI list 展示通道拒收。P3/P4 余项与 khyquant 分叉副本未做。",
         "2026-09-23: P3 已交付:隔离式挑战(toolChallengeCadence,单边实现只跳过剥离、不越权通道拒收与 env 钉子),机制已按 S1 登记进 FEATURE-OWNERSHIP rollout,设计文档 [DESIGN-ARCH-138] 含 .html 孪生。最终验证:node:test 286/286、jest 155/155、13 个守卫可跑部分全绿。未做:P4 余项、剥离门自身的阶段登记、khyquant 分叉副本、版本 bump(因 changelog-new --check 存量失败:CHANGELOG 顶部 1.1.14 vs pyproject 1.1.15,红线级存量问题应单独处理)。本次施工中我为验证生成器幂等跑了全仓 docs 构建,刷新了 11 个陈旧孪生 .html(均为 LAY-5 构建产物,源未改),本机无 git 无法按字节回退,详情见 .khy/feedback/toolcall-capability-falseneg-20260923/P3-delivery.md。",
         "2026-09-23: 全部完成:P0/P1/P2/P3/P4 五项 + 版本收口。P4 余项实现非对称继承(getVerdictFor:negative 只在测出它的适配器生效、positive 全局共享;不做重新分键,读侧过滤向后兼容)。剥离门定性为 PROCESS-008 范围外并给出反方向判据(见 [DESIGN-ARCH-138] §4.1)——不登记的理由是:填 S3 会让仓库变红且无解、填 S1 是假话。版本 1.1.15→1.2.0(含 ###Fixed + ###Added ⇒ MINOR),G1 四源同步,changelog-new --check 由 FAIL 转 OK。khyquant 分叉副本另开 BUG-015。最终:node:test 292/292、jest 155/155、守卫全绿。收口记录见 .khy/feedback/toolcall-capability-falseneg-20260923/COMPLETION.md。",
-        "2026-09-23: git 依赖门禁已补跑(git 在 D:\\Portable\\2-tools\\Tools\\git\\cmd,挂 PATH)。关键上下文:本工作树已有 359 个存量未提交文件(chore/tui-ux-nightly),故 --changed 门禁评的是整树变更集。结论:与我文件相关且根因在我的失败为 0。check-agent-feedback 0 error 且我的文件 0 finding;check-leaf-contract --changed 通过。两条 exit 1 根因均为存量:check-change-safety 仅因 changed-count-error(359 files);check-arch-debt 因 6 个我触碰过的巨石文件未登记 godFiles(改动前已超 800 行,我未擅自扩大基线)。check-file-ratchet 整树 133 error 且对 HEAD~1 比较,增量含全部存量。归属核查脚本与结果见 .khy/feedback/toolcall-capability-falseneg-20260923/{attribute.js,attribution.txt,generator-delta.txt,COMPLETION.md §7}。"
+        "2026-09-23: git 依赖门禁已补跑(git 在 D:\\Portable\\2-tools\\Tools\\git\\cmd,挂 PATH)。关键上下文:本工作树已有 359 个存量未提交文件(chore/tui-ux-nightly),故 --changed 门禁评的是整树变更集。结论:与我文件相关且根因在我的失败为 0。check-agent-feedback 0 error 且我的文件 0 finding;check-leaf-contract --changed 通过。两条 exit 1 根因均为存量:check-change-safety 仅因 changed-count-error(359 files);check-arch-debt 因 6 个我触碰过的巨石文件未登记 godFiles(改动前已超 800 行,我未擅自扩大基线)。check-file-ratchet 整树 133 error 且对 HEAD~1 比较,增量含全部存量。归属核查脚本与结果见 .khy/feedback/toolcall-capability-falseneg-20260923/{attribute.js,attribution.txt,generator-delta.txt,COMPLETION.md §7}。",
+        "2026-10-25 复验 PASS（node:test 组）：toolCapabilityFalsenegRegression 15/15、modelToolingCapability 41/41、capabilityModelKey 8/8、toolCapabilityStore 32/32、toolCallingProbe 36/36、toolCallParser.explicitSyntax 14/14 —— 合计 146 例 0 失败。",
+        "2026-10-25 顺带修掉一条「跑不起来」的测试：tests/services/gateway/capabilityModelKey.test.js 原是 jest-only（本仓 checkout 无 jest 二进制 → node --test 下 ReferenceError: describe is not defined，该条断言在 BUG-014 的键规范化面上**实际从未在本环境执行过**）。已按仓内既定写法改成**模块作用域**的 jest-or-node:test 双运行器 shim（与 dataHomePointer.test.js 同款）。刻意不用 global 注入 —— 那会让同进程里其他 jest-only 套件在 node --test 下拿到残缺 matcher 而假绿。按 jest.config.js 的 findNodeTestFiles 规则，文件含 require('node:test') 会被移出 jest、交 node --test 跑 —— 覆盖不丢（不是两头落空）。改后 8/8 绿。"
       ]
     },
     {
@@ -329,16 +340,97 @@
       "title": "W9-prime 数据家锚定漂移：appDefault=runtime/works 空壳被 established-wins 误钉，根别名悬空",
       "severity": "P1",
       "domain": "services",
-      "status": "open",
+      "status": "closed",
       "symptom": "迁移收口 7bfc49d9 后本机实测：根 khy-Trajectory 别名悬空（指向已消失的 .khy）；指针 projectDataHome 钉在 runtime/works/data/khy 空壳（0 文件），真实数据家 root works/data/khy（约500MB）脱离指针引用。另致 khy hq 全系命令 ENOENT（hqStore REPO_ROOT 少回溯一层，已顺手修复）。本机已手工修复（指针校准+空壳隔离进 .khyos/housekeeping/2026-10-05+别名重建），代码未修，新机器/新克隆首启必复发",
       "repro": "portable-health-check.js 输出 [FAIL] khy-Trajectory（可见别名）— 断链（目标不可达: ENOENT）；dataHome 探针 projectDataHome=D:/Portable/khy-os/runtime/works/data/khy 且该树 files=0；khy hq status 报 BUGS.json 无法读取 ENOENT runtime/works/record/ai/hq/BUGS.json",
       "suspect_area": "runtime/node/backend/src/utils/dataHome.js：L401 appDefault=getAppRoot()/works/data/khy 而 getAppRoot() 方案P 后=runtime 子目录；L420 _isEstablished 把 _ensureDir 副产空目录树当已确立→established-wins 误钉；L429 fresh-auto-pick 会把项目家钉到外部盘 .khy-project；L409/L450 _ensureVisibleAlias(aliasDir=getAppRoot()) 在 runtime/ 下另造别名且不按 ROOT_CATALOG/portable-health-check 约定维护仓根别名、已有链接不修断链。delivery/extension/scripts/khy-portable/repair-portable.js L91 兜底仍指已作废的 ROOT/.khy",
-      "root_cause": "方案P 把 backend 迁到 runtime/node/backend 后，按 getAppRoot()/向上回溯层数解析的锚未同步：dataHome.appDefault 落到 runtime/works 空壳并被 _isEstablished+established-wins 钉进指针；hqStore.REPO_ROOT 少回溯一层致 khy hq 全系 ENOENT；repair-portable L91 兜底仍指已作废的 ROOT/.khy",
-      "fix_summary": "本机态已修（指针校准→works/data/khy、空壳隔离、根别名重建，portable-health-check 6/6 PASS）。代码侧已顺手修 hqStore REPO_ROOT（回溯 4→5 层，khy hq verify 全绿）；dataHome/repair-portable 的修正属代码裁决，留给后续会话按 khy hq next --bug BUG-018 处置",
+      "root_cause": "方案 P 把 backend 迁到 runtime/node/backend 后，按「向上回溯层数」解析的锚有三处没跟着搬：① getAppRoot() 的**注释**仍写旧布局 services/backend/src/utils 与「上溯 4 层」，而代码已是 5 层 —— 注释与代码脱节，后来者照注释改回 4 层就会把数据家锚到 runtime/works/data/khy 空壳（实测本机该症状：指针钉在 0 文件空壳，真实数据家 works/data/khy 约 500MB / 75497 文件脱离指针引用）；② _ensureVisibleAlias 对「已存在的链接/junction」一律假设正确、从不校验目标是否可达 —— 数据家搬家后留下悬空 junction，界面与脚本看到的是指向不存在路径的可见别名，且永远不会自愈；③ repair-portable.js 的 projectDataHome 兜底仍指已作废的 ROOT/.khy（B 档 W9′ 前的旧落点），等于写出一个解析器不认的空指针，把真实数据家架空。",
+      "fix_summary": "① getAppRoot() 注释改写为「按实际落点核对层数」并写明旧 4 层 / 现 5 层的对照与 BUG-018 由来，杜绝后来者照旧注释改回（新增回归断言：getAppRoot() 下必须能找到 runtime/node/backend/src/utils/dataHome.js）；② _ensureVisibleAlias 新增 _linkTargetOf()（剥 Windows junction 的 \\\\?\\ 前缀）判定目标可达性，链接**断链**时摘除重建、指向仍在则不动、真实文件/目录占名仍绝不覆盖；③ repair-portable.js 兜底改为 path.join(ROOT, \"works\", \"data\", \"khy\")，与 dataHome.appDefault 对齐。新增回归测试 tests/utils/dataHome.bug018Anchoring.test.js（5 例，node --test 5/5 绿；变异对照：临时关掉断链修复后该套件立即变红 1 例，证明测试对缺陷敏感）。**未做**：_isEstablished 仍以「目录有任意条目」判定已确立（空壳里只有空子目录时仍会被误判为已确立）—— 本次只做不改变既有行为语义的部分，该项留给后续单独立项。",
       "created": "2026-10-05",
-      "updated": "2026-10-05",
+      "updated": "2026-10-25",
       "notes": [
-        "2026-10-05: 存证：.khyos/housekeeping/2026-10-05/manifest.md、.khyos/diag/location.json.bak-2026-10-05、.khyos/diag/fix-pointer-20261005.cjs、datahome-probe.cjs"
+        "2026-10-05: 存证：.khyos/housekeeping/2026-10-05/manifest.md、.khyos/diag/location.json.bak-2026-10-05、.khyos/diag/fix-pointer-20261005.cjs、datahome-probe.cjs",
+        "2026-10-24 代码侧修复落地（待全量复验）：三处已改 —— 断链别名自愈、repair 兜底改指 works/data/khy、getAppRoot 注释订正（防回溯层数被改回）。回归测试 tests/utils/dataHome.bug018Anchoring.test.js 5/5 绿，变异对照确认敏感。",
+        "2026-10-24 基线对照（零侵入）：用 Module._compile 虚拟编译 HEAD 版 dataHome.js 与工作区版，同场景（清空定位 env）下 isPortableDeployment / getAppRoot / getDataHome / getProjectDataHome **逐项同值** → 本次改动未改变任何既有解析行为。",
+        "2026-10-24 顺带发现（既有失败，与本条无关）：tests/utils/dataHomePointer.test.js 7 例在本机失败，根因是本仓带 .portable 标记 → isPortableDeployment()=true → getDataHome() 按设计返回项目数据家，而该测试断言的是非便携机的 ~/.khy；另 dataHome.appHome/baseHome 是 jest 套件，node --test 下 \"describe is not defined\"。两者在 HEAD 上同样失败。",
+        "2026-10-25 复验 PASS：node --test tests/utils/dataHome.bug018Anchoring.test.js → # pass 5 / # fail 0。",
+        "变异对照（敏感度证明）：临时加 KHY_MUTATION_ALIAS_REPAIR_OFF 开关关掉「断链别名重建」后，同一套件立即变红（# pass 4 / # fail 1）—— 证明该套件真能抓住这个缺陷，不是恒绿的摆设。",
+        "零侵入基线对照：用 Module._compile 把 HEAD 版 dataHome.js 虚拟编译在原目录，与工作区版同场景（清空定位 env）逐项比对 isPortableDeployment / getAppRoot / getDataHome / getProjectDataHome —— **四项全同** ⇒ 本次改动未改变任何既有解析行为。",
+        "本机实证：getAppRoot() = D:\\Portable\\khy-os（5 层回溯正确）、appDefault = <root>/works/data/khy、根别名 khy-Trajectory 是指向 works/data/khy 的有效 Junction、works/data/khy 有 75497 个文件。"
+      ]
+    },
+    {
+      "id": "BUG-019",
+      "title": "软著就绪守卫的 C-E4 分支错误：底档真源目录指错 + 登记路径解析基准错",
+      "severity": "P1",
+      "domain": "packaging",
+      "status": "closed",
+      "symptom": "守卫报「COPYRIGHT.json 的 evidence 段登记了路径，但没有一处真实存在 —— 这等于声明已留痕却没留」，而 D:\\Portable\\软著交付\\Khy-OS\\00_决策入口.md 等三份底档**实际存在**；同时仓库内的入库底档（works/record/evidence/，62 文件 / 五类必需件 / 图片四类齐备）**从未被校验过**。",
+      "repro": "node scripts/ci/check-copyright-readiness.js → 报 copyright-evidence-registry（C-E4 一处真实存在的路径被称\"没有一处真实存在\"）。另：把 works/record/evidence/ 整个目录挪走，守卫的 C-E4 仍然只报上面那条 —— 说明它压根没在守这个目录。",
+      "suspect_area": "scripts/ci/check-copyright-readiness.js 检查 7（C-E4）的两个分支：分支①触发条件 fs.existsSync(REPO_ROOT/evidence) 与分支②的 fs.existsSync(p)",
+      "root_cause": "① 分支①查的是**仓库根 evidence/**，而裁决 D-E1 立的真源是 **works/record/evidence/**（2026-10-02 迁入）—— 仓库根没有 evidence/ 目录，于是分支①**永远不触发**，入库底档从未被校验；② 分支②直接用 fs.existsSync(p) 判登记路径，而这些路径是**相对 docs/10_规范/registry/** 的（COPYRIGHT.json 的 $note 明写「自 docs/10_规范/registry/ 出发上溯 4 层到 Portable 根」），拿进程 cwd 解析会算到仓库外两层 → 3 条真实存在的底档指针被误报成全缺。",
+      "fix_summary": "分支①改指 EVIDENCE_DIR = works/record/evidence（与 D-E1 裁决对齐），并把「被 .gitignore 忽略」判据改为问 git 自己（git check-ignore -q，正则判不准 .gitignore 的通配/否定/任意层级语义，git 不可用才回退正则）；分支②改用 resolveRegistryPath() 以 registry 所在目录为基准解析绝对/相对路径，并新增「部分缺失」分档告警。修后实测：C-E4 报 copyright-evidence-ok（62 文件 / 五类必需件齐全 / 图片 16 张四类齐备），误报消失。",
+      "created": "2026-10-24",
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24: 修复并复验。复验依据 = 守卫输出从「copyright-evidence-registry（误报）」变为「copyright-evidence-ok（62 文件 / 五类齐全 / 图片 4/4）」；同时守卫整体 0 error / 6 warning，名称一致性一项**不再出现**（即 0 处不一致）。"
+      ]
+    },
+    {
+      "id": "BUG-020",
+      "title": "path-integrity 扫描器把同一处陈旧路径报告两遍：计数虚高 76%，并让按 span 落刀的修复器整份回滚",
+      "severity": "P2",
+      "domain": "packaging",
+      "status": "closed",
+      "symptom": "node scripts/maintenance/path-integrity.js --scan-refs 报「真断 1199 处」，但去重后只有 681 个真实命中点。按 span 落刀的修复器按「实改数 == 命中数」自检，于是每份文件都判定「命中 7 处、实改 4 处」而**整份回滚**，一次都改不下去 —— 守卫数字本身成了修复的拦路虎。",
+      "repro": "node scripts/maintenance/path-integrity.js --scan-refs --json → actionable.length = 1199；对 actionable 按 file|line|spanCol|span 去重 → 唯一 = 681。",
+      "suspect_area": "scripts/maintenance/path-integrity.js 的 scanStaleRefs()：每个别名正则独立跑一遍同一行，且 extractPathToken 会把命中处向前扩成完整 token",
+      "root_cause": "两层重复：① 长前缀别名（services/）与短前缀别名命中同一段文本时，两个正则各自登记一遍；② 更隐蔽的一层 —— 路径里的**第二段**同前缀（如 services/backend/src/services/x.js 里的第二个 services/）被 extractPathToken **向前扩成同一个完整 token**，产出 file/line/spanCol/span 四项全同的重复记录，raw 区间不重叠 ⇒ 单靠 raw 区间去重拦不住。",
+      "fix_summary": "加两级去重：① 同一行内 raw 命中区间重叠即跳过（长前缀先命中，短前缀让位）；② 记录级去重键（spanCol + span）—— 落刀区间相同即同一处，直接跳过。修后 actionable 与去重后唯一命中数**相等**（虚高从 76% 降到 0）。连带效果：守卫数字不再虚高，按 span 落刀的批量修复器的「实改数 == 命中数」自检不再误判回滚。",
+      "created": "2026-10-24",
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24: 修复并复验：--scan-refs --json 的 actionable 计数与去重后唯一命中数**相等**（扫描 10935 个跟踪文本文件时为 681 = 681；虚高由 1199 降到 681）。",
+        "2026-10-24: 同批修掉的还有「陈旧路径引用」的**真实存量** —— 方案 P（2026-09-30 目录物理化）之后仍残留 873 处指向旧布局的路径引用。按扫描器给出的精确 span 批量改写，但**只改机器读的那一类**（模块清单 khy.module.json / 登记真源 / 机器生成元数据 / 多端入口真源）：共修 472 处 / 49 份文件，逐批跑相关测试套件确认零回归。",
+        "2026-10-24: **踩坑记录（重要）**：先按「全量落刀」试过一轮，**改坏了 3 个测试套件** —— tests/services/docPathIndex.test.js（6/7）、tests/evolutionPolicy.test.js（28/6）、tests/evolutionSafety.test.js（24/7）；从备份逐字节回退后三者全绿（13/0、34/0、31/0），**A/B 确认是自动改写引入的**。根因：**测试里的旧路径常是「故意夹具」**（被测函数的输入/期望），机械改写会改变被测语义。结论：路径引用治理**只动机器读的配置**，源码与测试里的旧路径必须逐条人工裁决（与仓库既定设计「自动改写源码风险远高于收益」一致）。",
+        "2026-10-24: 最终存量 401 处 = 历史 stash 转储 104（永不改：那是那一次转储的事实）+ 生成锁文件 18（永不改）+ 源码与测试 279（需人工裁决）。"
+      ]
+    },
+    {
+      "id": "BUG-021",
+      "title": "B8 第 8 次复发：守卫自身的用法示例在教人往仓库根写 .khy/feedback/，organize.py 也把归档落在根 .khyos/",
+      "severity": "P1",
+      "domain": "packaging",
+      "status": "closed",
+      "symptom": "仓库根出现 `.khy/`（10 文件）与 `.khyos/`（22 文件）两棵影子数据树，守卫 root-shadow-dir 亮红 —— 而 B8 的执行面明写「报 root-shadow-dir 即未完成」。其中 `.khy/feedback/T-030-opencode-free-channel-stability/` 是 **T-030 存证的唯一副本**（canonical `works/data/khy/feedback/` 的 368 个任务目录里没有它）；`.khyos/housekeeping/2026-10-18-root-tmp/` 的日期晚于 B8 上次修复（2026-10-12），即**又复发了一次**。",
+      "repro": "node scripts/ci/check-repo-layout.js → [error] 根目录出现 2 个影子数据目录：.khy, .khyos；ls .khy/feedback → 只有 T-030 一个目录，而 ls works/data/khy/feedback → 368 个目录且无 T-030。",
+      "suspect_area": "scripts/ci/check-agent-feedback.js:40（Usage 示例）与 :188（注释）；scripts/maintenance/organize.py:38（OUT_ROOT）",
+      "root_cause": "① 守卫 check-agent-feedback.js 的**默认读取路径**是 `works/data/khy/feedback/<task-id|adhoc>`（:502 正确），但它的 **Usage 示例（:40）与存证契约注释（:188）却写着 `.khy/feedback/<task-id>`** —— 那是 B8 明令禁止的仓库根影子路径。操作者（或 AI）照文档执行就会在仓库根造出影子树，**且与门默认读的位置不匹配**：实测 2026-10-21 的 T-030 正是照旧示例写的 —— 存证落在根 `.khy/feedback/`，门却仍在读数据家那一份。② scripts/maintenance/organize.py 的隔离区 OUT_ROOT 写死 `REPO / \".khyos\" / \"housekeeping\"` —— 落在**仓库根**，每次「整理根目录临时文件」批次就又造一棵根影子树（2026-10-18 那批即其产物）。",
+      "fix_summary": "① check-agent-feedback.js 的 Usage 示例与注释改指 `works/data/khy/feedback/<task-id>`，并补一段说明「仓库根 .khy/ 是 B8 禁止的影子目录，且与本门默认读取路径不匹配」；② organize.py 的 OUT_ROOT 改为数据家的临时区 `works/data/khy/T4-transient/tmp/housekeeping/`（章程指定的临时件落点，被 .gitignore 忽略、不污染 git 状态）；③ **收容而非删除**根影子内容：T-030 存证迁回 canonical `works/data/khy/feedback/`（它当时是唯一副本）；`key_manager_audit.jsonl` 与 canonical **按行取并集**（只追加审计，根侧 67 行是超集）；`settings.json` 以 canonical 为权威、根侧归档；`aesthetics/`、`housekeeping/`、`tmp-*` 全部移进 `works/data/khy/T4-transient/tmp/root-shadow-2026-10-25/`（25 文件 / 1.8 MB，全部可回溯）；④ 顺带清掉仓库根 11 个「临时/事故残留」文件 —— 它们的**文件名**是 PowerShell 片段（`$($_.Count)`、`c.domain).join(` 等），是某次命令把输出片段当文件名写出来的，内容也是工具输出碎片（`hits = hits`）。",
+      "created": "2026-10-24",
+      "updated": "2026-10-24",
+      "notes": [
+        "2026-10-24: 修复并复验：node scripts/ci/check-repo-layout.js —— **root-shadow-dir 与 root-junk 两条 finding 均已消失**；root-uncatalogued 由 16 降到 5（那 11 个垃圾文件同时是未登记实体）；仓库根 .khy / .khyos 已不存在，归档内容 25 文件 / 1.8 MB 完整留存于数据家临时区。",
+        "2026-10-24: 仍红的一条 entry-buffer（2481 vs 基线 2470，+11）**与本条及本次改动无关**：逐条核出其中 10 条正是工作区在途新增的未登记文件（src/cli/tui/ 下的 ccPhoneLinkCommand.js、ccPhoneLinkSource.js、commandParamSpecs.js、hooks/usePhoneLinkStatus.js、ink-components/{CcNoticeBlock,CcPhoneLinkPanel,ParamPanel}.js、menuHover.js、sgrHold.js、utils/ccNoticeLines.js），另 1 条同类；判据 [RESEARCH-018] §4 C-5 要的是「核心域内新文件必须带 lifecycle 记录」，属在途特性域的补登记义务，**不由本次代劳**（补齐需一并写 README + 共置测试）。"
+      ]
+    },
+    {
+      "id": "BUG-022",
+      "title": "TUI 选区锚点漂移：第一期写好的重定位函数是死代码（生产里从未被调用），端到端探针因此长红",
+      "severity": "P2",
+      "domain": "cli",
+      "status": "closed",
+      "symptom": "「拖选复制出来少一截 / 整段错位」的修复，第一期（2026-09-23）已在 `selection.js` 写好了\n    `relocateLine` / `relocateSelection` / `extractTextRelocated` 三个纯函数 + `beginSelection` 的可选 `fp` 参数，\n并新建了 `selectionRelocate.test.js`（17 条全绿）。\n但**生产代码里没有任何一处调用它们** —— `App.js` 始终按纯行号切片。\n于是：`selection.js` 里这三个函数是**字面意义的死代码**，而端到端探针\n`selectionAnchorDrift.test.js` 的 D-02（手势中途头部插入 3 行 → 复制到 `L07..L11`，\n应为用户看到的 `L10..L14`）**从 2026-09-23 起一直红着**，被登记进\n`docs/05_TEST_测试/tests-debt/DEBT.md` §十一（@bug，截止 ≈2026-12-23）。",
+      "repro": "cd runtime/node/backend && node --test tests/cli/tui/selectionAnchorDrift.test.js\n  → 2026-09-23~2026-10-24：3 pass / 2 fail（D-02、D-04 红）\n  → 2026-10-25（第二期接线后）：4 pass / 1 fail（仅剩 D-04，属第三期范围）\n另：rg 在 runtime/ 下搜 extractTextRelocated 的调用点，接线前只有 selection.js 自身的定义与导出。",
+      "suspect_area": "runtime/node/backend/src/cli/tui/selection.js（纯函数已就位）\nruntime/node/backend/src/cli/tui/ink-components/App.js（缺接线：down/move/up 三处未传 fp、松手未走重定位）",
+      "root_cause": "**修复被拆成三期，而第三期（行投影补 seq）风险最高、第一期又是纯新增** ——\n于是「纯新增 + 未接线」的中间态在仓库里躺了**一个月**：函数写好了、测试也写好了，\n但没有任何一处生产代码调用它。纯函数 + 纯单测 17/17 绿，**看起来**修复已完成，\n实际上一行都没生效 —— 这正是「三层单测各自自洽、只有端到端才暴露」的典型形态。\nDEBT.md §十一把 D-02 登记成「待接线规格」，但登记本身不产生接线。",
+      "fix_summary": "按 [DESIGN-ARCH-132] §4 第二期接线（2026-10-25）：\n  · `selection.js`：`extendSelection(sel, line, col, fp)` 接受可选 fp（**活动端也要带** ——\n    relocateSelection 对两端各自重定位，只给锚点带指纹时末行仍按纯行号取，D-02 只会切出一行）；\n    `endSelection` 的 head 改用 `_anchor()` 规范化（`_point` 会丢 fp）。\n  · `App.js`：新增 `_selectFromLinesRef` 留存 T0（按下那一帧）行快照；down/move/up 三处把\n    **T0 同一行号处**的行原文作为 fp 传入；松手取文改走 `extractTextRelocated(lines, fromLines, sel)`。\n    指纹取 T0 而非当帧：取当帧会让指纹自我印证、永远命中当前行，重定位退化成没做。\n  · 探针 `selectionAnchorDrift.test.js` 的复刻**跟着 App 一起改**（它复刻的就是 App 的接线）。\n  · 连带修掉一条被注释长度撑破的邻条守卫（viewportDragEdgeScroll 的 T6）—— 判据从「字符距离代理」\n    换成「花括号配对取分支体」的结构性判据，并用**端到端变异对照**证明它仍能守住原缺陷\n    （原样绿；调用消失 / 挪到 up 分支前 / 挪到 down 分支里三个变异全红 —— 旧距离代理抓不到后两个）。",
+      "created": "2026-10-25",
+      "updated": "2026-10-25",
+      "notes": [
+        "2026-10-25 实测：选区相关 6 套件 **83 例 / 82 绿**（唯一红 = D-04，第三期范围，方案明写「可独立放弃」）；`selectionRelocate.test.js` 17/17 绿；§7.2 的 57 条零回归基线全绿；TUI 全套 **1190 例 / 1184 绿 / 6 红**（5 红为在途工作既有、1 红为 D-04 ⇒ **零新增失败**）。",
+        "2026-10-25 顺带核实：TUI 门禁棘轮报 242 > 237（+5）**与本次改动无关** —— 逐文件量过：`selection.js` 0→0、`selectionAnchorDrift.test.js` 0→0、`viewportDragEdgeScroll.test.js` 0→0，`App.js` +1 且是 `KHY_MENU_HOVER`（用户 2026-10-10 菜单悬停特性，非本次）。",
+        "2026-10-25 教训（值得写进台账）：**「纯函数写好 + 单测全绿」不等于修复生效**。第一期交付物在仓库里躺了一个月而生产零调用 —— 若当时就让端到端探针的 D-02 转红被看见，或让守卫检查「导出但无人调用」，本可提前一个月发现。"
       ]
     }
   ]

@@ -239,7 +239,10 @@ describe('hqStore', () => {
     const progDoc = {
       tasks: [
         { id: 'T-001', status: 'todo', priority: 'P1' },
-        { id: 'T-002', status: 'doing', priority: 'P0' },
+        // started_at keeps this a sanctioned doing entry: a bare doing row is now a
+        // G0 health item (unproven self-declared start), which would mask the G1
+        // assertion below instead of testing it.
+        { id: 'T-002', status: 'doing', priority: 'P0', started_at: '2026-09-16T08:00:00' },
       ],
     };
 
@@ -261,6 +264,20 @@ describe('hqStore', () => {
       expect(H.pickNext({ bugs: [] }, stale, 'ME', now).action).toBe('health');
       const alive = { tasks: [{ id: 'T-001', status: 'doing', priority: 'P1', claimed_by: 'OTHER', lease_expires: '2026-09-17T12:00:00' }] };
       expect(H.pickNext({ bugs: [] }, alive, 'ME', now).action).toBe('idle');
+    });
+
+    test('G0：doing 无占用且无开工戳 → 自称开工不可证实，进健康档', () => {
+      const unclaimed = { tasks: [{ id: 'T-020', status: 'doing', priority: 'P1' }] };
+      const r = H.pickNext({ bugs: [] }, unclaimed, 'ME', now);
+      expect(r.action).toBe('health');
+      expect(r.evidence.unclaimedDoing).toBe(1);
+      expect(r.items.map((x) => x.item.id)).toContain('T-020');
+      expect(r.items.find((x) => x.item.id === 'T-020').howto).toContain('--task T-020');
+    });
+
+    test('G0：doing 有开工戳（task set 正规开工）不算自称，仍 idle', () => {
+      const stamped = { tasks: [{ id: 'T-021', status: 'doing', priority: 'P1', started_at: '2026-09-17T08:00:00' }] };
+      expect(H.pickNext({ bugs: [] }, stamped, 'ME', now).action).toBe('idle');
     });
 
     test('skipHealth 显式跳过验收债，进入正常排程', () => {

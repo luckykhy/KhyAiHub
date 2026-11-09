@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-23",
+  "last_updated": "2026-10-21",
   "khy_os_version": "1.1.11",
   "khy_os_path_note": "khy-os 实际位于 Portable 根目录下（scripts/hq_common.py 自动探测，勿在脚本外硬编码盘符）",
   "schema": {
@@ -11,7 +11,7 @@
     "priority": "P0(阻断)/P1(严重)/P2(一般)/P3(轻微)",
     "status": "todo -> doing -> review -> done；旁路: doing->todo, review->doing(打回)",
     "acceptance": "完成定义。**必须**包含至少一条可执行命令或可核对数字阈值，否则 review->done 无法机器核对（2026-09-23 新增约束，见下方 review 判据）。文中引用的仓内路径会被 `khy hq verify` 核对是否存在（改名/搬家检测）",
-    "evidence": "（可选，翻 done 时必填）`.khy/feedback/` 下的证据目录名，格式 <task-id>-<slug>，只允许字母/数字/./_/-。约定：review->done 前必须声明并让该目录非空、含 acceptance.md",
+    "evidence": "（可选，翻 done 时必填）`works/data/khy/feedback/` 下的证据目录名，格式 <task-id>-<slug>，只允许字母/数字/./_/-。仓库根 `.khy/` 是 B8 禁止的影子目录，done 门只读 works/data/khy/feedback/，落那儿门读不到。约定：review->done 前必须声明并让该目录非空、含 acceptance.md",
     "baseline_metrics": "（可选）「不劣化」类判据的基线数字，如 {\"jest_suites\":1231,\"jest_failed\":24}。没有基线数字的『不劣化于批次前』不可机器核对",
     "scope_guard": "（可选）边界清单，每条一句「不做什么」。是 RUNTIME-008 BUILD 五问第 5 问在任务级的落地；越界时 `khy hq verify` 报出（不拦，只让偏离可见）",
     "cod": "PROCESS-102 档内评分：变更必要性 1-5（可选，存量未填，同档并列时缺它则落 G4 问人）",
@@ -302,8 +302,8 @@
         "2026-09-19: 2026-09-19 机器侧验收证据（review 维持，done 待人工确认）：apps/khyos-desktop npm test 全绿——keyStore/agentWriters/health 21/21 + keyManagerContract/desktopUiContract 34/34；含 D1-D10 全通过、Mode B 激活（claude-code/opencode/qodercli 门控）、『无真实 key 明文』grep 不变式、reveal 限流、.bak 自愈。验收项中的 services/backend 全量 jest 未跑（工程量大），故不代人工翻 done。",
         "2026-09-20: 2026-09-20 T-023 后端回归补齐（原备注唯一缺口 services/backend 全量 jest）：全量 jest 实测 1231 套件纳入 1223——1199 passed / 24 failed / 8 skipped，用例 12338 中 12161 passed / 38 failed。对比 DEBT.md 09-08 基线 465 失败套件已回收至 24，且失败清单全部位于 toolUseLoop/queryEngine/worktree/shellCommand 等预存债务区，与 T-023 触及面（keyStore/apiKeyPool/relay/credentials/agentWriters）零交集；相关套件（apiKeyPoolHotReload、relayAccessBoundary、security/credentialsHardening、gateway wildcardPoolGuard 等）全部 PASS。至此 T-023 机器可验证面全部闭环，done 翻转待人工确认。",
         "2026-09-23: 回退一步仅为补挂 evidence 字段（状态机要求 evidence 在进入 review 时写入），工作与验收结论不变",
-        "2026-09-23: 重进 review 并挂验收存证 .khy/feedback/T-023-keymanager/（五条判据当日复测全 PASS，见 acceptance.md）",
-        "2026-09-23: 2026-09-23 人工确认翻转 done（用户指示『按照计划完成』，T-023 为阶段A钥匙）：当日复测桌面端 21/21+34/34 全绿、触及面后端 jest 5 套件 49 用例 + node:test credentialsHardening 8/8 全过、触及面 33 文件 check-agent-rules 0 违规；验收清算 .khy/feedback/T-023-keymanager/acceptance.md 五条判据全部 PASS"
+        "2026-09-23: 重进 review 并挂验收存证 works/data/khy/feedback/T-023-keymanager/（五条判据当日复测全 PASS，见 acceptance.md）",
+        "2026-09-23: 2026-09-23 人工确认翻转 done（用户指示『按照计划完成』，T-023 为阶段A钥匙）：当日复测桌面端 21/21+34/34 全绿、触及面后端 jest 5 套件 49 用例 + node:test credentialsHardening 8/8 全过、触及面 33 文件 check-agent-rules 0 违规；验收清算 works/data/khy/feedback/T-023-keymanager/acceptance.md 五条判据全部 PASS"
       ],
       "updated": "2026-09-23",
       "evidence": "T-023-keymanager",
@@ -331,7 +331,7 @@
       "scope_guard": [
         "不改 .ai/hq/BUGS.json 与既有任务的既存状态/备注",
         "不进 scripts/ci/ 门禁体系（不新增检查器、不新增规则 ID、不接门引用）",
-        "不删改 .khy/feedback/ 下 52 个存量存证目录"
+        "不删改 works/data/khy/feedback/ 下 52 个存量存证目录"
       ],
       "updated": "2026-09-23",
       "notes": [
@@ -394,8 +394,8 @@
       "updated": "2026-09-26",
       "notes": [
         "2026-09-23: 2026-09-23 进度：README 首屏已改用户语言（定位话术/四主张/三步开跑/内核降级实验分支，含国内镜像提示与首跑补装说明）；首跑卡点 BUG-016（preflight 命令不存在）已修并闭单；10 分钟承诺实测未达成（BUG-017 open：慢网 pip 8.8min + bundled node_modules 首跑补装），判据 1 未过，不翻 done",
-        "2026-09-23: 2026-09-23 阶段存证补全：.khy/feedback/T-027-firstrun-promise/ 新增 conclusions.md（判据五条对照：1 未达成 / 2·3·4·5 达成；翻 done 前提 = BUG-017 修复后复测首跑全程 <10 分钟）",
-        "2026-09-26: BUG-017 修复轮——1.2.0 bundle 轮子结构性消除首跑补装；preflight 依赖缺失 FAIL→WARN；验收项中的 KHY_FIRST_RUN 模拟现已存在（只读、零副作用）。快网实测 install+preflight+启动链共 19.2s（wheel 5.32MB）。判据 1 仍缺「慢网安装 + 首次对话」两段实测（本机无凭据），如实保持 doing 不翻 done。证据 .khy/feedback/BUG-017-firstrun-fix/。"
+        "2026-09-23: 2026-09-23 阶段存证补全：works/data/khy/feedback/T-027-firstrun-promise/ 新增 conclusions.md（判据五条对照：1 未达成 / 2·3·4·5 达成；翻 done 前提 = BUG-017 修复后复测首跑全程 <10 分钟）",
+        "2026-09-26: BUG-017 修复轮——1.2.0 bundle 轮子结构性消除首跑补装；preflight 依赖缺失 FAIL→WARN；验收项中的 KHY_FIRST_RUN 模拟现已存在（只读、零副作用）。快网实测 install+preflight+启动链共 19.2s（wheel 5.32MB）。判据 1 仍缺「慢网安装 + 首次对话」两段实测（本机无凭据），如实保持 doing 不翻 done。证据 works/data/khy/feedback/BUG-017-firstrun-fix/。"
       ]
     },
     {
@@ -426,7 +426,7 @@
       "type": "feature",
       "priority": "P1",
       "status": "done",
-      "acceptance": "1) node --test services/backend/tests/positioning.test.js 全绿（6 用例：形状/四主张/OS 块/品牌链同源/渲染面/manifest）；2) node --test services/backend/tests/cli/tui/logoArt.test.js 与 services/backend/tests/cli/tui/ccMessageProjection.test.js 全绿（tagline 断言改跟 BRAND 真源，不再硬编码英文串）；3) node scripts/ci/check-agent-rules.js <触及面 10 文件> error=0；4) 冒烟 renderBanner/printBanner/printLiteBanner 输出含 POSITIONING.tagline 且 khy about 真实跑通（exit 0，含四条主张与 doc 指针）；5) khy 关于 与 khy guanyu 别名可用（aliases.js 静态表 + manifest 双登记）；6) 证据落 .khy/feedback/T-029-positioning-in-code/repro.txt",
+      "acceptance": "1) node --test services/backend/tests/positioning.test.js 全绿（6 用例：形状/四主张/OS 块/品牌链同源/渲染面/manifest）；2) node --test services/backend/tests/cli/tui/logoArt.test.js 与 services/backend/tests/cli/tui/ccMessageProjection.test.js 全绿（tagline 断言改跟 BRAND 真源，不再硬编码英文串）；3) node scripts/ci/check-agent-rules.js <触及面 10 文件> error=0；4) 冒烟 renderBanner/printBanner/printLiteBanner 输出含 POSITIONING.tagline 且 khy about 真实跑通（exit 0，含四条主张与 doc 指针）；5) khy 关于 与 khy guanyu 别名可用（aliases.js 静态表 + manifest 双登记）；6) 证据落 works/data/khy/feedback/T-029-positioning-in-code/repro.txt",
       "scope_guard": [
         "不改 README 首屏（属 T-027 首跑 10 分钟承诺）",
         "不动 BootScreen 品牌资产结构（logoArt 四叶草不动，只换 tagline 文案来源）",
@@ -448,7 +448,40 @@
           "PASS:3) node scripts/ci/check-agent-rules.js <触及面 10 文件> error=0",
           "PASS:4) 冒烟 renderBanner/printBanner/printLiteBanner 输出含 POSITIONING.tagline 且 kh",
           "PASS:5) khy 关于 与 khy guanyu 别名可用（aliases.js 静态表 + manifest 双登记）",
-          "PASS:6) 证据落 .khy/feedback/T-029-positioning-in-code/repro.txt"
+          "PASS:6) 证据落 works/data/khy/feedback/T-029-positioning-in-code/repro.txt"
+        ]
+      }
+    },
+    {
+      "id": "T-030",
+      "title": "opencode 免费渠道稳定化与对接核验：发现层/Key 池台账过滤 + 配置解析修复 + 18 用例契约测试",
+      "domain": "services",
+      "type": "quality",
+      "priority": "P1",
+      "status": "done",
+      "acceptance": "1) node --test tests/services/opencodeFreeChannels.test.js 18/18 通过（runtime/node/backend 下运行）；2) 存量 9 套件零回归：git stash 基线对照，6 个存量失败编号逐一相同、0 新增；3) builtinProviderConfig 的 opencode-zen 模型 = freeModelChannels 的 opencode-zen freeModels = 2026-10-21 实测目录 10 项（测试 B1 deepStrictEqual 锁定，A1 断言无废弃 id）；4) 受控账本（KHY_ZEN_RETIRED_FILE）标记后，发现层/Key 池/网关 filterFreeZenModels 三处同剔（A2/B2/F1），KHY_ZEN_RETIRED_FILTER=0 逐字节回退（A3），env 覆盖与过滤复合（A4）；5) configPath 解析矩阵 XDG 先于便携命中（C1），adapter add/list/get/usable/remove/repair 全契约（C2-C4）",
+      "evidence": "T-030-opencode-free-channel-stability",
+      "scope_guard": [
+        "不动网关动态模型列表链路（apiAdapter.listModels / multiFreeService / zenGatekeeper 既有过滤）",
+        "不新增 env 门（复用 KHY_ZEN_RETIRED_FILTER 语义：默认开，0/false/off/no 关）",
+        "不修存量 6 个测试失败与存量 prettier 漂移（记录备查，单独开任务）",
+        "不动 opencode 自身配置（xdg/opencode.json 只读消费，本轮只修 khy 侧解析）"
+      ],
+      "updated": "2026-10-21",
+      "notes": [
+        "2026-10-21: 定位——免费渠道三处消费面中，网关侧（zenGatekeeper.filterFreeZenModels）已按 zenRetiredModels 台账过滤，发现层（freeModelChannels）与 Key 池（builtinProviderConfig）是缺口：静态清单把死模型（上游 401/410/403）摆给用户，选中即调用失败。补法：两模块内聚台账过滤（门 KHY_ZEN_RETIRED_FILTER 默认开、fail-soft、账本缺失即回退），与既有 _withGlmLatest 叠加模式同构；本机无账本 → 过滤空转，机制是上游目录后续废弃时的自愈兜底（markRetired 撞一次即永久隐藏）。",
+        "2026-10-21: 顺带修复 opencodeAdapter 两处——_portableConfigPath 硬编码 5 级上溯在新布局（runtime/node/backend/src/services/...）下指向无效路径（旧布局 services/backend/src/... 才成立，靠 XDG 兜底才未暴露），改为上溯 .portable 标记定位；configPath 候选顺序改 XDG 优先于便携 Tools/config（镜像 opencode 自身 XDG 解析——当前生效配置经用户级 XDG_CONFIG_HOME 指向 Tools/opencode/xdg/opencode/opencode.json，~/.config 下是历史遗留副本）。",
+        "2026-10-21: 核验方法——新增 18 用例契约测试（tests/services/opencodeFreeChannels.test.js，全部 env 注入保证确定性），存量 9 套件用 git stash 基线对照法证零回归（6 个存量失败编号逐一相同）。已知存量：三文件 HEAD 即 prettier 不合规（版本漂移，不在编辑区）、eslint 本地未装，均记录于 evidence/acceptance.md。"
+      ],
+      "acceptance_audit": {
+        "at": "2026-10-21",
+        "total": 5,
+        "verdicts": [
+          "PASS:1) node --test tests/services/opencodeFreeChannels.test.js 18/18 通过（new-suite-output.txt）",
+          "PASS:2) 存量 9 套件零回归——stash 基线 6 失败编号逐一相同，0 新增（regression-baseline-stashed.txt vs regression-with-changes.txt）",
+          "PASS:3) 两处静态清单一致且=实测目录 10 项（B1 deepStrictEqual；A1 无废弃 id）",
+          "PASS:4) 台账过滤三处同剔+门控回退（A2/A3/A4/B2/F1；本机无账本→空转，机制为后续自愈兜底）",
+          "PASS:5) configPath 矩阵 XDG 先于便携（C1）+ adapter 全契约 C2-C4"
         ]
       }
     }
