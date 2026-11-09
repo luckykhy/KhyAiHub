@@ -93,9 +93,11 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 | `code` | ✓ | **稳定机器码**，枚举见 §3 表；新增码先入表再用（与 API-003 §2 同制） |
 | `title` | ✓ | 人话一句话，遵循 `AGENTS.md` 规则 2.2（问题 + 识别码 + 修复建议） |
 | `cause` | ✓（有 attempts 时） | **一个**主因（按 `failureReasonRanking` 的 live-优先排序取首条），非一份清单 |
+| `cause.human` | 选 | **人话叙事**（`cliErrorDescriptor.humanizeFailure` 产出：`{label, code, reason, fix, sentence, matched}`）。门 `KHY_FAILURE_HUMAN_TEXT` 关 / 本笔不可转述 → `null`，首屏逐字节回落 `cause.detail`。渲染专用，**不得**当机器判据 |
+| `cause.vendor` | 选 | 上游 body 的 `{ type, code, param }` 结构化视图（**不含 `message`**——它可能带明文密钥）。供机器消费者精确分流，免去解析 `detail` 文本 |
 | `routing` | ✓ | `mode ∈ {auto, pinned-strict, user-pinned}`；`fallbackSuppressed` 为真时 `hint` **必须**首条给解钉方法 |
 | `hint` | ✓ | 可执行命令数组，每条 ≤ 1 行；**推广清单不得进入 `hint`**（见 §2.2） |
-| `attempts` | 选 | 完整逐通道记录（内部字段），默认折叠，`khy --verbose` 展开 |
+| `attempts` | 选 | 完整逐通道记录（内部字段），默认折叠，`khy --verbose` 展开；`attempts[].error` **恒为原始报文**，人话化一字不改 |
 | `resumable` | 选 | 决定是否追加 `_CONTINUE_HINT`（沿用现状语义） |
 | `traceId` | 选 | 与 API-003 §5 最小披露一致；**不得**外露堆栈、绝对路径、密钥 |
 
@@ -105,14 +107,14 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 第 1 屏（必现，≤ 8 行）
   ⚠ 本次请求未能完成 —— 被钉选的通道不存在或未启用
   [CHANNEL_ABSENT_PINNED]
-  通道: windsurf [unavailable] — windsurf disabled by configuration
+  通道: windsurf [unavailable] — 通道不可用：该通道未注册、未启用或未安装，请运行 khy gateway status 查看各通道实测状态；或运行 /model 换用其它通道
   路由: 钉选 strict（GATEWAY_PREFERRED_ADAPTER=windsurf），本轮不回退
   → 该通道在本机不存在或未启用，且 strict 抑制了回退
   → 把 GATEWAY_PREFERRED_ADAPTER 清空或设为 auto，并设 GATEWAY_PREFERRED_STRICT=false
   → 改完运行 `khy gateway status` 复核实测通道
 
 第 2 屏（`khy --verbose` 或用户按 V 展开）
-  真实失败原因:（逐通道，沿用 _formatGatewayFailureDetails）
+  真实失败原因:（逐通道，沿用 _formatGatewayFailureDetails；每条 shown 为人话句）
   内部已尝试: N 次请求（…）
 
 第 3 屏（**仅在无任何 hint 可给时**才出现）
@@ -124,6 +126,19 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 
 **红线 R-GW-2**：`result.content` **禁止**做长度截断后当作「失败信息」直接展示（废止 `aiChatCore.js:3243`
 的 `.slice(0, 180)` 语义）。若要摘要，必须从结构化字段取，不截断自然语言。
+
+**红线 R-GW-3（2026-11-01 增补，`KHY_FAILURE_HUMAN_TEXT`）**：**用户可见面不得出现原始 JSON 报文**。
+第 1 屏第 3 行与第 2 屏失败墙的每条 `shown` 由 `cliErrorDescriptor.humanizeFailure` +
+`composeHuman` 合成固定中文模板（问题 + 原因 + 下一步），墙与信封**共用同一个**合成器
+（bracket 已显中文真因标签 → 省 label 段；句子识别码与同行 kind 槽 token 相同 → 省括号段）。
+边界：kind 槽规则、分组 sig、`errorType` 分类、熔断/冷却集合**一个字都不动**；
+`attempts[].error` 与 `cause.detail` 仍是结构化原文（机器通道不丢）。
+门关 → 人话叶子根本不被调用，三处消费点逐字节回退今日。
+
+**红线 R-GW-4（安全收紧，非退化）**：「脱敏≠抹掉」不变式的载体从「脱敏后的上游文本」换成
+「固定中文模板」⇒ 人读面从此**不再出现密钥的掩码形态 `***`**（`cause.detail` /
+`attempts[].error` 仍是掩码形态，`_redactDetail` / `_redactWallEntry` 不动）。
+后来者不得把「人读面不含 `***`」当回归去「修」。
 
 ## 3. CLI 机器码登记表（初版）
 

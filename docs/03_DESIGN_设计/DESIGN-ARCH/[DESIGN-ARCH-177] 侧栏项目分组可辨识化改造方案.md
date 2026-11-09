@@ -128,6 +128,9 @@ desktopProjects: [
 未登记路径按**固定顺序**判定，避免误伤：
 
 1. **已登记** → 用登记的 `name`/`icon`/`color`。
+   **登记项 `path` 是「项目根」，不是一条 cwd。** 其下任意层子目录（含相等）
+   都归入该项目；同时命中多个登记时**最长前缀**胜出。
+   （2026-10-20 修订：原为「精确匹配」，见 §11。）
 2. **临时/转录目录**（形如 `khy-durable-transcript-<随机6位>`）→ 归入固定分组「**未归属**」，不占用项目层级。
 3. **其它路径** → 显示 `baseName()`，但**标记为「推测项目名」**（弱化样式 + `title` 提示完整路径），用户可一键「登记为项目」把它正名。
 
@@ -323,4 +326,77 @@ desktopProjects: [
 4. 登记后：显示名生效、副行消失、图标与色条出现；`Portable` 若登记为容器名，它的色条与 `khy-os` 的不同。
 
 ⚠ 若 `khy-durable-transcript-*` 仍散在项目层级 ⇒ 判定层没生效，先查 `out/renderer/index.html` 指向的 hash 包是否为本次产物。
+
+---
+
+## 11. 修订：项目根前缀归并（2026-10-20）
+
+### 11.1 为什么改
+
+§3.1 的登记键是「精确匹配」（`registrations.find(r => r.path === path)`），
+上线后暴露了 §1.1 已写下但未修的第 ④ 类病灶：**同一项目的不同子目录被拆成多个项目**。
+
+实况（用户 2026-10-20 截图，`desktopProjects` 为空）：
+
+| 侧栏行 | 条数 | 真实身份 |
+|---|---|---|
+| `D:\Portable` | 44 | 父容器，不是项目 |
+| `D:\Portable\khy-os\runtime\node\backend` | 15 | **khy-os 的子目录** |
+| `D:\Portable\khy-os` | 2 | **同一个 khy-os** |
+| `AppData\Local\Temp\...` | 1 ×2 | 临时目录 |
+
+根因在 `AppLayout.tsx:313`：`workspacePath: s.cwd || s.projectDir` —— 喂给侧栏的是
+**会话当时的 cwd**，它可以落在项目里的任意一层。而 `projectDir` 帮不上忙：
+`sessionPersistence.js:1067` 把它定义成「会话文件的桶目录」（sessions root 下的子目录），
+不是用户项目路径。
+
+### 11.2 改了什么
+
+| 文件 | 改动 |
+|---|---|
+| `shared/sidebarProjectClassify.ts` | 新增 `isUnderPath` / `findProjectRoot` / `parentPath` / `ClassifyOptions.transientRoots` 与 `normalizePath`·`compareKey`；`ProjectClassification` 新增 `rootPath`（分桶键）；`classifyWorkspacePath` 由精确匹配改为最长前缀匹配，并支持按**系统临时目录根**判 transient |
+| `components/layout/WorkspaceSidebar.tsx` | `folders` memo 改为按 `c.rootPath` 分桶（一次遍历，同时收集未归属）；登记对话框的「项目文件夹」可编辑 + 上一级按钮；挂载时从 `workspaceList()` 取 `tempRoots` |
+| `components/layout/AppLayout.tsx` | `workspacePath: s.cwd \|\| s.projectDir` → `s.cwd \|\| ''`。`projectDir` 是会话文件的**桶目录**（`sessionPersistence.js:1067` 的 `path.dirname(file)`，形如 `D--Portable-khy-os`），拿它当项目 = 把存储结构显示成项目。实测 708 个快照里 412 个没有 `metadata.cwd` |
+| `src/main/index.ts` | `workspace:list` 返回值加 `tempRoots: [os.tmpdir()]`（**扩展既有通道**，未新增 IPC）—— 平台路径只在主进程知道一处 |
+| `tests/sidebarProjectClassify.test.cjs` | 原「登记按精确匹配，不按前缀」用例**反转**为归并语义；新增段边界 / 大小写 / 分隔符 / 最长前缀 / `parentPath` / `transientRoots` 用例（30 条） |
+
+语义三条：
+
+1. **登记项 path = 项目根。** cwd 等于它或位于它之下（段边界，非裸 `startsWith`）即归入。
+2. **最长前缀胜出。** 同时登记 `D:\a` 与 `D:\a\b`，`D:\a\b\c` 归 `D:\a\b`。
+3. **未登记路径不归并。** 仍按自身精确分桶 —— 不做「向上找 `.git`」之类启发，
+   理由见 §6 反模式（项目是用户意图，不是目录属性）。
+
+### 11.3 已知边界（如实标注）
+
+- 父目录行的历史会话**无法自动归位**：cwd 就是 `D:\Portable` 的 22 条，
+  数据里没有「它属于哪个子项目」的信息。要么登记 `D:\Portable` 为容器，
+  要么以后新建任务时选对工作目录。**不猜。**
+- **不从桶名反解 cwd**：`D--Portable-khy-os` 这类桶名编码有损（`khy-os` 里的 `-`
+  会被反解成路径分隔符），反解出来是假数据。缺 cwd 的会话一律进「未归属」。
+- 路径比较对 Windows 盘符 / UNC 路径折叠大小写，POSIX 保持敏感
+  （`isUnderPath` 的单测钉住了这两个方向）。
+- 登记表里同一 path 只保留一条（`confirmProjectDialog` 按新 path + 原 path 双删）。
+- `transientRoots` 由主进程 `os.tmpdir()` 提供；渲染层拿不到时退化为只按
+  `TRANSIENT_PREFIXES` 判，不会崩，也不会误杀。
+
+### 11.4 验收实测
+
+| 项 | 结果 |
+|---|---|
+| `sidebarProjectClassify.test.cjs` | **30/30 绿** |
+| 桌面端 `tests/*.test.cjs` 全量 | **84/84 绿** |
+| `npm run typecheck`（基线比对） | 既有 18 条 / 实际 18 条，**无新增** |
+| `check-agent-rules` / `check-agent-feedback` | 全绿（0 violation / 0 error 0 warning） |
+| `check-frontend-design-tokens` | `exit=0`，66 findings 全在 `delivery/web/ai-frontend`，khyos-desktop 零新增 |
+
+**真实会话数据验证**（`works/data/khy/T1-domains/sessions/sessions/**`，取最近 50 条，
+与 `AppLayout listSessions(50)` 同口径；探针脚本用完即删）：
+
+| 分组 | 改前 | 改后 |
+|---|---|---|
+| `D:\Portable` | 22 | 22（父容器，未动） |
+| `D:\Portable\khy-os` | 2 + `...\runtime\node\backend` 15 = **两行** | **17，一行** |
+| `AppData\Local\Temp\agprobe*` ×5 | 5 行，各 1 条 | **并入「未归属」**（6 → 11 条） |
+| 未归属 | 6 | 11 |
 
