@@ -26,7 +26,8 @@
       <header class="hero reveal"><h1>khyos 用户输入预处理规范（Input Sanitization）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khyos-用户输入预处理规范-input-sanitization">khyos 用户输入预处理规范（Input Sanitization）</a></li><li class="lvl-2"><a href="#0-目标与非目标">0. 目标与非目标</a></li><li class="lvl-2"><a href="#1-自调查结论-接入前现状">1. 自调查结论（接入前现状）</a></li><li class="lvl-2"><a href="#2-处理流程">2. 处理流程</a></li><li class="lvl-2"><a href="#3-防呆-硬约束">3. 防呆（硬约束）</a></li><li class="lvl-2"><a href="#4-配置">4. 配置</a></li><li class="lvl-2"><a href="#5-示例">5. 示例</a></li><li class="lvl-2"><a href="#6-接口">6. 接口</a></li><li class="lvl-2"><a href="#7-边界-只新增预处理模块">7. 边界（只新增预处理模块）</a></li><li class="lvl-2"><a href="#8-落地检查清单">8. 落地检查清单</a></li></ul></nav>
       <article class="doc-body">
-<p>&lt;!-- 文档分类: DESIGN-ARCH-019 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-019] 用户输入预处理规范.md（新建） --&gt;</p>
+<p>&lt;!-- 文档分类: DESIGN-ARCH-019 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-019] 用户输入预处理规范.md（新建） --&gt;<br>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。</p></blockquote>
 <h1 id="khyos-用户输入预处理规范-input-sanitization">khyos 用户输入预处理规范（Input Sanitization）<a class="anchor" href="#khyos-用户输入预处理规范-input-sanitization" aria-label="锚点">#</a></h1>
 <blockquote><p>版本 v1.0（2026-06-12）。本文定义 khyos 生态底座在<strong>把用户输入送入模型之前</strong>的<br>轻量预处理机制：清洗「乱输入」中的<strong>纯噪声</strong>（控制/零宽字符、乱码替换符、刷屏式<br>重复标点、过量空白/空行、连续重复行），以<strong>降低 token 消耗</strong>、提升模型对有效内容的<br>聚焦，同时<strong>绝不修改有效信息</strong>。</p>
 <p>关键词 <strong>必须 / 严禁 / 应 / 可</strong> 按 RFC 2119 语义。</p></blockquote>

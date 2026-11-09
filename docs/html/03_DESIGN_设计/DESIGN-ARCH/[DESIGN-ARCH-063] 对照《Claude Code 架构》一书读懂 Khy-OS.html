@@ -149,7 +149,7 @@
 <p>这是 khy 命名里 &quot;OS&quot; 的由来。书讲愿景,khy 已落若干<strong>具体子系统</strong>:</p>
 <ul><li><strong>微内核(C/MoonBit)</strong>:仓库根 <code>kernel/</code>(<code>kernel/moonbit/lib/khy_kernel/main.mbt</code>、<code>Dockerfile.kernel-build</code>),</li></ul>
 <p>插件 SDK <code>platform/packages/moonbit-plugin-sdk/khy_sys.mbt</code>;backend 内 wasm 模块 <code>wasm-context/</code>/<code>wasm-chain/</code>/<br>  <code>wasm-indicators/</code>。深读 [DESIGN-ARCH-007] 微内核-ipc-moonbit、[DESIGN-ARCH-008] moonbit-系统边界。</p>
-<ul><li><strong>后台任务(进程即调度单元)</strong>:<code>src/services/backgroundTaskSpec.js</code>(纯叶子)+ <code>scripts/task-runner.js</code>(分离执行</li></ul>
+<ul><li><strong>后台任务(进程即调度单元)</strong>:<code>src/services/backgroundTaskSpec.js</code>(纯叶子)+ <code>runtime/node/backend/scripts/task-runner.js</code>(分离执行</li></ul>
 <p>进程,<code>khy tasks run</code> 每任务一个 detached 子进程,关掉 REPL 也存活)+ <code>backgroundTaskLauncher.js</code>(launch/stop/<br>  tailLogs)+ 复用持久化 <code>src/tasks/largeTaskRuntimeStore.js</code> 状态机。这是 khy「让 Agent 拥有后台进程」的最新一块。</p>
 <ul><li><strong>守护进程(daemon)</strong>:<code>src/services/daemonEntry.js</code>/<code>daemonManager.js</code>/<code>daemonSpawnLocation.js</code> + <code>cli/handlers/daemon.js</code>。</li><li><strong>移动协作(bridge)</strong>:<code>src/bridge/</code>(<code>bridgeServer.js</code>/<code>mobilePage.js</code>/<code>bridgeAuth.js</code>),让手机接入同一个 Agent OS。</li></ul>
 <p>深读 [DESIGN-ARCH-001] khy-移动智能体协议。</p>

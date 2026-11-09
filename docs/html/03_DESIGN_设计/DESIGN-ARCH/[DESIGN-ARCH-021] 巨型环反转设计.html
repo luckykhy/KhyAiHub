@@ -32,7 +32,7 @@
 <p>数据来源：本轮新增的两个<strong>只读分析子命令</strong>（<code>archDebtScan --scc</code> / <code>--drift</code>，确定性、<br>零依赖、可离线），实测当前代码库得出。<strong>先量化、再设计</strong>，不靠直觉拍脑袋。</p></blockquote>
 <hr>
 <h2 id="0-本轮交付的工具增强-只读分析-零业务改动">0. 本轮交付的工具增强（只读分析，零业务改动）<a class="anchor" href="#0-本轮交付的工具增强-只读分析-零业务改动" aria-label="锚点">#</a></h2>
-<p>为支撑本设计，给自研分析器 <code>scripts/archDebtScan.js</code> 增了两条<strong>纯只读</strong>能力，<br>默认 <code>npm run arch:debt</code> 的行为与退码语义<strong>完全不变</strong>，新能力走独立子命令：</p>
+<p>为支撑本设计，给自研分析器 <code>runtime/node/backend/scripts/archDebtScan.js</code> 增了两条<strong>纯只读</strong>能力，<br>默认 <code>npm run arch:debt</code> 的行为与退码语义<strong>完全不变</strong>，新能力走独立子命令：</p>
 <table><thead><tr><th>子命令</th><th>能力</th><th>性质</th></tr></thead><tbody><tr><td><code>node scripts/archDebtScan.js --scc</code></td><td><strong>巨型环切点杠杆</strong>：逐条 <code>services→cli</code> 反向边「移除→重算 SCC→量化巨型分量缩小量」，再贪心给出批量破环顺序</td><td>纯内存图算法，增删边即时还原，零写盘</td></tr><tr><td><code>node scripts/archDebtScan.js --drift</code></td><td><strong>R4 抽取漂移</strong>：检出「re-export 助手模块符号、却仍内部调本地同名旧副本」的半截抽取（三证据齐备才报，零误报）</td><td>纯文本词法分析（<code>_blankNonCode</code> 剥注释/字符串），零依赖</td></tr></tbody></table>
 <ul><li>两者均加 <code>--json</code>；退码恒 0（只读，不参与 CI 门禁）。</li><li>合成 fixture 测试 +10 用例（R4 正例 2 / 反例 4 + <code>_blankNonCode</code> + SCC 杠杆/无环/findCycles 零回归），</li></ul>
 <p>连同既有 13 用例共 <strong>23/23 绿</strong>；<code>findCycles</code> 经 <code>_sccComponents</code> 重构后行为字节级不变。</p>
