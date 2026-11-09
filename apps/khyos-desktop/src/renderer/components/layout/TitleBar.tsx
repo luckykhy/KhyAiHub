@@ -1,19 +1,41 @@
-﻿import { useState, useEffect, useRef } from 'react'
+// khy-canary: Khy-20261102-289-ESA2GVH8
+import { useState, useEffect, useRef, Suspense, lazy } from 'react'
 import { useAppDispatch } from '../../state/store'
 import { addToast } from '../../state/toastSlice'
-import { ProcessMonitorDialog } from './ProcessMonitorDialog'
 import { WorkspacePicker } from '../workspace/WorkspacePicker'
 import { openWorkspace } from '../../utils/openWorkspace'
 import { keyLabelFor } from '../../shared/keymap'
+import { Icon, type IconName } from '../ui/Icon'
 import { BrandMark } from '../ui/BrandMark'
 
 const TITLEBAR_HEIGHT = 48
 const CAPTION_BUTTON_WIDTH = 46
 
+// 剥洋葱 · 视觉侧第六刀：进程监视器对话框按需加载。
+//
+// 守卫的候选扫描把它判为「可切」，依据：
+//   ① 条件渲染（{processOpen && <ProcessMonitorDialog/>}）—— 窗口菜单点开才显示；
+//   ② 传递重量 2 文件 / 453 行；
+//   ③ **副作用有完整 cleanup**（1s 轮询 clearInterval + Esc 监听 removeEventListener）
+//      —— 条件挂载不会漏订阅。
+//
+// ③ 还有一个反向收益：此前对话框**常驻挂载**，关着时那个 1s 轮询还在跑
+// （每 1000ms 问一次 host 的进程信息）。改成条件挂载后，关着就不跑 ——
+// 这正是「第三判据」的另一面：**常驻的副作用本身也是重量**。
+const ProcessMonitorDialog = lazy(() =>
+  import('./ProcessMonitorDialog').then((m) => ({ default: m.ProcessMonitorDialog }))
+)
+
+// 任务监控与进程监视器同样按需加载：点开才挂载，关着就不跑那 1s 轮询。
+const TaskMonitorDialog = lazy(() =>
+  import('./TaskMonitorDialog').then((m) => ({ default: m.TaskMonitorDialog }))
+)
+
 interface TitleBarProps {
   onToggleSidebar?: () => void
   sidebarVisible?: boolean
-  onOpenSidePane?: () => void
+  onToggleSidePane?: () => void
+  sidePaneVisible?: boolean
   onToggleTerminal?: () => void
   // 会话 tab 头：会话标题（空 → 「新任务」）
   sessionTitle?: string
@@ -29,13 +51,14 @@ interface TitleBarProps {
 }
 
 type MenuItem =
-  | { kind: 'action'; label: string; shortcut?: string; disabled?: boolean; run: () => void }
+  | { kind: 'action'; label: string; icon?: IconName; shortcut?: string; disabled?: boolean; run: () => void }
   | { kind: 'separator' }
 
 export function TitleBar({
   onToggleSidebar,
   sidebarVisible = true,
-  onOpenSidePane,
+  onToggleSidePane,
+  sidePaneVisible = false,
   onToggleTerminal,
   sessionTitle,
   onNewTask,
@@ -48,6 +71,7 @@ export function TitleBar({
   const [platform, setPlatform] = useState('win32')
   const [menuOpen, setMenuOpen] = useState(false)
   const [processOpen, setProcessOpen] = useState(false)
+  const [taskMonitorOpen, setTaskMonitorOpen] = useState(false)
   // Real workspace root from the main process. main resolves it through
   // getWorkspaceRoot() (settings.desktopWorkspacePath → cwd fallback), so the
   // chip follows 打开工作区 immediately instead of freezing the boot directory.
@@ -142,18 +166,18 @@ export function TitleBar({
     // 的原生「工具」菜单里，而那份菜单从未被引入、又被 Menu.setApplicationMenu(null)
     // 摘掉 —— 独立管理窗口因此只剩 `--key-manager` 启动一条路（入口③），入口① 名存实亡。
     // menu.ts 退役后入口迁到这里：自绘窗口菜单才是当前形态下唯一活着的菜单面。
-    { kind: 'action', label: '密钥与端点管理', shortcut: keyLabelFor('openKeyManager'), run: () => { void api?.openKeyManagerWindow?.() } },
+    { kind: 'action', label: '密钥与端点管理', icon: 'settings', shortcut: keyLabelFor('openKeyManager'), run: () => { void api?.openKeyManagerWindow?.() } },
     { kind: 'separator' },
     // 键位标签取自 shared/keymap.ts 单一真源（[DESIGN-ARCH-125] P-03）：菜单里
     // 写死 'Ctrl+N' 而加速键没人实现，是命令面板与窗口菜单双双骗人的根源。
-    { kind: 'action', label: '新建任务', shortcut: keyLabelFor('newTask'), run: () => onNewTask?.() },
-    { kind: 'action', label: '打开工作区', shortcut: keyLabelFor('openWorkspace'), run: () => { void pickWorkspace() } },
-    { kind: 'action', label: '重新加载会话', run: () => onReloadSession?.() },
-    { kind: 'action', label: '在资源管理器中打开', run: () => {
+    { kind: 'action', label: '新建任务', icon: 'new-task', shortcut: keyLabelFor('newTask'), run: () => onNewTask?.() },
+    { kind: 'action', label: '打开工作区', icon: 'folder', shortcut: keyLabelFor('openWorkspace'), run: () => { void pickWorkspace() } },
+    { kind: 'action', label: '重新加载会话', icon: 'reload', run: () => onReloadSession?.() },
+    { kind: 'action', label: '在资源管理器中打开', icon: 'open-file', run: () => {
       if (!workspacePath) { toast('工作区路径不可用：请重启应用后重试', 'error'); return }
       void api?.openPath?.(workspacePath).then((r) => { if (r && !r.ok) toast(r.error || '打开失败', 'error') })
     } },
-    { kind: 'action', label: '在编辑器中打开', run: () => {
+    { kind: 'action', label: '在编辑器中打开', icon: 'code', run: () => {
       void api?.openInEditor?.(workspacePath).then((r) => {
         if (r && !r.ok) toast(r.error || '编辑器启动失败', 'error')
         else toast(`已在编辑器 ${r?.editor ?? ''} 中打开 ${workspacePath}`)
@@ -162,20 +186,22 @@ export function TitleBar({
     { kind: 'separator' },
     // 四端互跳：网页版地址与安装包位置由 main 解析（设置 / serviceDefaults /
     // downloadsCatalog 单一真源），这里只做入口，不在渲染层拼地址。
-    { kind: 'action', label: '打开网页版', run: () => { void openWebVersion() } },
-    { kind: 'action', label: '下载 Android 版', run: () => { void download('android') } },
-    { kind: 'action', label: '下载桌面版', run: () => { void download('windows') } },
-    { kind: 'action', label: '关于 KhyOS', run: () => toast('KhyOS Desktop（开发构建）') },
-    { kind: 'action', label: '检查更新', run: () => toast('当前为开发构建：自动更新通道未配置，跳过检查') },
-    { kind: 'action', label: '进程监视器', run: () => setProcessOpen(true) },
+    { kind: 'action', label: '打开网页版', icon: 'browser', run: () => { void openWebVersion() } },
+    { kind: 'action', label: '下载 Android 版', icon: 'download', run: () => { void download('android') } },
+    { kind: 'action', label: '下载桌面版', icon: 'download', run: () => { void download('windows') } },
     { kind: 'separator' },
-    { kind: 'action', label: '问题反馈', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.feedback)) } },
-    { kind: 'action', label: '给产品提需求', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.issues)) } },
-    { kind: 'action', label: '用户社群', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.community)) } },
-    { kind: 'action', label: '产品文档', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.docs)) } },
-    { kind: 'action', label: '导出日志', run: () => toast('导出日志：请在应用数据目录 ~/.khyquant/logs 中查看（自动导出通道未接线）') },
+    { kind: 'action', label: '关于 KhyOS', icon: 'info', run: () => toast('KhyOS Desktop（开发构建）') },
+    { kind: 'action', label: '检查更新', icon: 'arrow-up', run: () => toast('当前为开发构建：自动更新通道未配置，跳过检查') },
+    { kind: 'action', label: '进程监视器', icon: 'report', run: () => setProcessOpen(true) },
+    { kind: 'action', label: '任务监控', icon: 'report', run: () => setTaskMonitorOpen(true) },
     { kind: 'separator' },
-    { kind: 'action', label: '关闭窗口', run: () => api?.closeWindow?.() },
+    { kind: 'action', label: '问题反馈', icon: 'chat', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.feedback)) } },
+    { kind: 'action', label: '给产品提需求', icon: 'chat-new', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.issues)) } },
+    { kind: 'action', label: '用户社群', icon: 'plugins', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.community)) } },
+    { kind: 'action', label: '产品文档', icon: 'doc', run: () => { void api?.getBrandingLinks?.().then((l) => openUrl(l.docs)) } },
+    { kind: 'action', label: '导出日志', icon: 'file', run: () => toast('导出日志：请在应用数据目录 ~/.khyquant/logs 中查看（自动导出通道未接线）') },
+    { kind: 'separator' },
+    { kind: 'action', label: '关闭窗口', icon: 'close', run: () => api?.closeWindow?.() },
   ]
 
   return (
@@ -192,10 +218,7 @@ export function TitleBar({
             title="切换侧边栏"
             aria-label="切换侧边栏"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M5.5 2.5v9" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
+            <Icon name="panel-left" size={14} />
           </button>
           <button
             onClick={onBack}
@@ -206,9 +229,7 @@ export function TitleBar({
             title={canBack ? '后退（上一个会话）' : '后退：没有更早的会话'}
             aria-label="后退"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M8.5 3L4.5 7l4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Icon name="chevron-left" size={14} />
           </button>
           <button
             onClick={onForward}
@@ -219,9 +240,7 @@ export function TitleBar({
             title={canForward ? '前进（下一个会话）' : '前进：没有更新的会话'}
             aria-label="前进"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M5.5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Icon name="chevron-right" size={14} />
           </button>
         </div>
       )}
@@ -252,15 +271,17 @@ export function TitleBar({
       {!isMac && (
         <div className="flex items-center gap-0.5 pr-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
           <button
-            onClick={onOpenSidePane}
-            className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-surface-hover text-foreground/70 hover:text-foreground transition-colors"
-            title="展开侧边面板"
-            aria-label="展开侧边面板"
+            onClick={onToggleSidePane}
+            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+              sidePaneVisible
+                ? 'bg-selected text-foreground'
+                : 'hover:bg-surface-hover text-foreground/70 hover:text-foreground'
+            }`}
+            title={sidePaneVisible ? '收起侧边面板' : '展开侧边面板'}
+            aria-label={sidePaneVisible ? '收起侧边面板' : '展开侧边面板'}
+            aria-pressed={sidePaneVisible}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M8.5 2.5v9" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
+            <Icon name="side-pane" size={14} />
           </button>
           <button
             onClick={onToggleTerminal}
@@ -268,10 +289,7 @@ export function TitleBar({
             title="切换终端"
             aria-label="切换终端"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4 5.5l2 1.7-2 1.7M7.3 9h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Icon name="terminal" size={14} />
           </button>
           <button
             onClick={() => setMenuOpen((v) => !v)}
@@ -279,9 +297,7 @@ export function TitleBar({
             title="窗口菜单"
             aria-label="窗口菜单"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2.5 4h9M2.5 7h9M2.5 10h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
+            <Icon name="menu" size={14} />
           </button>
         </div>
       )}
@@ -290,7 +306,7 @@ export function TitleBar({
         <>
           <div className="fixed inset-0 z-40" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties} onClick={() => setMenuOpen(false)} />
           <div
-            className="fixed right-2 top-12 z-50 w-64 py-1.5 rounded-lg border border-border bg-popover shadow-2xl text-sm select-none"
+            className="fixed right-2 top-12 z-50 w-64 py-1.5 rounded-lg border border-border bg-popover shadow-2xl text-sm select-none animate-scale-in origin-top-right"
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           >
             {menuItems.map((item, idx) =>
@@ -304,14 +320,15 @@ export function TitleBar({
                     setMenuOpen(false)
                     item.run()
                   }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors ${
                     item.disabled
                       ? 'text-foreground/30 cursor-default'
                       : 'text-foreground hover:bg-surface-hover'
                   }`}
                 >
+                  {item.icon && <Icon name={item.icon} size={14} className="text-foreground-muted flex-shrink-0" />}
                   <span className="flex-1">{item.label}</span>
-                  {item.shortcut && <span className="text-xs text-foreground/40">{item.shortcut}</span>}
+                  {item.shortcut && <span className="text-xs text-foreground-muted">{item.shortcut}</span>}
                 </button>
               )
             )}
@@ -320,17 +337,30 @@ export function TitleBar({
       )}
       {/* 进程监视器（窗口菜单 L4 / ZCode M1）：展示 main/host/scheduler 真实
           pid 与存活态（四进程架构自检的 UI 入口） */}
-      {processOpen && <ProcessMonitorDialog onClose={() => setProcessOpen(false)} />}
+      {processOpen && (
+        <Suspense fallback={null}>
+          <ProcessMonitorDialog onClose={() => setProcessOpen(false)} />
+        </Suspense>
+      )}
+      {/* 任务监控（窗口菜单）：本进程在跑的会话/工具 + 文件真源队列，只读 */}
+      {taskMonitorOpen && (
+        <Suspense fallback={null}>
+          <TaskMonitorDialog onClose={() => setTaskMonitorOpen(false)} />
+        </Suspense>
+      )}
       {!isMac && (
         <div className="flex items-center" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          {/* 窗口标题栏按钮（系统语义控件）：三者形态各自不同 —— 最小化横线、
+              最大化方框、关闭叉号 —— 但统一走全局图标注册表，描边与其余图标
+              同为 1.6，不再各写各的 strokeWidth（此前这三枚是 1.5）。 */}
           <button onClick={() => (window as any).__KHYOS__?.minimizeWindow()} className="flex items-center justify-center hover:bg-surface-hover text-foreground" style={{ width: CAPTION_BUTTON_WIDTH, height: TITLEBAR_HEIGHT }} aria-label="最小化窗口">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6H10" stroke="currentColor" strokeWidth="1.5" /></svg>
+            <Icon name="minimize" size={12} />
           </button>
           <button onClick={() => (window as any).__KHYOS__?.maximizeWindow()} className="flex items-center justify-center hover:bg-surface-hover text-foreground" style={{ width: CAPTION_BUTTON_WIDTH, height: TITLEBAR_HEIGHT }} aria-label="最大化或还原窗口">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="2" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+            <Icon name="maximize" size={12} />
           </button>
           <button onClick={() => (window as any).__KHYOS__?.closeWindow()} className="flex items-center justify-center hover:bg-destructive text-foreground" style={{ width: CAPTION_BUTTON_WIDTH, height: TITLEBAR_HEIGHT }} aria-label="关闭">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.5" /></svg>
+            <Icon name="close" size={12} />
           </button>
         </div>
       )}

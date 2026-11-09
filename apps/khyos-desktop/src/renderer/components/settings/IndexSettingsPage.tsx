@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-309-0X0B0W02
 import { useCallback, useEffect, useState } from 'react'
 
 // ── 索引库 settings page (Pattern B variant, ZC-ALIGN-001 P13) ──
@@ -174,17 +175,17 @@ export function IndexSettingsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-foreground/70">
-            已建立 <span className="text-foreground/40">{indexes ? indexes.length : '…'}</span>
+            已建立 <span className="text-foreground-muted">{indexes ? indexes.length : '…'}</span>
           </span>
         </div>
         {indexes === null && !loadError ? (
-          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground/50">
+          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground-muted">
             读取索引库中…
           </div>
         ) : (indexes || []).length === 0 ? (
           <div className="bg-card border border-card-border rounded-xl p-8 text-center">
-            <p className="text-sm text-foreground/50 mb-2">尚未建立索引</p>
-            <p className="text-xs text-foreground/40">为当前工作区建立索引，增强 Agent 的代码理解能力。</p>
+            <p className="text-sm text-foreground-muted mb-2">尚未建立索引</p>
+            <p className="text-xs text-foreground-muted">为当前工作区建立索引，增强 Agent 的代码理解能力。</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -196,24 +197,24 @@ export function IndexSettingsPage() {
                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${ix.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
                       <span className="text-sm font-medium text-foreground">{ix.name}</span>
                     </div>
-                    <p className="text-xs text-foreground/50">
+                    <p className="text-xs text-foreground-muted">
                       {ix.fileCount} 个文件 · {fmtBytes(ix.totalBytes)}
                       {!ix.enabled && ' · 已停用'}
                     </p>
                     {detailId === ix.id && (
-                      <p className="mt-2 text-xs text-foreground/40 font-mono break-all">{ix.root}</p>
+                      <p className="mt-2 text-xs text-foreground-muted font-mono break-all">{ix.root}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => setDetailId(detailId === ix.id ? null : ix.id)}
-                      className="px-2 py-1 text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover rounded transition-colors"
+                      className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
                     >
                       {detailId === ix.id ? '收起' : '详情'}
                     </button>
                     <button
                       onClick={() => handleRebuild(ix.id, ix.name)}
-                      className="px-2 py-1 text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover rounded transition-colors"
+                      className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
                     >
                       重建
                     </button>
@@ -234,7 +235,7 @@ export function IndexSettingsPage() {
                     </button>
                     <button
                       onClick={() => handleDelete(ix.id, ix.name)}
-                      className="px-2 py-1 text-xs text-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                      className="px-2 py-1 text-xs text-foreground-muted hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
                     >
                       删除
                     </button>
@@ -255,7 +256,7 @@ export function IndexSettingsPage() {
           为当前工作区建立索引
         </button>
         {pendingAction && (
-          <span className="text-xs text-foreground/50">{pendingAction}</span>
+          <span className="text-xs text-foreground-muted">{pendingAction}</span>
         )}
       </div>
 
@@ -282,7 +283,7 @@ function CreateIndexDialog({ onClose, onSubmit }: {
       <div className="relative w-full max-w-md bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
         <div className="px-6 py-4 border-b border-popover-border">
           <h3 className="text-base font-semibold text-popover-foreground">新建索引</h3>
-          <p className="text-xs text-foreground/50 mt-1">默认索引当前工作区；可自定义名称</p>
+          <p className="text-xs text-foreground-muted mt-1">默认索引当前工作区；可自定义名称</p>
         </div>
         <div className="px-6 py-4 space-y-4">
           <div>
@@ -291,7 +292,7 @@ function CreateIndexDialog({ onClose, onSubmit }: {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="默认：当前工作区"
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
           <div>
@@ -300,20 +301,20 @@ function CreateIndexDialog({ onClose, onSubmit }: {
               value={root}
               onChange={(e) => setRoot(e.target.value)}
               placeholder="留空 = 当前工作区"
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
         </div>
         <div className="px-6 py-4 border-t border-popover-border flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-foreground/60 hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
+            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
           >
             取消
           </button>
           <button
             onClick={() => onSubmit(name, root)}
-            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             扫描并建立
           </button>

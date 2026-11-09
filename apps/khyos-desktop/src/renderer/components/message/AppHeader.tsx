@@ -1,4 +1,5 @@
-import { useState } from 'react'
+// khy-canary: Khy-20261102-293-13PMERCA
+import { useEffect, useRef, useState } from 'react'
 import { useAppDispatch } from '../../state/store'
 import { addToast } from '../../state/toastSlice'
 
@@ -17,7 +18,28 @@ export function AppHeader({ sessionId = '', sessionJsonlPath = '', workspacePath
   const modelLabel = modelName ?? ''
   const [copied, setCopied] = useState<string | null>(null)
   const [reloading, setReloading] = useState(false)
+  // 低频操作收进溢出菜单：此前 6 个等权文字按钮全时可见 + flex-wrap，窄窗口下
+  // 折成两行把消息区再压掉一行；其中「复制工作区路径」与 TitleBar 的
+  // WorkspacePicker chip 信息重复，唯一路径展示点留在 TitleBar。
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDocClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onEsc)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onEsc)
+    }
+  }, [menuOpen])
 
   const copyToClipboard = async (text: string, label: string) => {
     if (!text) {
@@ -46,11 +68,18 @@ export function AppHeader({ sessionId = '', sessionJsonlPath = '', workspacePath
   // 在编辑器中打开 / 在资源管理器中打开：都走 main 的真实 IPC
   const openInEditor = () => {
     const api = (window as unknown as {
-      __KHYOS__?: { openInEditor?: (t?: string) => Promise<{ ok: boolean; editor?: string; error?: string }> }
+      __KHYOS__?: { openInEditor?: (t?: string) => Promise<{ ok: boolean; state?: string; editor?: string; error?: string }> }
     }).__KHYOS__
     if (!api?.openInEditor) { toast('编辑器打开不可用：preload 未注入 __KHYOS__，请重启应用', 'error'); return }
     void api.openInEditor(workspacePath).then((r) => {
-      if (!r?.ok) toast(r.error || '编辑器启动失败', 'error')
+      if (!r?.ok) {
+        toast(r.error || '编辑器启动失败', 'error')
+        // 未配置外部编辑器不再是死路：落到内置文件选择器（AppLayout 监听后
+        // 打开「打开文件」标签），用户直接从工作区选文件进内置编辑器。
+        if (r.state === 'unconfigured') {
+          window.dispatchEvent(new Event('khy:open-file-picker'))
+        }
+      }
       else toast(`已在编辑器 ${r.editor ?? ''} 中打开 ${workspacePath}`)
     }).catch((err: unknown) => toast(`编辑器启动失败：${String(err)}`, 'error'))
   }
@@ -66,92 +95,107 @@ export function AppHeader({ sessionId = '', sessionJsonlPath = '', workspacePath
     }).catch((err: unknown) => toast(`打开目录失败：${String(err)}`, 'error'))
   }
 
+  const runFromMenu = (fn: () => void) => {
+    setMenuOpen(false)
+    fn()
+  }
+
   return (
-    <div className="bg-panel border-b border-border px-4 py-2 flex items-center gap-2 flex-wrap">
-      {/* 会话信息 */}
-      <div className="flex items-center gap-2 text-xs text-foreground/60 mr-2">
+    <div className="bg-panel border-b border-border px-4 py-2 flex items-center gap-2">
+      {/* 会话信息：模型 + 会话 ID（工作区路径只在 TitleBar 出现一次） */}
+      <div className="flex items-center gap-2 text-xs text-foreground-muted mr-2 min-w-0">
         {modelLabel && (
           <>
             <span className="font-medium text-foreground/80">{modelLabel}</span>
-            <span className="text-foreground/30">·</span>
+            <span className="text-foreground-subtle">·</span>
           </>
         )}
-        <span className="truncate max-w-[200px]" title={workspacePath}>{workspacePath}</span>
+        {sessionId && (
+          <span className="truncate max-w-[220px]" title={sessionId}>会话 {sessionId.slice(0, 8)}</span>
+        )}
       </div>
 
       <div className="flex-1" />
 
-      {/* 操作按钮组 */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => copyToClipboard(workspacePath, 'path')}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5"
-          title="复制路径"
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="3.5" y="3.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M5 2.5H8a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-          <span>{copied === 'path' ? '已复制' : '复制路径'}</span>
-        </button>
-
-        <button
-          onClick={() => copyToClipboard(sessionId, 'session')}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5"
-          title="复制会话 ID"
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="3.5" y="3.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M5 2.5H8a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-          <span>{copied === 'session' ? '已复制' : '复制会话 ID'}</span>
-        </button>
-
-        <button
-          onClick={() => copyToClipboard(sessionJsonlPath, 'jsonl')}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5"
-          title={sessionJsonlPath ? `复制 JSONL 路径：${sessionJsonlPath}` : '复制 JSONL 路径：请先选择一个会话'}
-        >
-          <span>{copied === 'jsonl' ? '已复制' : '复制JSONL路径'}</span>
-        </button>
-
-        <div className="w-px h-4 bg-border mx-1" />
-
+      {/* 操作组：常态只留高频动作（重载），其余收进「更多操作」溢出菜单 */}
+      <div ref={menuRef} className="flex items-center gap-1" >
         <button
           onClick={handleReload}
           disabled={reloading}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          className="px-2.5 py-1.5 rounded-md text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5 disabled:opacity-50"
           title="重载会话"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={reloading ? 'animate-spin' : ''}>
-            <path d="M2.5 6a3.5 3.5 0 016.7-1.3M9.5 6a3.5 3.5 0 01-6.7 1.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M9 2.5V4H7.5M3 9.5V8H4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2.5 6a3.5 3.5 0 016.7-1.3M9.5 6a3.5 3.5 0 01-6.7 1.3" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
+            <path d="M9 2.5V4H7.5M3 9.5V8H4.5" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span>{reloading ? '重载中...' : '重载会话'}</span>
+          <span>{reloading ? '重载中…' : '重载'}</span>
         </button>
 
-        <button
-          onClick={openInEditor}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5"
-          title="在编辑器中打开（编辑器取 设置 → 常规 或 KHY_EDITOR）"
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M7 2H3a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M7 5l3-3M5 8l3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span>在编辑器中打开</span>
-        </button>
-
-        <button
-          onClick={openInFileManager}
-          className="px-2.5 py-1.5 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex items-center gap-1.5"
-          title="在资源管理器中打开"
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2 4h8M2 4a1 1 0 011-1h2l1 1h3a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" strokeWidth="1.2" />
-          </svg>
-          <span>在资源管理器中打开</span>
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className={`px-2 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 ${
+              menuOpen ? 'bg-selected text-foreground' : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
+            }`}
+            title="更多会话操作"
+            aria-label="更多会话操作"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+              <circle cx="2.5" cy="6" r="1.1" />
+              <circle cx="6" cy="6" r="1.1" />
+              <circle cx="9.5" cy="6" r="1.1" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute right-0 top-full mt-1 w-60 py-1.5 rounded-lg border border-border bg-popover shadow-2xl text-sm z-50"
+            >
+              <button
+                role="menuitem"
+                onClick={() => runFromMenu(() => { void copyToClipboard(workspacePath, 'path') })}
+                className="w-full text-left px-3 py-1.5 text-foreground hover:bg-surface-hover transition-colors truncate"
+                title={workspacePath || '尚未选择工作区'}
+              >
+                {copied === 'path' ? '已复制工作区路径' : '复制工作区路径'}
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => runFromMenu(() => { void copyToClipboard(sessionId, 'session') })}
+                className="w-full text-left px-3 py-1.5 text-foreground hover:bg-surface-hover transition-colors"
+              >
+                {copied === 'session' ? '已复制会话 ID' : '复制会话 ID'}
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => runFromMenu(() => { void copyToClipboard(sessionJsonlPath, 'jsonl') })}
+                className="w-full text-left px-3 py-1.5 text-foreground hover:bg-surface-hover transition-colors"
+                title={sessionJsonlPath || '请先选择一个会话'}
+              >
+                {copied === 'jsonl' ? '已复制 JSONL 路径' : '复制 JSONL 路径'}
+              </button>
+              <div className="my-1.5 border-t border-border" />
+              <button
+                role="menuitem"
+                onClick={() => runFromMenu(openInEditor)}
+                className="w-full text-left px-3 py-1.5 text-foreground hover:bg-surface-hover transition-colors"
+                title="编辑器取 设置 → 常规 或 KHY_EDITOR"
+              >
+                在编辑器中打开
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => runFromMenu(openInFileManager)}
+                className="w-full text-left px-3 py-1.5 text-foreground hover:bg-surface-hover transition-colors"
+              >
+                在资源管理器中打开
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

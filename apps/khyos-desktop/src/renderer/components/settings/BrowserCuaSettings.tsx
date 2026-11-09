@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-307-PGXTQKAV
 // ── 浏览器控制 settings page (ZC-ALIGN-002 I6, browser 41 keys) ──
 // ── 电脑控制 settings page (ZC-ALIGN-002 I11, cuaPermission 28 keys) ──
 // 电脑控制页每个控件走真实后端链路：写入设置键 → main 转发 host 进程改写
@@ -5,6 +6,7 @@
 // KHY_COMPUTER_USE_ALLOWED_APPS）→ 后端 desktopControl/safetyGate 每次
 // 授权调用重读 env，下一次操作立即生效。fail-closed：缺省 off。
 import { useState, useEffect, useCallback } from 'react'
+import { SettingSection, ToggleField, SelectField, TextField } from './fields'
 
 interface SettingsProps {
   settings: Record<string, unknown>
@@ -160,112 +162,12 @@ export function CuaSettings({ settings, onChange }: SettingsProps) {
           )}
           <button
             onClick={loadGate}
-            className="mt-2 text-xs text-foreground/50 hover:text-foreground transition-colors"
+            className="mt-2 text-xs text-foreground-muted hover:text-foreground transition-colors"
           >
             刷新
           </button>
         </div>
       </SettingSection>
-    </div>
-  )
-}
-
-// ── Shared field components ──
-
-function SettingSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-8">
-      <h3 className="text-sm font-medium text-foreground mb-3 px-1">{title}</h3>
-      <div className="bg-card border border-card-border rounded-xl px-5 divide-y divide-card-border">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ToggleField({ label, description, enabled, onChange }: {
-  label: string
-  description: string
-  enabled: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-center justify-between py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-      </div>
-      <button
-        onClick={() => onChange(!enabled)}
-        className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
-          enabled ? 'bg-brand' : 'bg-foreground/20'
-        }`}
-        role="switch"
-        aria-checked={enabled}
-      >
-        <span
-          className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            enabled ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </button>
-    </div>
-  )
-}
-
-function SelectField({ label, description, value, onChange, options }: {
-  label: string
-  description: string
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
-}) {
-  return (
-    <div className="flex items-center justify-between py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-      </div>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-input-border-focused min-w-[140px] flex-shrink-0"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-  )
-}
-
-// Local draft + commit on blur: typing must not fire a settings write (and a
-// host env push) on every keystroke.
-function TextField({ label, description, value, placeholder, onChange }: {
-  label: string
-  description: string
-  value: string
-  placeholder?: string
-  onChange: (v: string) => void
-}) {
-  const [draft, setDraft] = useState(value)
-  useEffect(() => { setDraft(value) }, [value])
-  return (
-    <div className="py-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-foreground">{label}</div>
-          <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-        </div>
-        <input
-          type="text"
-          value={draft}
-          placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={() => { if (draft !== value) onChange(draft) }}
-          className="bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-input-border-focused min-w-[180px] flex-shrink-0"
-        />
-      </div>
     </div>
   )
 }

@@ -6,10 +6,12 @@ import { ThinkingBlock } from './ThinkingBlock'
 import { ChatEmptyState } from '../ui/EmptyState'
 import { Icon } from '../ui/Icon'
 import { SkeletonBubble } from '../ui/Skeleton'
+import { Spinner } from '../ui/Spinner'
+import { useTicker } from '../ui/useTicker'
 import { useAppDispatch, useAppSelector } from '../../state/store'
+import { useChatIdentity } from '../../shared/chatIdentity'
 import { requestRetry, selectMessageReasoning } from '../../state/messageSlice'
 import type { Message as StoreMessage } from '../../state/messageSlice'
-import { useChatIdentity } from '../../shared/chatIdentity'
 import {
   useSessionLoadSignal,
   useSessionLoadError,
@@ -271,6 +273,56 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
   )
 }
 
+// 时间戳按北京时间展示：会话可跨机器同步，用本机时区会让同一条消息在两台
+// 机器上显示成两个时刻。固定 +8 偏移（手工算 UTC 字段），不依赖 Intl 的时区
+// 数据库 —— 打包产物里没有完整的 tzdata 时，带时区名的格式化会静默退回本机时区。
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000
+
+function formatBeijingTime(ts: number): string {
+  const d = new Date(ts + BEIJING_OFFSET_MS)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} `
+    + `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} (UTC+8)`
+}
+
+function formatElapsedSec(sec: number): string {
+  if (sec < 60) return `${sec}s`
+  return `${Math.floor(sec / 60)} 分 ${String(sec % 60).padStart(2, '0')} 秒`
+}
+
+// 首字未到时的等待卡：请求已发出，模型还没吐出第一个字（也还没有思维链 /
+// 工具动作），消息区此前是一片空白 —— 用户分不清「在跑」还是「卡死」。
+// 时间从消息落下的时刻算起，秒数每秒刷新；不定长进度条只表达「仍在前推」。
+function WaitingCard({ startedAt }: { startedAt: number }) {
+  const now = useTicker(true, 1000)
+  const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000))
+
+  return (
+    <div className="rounded-xl border border-card-border bg-card overflow-hidden animate-fade-in">
+      <div className="flex items-center gap-2 px-3 py-2.5 text-sm text-foreground-muted">
+        <Spinner size="sm" className="shrink-0 text-brand" />
+        <span className="text-foreground">等待模型响应</span>
+        <span className="text-xs tabular-nums">已等 {formatElapsedSec(elapsed)}</span>
+        <span className="inline-flex items-center gap-1" aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="w-1 h-1 rounded-full bg-current animate-pulse"
+              style={{ animationDelay: `${i * 160}ms` }}
+            />
+          ))}
+        </span>
+        {elapsed >= 60 && (
+          <span className="text-xs text-warning ml-auto">耗时较长，可点「停止」中断</span>
+        )}
+      </div>
+      <div className="relative h-0.5 overflow-hidden bg-brand/15">
+        <span className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-brand/60 khy-indeterminate" />
+      </div>
+    </div>
+  )
+}
+
 export function MessageBubble({ message }: { message: Message }) {
   const [expanded, setExpanded] = useState(true)
   const [copied, setCopied] = useState(false)
@@ -287,6 +339,19 @@ export function MessageBubble({ message }: { message: Message }) {
   }
 
   const isUser = message.role === 'user'
+  // 首字未到：请求在途，正文 / 思维链 / 工具动作全都还没有 —— 此时正文区
+  // 只有一枚流式光标，看起来像空壳。用等待卡替它表达「确实在等」。
+  const waitingFirstToken = !isUser
+    && Boolean(message.isStreaming)
+    && !message.content
+    && !message.reasoning
+    && !hasToolExecutions
+  // 已有思考卡 / 工具卡在显示时，正文仍是空的 —— 那些卡片已经承担了「在推进」
+  // 的表达，这里不能再落一枚孤零零的流式光标（屏幕上会是一个悬浮的色块）。
+  const hideEmptyStreamingBody = !isUser
+    && Boolean(message.isStreaming)
+    && !message.content
+    && !waitingFirstToken
   // 两个名字都来自 settings.json（见 shared/chatIdentity）：用户轮显示账号名，
   // 助手轮显示桌宠名 —— 「助手」是产品内角色词，用户认的是他自己那只桌宠。
   const { userName, assistantName } = useChatIdentity()
@@ -295,12 +360,13 @@ export function MessageBubble({ message }: { message: Message }) {
     // 消息流去表格化：此前每条消息一条通栏分隔线（border-b），读感像表格行
     // 而非对话。改为靠 py-4 的垂直间距分隔，层级由间距与用户轮的底板承担。
     <div className="group px-5 py-4 animate-fade-in">
-      {/* 头部 — 始终可见（内嵌终端形态：头像圆圈换终端提示符，统一左对齐
-          提示符布局，不再保留聊天式的用户行右对齐；收起/复制按钮保留） */}
+      {/* 头部 — 始终可见（内嵌终端形态：头像圆圈换终端提示符）。
+          助手轮提示符居左；用户轮整组靠右，与下方右对齐的气泡连成一块，
+          所以用户轮不用 flex-1 撑开，改由提示符的 ml-auto 把整组推过去。 */}
       <div className="flex items-center gap-3 mb-3">
         <span
           className={`font-mono text-sm leading-none select-none ${
-            isUser ? 'text-trajectory-user' : 'text-trajectory-assistant'
+            isUser ? 'text-trajectory-user ml-auto' : 'text-trajectory-assistant'
           }`}
         >
           {isUser ? '❯' : '●'}
@@ -309,9 +375,9 @@ export function MessageBubble({ message }: { message: Message }) {
           {isUser ? userName : assistantName}
         </span>
         <span className="text-xs text-foreground-muted">
-          {new Date(message.timestamp).toLocaleTimeString()}
+          {formatBeijingTime(message.timestamp)}
         </span>
-        <div className="flex-1" />
+        {!isUser && <div className="flex-1" />}
         <div className="flex items-center gap-1">
           <button
             onClick={() => setExpanded(!expanded)}
@@ -359,24 +425,24 @@ export function MessageBubble({ message }: { message: Message }) {
         </div>
       )}
 
-      {/* 消息内容 — 内嵌终端形态（.khy-tui 作用域只保留等宽字体，色彩继承
-          外壳令牌）：用户与 AI 均为左对齐终端正文，角色差异由头部提示符与
-          颜色承担；右对齐描边气泡已移除（用户拍板：整块终端化）。
-          删掉通栏分隔线后，用户轮加一层轻底板，给「我说的 / 它答的」一个
-          非色彩锚点（DOM 仅加类，不增删节点）。
+      {/* 消息内容 — 助手轮是终端正文（左对齐、无底板），用户轮是聊天气泡
+          （右对齐、限宽、轻底板）：两轮不能只靠颜色区分，「我说的在右边」
+          本身就是最强的非色彩锚点。气泡作为 flex 子项按内容收缩，短句是
+          小气泡，长文最多占 85% 宽（与 SelectionChatPane 同档）。
+          气泡类挂在消息体根节点上，对齐由父级 flex 承担，不新增 DOM 节点。
           失败消息（status==='error'，或网关把错误包装成正文的 "API Error:..."）
           渲染为错误卡片而不是普通正文。 */}
       {expanded && (
-        <div className="text-sm text-foreground pl-10">
-          {message.role === 'assistant' && (message.failed || /^API Error:/i.test(message.content)) ? (
+        <div className={`text-sm text-foreground pl-10 ${isUser ? 'flex justify-end' : ''}`}>
+          {waitingFirstToken ? (
+            <WaitingCard startedAt={message.timestamp} />
+          ) : hideEmptyStreamingBody ? null : message.role === 'assistant' && (message.failed || /^API Error:/i.test(message.content)) ? (
             <ErrorCard message={message} />
           ) : (
             <MarkdownRenderer
               content={message.content}
               isStreaming={message.isStreaming}
-              // 用户轮加一层轻底板：删掉通栏分隔线后，「我说的 / 它答的」需要
-              // 一个非色彩的锚点。类加在消息体根节点上，不新增 DOM 节点。
-              className={isUser ? 'bg-surface rounded-lg px-3 py-2' : ''}
+              className={isUser ? 'khy-user-bubble max-w-[85%] rounded-xl bg-surface px-4 py-2.5 break-words' : ''}
             />
           )}
         </div>

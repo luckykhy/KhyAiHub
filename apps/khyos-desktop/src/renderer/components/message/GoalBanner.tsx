@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-297-KVG3GGYR
 import { useState } from 'react'
 
 interface GoalBannerProps {
@@ -12,7 +13,7 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
   const [draft, setDraft] = useState(goal ?? '')
 
   const statusConfig = {
-    idle: { color: 'text-foreground/40', bg: 'bg-foreground/5', label: '' },
+    idle: { color: 'text-foreground-muted', bg: 'bg-foreground/5', label: '' },
     running: { color: 'text-brand', bg: 'bg-brand/10', label: '执行中' },
     checking: { color: 'text-warning', bg: 'bg-warning/10', label: '目标校验中' },
     complete: { color: 'text-success', bg: 'bg-success/10', label: '目标已完成，任务结束' },
@@ -25,7 +26,7 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
   if (!goal && !editing) return null
 
   return (
-    <div className={`mx-4 mt-3 rounded-xl border border-border overflow-hidden animate-slide-down`}>
+    <div className="khy-content-col mt-3 rounded-xl border border-border overflow-hidden animate-slide-down">
       <div className={`flex items-center gap-3 px-4 py-3 ${config.bg}`}>
         <span className="text-sm">◎</span>
         <div className="flex-1">
@@ -35,7 +36,7 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 placeholder="描述你的目标，例如：实现用户登录功能"
-                className="flex-1 bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-input-border-focused"
+                className="flex-1 bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
                 autoFocus
               />
               <button
@@ -51,7 +52,7 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
               </button>
               <button
                 onClick={() => { setEditing(false); setDraft(goal ?? '') }}
-                className="px-3 py-1.5 text-foreground/60 hover:text-foreground text-sm"
+                className="px-3 py-1.5 text-foreground-muted hover:text-foreground text-sm"
               >
                 取消
               </button>
@@ -70,14 +71,14 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
           <div className="flex items-center gap-1">
             <button
               onClick={() => setEditing(true)}
-              className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-surface-hover text-xs"
+              className="p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-hover text-xs"
             >
               编辑
             </button>
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="p-1.5 rounded-lg text-foreground/40 hover:text-destructive hover:bg-surface-hover text-xs"
+                className="p-1.5 rounded-lg text-foreground-muted hover:text-destructive hover:bg-surface-hover text-xs"
               >
                 取消
               </button>
