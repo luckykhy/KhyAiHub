@@ -20,9 +20,11 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 process.env.KHYQUANT_PORTABLE_ROOT = path.resolve(__dirname, '..', '..');
 
 const aiManagementServer = require('../src/services/aiManagementServer');
+// 端口真源在 constants/serviceDefaults.js（LAYOUT-008）；此处不再另写一份字面量。
+const { AI_BACKEND_DEFAULT_PORT } = require('../src/constants/serviceDefaults');
 
 async function main() {
-  const port = parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+  const port = parseInt(process.env.AI_MGMT_PORT, 10) || AI_BACKEND_DEFAULT_PORT;
   const actualPort = await aiManagementServer.start(port);
   console.log(`[mgmt-server] AI Management Server listening on http://127.0.0.1:${actualPort}`);
   console.log(
