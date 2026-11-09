@@ -18,7 +18,10 @@ const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..', '..');
-const IMG_ROOT = path.join(REPO, 'evidence', '03_图片');
+// 2026-10-02 起底档迁入 works/record/evidence/（根级 evidence/ 已废止，见
+// [DESIGN-LAY-005] §1.2 与 D-E1）。此处若仍指根级 evidence/，采集器会另造一棵
+// 影子树 —— 根目录封闭清单会把它判成未登记实体。
+const IMG_ROOT = path.join(REPO, 'works', 'record', 'evidence', '03_图片');
 const SRC_DIR = path.join(IMG_ROOT, 'HTML源码');
 const BIN = path.join(REPO, 'runtime', 'node', 'backend', 'bin', 'khy.js');
 const PROFILE_DIR = path.join(REPO, 'works', 'data', 'khy', 'tmp', 'evidence-browser-profile');
@@ -175,10 +178,13 @@ function captureTerminals(browser, records) {
 }
 
 // ── B. 界面截图：本地静态站真实渲染 ────────────────────────────────────────
+// 路径随仓内布局迁移同步过三轮（apps/ai-frontend → delivery/web/ai-frontend；
+// 桌面端产物从 dist/ 迁到 out/renderer/ —— electron-vite 的输出目录）。
+// 路径漂了不会报错，只会**默默拍到旧构建产物**，所以每次改布局都要同步这里。
 const UI_TARGETS = [
-  { app: 'apps/ai-frontend', root: 'dist', 名: '01_ai管理台', 路径: '/login', 说明: 'L3 平台自带管理前端（AI 平台 UI）构建产物' },
-  { app: 'apps/khyos-desktop', root: 'dist', 名: '02_桌面端', 路径: '/', 说明: '桌面端渲染层构建产物（标题栏 + 侧栏 + 会话列表）' },
-  { app: 'apps/provider-hub', root: 'dist', 名: '03_provider-hub', 路径: '/', 说明: '模型通道管理端构建产物' },
+  { app: 'delivery/web/ai-frontend', root: 'dist', 名: '01_ai管理台', 路径: '/login', 说明: 'L3 平台自带管理前端（AI 平台 UI）构建产物' },
+  { app: 'apps/khyos-desktop', root: 'out/renderer', 名: '02_桌面端', 路径: '/', 说明: '桌面端渲染层构建产物（标题栏 + 侧栏 + 会话列表）' },
+  { app: 'delivery/web/provider-hub', root: 'dist', 名: '03_provider-hub', 路径: '/', 说明: '模型通道管理端构建产物' },
 ];
 
 function serveStatic(rootDir) {
