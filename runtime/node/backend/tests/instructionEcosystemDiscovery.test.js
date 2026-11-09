@@ -116,10 +116,16 @@ test('scoped rules: only always-on Cursor rules are adopted', () => {
     '.cursor/rules/b-scoped.mdc': '---\ndescription: react\nglobs: src/**\nalwaysApply: false\n---\nHooks only.',
     '.cursor/rules/c-plain.md': 'No frontmatter, always on.',
   });
-  const paths = discover(root)
+  const out = discover(root);
+  const paths = out
     .filter((f) => f.ecosystem === 'cursor')
     .map((f) => path.basename(f.path));
   assert.deepStrictEqual(paths, ['a-global.mdc', 'c-plain.md']);
+  // The dropped scoped rule must be disclosed, not silently vanished.
+  const notice = out.find((f) => f.kind === 'notice');
+  assert.ok(notice, 'a scoped drop must produce a disclosure entry');
+  assert.match(notice.content, /\[SKIPPED: scoped\][^\n]*b-scoped\.mdc/);
+  assert.match(notice.content, /共发现 3 个第三方规则文件，注入 2 个，未注入 1 个/);
 });
 
 test('scoped rules: Copilot instructions honour applyTo width', () => {
@@ -149,12 +155,79 @@ test('budgets: per-file truncation and a hard tier total', () => {
     'CONVENTIONS.md': big,
   });
   const out = discover(root);
-  const total = out.reduce((n, f) => n + f.content.length, 0);
+  const injected = out.filter((f) => f.kind !== 'notice');
+  const total = injected.reduce((n, f) => n + f.content.length, 0);
   assert.ok(total <= reg.ECO_MAX_TOTAL_CHARS, `tier total ${total} must stay within budget`);
-  for (const f of out) {
+  for (const f of injected) {
     assert.ok(f.content.length <= reg.ECO_MAX_FILE_CHARS);
     assert.strictEqual(f.truncated, true);
   }
+  assert.strictEqual(injected.length, 2, 'two files fit before the tier budget dies');
+  // Files the tier never injected must be named in the disclosure entry — a
+  // silently dropped rule file is indistinguishable from one never written.
+  const notice = out.find((f) => f.kind === 'notice');
+  assert.ok(notice, 'budget-dropped files must produce a disclosure entry');
+  assert.match(notice.content, /共发现 4 个第三方规则文件，注入 2 个，未注入 2 个/);
+  assert.match(notice.content, /\[SKIPPED: budget\][^\n]*\.rules/);
+  assert.match(notice.content, /\[SKIPPED: budget\][^\n]*CONVENTIONS\.md/);
+});
+
+test('tier budget: a file that cannot fit head+notice is dropped, never notice-only', () => {
+  // Straddle corner the 4×8000 fixture above cannot reach: the first two files
+  // leave exactly 1 char of budget, which cannot hold the ~75-char
+  // [TRUNCATED] notice. Slicing anyway would inject a notice-only section and
+  // push the tier total past ECO_MAX_TOTAL_CHARS (7999 + 75 = 8074); the file
+  // must be dropped and named in the summary instead.
+  const root = mkProject({
+    '.cursorrules': 'x'.repeat(5000), // readFileSafe caps it to exactly 4000
+    'GEMINI.md': 'y'.repeat(3999), // leaves a 1-char remainder
+    '.rules': 'z'.repeat(3000), // head + notice cannot fit → dropped
+    'CONVENTIONS.md': 'c'.repeat(3000), // budget already dead → dropped
+  });
+  const out = discover(root);
+  const injected = out.filter((f) => f.kind !== 'notice');
+  const total = injected.reduce((n, f) => n + f.content.length, 0);
+  assert.ok(total <= reg.ECO_MAX_TOTAL_CHARS, `tier total ${total} must stay within budget`);
+  assert.ok(
+    !injected.some((f) => f.path.endsWith('.rules')),
+    'the straddling file must be dropped, not injected as a notice-only section'
+  );
+  const notice = out.find((f) => f.kind === 'notice');
+  assert.ok(notice, 'budget-dropped files must produce a disclosure entry');
+  assert.match(notice.content, /共发现 4 个第三方规则文件，注入 2 个，未注入 2 个/);
+  assert.match(notice.content, /\[SKIPPED: budget\][^\n]*\.rules/);
+  assert.match(notice.content, /\[SKIPPED: budget\][^\n]*CONVENTIONS\.md/);
+});
+
+test('no drops ⇒ no disclosure entry (clean repos stay byte-identical)', () => {
+  const root = mkProject({ 'GEMINI.md': 'rules', '.cursorrules': 'more rules' });
+  const out = discover(root);
+  assert.deepStrictEqual(
+    out.filter((f) => f.kind === 'notice'),
+    [],
+    'nothing was lost, so nothing may be announced'
+  );
+});
+
+test('ecosystem @include lines are disclosed as not-expanded, never silently inlined', () => {
+  const root = mkProject({ '.roo/rules/with-include.md': 'body line\n@other.md\ntail line' });
+  const merged = svc.loadInstructions(root);
+  assert.match(merged, /\[INCLUDE-NOT-EXPANDED\][^\n]*with-include\.md/);
+  assert.match(merged, /含 1 行 @ 路径引用未展开/);
+  assert.match(merged, /@other\.md/, 'the raw line still reaches the prompt verbatim');
+});
+
+test('the disclosure entry never leaks into the /memory summary', () => {
+  const root = mkProject({
+    '.cursor/rules/b-scoped.mdc': '---\nglobs: src/**\nalwaysApply: false\n---\nHooks only.',
+  });
+  // The notice carries no file (path ''), so a leak would surface as an entry
+  // with an empty path — /memory must keep listing real files only.
+  const summary = svc.getInstructionSummary(root);
+  assert.ok(
+    summary.every((f) => f.path),
+    '/memory lists real files only, not the ecosystem notice'
+  );
 });
 
 test('empty / whitespace-only rule files are skipped rather than injected', () => {

@@ -81,6 +81,9 @@ describe('doctor claude settings conflict detection', () => {
       };
     });
 
+    // doctorReport.js 从 formatters 解构这两个纯文本宽度函数；局部 mock 不给它们，
+    // doctor 渲染时会抛 "truncateToWidth is not a function"。宽度算法取真叶子实现。
+    const actualWidth = jest.requireActual('../src/utils/text/width');
     jest.doMock('../src/cli/formatters', () => ({
       printSuccess: jest.fn(),
       printError: jest.fn(),
@@ -91,6 +94,8 @@ describe('doctor claude settings conflict detection', () => {
       MASCOT_MINI: '*',
       ICON_HEART: '+',
       ICON_GEAR: '*',
+      displayWidth: actualWidth.displayWidth,
+      truncateToWidth: actualWidth.truncateToWidth,
     }));
 
     jest.doMock('../src/services/gateway/aiGateway', () => ({

@@ -37,13 +37,7 @@ let adapterContent = '已作答'; // 默认不提 OCR(模拟模型忽略 OPS-124
 const env = h.envSandbox(['KHY_VISION_FALLBACK_MODEL', 'KHY_VISION_FALLBACK_CASCADE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_INTERMEDIATE_MESSAGE', 'KHY_VISION_OCR_FALLBACK', 'KHY_OCR_USAGE_FOOTNOTE']);
 const runner = h.makeRunner({ prompt: '请描述图片中的关键信息', model: 'gpt-4o', tag: 'usage-footnote' });
 
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: () => adapterContent });
-  h.wireCascade(h.makeRejectAdapter(), rec);
-}
-
-const _OCR_TEXT_DETAIL = [{ text: '发票 金额 100', confidence: 90, needsAiFallback: false, truncated: false, lang: 'chi_sim', requestedLang: 'chi_sim', orientationCorrected: 0, upscaledFactor: 0 }];
+const run = h.makeRescueRun({ genLeaf, runner, content: () => adapterContent, captureImages: false });
 
 describe('ocrUsageFootnote 纯叶:isFootnoteEnabled + answerAlreadyDisclosesOcr', () => {
   test('门默认开;仅显式 0/false/off/no 关', () => {
@@ -76,9 +70,7 @@ describe('OCR 成功路径「使用 OCR」确定性脚注端到端(OPS-MAN-126)'
   test('A) 修复点:门开 + 模型答复不提 OCR → result.content 末尾出现确定性脚注(明显告知)', async () => {
     env.set({ KHY_OCR_USAGE_FOOTNOTE: undefined }); // 默认开
     adapterContent = '发票金额是 100 元'; // 模型忽略了 OPS-124 指令,只字不提 OCR
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.match(rec.finalPrompt || '', /OCR 图像文本识别结果/, '不变量:OCR 文本仍注入(准确识别不回退)');
     assert.ok(String(res.content || '').includes(ouf.OCR_USAGE_FOOTNOTE_MARKER), '修复:确定性追加用户可见 OCR 脚注');
@@ -89,9 +81,7 @@ describe('OCR 成功路径「使用 OCR」确定性脚注端到端(OPS-MAN-126)'
   test('B) 去重:门开 + 模型答复已提 OCR → 不追加脚注(保持无感、不重复披露)', async () => {
     env.set({ KHY_OCR_USAGE_FOOTNOTE: undefined });
     adapterContent = '我通过 OCR 识别到发票金额是 100 元'; // 模型合规(OPS-124 指令生效)
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.ok(!String(res.content || '').includes(ouf.OCR_USAGE_FOOTNOTE_MARKER), '去重:正文已披露 OCR → 不追加脚注');
     assert.match(res.content || '', /我通过 OCR 识别到/, '原答复正文逐字节保留');
@@ -100,9 +90,7 @@ describe('OCR 成功路径「使用 OCR」确定性脚注端到端(OPS-MAN-126)'
   test('C) 门关(KHY_OCR_USAGE_FOOTNOTE=off) → 逐字节回退(答复无脚注)', async () => {
     env.set({ KHY_OCR_USAGE_FOOTNOTE: 'off' });
     adapterContent = '发票金额是 100 元';
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.equal(res.content, '发票金额是 100 元', '门关:result.content 逐字节不变(无脚注)');
   });
@@ -110,9 +98,7 @@ describe('OCR 成功路径「使用 OCR」确定性脚注端到端(OPS-MAN-126)'
   test('D) 无回归:OCR 无文本(读不出) → _ocrImageTextRead 未置 → 不追加脚注', async () => {
     env.set({ KHY_OCR_USAGE_FOOTNOTE: undefined });
     adapterContent = '发票金额是 100 元';
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => [], collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res } = await run([]);
     assert.equal(res.success, true);
     assert.ok(!String(res.content || '').includes(ouf.OCR_USAGE_FOOTNOTE_MARKER), 'OCR 无文本 → 无 OCR 读出可披露,不追加脚注');
   });
