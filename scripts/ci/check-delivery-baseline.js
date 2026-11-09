@@ -723,7 +723,25 @@ function main() {
   // D1/D2/D3/D7 是全仓状态读数，与单次提交无关 ⇒ --changed 下不报（但仍测量并计入 JSON）。
   const reportFullState = !changedMode;
 
-  const d1 = checkD1(reportFullState ? add : () => {});
+  // D1 在 --changed 档**不测量**：它的判据是 `git fsck --no-dangling`，要遍历整个
+  // 对象库——本仓实测 125 秒（30792 个对象，且每次提交都在往里加）。
+  //
+  // 为什么这是修正而不是放宽：check-debt-ledger.js 的注释早就写明「6 个守卫实测
+  // 合计约 179 秒（check-delivery-baseline 一个就 121 秒），挂在 pre-commit 上
+  // 不可接受」——同一个项目里，check-debt-ledger 自己已经默认不跑这批昂贵测量，
+  // 而本执行器却仍留在 commit 快档里，把每次提交都拖成两分多钟。
+  //
+  // 读数没有因此消失：默认档（PR 门）照常测量，check-debt-ledger.js --remeasure
+  // 走的也是默认档。--changed 档的语义是「只报与本次改动相关的项」，而 D1 是全仓
+  // 状态读数——这里本来就是不报它的，测了再扔是纯浪费。
+  const d1 = changedMode
+    ? {
+      status: 'SKIPPED',
+      detail: '--changed 档不测全仓读数：git fsck 要遍历整个对象库（本仓实测 125 秒），'
+        + '挂在 pre-commit 快档上不可接受（同一口径见 check-debt-ledger.js 的注释）。'
+        + '完整读数请跑默认档或 `node scripts/ci/check-debt-ledger.js --remeasure`。',
+    }
+    : checkD1(reportFullState ? add : () => {});
   const d2 = checkD2(reportFullState ? add : () => {}, data);
   const d3 = checkD3(reportFullState ? add : () => {});
   const d4 = checkD4(add);
@@ -756,11 +774,16 @@ function main() {
     severity: isObserver && !strictMode && f.severity === 'error' ? 'warning' : f.severity,
   }));
 
+  // ── 细档计数：每一种 status 都必须有自己的一档 ──────────────────────────
+  // 早期只数四档，SKIPPED 在 counts 与汇总行里完全隐身 —— 12 条结果汇总成 11，
+  // 读的人看不出「有一条本次没量」。缺档比缺测更危险：它让「没量」与「量了没问题」
+  // 长成同一个读数。新增 status 时必须在这里同步加档，测试用例锁住合计=results 条数。
   const counts = {
     PASS: results.filter((r) => r.status === 'PASS').length,
     PARTIAL: results.filter((r) => r.status === 'PARTIAL').length,
     GAP: results.filter((r) => r.status === 'GAP').length,
     UNKNOWN: results.filter((r) => r.status === 'UNKNOWN').length,
+    SKIPPED: results.filter((r) => r.status === 'SKIPPED').length,
   };
   const errors = effective.filter((f) => f.severity === 'error');
   const warnings = effective.filter((f) => f.severity === 'warning');
@@ -796,7 +819,13 @@ function main() {
     if (explainMode) w.write(`            判据来源：[DESIGN-DELIV-001] §3 / 阈值见 [DESIGN-DELIV-002] §4\n`);
   }
   w.write(`${'-'.repeat(72)}\n`);
-  w.write(`汇总: PASS ${counts.PASS} · PARTIAL ${counts.PARTIAL} · GAP ${counts.GAP} · UNKNOWN ${counts.UNKNOWN}\n`);
+  // SKIPPED 必须出现在汇总行：它代表「本次没量」，与四档的「量过了」不是一回事，
+  // 缺席时 12 条结果在汇总里只数出 11 条，缺口无人知道。
+  w.write(
+    `汇总: PASS ${counts.PASS} · PARTIAL ${counts.PARTIAL} · GAP ${counts.GAP} · UNKNOWN ${counts.UNKNOWN}`
+      + (counts.SKIPPED ? ` · SKIPPED ${counts.SKIPPED}（本次未测量，不计入通过）` : '')
+      + `\n`
+  );
   if (isObserver && !strictMode && items.some((f) => f.severity === 'error')) {
     w.write(`注: 阶段 ${STAGE} 下 ${items.filter((f) => f.severity === 'error').length} 个 GAP 已降级为 WARN（不参与放行）。升阶见 [DESIGN-DELIV-002] §5.2。\n`);
   }

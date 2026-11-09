@@ -128,6 +128,24 @@ function measureDepth(rootRel, absDir, acc = []) {
   return out;
 }
 
+/**
+ * 深度区间 min/max。Math.min(...depths) 对上万项的数组 spread 会爆栈
+ * （Maximum call stack size exceeded——实测正是守卫读不到登记表的根因），故走循环。
+ */
+function depthRange(depths) {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const d of depths) {
+    if (d < min) {
+      min = d;
+    }
+    if (d > max) {
+      max = d;
+    }
+  }
+  return { min, max };
+}
+
 function scanDataRoot(rootRel, reg) {
   const abs = path.join(REPO_ROOT, rootRel);
   const entries = directEntries(abs);
@@ -187,7 +205,7 @@ function scanDataRoot(rootRel, reg) {
     emptyDirs: countEmptyDirs(abs),
     junkHits,
     depths: depths.length
-      ? { min: Math.min(...depths), max: Math.max(...depths), outOfRange: depths.filter((d) => d < 2 || d > 5).length }
+      ? { ...depthRange(depths), outOfRange: depths.filter((d) => d < 2 || d > 5).length }
       : null,
     findings,
   };
@@ -292,11 +310,18 @@ function scanRepoRoot(reg) {
 /** L-3：绕开 dataHome 的字面拼接。 */
 function scanBypass() {
   const allowed = new Set([
-    path.join('services', 'backend', 'src', 'utils', 'dataHome.js').replace(/\\/g, '/'),
+    path.join('runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js').replace(/\\/g, '/'),
     REGISTRY_REL.replace(/\\/g, '/'),
     'scripts/ci/check-data-layout.js',
+    // 手机发现缓存（<user-home>/.khyquant/phone/discovery.json）的两处合法站点，
+    // 显式登记并指向 DATA-LOCATIONS.json knownGaps[] 的 phone-discovery-user-home：
+    // user-home 段不在任何 root 之下，是登记表的能力缺口，不是漏网。
+    'runtime/node/backend/src/services/domain/network/phone/phoneBridgeConfig.js',
+    'delivery/extension/bridges/khy-amoon-bridge/lib/wireless.js',
   ]);
-  const roots = ['runtime/node/backend/src', 'runtime/node/backend/bin', 'electron', 'scripts', 'delivery/extension/scripts'];
+  // bridges 必须入根：它与 runtime 平行（第二条桥、独立 npm 包），不入根则 L-3
+  // 永远看不见它——wireless.js 的 .khyquant 字面量正是本项主题。
+  const roots = ['runtime/node/backend/src', 'runtime/node/backend/bin', 'electron', 'scripts', 'delivery/extension/scripts', 'delivery/extension/bridges'];
   const hits = [];
   const stack = roots.map((r) => path.join(REPO_ROOT, r));
   let visited = 0;

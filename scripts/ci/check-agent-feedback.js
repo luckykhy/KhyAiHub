@@ -37,7 +37,9 @@
  *   node scripts/ci/check-agent-feedback.js --changed
  *   node scripts/ci/check-agent-feedback.js --files="A:a.js,D:b.js" --say="帮我删掉旧模块"
  *   node scripts/ci/check-agent-feedback.js --scenario=fix-no-repro
- *   node scripts/ci/check-agent-feedback.js --changed --evidence=.khy/feedback/<task-id>
+ *   node scripts/ci/check-agent-feedback.js --changed --task=<task-id>
+ *   KHY_TASK_ID=<task-id> node scripts/ci/check-agent-feedback.js --changed
+ *   node scripts/ci/check-agent-feedback.js --changed --evidence=works/data/khy/feedback/<task-id>
  *   node scripts/ci/check-agent-feedback.js --scenario=delete-mass --explain
  *
  * Exit: 0 无 error（S1 恒 0），1 有 error，2 用法错误。
@@ -185,7 +187,13 @@ function detectMode(changes, statement) {
 
 // ── 存证契约（方案 §6） ────────────────────────────────────────────────
 // 为什么是「文件」而不是「对话」：对话会滚动、被压缩、被转述失真；
-// 文件留在 .khy/feedback/<task-id>/ 里，可被下一个 AI 或人来复核。
+// 文件留在 works/data/khy/feedback/<task-id>/ 里，可被下一个 AI 或人来复核。
+//
+// ⚠ 路径约定（2026-10-24 订正）：本仓数据家在 `works/data/khy/`（CLAUDE.md §二 B8），
+// **仓库根的 `.khy/` 是被明令禁止的影子目录**（守卫 root-shadow-dir 会亮红）。
+// 本文件旧版的用法示例写的是 `.khy/feedback/<task-id>` —— 照着做会造出影子树，
+// 且与本门默认读取的 `works/data/khy/feedback/` 不匹配（实测 2026-10-21 的 T-030
+// 就是照旧示例写的：存证落在根 `.khy/feedback/`，门却仍在读数据家那一份）。
 const EVIDENCE = {
   FIX: [
     { file: 'complaint.md', label: '主诉（条件 + 现象）' },
@@ -246,12 +254,92 @@ function evidenceElsewhere(dir, file) {
       }
     }
     const rel = path.relative(REPO_ROOT, dir).split(path.sep).join('/');
-    const hint = n > 0 ? `｜同级另有 ${n} 个 task-id 目录存在 ${file}（最新：${newest}）；门默认读 ${rel}，本次任务若已写存证请加 --evidence 指过去` : '';
+    const hint = n > 0 ? `｜同级另有 ${n} 个 task-id 目录存在 ${file}（最新：${newest}）；门默认读 ${rel}，本次任务若已写存证请加 --evidence 指过去（或 --task=<task-id> 直接指任务目录）` : '';
     _elsewhereCache.set(file, hint);
     return hint;
   } catch {
     return '';
   }
+}
+
+// ── 存证定位（--task / KHY_TASK_ID / 分支名回退） ─────────────────────────
+//
+// 为什么需要显式定位：规则 5/6/7 约定存证落 `feedback/<task-id>/`，但门在 pre-commit
+// 经 ruleguard 跑时只拿到登记表里的 `--changed`（RUNTIME-007 exec.args），于是恒读
+// `feedback/adhoc`。实测（2026-11-05）feedback 下 392 个任务目录、0 个 adhoc ——
+// 「缺存证」的样本量的是寻址错误，不是纪律。定位只接受**显式指向**或分支名里的
+// 任务号；仍不自动认领同级目录（理由见 evidenceElsewhere），指不到就如实说「未定位」。
+
+/** 任务存证目录名：单段、不以符号开头，杜绝 `..` 与路径分隔符借道。 */
+const TASK_DIR_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+/** 存证根；`KHY_FEEDBACK_DIR` 覆盖点与 hqStore.feedbackDir() 同址（测试不得写真实数据家）。 */
+function feedbackRoot() {
+  const override = process.env.KHY_FEEDBACK_DIR;
+  if (override && String(override).trim()) {
+    return path.resolve(String(override).trim());
+  }
+  return path.join(REPO_ROOT, 'works', 'data', 'khy', 'feedback');
+}
+
+/** 当前分支名；git 不可用/不在工作树时返回空串（穷环境不抛，与全局纪律一致）。 */
+function currentBranch() {
+  const r = cp.spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  return r.status === 0 ? String(r.stdout || '').trim() : '';
+}
+
+/**
+ * 解析本次读哪份存证。
+ *
+ * 优先级：`--evidence`（整条路径）> `--task` / `KHY_TASK_ID`（目录名）>
+ * 分支名里的 `T-<n>`（**仅当该目录真实存在**，避免猜一个不存在的任务）> scenario/adhoc。
+ * 分支回退排在 scenario 之后：`--scenario=fix-no-repro` 演示的是它自己的预置存证，
+ * 不该被当前分支上的真实任务目录劫走。
+ *
+ * @returns {{dir: string, locatedBy: 'evidence'|'task'|'branch'|'none'}}
+ */
+function resolveEvidenceDir(input) {
+  const o = input && typeof input === 'object' ? input : {};
+  const root = feedbackRoot();
+  if (o.explicit && String(o.explicit).trim()) {
+    return { dir: path.resolve(REPO_ROOT, String(o.explicit).trim()), locatedBy: 'evidence' };
+  }
+  const want = String(o.taskId || '').trim();
+  if (want && TASK_DIR_NAME_RE.test(want)) {
+    return { dir: path.join(root, want), locatedBy: 'task' };
+  }
+  if (!o.scenario) {
+    const hit = String(o.branch || '').match(/T-\d+/);
+    if (hit && TASK_DIR_NAME_RE.test(hit[0])) {
+      const dir = path.join(root, hit[0]);
+      if (fs.existsSync(dir)) {
+        return { dir, locatedBy: 'branch' };
+      }
+    }
+  }
+  return { dir: path.join(root, String(o.scenario || 'adhoc')), locatedBy: 'none' };
+}
+
+/**
+ * 「为什么这里没有存证」的一句话前缀，读不到文件时拼在 finding 前面。
+ *
+ * 区分三件事：门没被指向任何任务（寻址问题）/ 指向的目录不存在（指错或没写）/
+ * 目录在但缺这份文件（真缺证据，返回空串，由 finding 自己说）。
+ */
+function missingEvidenceNote(dir, locatedBy) {
+  const rel = path.relative(REPO_ROOT, dir).split(path.sep).join('/');
+  if (locatedBy === 'none') {
+    return `未能定位本次任务的存证目录（不是证据缺失）：--changed 档只拿到改动集，门默认读 ${rel}；`
+      + '用 --task=<task-id> 或环境变量 KHY_TASK_ID 指向 works/data/khy/feedback/<task-id>/。';
+  }
+  if (!fs.existsSync(dir)) {
+    return `指定的存证目录不存在：${rel}（不是证据缺失，先写存证或改正指向）。`;
+  }
+  return '';
 }
 
 // ── 五问反形式主义：自问自答识别（方案 §3.2） ────────────────────────────
@@ -497,10 +585,24 @@ function check() {
     : collectChanges();
   const statement = argValue('--say', preset ? preset.say : '');
 
-  const evidenceDir = path.resolve(
-    REPO_ROOT,
-    argValue('--evidence', `works/data/khy/feedback/${scenario || 'adhoc'}`)
-  );
+  const taskArg = String(argValue('--task', process.env.KHY_TASK_ID || '')).trim();
+  if (taskArg && !TASK_DIR_NAME_RE.test(taskArg)) {
+    const err = new Error(
+      `--task 只接受存证目录名，不是路径：${taskArg}\n`
+        + '存证约定落在 works/data/khy/feedback/<task-id>/（只允许字母/数字/./_/-）'
+    );
+    err.usage = true;
+    throw err;
+  }
+  const loc = resolveEvidenceDir({
+    explicit: argValue('--evidence', ''),
+    taskId: taskArg,
+    branch: currentBranch(),
+    scenario,
+  });
+  const evidenceDir = loc.dir;
+  // 读不到某份文件时的一句话前缀：区分「门没被指向任务」与「真的缺证据」
+  const missingNote = missingEvidenceNote(evidenceDir, loc.locatedBy);
 
   // 预置存证（仅 --scenario 演示用；真实运行绝不写盘）
   if (preset && preset.evidence) {
@@ -554,13 +656,13 @@ function check() {
     for (const item of EVIDENCE[mode]) {
       if (readEvidence(evidenceDir, item.file)) continue;
       if (mode === 'FIX' && item.file === 'repro-before.txt') {
-        add('error', 'fix-without-repro', `判定为 FIX 但缺 ${item.file}（${item.label}）—— 没量体温不许开药。${evidenceElsewhere(evidenceDir, item.file)}`);
+        add('error', 'fix-without-repro', `${missingNote}判定为 FIX 但缺 ${item.file}（${item.label}）—— 没量体温不许开药。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else if (mode === 'DELETE' && item.file === 'rollback.txt') {
-        add('error', 'delete-without-rollback', `判定为 DELETE 但缺 ${item.file}（${item.label}）—— 客户有喊停权。${evidenceElsewhere(evidenceDir, item.file)}`);
+        add('error', 'delete-without-rollback', `${missingNote}判定为 DELETE 但缺 ${item.file}（${item.label}）—— 客户有喊停权。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else if (mode === 'BUILD' && item.file === 'requirement-5q.md') {
-        add('warning', 'build-without-questions', `判定为 BUILD 但缺 ${item.file}（${item.label}）—— 先提问再动手。${evidenceElsewhere(evidenceDir, item.file)}`);
+        add('warning', 'build-without-questions', `${missingNote}判定为 BUILD 但缺 ${item.file}（${item.label}）—— 先提问再动手。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else {
-        add('warning', `missing-${item.file}`, `缺存证 ${item.file}：${item.label}${evidenceElsewhere(evidenceDir, item.file)}`);
+        add('warning', `missing-${item.file}`, `${missingNote}缺存证 ${item.file}：${item.label}${evidenceElsewhere(evidenceDir, item.file)}`);
       }
     }
   }
@@ -703,6 +805,9 @@ module.exports = {
   auditFiveQuestions,
   docsBackedTokens,
   customerSpeech,
+  resolveEvidenceDir,
+  missingEvidenceNote,
+  feedbackRoot,
   EVIDENCE,
   SCENARIOS,
   STAGE,

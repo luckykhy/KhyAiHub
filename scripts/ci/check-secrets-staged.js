@@ -71,6 +71,10 @@ const EXEMPT_NAME = [
   /\.mdown$/i,
   /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|Pipfile\.lock|Cargo\.lock|go\.sum|composer\.lock|Gemfile\.lock|packages\.lock\.json)$/i,
   /\.lock$/i,
+  // TypeScript 增量构建缓存：装的是「本机 node_modules 布局 + 文件哈希」，
+  // 不含文件内容，因此不可能带出凭据；而它随每台机器的依赖布局而变，
+  // 入库就是纯 diff 噪声（2026-10-25 实测：pnpm store 路径与普通路径之差）。
+  /\.tsbuildinfo$/i,
 ];
 
 const EXEMPT_TEST = [
@@ -86,9 +90,15 @@ function isExemptFile(file) {
 
 // docker 镜像 digest（`image: x@sha256:<64hex>`）与任何 `sha256: <64hex>` 校验和：
 // 它们是可公开的完整性指纹，不是凭据。命中 64 位 hex 时看前文 12 字符里有没有 shaXXX:。
+//
+// JSON 键形式（`"sha256": "<64hex>"`）也必须放行：算法名后面先跟键的闭引号、
+// 再跟冒号，老正则只认 `sha256: ` 那种裸形式，于是**图片证据清单里的
+// 校验和会被当成密钥**（2026-10-25 实测：works/record/evidence/03_图片/
+// 运行截图清单.json 的 8 条 sha256 里有 2 条被误报，提交直接被 pre-commit 挡住）。
+// 真密钥的键名是 JWT_SECRET / api_key 之类，不含 shaXXX，形态不会被这条放宽吃掉。
 function hex64LooksLikeDigest(line, index) {
   const before = line.slice(Math.max(0, index - 12), index);
-  return /sha\d{1,3}\s*[:=]?\s*$/i.test(before);
+  return /sha\d{1,3}["']?\s*[:=]?\s*["']?\s*$/i.test(before);
 }
 
 // 赋值型命中的值要真的像「随机串」：够长、同时含数字与字母、且不是占位符。

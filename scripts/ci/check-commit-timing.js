@@ -212,7 +212,7 @@ function evaluate(changes, ctx = {}) {
       'unit-unverified',
       codeFiles[0].path,
       `改了 ${codeFiles.length} 个代码文件但没有验证证据 —— T2「没跑过的不算做完」。` +
-        `请把验证命令的原始输出存到 .khy/feedback/<task-id>/verify.txt（不许转述）。` +
+        `请把验证命令的原始输出存到 works/data/khy/feedback/<task-id>/verify.txt（不许转述）。` +
         `若本单元确实无法运行验证（如纯声明性改动），请在提交信息里写明原因。`
     );
   }

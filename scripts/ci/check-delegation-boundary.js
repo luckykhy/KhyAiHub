@@ -19,6 +19,16 @@
  *   5 delegation-nudge-gate       点名 nudge 未要求模型写出闸门标记
  *   6 delegation-boundary-not-called claudeDelegation 未经过准入判定就决定委派
  *   7 delegation-bypass-spawn     在白名单目录之外拉起外部 CLI（旁路 spawn，绕过闸门）
+ *   8 delegation-face-ungated     可委派面（claude/codex/opencode）在 AgentTool 里直连适配器，
+ *                                 未收敛到 decideExternalDelegation（2026-10-15 实测：codex/opencode 两条面
+ *                                 当时完全不过准入）
+ *   9 delegation-g1-self-asserted G1 凭据退回「模型自述文本」（未接 delegationTicket 票券）——
+ *                                 被约束方同时持有证据的书写权
+ *  10 delegation-nudge-false-positive 点名识别退回「全文同现」式判据，缺少否定/征询守卫——
+ *                                「不要用 claude code」会被判成用户点名
+ *  11 delegation-cascade-ungated 网关自动候选池（预检自动挑选 + orderedAdapters 组装）在无
+ *                                'user-command' 批准标记时不得含外部委派 key——2026-10-19 实测：
+ *                                预检胜者被直写进 GATEWAY_PREFERRED_ADAPTER，随后级联逐 key 弹委派卡
  *
  * Usage:
  *   node scripts/ci/check-delegation-boundary.js [--changed] [--list=<id>[,id...]]
@@ -37,6 +47,11 @@ const RULE_ID = 'PROCESS-004';
 const SSOT_REL = 'docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md';
 const DIRECTIVE_REL = 'runtime/node/backend/src/services/externalAgentDirective.js';
 const DELEGATION_REL = 'runtime/node/backend/src/tools/AgentTool/claudeDelegation.js';
+const AGENT_TOOL_REL = 'runtime/node/backend/src/tools/AgentTool/index.js';
+const TICKET_REL = 'runtime/node/backend/src/services/delegationTicket.js';
+const DELEGATION_GATE_REL = 'runtime/node/backend/src/services/gateway/delegationGate.js';
+const PREFLIGHT_REL = 'runtime/node/backend/src/cli/aiMessageBuilder.js';
+const GENERATE_METHOD_REL = 'runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js';
 
 // 开放式授权句式黑名单。这些都是「把准入权交给模型的临场感觉」的措辞，
 // 一旦在任何注入给模型的文案里复活，本规则就形同虚设，故一律判 error。
@@ -71,6 +86,19 @@ function add(id, file, message) {
 function readText(rel) {
   const abs = path.join(repoRoot, rel);
   return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : null;
+}
+/**
+ * 去掉源码里的行注释与块注释。
+ *
+ * 为什么需要：G1 的判据原来用 `includes('delegationTicket')` 找「票券接线」，
+ * 而全文里**一句注释**就能满足它 —— 于是把真正的 require 与核销调用删掉、只留一句
+ * 「现在 G1 只认 delegationTicket …」的说明，守卫照样绿。模型自述与运行时事实必须分开，
+ * 守卫也得能分开看。
+ */
+function stripComments(src) {
+  return String(src || '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 }
 
 function changedFiles() {
@@ -253,6 +281,246 @@ function checkBoundaryIsCalled() {
   }
 }
 
+// ── 8：三条可委派面必须收敛到同一个决策点 ─────────────────────────────────────
+/** 从认知层 EXTERNAL_AGENTS 注册表抽出可委派 id（单一真源，不另立名单）。 */
+function delegatableIds(directiveText) {
+  const start = String(directiveText).indexOf('const EXTERNAL_AGENTS');
+  if (start < 0) return null;
+  const block = String(directiveText).slice(start);
+  const re = /id:\s*'([a-z][a-z0-9-]*)'[\s\S]{0,400}?delegatable:\s*(true|false)/g;
+  const ids = [];
+  for (const m of block.matchAll(re)) {
+    if (m[2] === 'true') ids.push(m[1]);
+  }
+  return ids;
+}
+
+function checkFacesGated() {
+  const agentTool = readText(AGENT_TOOL_REL);
+  if (agentTool === null) {
+    add('delegation-face-ungated', AGENT_TOOL_REL, 'AgentTool 入口不存在，无法断言可委派面是否过准入。');
+    return;
+  }
+  const directive = readText(DIRECTIVE_REL);
+  if (directive === null) return; // 检查 1 已报缺真源
+
+  const ids = delegatableIds(directive);
+  if (!ids || ids.length === 0) {
+    add('delegation-face-ungated', DIRECTIVE_REL, '未能从 EXTERNAL_AGENTS 解析出任何可委派项；守卫口径需同步更新。');
+    return;
+  }
+  if (!agentTool.includes('decideExternalDelegation')) {
+    add(
+      'delegation-face-ungated',
+      AGENT_TOOL_REL,
+      'AgentTool 未调用通用决策 decideExternalDelegation()；各面自行赋值适配器的实现会绕过三闸门。'
+    );
+  }
+  // 只审**代码**：注释里出现 `preferredAdapter = 'codex'` 通常是「说明这条通路已被收掉」，
+  // 注释不执行，把它判成绕过会把解释性文字和真旁路混为一谈（与 PROCESS-013 的口径一致）。
+  // 与规则 9 复用同一个 stripComments —— 按「行首是 // 或 *」跳过注释挡不住
+  // 「块注释里夹着代码」，也会把 `a://b` 这种含 `//` 的字符串当成注释。
+  const agentToolCode = stripComments(agentTool);
+  for (const id of ids) {
+    // 三种引号形态都算直连。只认单引号时，把同一个赋值写成双引号或模板字符串就能
+    // 绕过，而守卫照样绿 —— 那是一扇能被子串撬开的门，红着等于没红。
+    const faceAssign = new RegExp(`preferredAdapter\\s*=\\s*(?:'${id}'|"${id}"|\`${id}\`)`);
+    if (faceAssign.test(agentToolCode)) {
+      add(
+        'delegation-face-ungated',
+        AGENT_TOOL_REL,
+        `AgentTool 直接把可委派面 '${id}' 赋给 preferredAdapter（单引号 / 双引号 / 模板字符串都算）：`
+        + '外部适配器只能取自决策结果（d.adapter），直连即绕过准入。'
+      );
+    }
+  }
+}
+
+// ── 9：G1 的凭据必须是运行时票券，不是模型自述文本 ─────────────────────────────
+function checkG1Credential() {
+  const delegation = readText(DELEGATION_REL);
+  if (delegation === null) return; // 检查 6 已报缺决策模块
+  // 判据看的是**代码**不是文本：去注释后再找 require 与调用。
+  // 原来用全文 includes()，一句注释就能满足 —— 把真接线删了、只留说明，守卫照样绿。
+  const delegationCode = stripComments(delegation);
+  if (!/require\(\s*['"][^'"]*delegationTicket/.test(delegationCode)) {
+    add(
+      'delegation-g1-self-asserted',
+      DELEGATION_REL,
+      'G1 未接运行时票券（services/delegationTicket）：模型自写 `[委派闸门 G1]` 即可换到放行。'
+    );
+  }
+  // 核销调用：产品把核销函数取成别名再调用（redeemTicket: tickets.redeemDelegationTicket
+  // → const redeem = tools.redeemTicket → redeem(turnId, agentId)），所以判据不能只认
+  // `redeemDelegationTicket(` 这一种形态。三件事齐备才算接上：
+  //   ① require 了票券模块（上面已查）；② 代码里引用了核销函数本身；③ 存在调用形态。
+  if (!/redeemDelegationTicket/.test(delegationCode)) {
+    add('delegation-g1-self-asserted', DELEGATION_REL, '未看到票券核销函数的引用（redeemDelegationTicket），无法断言「用户点名」来自运行时事实。');
+  }
+  if (!/\b(?:redeemDelegationTicket|redeemTicket|redeem)\s*\(/.test(delegationCode)) {
+    add('delegation-g1-self-asserted', DELEGATION_REL, '票券核销函数被引用但没有调用点，无法断言「用户点名」来自运行时事实。');
+  }
+
+  if (/markerGate\s*===\s*'G1'\s*\?/.test(delegation)) {
+    add('delegation-g1-self-asserted', DELEGATION_REL, '检测到把模型自写标记当作 G1 证据的写法（markerGate === G1 ⇒ 放行）。');
+  }
+  if (readText(TICKET_REL) === null) {
+    add('delegation-g1-self-asserted', TICKET_REL, '票券模块不存在，G1 凭据链路断裂。');
+  }
+}
+
+// ── 10：点名识别必须带否定/征询守卫 ───────────────────────────────────────────
+function checkNudgeFalsePositive() {
+  const directive = readText(DIRECTIVE_REL);
+  if (directive === null) return;
+  for (const guard of ['NEGATION_RE', 'OPINION_RE', '_hasDelegationIntent']) {
+    if (!directive.includes(guard)) {
+      add(
+        'delegation-nudge-false-positive',
+        DIRECTIVE_REL,
+        `点名识别缺少 ${guard}：全文同现式判据会复活「不要用 claude code」被判成用户点名的假阳性（实测见 works/data/khy/feedback/delegation-self-first-20261015/）。`
+      );
+    }
+  }
+}
+
+// ── 11：网关自动候选池必须剔除未批准的外部委派 key ────────────────────────────
+/** 从源码里截出函数声明的近似切片（到下一个顶层 `function` 为止）。
+ *  守卫审的是源码结构，不是语法树；切片只求在本仓源码形态上稳定。 */
+function fnSlice(text, name) {
+  const src = String(text || '');
+  const m = new RegExp(`function\\s+${name}\\s*\\(`).exec(src);
+  if (!m) return null;
+  const next = src.indexOf('\nfunction ', m.index + 1);
+  return src.slice(m.index, next < 0 ? undefined : next);
+}
+
+/**
+ * 判据是结构性的，不是字符串碰巧匹配：外部 key 的排除必须由 delegationGate 导出的谓词
+ * 完成，且组装后的剔除结果必须真的写回 orderedAdapters。删掉预检过滤、让剔除结果空转、
+ * 或让调用方自带第二份 key 名单——任一条守卫即红。仅「文件里出现过 'user-command' 字样」
+ * 不构成判据（注释与巧合都能满足）。
+ */
+function checkCascadeGated() {
+  const gate = readText(DELEGATION_GATE_REL);
+  if (gate === null) {
+    add(
+      'delegation-cascade-ungated',
+      DELEGATION_GATE_REL,
+      '委派闸叶子不存在，外部委派 key 失去单一真源，自动候选池无从排除。'
+    );
+    return;
+  }
+  if (!/EXTERNAL_DELEGATION_ADAPTER_KEYS\s*=/.test(gate)) {
+    add(
+      'delegation-cascade-ungated',
+      DELEGATION_GATE_REL,
+      'delegationGate 未声明外部委派 key 集合：各调用方只能各自列举，两份名单迟早分叉（RUNTIME-010 A2-5）。'
+    );
+  }
+  if (!/function\s+isExternalDelegationAdapter\s*\(/.test(gate)) {
+    add(
+      'delegation-cascade-ungated',
+      DELEGATION_GATE_REL,
+      'delegationGate 未定义外部委派 key 谓词 isExternalDelegationAdapter()，排除判定失去可调用接缝。'
+    );
+  }
+  const strip = fnSlice(gate, 'stripUnapprovedExternalAdapters');
+  if (strip === null) {
+    add(
+      'delegation-cascade-ungated',
+      DELEGATION_GATE_REL,
+      'stripUnapprovedExternalAdapters() 被删除：orderedAdapters 组装后的剔除失去单一真源。'
+    );
+  } else {
+    if (!strip.includes('isExternalDelegationAdapter')) {
+      add(
+        'delegation-cascade-ungated',
+        DELEGATION_GATE_REL,
+        'stripUnapprovedExternalAdapters() 不再按外部委派谓词过滤：剔除成了空转，未批准的外部 key 照进级联。'
+      );
+    }
+    if (!strip.includes('HUMAN_PIN_APPROVED')) {
+      add(
+        'delegation-cascade-ungated',
+        DELEGATION_GATE_REL,
+        "stripUnapprovedExternalAdapters() 丢失 human-pin 豁免：'user-command' 点名的会话也被剔除，用户点名的通道失效。"
+      );
+    }
+  }
+
+  const preflight = readText(PREFLIGHT_REL);
+  if (preflight === null) {
+    add('delegation-cascade-ungated', PREFLIGHT_REL, '预检模块不存在，自动候选池的排除断言失去对象。');
+    return;
+  }
+  if (
+    !/const\s*\{[^}]*\bisExternalDelegationAdapter\b[^}]*\}\s*=\s*require\(\s*['"][^'"]*delegationGate['"]\s*\)/.test(
+      preflight
+    )
+  ) {
+    add(
+      'delegation-cascade-ungated',
+      PREFLIGHT_REL,
+      '预检未从 delegationGate 取外部委派谓词：key 集合会在这里长出第二份定义（RUNTIME-010 A2-5）。'
+    );
+  }
+  // 自动候选链的锚点：注释起点 → 候选截断点。定位不到即判红——无法证明外部 key 被排除时
+  // 必须报，而不是默默放行（删掉过滤守卫必须红，改成别的写法同样必须红）。
+  const chainStart = preflight.indexOf('Auto-pick first operational adapter');
+  const chainEnd = chainStart < 0 ? -1 : preflight.indexOf('.slice(0, maxAutoCandidates)', chainStart);
+  if (chainStart < 0 || chainEnd < 0) {
+    add(
+      'delegation-cascade-ungated',
+      PREFLIGHT_REL,
+      '未能定位预检自动候选链，守卫口径需同步更新——无法证明外部委派 key 被排除。'
+    );
+  } else if (!/\.filter\([^;]*?isExternalDelegationAdapter\(/.test(preflight.slice(chainStart, chainEnd))) {
+    add(
+      'delegation-cascade-ungated',
+      PREFLIGHT_REL,
+      '预检自动候选链未排除外部委派 key：胜者被直写为首选通道，随后级联逐 key 弹委派卡。'
+    );
+  }
+
+  const generate = readText(GENERATE_METHOD_REL);
+  if (generate === null) {
+    add('delegation-cascade-ungated', GENERATE_METHOD_REL, 'generate 方法模块不存在，组装后的剔除断言失去对象。');
+    return;
+  }
+  const callAt = generate.indexOf('stripUnapprovedExternalAdapters(');
+  if (callAt < 0) {
+    add(
+      'delegation-cascade-ungated',
+      GENERATE_METHOD_REL,
+      'orderedAdapters 组装完成后未剔除外部委派 key：自动级联会把未批准的外部通道当候选（默认自做被绕过）。'
+    );
+    return;
+  }
+  const callBlock = generate.slice(callAt, callAt + 1200);
+  if (!/stripUnapprovedExternalAdapters\(\s*orderedAdapters\b/.test(callBlock)) {
+    add(
+      'delegation-cascade-ungated',
+      GENERATE_METHOD_REL,
+      '剔除未作用于组装完成的 orderedAdapters（须在 _maybePromoteProcessFailoverAdapters 之后、级联循环之前）。'
+    );
+  }
+  if (!/orderedAdapters\s*=\s*[\w$.]+\.kept\b/.test(callBlock)) {
+    add(
+      'delegation-cascade-ungated',
+      GENERATE_METHOD_REL,
+      '剔除结果未写回 orderedAdapters：过滤成了空转，级联仍含未批准的外部 key。'
+    );
+  }
+  if (!/\bdelegationApprovedByUser\b/.test(callBlock) || !/\buserPinnedAdapter\b/.test(callBlock)) {
+    add(
+      'delegation-cascade-ungated',
+      GENERATE_METHOD_REL,
+      '剔除未携带批准标记与用户钉选上下文：env 机器钉选会被误当人类批准，或用户点名的通道被误剔。'
+    );
+  }
+}
+
 // ── 7：外部 CLI 的进程拉起必须收敛在白名单目录 ───────────────────────────────
 function checkBypassSpawn(changedOnly) {
   const roots = [
@@ -404,6 +672,10 @@ function main() {
   checkInjectedText();
   checkNudgeGate();
   checkBoundaryIsCalled();
+  checkFacesGated();
+  checkG1Credential();
+  checkNudgeFalsePositive();
+  checkCascadeGated();
   checkBypassSpawn(changedOnly);
 
   const selected = listArg
@@ -413,7 +685,7 @@ function main() {
 
   if (shown.length === 0) {
     console.log(
-      `委派边界检查通过：默认自做成立、三闸门未漂移、文案无开放式授权、委派必经准入、外部 CLI 无旁路 spawn。（${RULE_ID}）`
+      `委派边界检查通过：默认自做成立、三闸门未漂移、文案无开放式授权、委派必经准入、自动候选池无未批准的外部 key、外部 CLI 无旁路 spawn。（${RULE_ID}）`
     );
     return 0;
   }

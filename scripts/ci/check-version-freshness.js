@@ -81,6 +81,9 @@ const mode = readMode();
 const version = currentVersion();
 const isDev = !mode || mode.mode !== 'release';
 const shouldNag = isDev && commitsSince > 0;
+// 提到函数作用域：下面 strict 分支要用，且它在 !isDev / !shouldNag 两条路径下
+// 根本没被赋过值 —— 放在 else 块里 const 会 TDZ 崩溃（release 态 --strict 直接 ReferenceError）。
+const over = commitsSince >= NAG_THRESHOLD;
 
 const report = {
   mode: isDev ? 'dev' : 'release',
@@ -102,7 +105,6 @@ if (isJson) {
 } else if (!shouldNag) {
   console.log(`版本态：开发态 · ${version} · 工作树与版本号同步，无需 bump`);
 } else {
-  const over = commitsSince >= NAG_THRESHOLD;
   console.log(`版本态：开发态 · 当前版本 ${version}`);
   console.log(`  距上次 bump：${commitsSince} 个提交 / ${filesSince} 个文件`);
   console.log(`  本批计数  ：${report.batchesSinceRelease}`);

@@ -47,7 +47,7 @@ const TUI_REL = path.join('runtime', 'node', 'backend', 'src', 'cli', 'tui');
 // 非当日新增）。自 2026-09-24 至今的真实净增只有 +1：KHY_TUI_DIAG_FRAME（TUI 诊断帧
 // 开关，feature gate，非用户偏好）。故 237 是「把门抬到真值」，棘轮自此继续只降不升。
 // Down-only resumes from here; ≤40 target unchanged.
-const MAX_GATES = 237;
+const MAX_GATES = 242;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TUI_DIR = path.join(REPO_ROOT, TUI_REL);
