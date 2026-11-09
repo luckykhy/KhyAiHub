@@ -1,0 +1,1050 @@
+{
+  "_note": "【洋葱分层契约 —— 剥洋葱方案的机器可读真源】\n\n目标：把「khyos 太重（体积与逻辑）」变成可度量、可约束、可持续下降的量。\n\n【分轴】\n  逻辑轴 L0 芯 / L1 膜 / L2 皮 —— 按**加载时机**分（顶层 require 即入内存 = 芯），不按目录分。\n  视觉轴 V0 芯 / V1 膜 / V2 皮 —— 同一套语义用在「首屏要付多少代价」上。\n  体积轴 —— 运行时 require.cache 的事实侧度量（逻辑侧有；视觉侧因场景性质没有，见 visual.runtimeFootprintNote）。\n\n【三层机制】\n  1. 契约（本文件）：层定义、重量预算、方向矩阵、倒挂清单 —— 唯一的数真源。\n  2. 守卫：scripts/ci/check-core-layers.js（静态）+ check-runtime-footprint.js（运行时）。\n     两者都已接进 .github/workflows/pr-gate.yml 的 contract-checks job。\n  3. 刀口：每一刀改完，守卫的 --update 会把基线**收紧**到新值（只许减不许增）。\n\n【核心洞察（都是实测，不是推演）】\n  · 冷启动只要 2602 行；73 万行是懒加载边在运行期逐步拖进来的 —— 重量 = 冷闭包 + 被触发路径的懒加载边。\n  · lite 路径 427 个模块里 services 占 72%、cli 只占 5.2% —— 重在服务层，不在编排层。\n  · 视觉侧：8 个「终端几何/能力纯叶子」住在 cli/tui/ 导致逻辑芯渗入视觉皮；下沉后归零。\n  · 桌面端首屏：11 处低频组件改懒加载，73 文件/19385 行 → 40 文件/9815 行。\n\n【读这份契约前先读这条】测量工具本身也会骗人 —— 本文件所有数字都经过两法独立复核，\n详见 runtimeFootprint._note 与设计文档 §7.7。",
+  "version": 1,
+  "updated": "2026-10-30",
+  "loading": {
+    "_note": "如何判定一条 require 边是顶层还是懒加载：扫描源码时按括号深度定位 require 关键字，深度 0 记为顶层边。",
+    "topLevelMeans": "模块被 require 的瞬间即执行，计入冷闭包",
+    "lazyMeans": "只在函数被调用时求值，不计入冷闭包，但计入「可达闭包」"
+  },
+  "layers": [
+    {
+      "id": "L0",
+      "name": "芯 core",
+      "role": "冷启动即入内存、必须能独立成立的最小集合",
+      "rules": [
+        "L0 内的模块只允许依赖 L0。",
+        "L0 不得依赖 L1/L2 —— 这是本契约最硬的一条（芯纯净性）。",
+        "L0 内的模块不得 require 任何 cli/ 路径下的模块（表现层）。"
+      ],
+      "roots": [
+        "runtime/node/backend/bin/khy.js"
+      ],
+      "budget": {
+        "_note": "冷闭包（仅顶层边）的硬预算。存量超标先按 baseline 记账，只许减不许增；归零后收紧到新值。",
+        "maxFiles": 9,
+        "maxLines": 3757,
+        "baselineFiles": 9,
+        "baselineLines": 3757,
+        "measuredAt": "2026-10-30"
+      }
+    },
+    {
+      "id": "L1",
+      "name": "膜 membrane",
+      "role": "被调用时才装载的中间层：网关、工具循环、领域服务",
+      "rules": [
+        "L1 可以依赖 L0。",
+        "L1 不得依赖 L2（表现层）—— 现有的 services → cli 倒挂即属此类，已由 archDebtScan R1 拦截。",
+        "L1 不得跨层反向依赖 L0 内部的具体实现模块（只能依赖 L0 公开面）。"
+      ],
+      "roots": [
+        "runtime/node/backend/src/services/tool/toolUseLoopCore.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/cli/repl/startup.js"
+      ],
+      "budget": {
+        "_note": "L1 是按入口分别计的冷闭包预算。同一入口的冷闭包越大，说明该入口越重。",
+        "perRoot": {
+          "runtime/node/backend/src/services/tool/toolUseLoopCore.js": {
+            "maxFiles": 71,
+            "maxLines": 30175,
+            "baselineFiles": 71,
+            "baselineLines": 30175
+          },
+          "runtime/node/backend/src/services/gateway/aiGateway.js": {
+            "maxFiles": 122,
+            "maxLines": 71078,
+            "baselineFiles": 122,
+            "baselineLines": 71078
+          },
+          "runtime/node/backend/src/cli/repl/startup.js": {
+            "maxFiles": 1,
+            "maxLines": 385,
+            "baselineFiles": 1,
+            "baselineLines": 385
+          }
+        },
+        "measuredAt": "2026-10-30"
+      }
+    },
+    {
+      "id": "L2",
+      "name": "皮 skin",
+      "role": "表现层：终端 TUI、桌面 Electron、Web 前端。只负责呈现与交互。",
+      "rules": [
+        "L2 可以依赖 L0/L1。",
+        "L2 不得被 L0 依赖（芯不得知道表现层存在）。",
+        "L2 内部的重量增长不计入冷启动预算 —— 它不进冷路径。"
+      ],
+      "roots": [
+        "runtime/node/backend/src/cli/tui/app.js",
+        "apps/khyos-desktop/src/renderer/App.tsx"
+      ],
+      "budget": {
+        "_note": "L2 不设冷启动硬预算（不进冷路径），但设「视觉层重量」记账基线，供可视化与趋势用。",
+        "accountingOnly": true,
+        "measuredAt": "2026-10-30",
+        "measured": {
+          "runtime/node/backend/src/cli/tui": {
+            "files": 204,
+            "lines": 50834
+          },
+          "apps/khyos-desktop/src": {
+            "files": 104,
+            "lines": 24952
+          }
+        }
+      }
+    }
+  ],
+  "entryBudget": {
+    "_note": [
+      "【入口顶层 require 预算 —— 「所有命令都付」的那一份重量】",
+      "",
+      "「顶层 require」= **不在任何函数体内**的 require。它在**每个命令**启动时都求值。",
+      "这份重量与「走哪条路径」无关 —— `khy --version` 也要付。",
+      "剥洋葱时它排在最前面：它是唯一一个「减了所有人都受益」的层。",
+      "",
+      "【为什么不能只靠冷闭包预算】",
+      "冷闭包预算答的是「整个闭包有多重」，涨了只说明「变重了」；",
+      "这条答的是「**谁把它挂到顶层的**」—— 入口新增一个顶层 require，",
+      "是让所有命令都多付一份，且这种重量不会因为「那条路径用不到」而消失。",
+      "",
+      "【口径：AST 函数作用域，不是括号深度】",
+      "括号深度 ≠ 函数作用域：顶层 try{}/if{} 块里的 require、多行解构赋值里的 require",
+      "会被误判成懒加载（低估）；旧口径的 braceDepthMap 不识别正则字面量，",
+      "正则里的括号被当成代码结构 ⇒ 从文件中第一个正则起深度整体偏移，",
+      "函数体内的 require 被误判成顶层（虚高，实测 96% 的字符深度失真）。",
+      "两个方向都错，最多差 2.4 倍。详见 scripts/lib/requireGraph.js 头注。",
+      "",
+      "【实测（2026-10-31，AST 口径）】",
+      "入口直接顶层 require：6 个第一方模块 / 999 行",
+      "  ../src/bootstrap/windowsSpawnHardening  178 行",
+      "  ../src/bootstrap/moduleSelfHeal         309 行",
+      "  ../src/bootstrap/startupProfiler         83 行",
+      "  ../src/services/.../stateMachine/startupPhases.js  107 行",
+      "  ../src/services/.../stateMachine/debugLog.js       77 行",
+      "  ../package.json                          245 行",
+      "（node 内置 require 不计重量：path / fs / os / module / child_process）"
+    ],
+    "entry": "runtime/node/backend/bin/khy.js",
+    "maxTopLevelRequires": 6,
+    "maxTopLevelLines": 999,
+    "baselineTopLevelRequires": 6,
+    "baselineTopLevelLines": 999,
+    "measuredAt": "2026-10-30"
+  },
+  "edgePolicy": {
+    "_note": "按「源层 → 目标层」列出的允许矩阵。true=允许，false=禁止（守卫报 error）。",
+    "L0->L0": true,
+    "L0->L1": false,
+    "L0->L2": false,
+    "L1->L0": true,
+    "L1->L1": true,
+    "L1->L2": false,
+    "L2->L0": true,
+    "L2->L1": true,
+    "L2->L2": true
+  },
+  "inversions": {
+    "_note": [
+      "已知倒挂边。存量先按 baseline 记账（只许减不许增），归零后从 baseline 移除。",
+      "每条记：源文件、目标、当前状态。status: known=存量已记账 / fixed=已消除。",
+      "这些边是「剥洋葱」要剪掉的对象 —— 芯之所以重，根因就是它们把外壳拖了进来。"
+    ],
+    "entries": [
+      {
+        "from": "runtime/node/backend/src/tools/AgentTool/index.js",
+        "to": "runtime/node/backend/src/cli/ai.js",
+        "kind": "L1->L2",
+        "status": "known",
+        "note": "AgentTool 为拿 ai.chat 而 require CLI 层，把 cli/ai → aiConversationOps → handlers/gateway → gatewayManageDaemon → aiManagementServer 整条网关管理栈拖进 L1 闭包（实测支配子树 12.6 万行）。"
+      },
+      {
+        "from": "runtime/node/backend/src/services/tool/toolUseLoopCore.js",
+        "to": "runtime/node/backend/src/cli/toolPrefaceVoice.js",
+        "kind": "L1->L2",
+        "status": "known",
+        "note": "懒加载边，仅影响可达闭包不影响冷闭包；候选下沉点见剪边计划。"
+      }
+    ]
+  },
+  "blindSpots": {
+    "_note": "既有守卫的覆盖边界，以及本契约补上的那块。\narchDebtScan R1 只扫 src/services/** → src/cli/**；\n但实测倒挂发生在 src/tools/** → src/cli/**（AgentTool），这在 R1 的扫描范围之外。\n所以「芯被外壳污染」这件事此前没有任何守卫看得见。\n\n【coveredHere 的 rule 名与守卫的 finding id 逐字一致】——\n「文档说的」与「机器做的」对不上，是本契约要消灭的漂移本身。",
+    "coveredByOthers": [
+      {
+        "guard": "archDebtScan R1",
+        "scope": "src/services/** -> src/cli/**"
+      },
+      {
+        "guard": "check-repo-layout cross-layer-require",
+        "scope": "顶层板块 L0-L6 之间的 require"
+      },
+      {
+        "guard": "DOMAIN-DEPS domain-direction",
+        "scope": "五域 D1-D5 之间方向"
+      }
+    ],
+    "coveredHere": [
+      {
+        "rule": "core-purity",
+        "scope": "任何 L0 成员不得依赖 L1/L2"
+      },
+      {
+        "rule": "core-budget-files",
+        "scope": "L0/L1 冷闭包文件数（只许减不许增）"
+      },
+      {
+        "rule": "core-budget-lines",
+        "scope": "L0/L1 冷闭包行数"
+      },
+      {
+        "rule": "skin-into-core",
+        "scope": "L1 入口的可达闭包不得渗入视觉皮文件"
+      },
+      {
+        "rule": "facade-cross-layer",
+        "scope": "逻辑侧不得经皮侧 re-export 门面引用通用能力"
+      },
+      {
+        "rule": "visual-budget-files",
+        "scope": "V0 视觉芯首屏冷闭包文件数"
+      },
+      {
+        "rule": "visual-budget-lines",
+        "scope": "V0 视觉芯首屏冷闭包行数"
+      },
+      {
+        "rule": "skin-into-visual-core",
+        "scope": "应懒加载的低频页面不得进 V0/V1 首屏闭包"
+      },
+      {
+        "rule": "visual-layer-direction",
+        "scope": "消费 visual.edgePolicy：芯不依赖膜与皮"
+      },
+      {
+        "rule": "visual-classifier-degraded",
+        "scope": "视觉侧加载边分类必须用 AST；回退到括号深度口径须显式报出（数字不可信）"
+      },
+      {
+        "rule": "inversion-persists",
+        "scope": "已知倒挂边只许减不许增"
+      },
+      {
+        "rule": "core-entry-toplevel-requires",
+        "scope": "CLI 入口的顶层 require 数量 —— 顶层 require 的重量由所有命令承担"
+      },
+      {
+        "rule": "core-entry-toplevel-lines",
+        "scope": "CLI 入口的顶层 require 合计行数"
+      },
+      {
+        "rule": "runtime-weight-layer-top-files",
+        "scope": "运行时顶层边可达模块数（装载期求值的那部分）"
+      },
+      {
+        "rule": "runtime-weight-layer-lazy-files",
+        "scope": "运行时懒加载边可达模块数（只在被触发路径上求值的那部分）"
+      }
+    ],
+    "knownGaps": [
+      {
+        "topic": "顶层/懒加载的分类口径",
+        "status": "fixed-2026-10-31",
+        "note": "旧口径用「require 处的括号深度」判定顶层 vs 懒加载，而括号深度 ≠ 函数作用域。实测两个方向都错：顶层 try{}/if{} 块里的 require、以及多行解构赋值里的 require（require( 落在花括号内）被误判成懒加载（低估）；旧口径的 braceDepthMap 不识别正则字面量，正则里的括号被当成代码结构 ⇒ 从文件中第一个正则起深度整体偏移，函数体内的 require 被误判成顶层（虚高，实测 toolUseLoopCore.js 第 360 行起 96% 的字符深度失真）。最大偏差 2.4 倍。现已改为：静态侧 AST 函数作用域（scripts/lib/requireGraph.js），运行时侧「加载者是否正在求值」（scripts/lib/runtimeFootprint.js）。"
+      },
+      {
+        "topic": "AST 解析器不可用时的降级",
+        "status": "open",
+        "note": "@babel/parser 是**后端包**的直接依赖，从后端目录解析。解析不到时 requireGraph 回退到括号深度口径，守卫会报 `core-classifier-degraded` 告警并说明数字不可信 —— 不静默降级。实测 3076 个模块 0 回退。"
+      },
+      {
+        "topic": "顶层 IIFE 与类字段里的 require",
+        "status": "open",
+        "note": "静态 AST 口径看不见「顶层 IIFE 在装载期执行」与「类字段初始化器在实例化时执行」两件事 —— 前者被记成懒加载（低估），后者被记成顶层（高估）。运行时口径不受此影响（它看的是真实求值时刻）。"
+      },
+      {
+        "topic": "视觉侧的顶层判定仍是括号深度",
+        "status": "fixed-2026-10-31",
+        "note": "已于 2026-10-31 修正：scripts/lib/visualLayerGraph.js 改用 AST 判定「静态边 vs 动态边」，并显式处理视觉侧特有的三条语义 —— ESM import 是**提升**的（恒为装载期边）、ESM 重导出（export ... from）同样提升、类型导入被**擦除**（不算运行时边）。实测 651 个视觉侧文件 0 降级。影响面：11 个 V0 根里只有 1 个变化（Transcript.js 首屏冷闭包 15→17 文件 / 4,019→4,178 行，因为 ProcessGroup.js 里两个顶层 try{} 中的 require 被旧口径误判成懒加载 ⇒ 旧数字是**低估**）；同时修掉一类**假边** —— 旧正则会匹配注释里的 require 文本（实测 caretGeometry.js 的注释写着「本叶子绝不 require('./PromptFrame')」，工具把这句话当成了一条真实静态边）。"
+      },
+      {
+        "topic": "RUNTIME-012 顶层副作用守卫仍用括号深度",
+        "status": "open-by-design",
+        "note": "scripts/lib/toplevelSideEffectGuard.js 仍用手写词法扫描（深度 + 语句前缀）判定「顶层副作用」，**这不是同一个缺陷**：它的判据真源是 [DESIGN-ARCH-178] §3.1/§4，判的是「顶层是否调用了会 require/spawn/connect 的函数」，不是加载时机分类；且该文件有**零依赖硬约束**（仓库 94 个检查器无一 require 外部 npm 包，原型曾用 acorn 但它不是直接依赖，已弃用），并要扫 3035 个文件 / 27MB（AST 解析在这个量级上不可接受）。它的深度判定只影响**候选建议**（可切 / 需人判），不进入任何重量预算；其保守偏向与已知取舍写在该文件的 LIMITATIONS 与 SCENARIOS 里。"
+      }
+    ]
+  },
+  "runtimeFootprint": {
+    "_note": "运行时重量预算 —— 「体积」轴的事实侧度量。,,【为什么静态闭包不够】静态图是估算（「如果全加载会进多少」），运行时才是事实。,实测（2026-10-30）：khy --version 静态冷闭包 3 文件 2602 行 → 运行时 11 文件 7805 行；,khy ai -p 'hi' 静态全可达闭包 2178 文件 → 运行时 468 文件 / 21 万行。,差 80 倍，**但静态分析没有盲区**（实测盲区 = 0 个模块）——,差在懒加载边于运行期被求值。故两个数字都要：,  静态冷闭包 = 启动瞬间的重量（check-core-layers.js 管）,  运行时足迹 = 一条真实命令路径的总重量（本段管）,,【口径】跑真实命令，用 --require 预挂 scripts/lib/runtimeFootprint.js，,在 process exit 时读 require.cache：第一方模块数 / 行数 / 字节 + heapUsed + rss。,探针绝不抛、绝不阻塞退出。,,【棘轮语义】只许减不许增 —— 与静态侧同一哲学。\n【外部依赖也是体积的一半】lite 路径实测拉了 419 个外部模块 / 3.15 MB —— 只管第一方会漏掉「多 require 了一个重量级依赖」这类膨胀，故外部模块数与字节数一并纳入预算。\n【归因重量闸门】静态图答不了「哪条懒加载边被触发了」，运行时归因能答：\n拦截 Module._load 记录「加载者 → 被加载者」，算每个加载者的第一方可达重量。\nlite 路径的总闸门是 src/cli/ai.js（直接 26 个模块 / 可达 460 个 / 20.1 万行），\n与支配树分析互相印证（cli/ai.js 支配子树 12.7 万行）。\n守卫判据 runtime-attribution-gate-* 盯住这个闸门不許变大；\n闸门换了人会报 warning（需人工判读新闸门是否更合理）。\n【2026-10-30 修正】旧基线（468 文件 / 210454 行）作废 —— 那是「探针把自己算进外部依赖\n+ 归因钩子干扰加载」两个探针自身缺陷造成的假读数。修正后由两法独立复核：\n  正式探针（scripts/lib/runtimeFootprint.js）：427 文件 / 188282 行 / 外部 423 个\n  纯计数探针（无归因、无读盘、同路径口径）：完全一致\n探针已修：① 排除自身文件（--require 预挂必然在 require.cache 里）；\n② 归因钩子只读不改；③ 探针内部异常会留 .err 痕迹，不再被空 catch 静默吞掉。\n【闸门不取入口】bin/khy.js 是所有路径的根，天然可达全部模块（lite 路径 444 个），\n但它是「按需加载的调度者」而非「重量来源」—— 拿它当闸门等于把「入口存在」当违规，\n无法指导任何瘦身动作。故闸门取**非入口加载者**中拽进最多的那个：\n  version  → src/bootstrap/init.js（27 个 / 1.2 万行）\n  doctor   → src/cli/router.js（45 个 / 2.1 万行）\n  ai-lite  → src/cli/ai.js（417 个 / 17.9 万行）——重量编排层\n【读这份契约前先读这条】\n本文件的所有数字都是**实测**，但**测量工具本身也会骗人**。本次工作中探针自身踩了五个坑：\n  1. 路径没规范化（Windows 上 D:/x 与 D:\\x 不同）→ 第一方计数恒为 0，守卫却「绿」着；\n  2. 钩子只定义不安装 → 场景全判「不可测」，等于没有守卫；\n  3. --update 漏字段（运行时侧漏 external、静态侧漏视觉）→ 更新后仍报红，像有非确定性；\n  4. 探针把自己算进测量 → 数字随探针自身体积漂移，被测对象一点没变；\n  5. 异常被空 catch 吞掉 → 快照静默降级，守卫读残缺数据却不知情。\n所以：**每个数字都做了两法独立复核**（正式探针 vs 纯计数探针，不归因、不读盘、路径口径一致），\n并且反向注入验证过判据会红、连跑三次验证过基线不随机红。\n若你发现某个读数与直觉不符，**怀疑测量工具比怀疑结论更可能是对的**。",
+    "measuredAt": "2026-10-30",
+    "scenarios": [
+      {
+        "id": "version",
+        "argv": [
+          "bin/khy.js",
+          "--version"
+        ],
+        "cwd": "runtime/node/backend",
+        "role": "最轻场景：只读版本号。这条是「启动瞬间」的下界参照。",
+        "timeoutMs": 60000,
+        "budget": {
+          "maxFiles": 11,
+          "maxLines": 7805,
+          "maxBytes": 504698,
+          "baselineFiles": 11,
+          "baselineLines": 7805,
+          "baselineBytes": 504698,
+          "maxExternalFiles": 0,
+          "maxExternalBytes": 0,
+          "baselineExternalFiles": 0,
+          "baselineExternalBytes": 0,
+          "attributionGate": {
+            "excludeEntryLoader": "bin\\khy.js",
+            "expectedLoader": "src\\services\\domain\\state\\stateMachine\\startupPhases.js",
+            "maxReachable": 3,
+            "maxReachableLines": 4322
+          }
+        }
+      },
+      {
+        "id": "doctor",
+        "argv": [
+          "bin/khy.js",
+          "doctor",
+          "--quick"
+        ],
+        "cwd": "runtime/node/backend",
+        "role": "诊断命令：不碰模型与网关，但会拉起一批服务层模块。用 --quick 跳过工具链探测组（不 spawn），读数完全确定 —— 默认模式随 doctor-toolchain.json 的缓存冷/热漂移（实测 62 / 67 / 68 / 74 四种取值）。",
+        "timeoutMs": 120000,
+        "budget": {
+          "maxFiles": 62,
+          "maxLines": 35648,
+          "maxBytes": 1583074,
+          "baselineFiles": 62,
+          "baselineLines": 35648,
+          "baselineBytes": 1583074,
+          "maxExternalFiles": 12,
+          "maxExternalBytes": 56088,
+          "baselineExternalFiles": 12,
+          "baselineExternalBytes": 56088,
+          "attributionGate": {
+            "excludeEntryLoader": "bin\\khy.js",
+            "expectedLoader": "src\\cli\\router.js",
+            "maxReachable": 45,
+            "maxReachableLines": 20779
+          },
+          "externalNote": "doctor 的外部依赖按环境探测结果浮动（initDoctorProbes 的工具链探测：探测到 CLI 存在就 require 对应模块）。默认模式曾观测到 107 个 / 605KB（缓存冷时现场探测全部 CLI）。场景已改用 --quick（跳过探测），此项仍留宽松上限（130 个 / 900KB）作兜底，不参与棘轮。"
+        }
+      },
+      {
+        "id": "ai-lite",
+        "argv": [
+          "bin/khy.js",
+          "ai",
+          "-p",
+          "hi"
+        ],
+        "cwd": "runtime/node/backend",
+        "role": "轻量 AI 模式（khy ai / khy --lite）：真实使用路径的重量上界参照。",
+        "timeoutMs": 180000,
+        "budget": {
+          "maxFiles": 425,
+          "maxLines": 188294,
+          "maxBytes": 7047597,
+          "baselineFiles": 425,
+          "baselineLines": 188294,
+          "baselineBytes": 7047597,
+          "maxExternalFiles": 422,
+          "maxExternalBytes": 3166968,
+          "baselineExternalFiles": 422,
+          "baselineExternalBytes": 3166968,
+          "attributionGate": {
+            "excludeEntryLoader": "bin\\khy.js",
+            "expectedLoader": "src\\cli\\ai.js",
+            "maxReachable": 417,
+            "maxReachableLines": 179335
+          }
+        }
+      }
+    ],
+    "measured": {
+      "_note": "2026-10-30 实测。跨三档 42 倍 —— 这是「剥洋葱」在体积轴上的实际跨度。",
+      "version": {
+        "files": 11,
+        "lines": 7805,
+        "bytes": 504698,
+        "externalFiles": 0,
+        "externalBytes": 0,
+        "heapUsedMB": 6.5,
+        "rssMB": 35.4
+      },
+      "doctor": {
+        "files": 62,
+        "lines": 35648,
+        "bytes": 1583074,
+        "externalFiles": 12,
+        "externalBytes": 56088,
+        "heapUsedMB": 14.5,
+        "rssMB": 51.8
+      },
+      "ai-lite": {
+        "files": 425,
+        "lines": 188294,
+        "bytes": 7047597,
+        "externalFiles": 422,
+        "externalBytes": 3166968,
+        "heapUsedMB": 44.6,
+        "rssMB": 125.2
+      },
+      "aiLiteTopDirs": {
+        "src/services": 165940,
+        "src/cli": 16232,
+        "src/utils": 10356,
+        "src/constants": 6252,
+        "src/tools": 3861
+      },
+      "staticVsRuntime": {
+        "_note": "静态与运行时的差距归因：静态全可达闭包 2178 文件 vs 运行时 468 —— 静态分析盲区实测 = 0 个模块，差在懒加载边于运行期被求值。",
+        "staticColdClosure": 3,
+        "staticFullClosure": 2178,
+        "runtimeLite": 468,
+        "blindSpotModules": 0
+      }
+    },
+    "adapterLoading": {
+      "_note": "网关适配器的加载现状与「按需加载」的实测材料。\n\n【现状】aiGateway.js 在**模块顶层**静态 require 了 18 个适配器，\n并把它们组成 this._adapters = [{key, adapter, priority, enabled}, ...] 的自动回退链。\n\n【2026-10-30 实测修正：原估算偏低】\n先前按「18 个适配器 + 其传递依赖 = 52 文件 / 31868 行」估算 —— **错**。\n实测（拦截适配器模块的 detect 导出，统计 lite 路径上真正被 probe 的适配器）：\n  · 实际被 detect 的只有 **8 个**：acp / api / claude / clipboardRelay / opencode /\n    relayApi / warp / webRelay（detect 调用 16 次，含重复与强制刷新）；\n  · **另有 10 个只是被顶层 require 拖进来，从未被 probe**：\n    cliTool / codex / cursor2api / cursor / kiro / localLLM / ollama /\n    openclaw / trae / vscode；\n  · 这 10 个各自还拖着 6–21 个传递依赖，闭包合计 **159 文件 / 71,525 行**。\n故按需加载的真实收益上限远大于原估（52 → 159 文件）。\n\n【为什么不能自主改】构造函数里对每个 entry.adapter.detect 做包装\n（适配器检测缓存段），即**每个适配器模块必须在构造时已加载**；\n改成 thunk 会改变 detect 包装时机与副作用顺序 —— 网关是核心链路，\n适配器选择结果可能变化。这属于「对外可见的判断」，按章程 B7 归人决策。\n\n【仓库已有同型先例】src/adapters/im/adapterRegistry.js 实现了同样的「零加载」契约：\n注册项存 create **thunk**，require 写在 thunk 体内，未选中的渠道模块从头到尾不被 require；\n并由 tests/imAdapterRegistry.test.js 直接断言 require.cache 里没有该模块。\n故「按需加载」在本仓是**既有约定**，aiGateway 的静态全量加载是与该约定不一致的存量债。",
+      "measuredAt": "2026-10-30",
+      "staticTopLevelAdapters": {
+        "count": 18,
+        "ownLines": 21246,
+        "modules": [
+          "apiAdapter",
+          "claudeAdapter",
+          "clipboardRelayAdapter",
+          "cliToolAdapter",
+          "codexAdapter",
+          "cursorAdapter",
+          "kiroAdapter",
+          "localLLMAdapter",
+          "opencodeAdapter",
+          "openclawAdapter",
+          "acpAgentAdapter",
+          "traeAdapter",
+          "vscodeAdapter",
+          "warpAdapter",
+          "ollamaAdapter",
+          "cursor2apiAdapter",
+          "relayApiAdapter",
+          "webRelayAdapter"
+        ]
+      },
+      "litePathTotals": {
+        "adapterFiles": 52,
+        "adapterLines": 31868,
+        "totalFiles": 427,
+        "totalLines": 188413,
+        "adapterFilePct": 12.2,
+        "adapterLinePct": 16.9
+      },
+      "lazyLoadDecision": {
+        "status": "pending-human-decision",
+        "measuredAt": "2026-10-31",
+        "selfCorrection": {
+          "summary": "2026-10-31 实测推翻本项的收益前提：此前「10 个适配器从未被 probe、只被顶层 require 拖进来」的结论**作废**。",
+          "whyTheEarlierProbeWasWrong": "此前只统计了 detect 调用。而网关除了 detect 还会对**每个**适配器调 getStatus() 与 detectAsync()（异步探活，正是回退链挨个试的那一步）。",
+          "correctedMeasurement": "拦截适配器模块的加载与其导出函数调用（scripts 侧临时探针，跑 lite 路径 `khy ai -p \"hi\"`）：18 个渠道适配器**全部被碰到**，无一例外；被碰到的调用包括 detect / detectAsync / getStatus / listModels / getRuntimeDiagnostics / generate。适配器目录共 68 个文件，其中 53 个被加载过；完全没碰的 15 个全是 helper 模块（acpAgentProbe / anthropicRelayPresets / ccEnvAdoptPolicy / codexEnvAdoptPolicy / commandCodeAdapter / commandCodeInvocation / openaiRelayPresets / portableCliInstaller / streamErrorPartial / streamStallPolicy / _anthropicSseStream / _endpointResolver / _imageTranscode / _responsesSseStream / _streamStaleDetector），**没有一个是渠道适配器**。",
+          "consequence": "按需加载（thunk 化）那 10 个适配器，在 AI 路径上**省不到模块** —— 它们本来就会被探活，模块与其传递依赖照样进内存。此前记的「上限 159 文件 / 71,525 行」**作废**。",
+          "theRealCostIsProbingNotLoading": "证据指向另一个结论：代价在**探活**（读文件系统、起进程），不在模块加载 —— 被调到的 helper 里 ideDetector.findInstallation、traeOfficialArtifacts.resolve*（多处）、portableAdapterSpawn.forTool 都在摸磁盘/起进程；网关给 detect 套 60s TTL 缓存本身也说明探活很贵。故更值当的一刀是「**别探没配置的适配器**」（按配置/env 门控后再探），而不是「别加载没用的适配器」。",
+          "howToVerifyAfterAnyChange": "改造后必须复测同一集合：18 个渠道适配器的**选择结果**不能变，且被探活的适配器集合不能变（除非正是本次要改的那一项）。"
+        },
+        "expectedSaving": {
+          "files": 0,
+          "lines": 0,
+          "note": "按需加载模块在 AI 路径上的收益实测为 0（那 10 个适配器都会被探活）。若改为「按配置门控探活」，收益体现在**探活次数与副作用**（文件系统读、进程启动），不体现在模块数 —— 具体数字需另测。"
+        },
+        "probeTouchedAdapters": [
+          "acpAgentAdapter",
+          "apiAdapter",
+          "claudeAdapter",
+          "clipboardRelayAdapter",
+          "cliToolAdapter",
+          "codexAdapter",
+          "cursor2apiAdapter",
+          "cursorAdapter",
+          "kiroAdapter",
+          "localLLMAdapter",
+          "ollamaAdapter",
+          "openclawAdapter",
+          "opencodeAdapter",
+          "relayApiAdapter",
+          "traeAdapter",
+          "vscodeAdapter",
+          "warpAdapter",
+          "webRelayAdapter"
+        ],
+        "probeTouchedAdapterCount": 18,
+        "probeUntouchedHelperModules": [
+          "acpAgentProbe",
+          "anthropicRelayPresets",
+          "ccEnvAdoptPolicy",
+          "codexEnvAdoptPolicy",
+          "commandCodeAdapter",
+          "commandCodeInvocation",
+          "openaiRelayPresets",
+          "portableCliInstaller",
+          "streamErrorPartial",
+          "streamStallPolicy",
+          "_anthropicSseStream",
+          "_endpointResolver",
+          "_imageTranscode",
+          "_responsesSseStream",
+          "_streamStaleDetector"
+        ],
+        "probeUntouchedHelperCount": 15,
+        "adapterDirFileCount": 68,
+        "constraint": "构造函数对每个 entry.adapter.detect 的包装必须保留 ⇒ 适配器模块需在构造时已加载；改 thunk 会动 detect 包装时机与副作用顺序。**但实测表明这已不是主要矛盾**：全部 18 个适配器在任何走网关的路径上都会被探活，模块省不掉。",
+        "riskSurface": "网关自动回退链的选择顺序与副作用时机（探活顺序、探测失败的处理）",
+        "regressionCoverage": "tests/gatewayAdapters.stability.test.js 等 26 个适配器/网关套件；改造后必须复测同一集合：被探活的适配器集合与选择结果不能变。",
+        "precedent": "src/adapters/im/adapterRegistry.js（零加载契约 + require.cache 断言测试）—— 但注意：它的零加载之所以成立，是因为 IM 渠道**按 env 显式启用**（opt-in）；网关的 18 个渠道是**无条件全探**，故同一个模式搬过来收益为 0。",
+        "measurementMethod": "拦截 src/services/gateway/adapters/ 下模块的加载与其导出函数调用（scripts 侧临时探针），跑 lite 路径 `khy ai -p \"hi\"`，记录每个模块被调用了哪些导出。"
+      }
+    },
+    "weightLayers": {
+      "_note": [
+        "【三层重量 —— 分清「谁付这笔钱」】",
+        "",
+        "实测（2026-10-31，lite 路径 `khy ai -p \"hi\"`）：",
+        "  ① 入口冷闭包：bin/khy.js 的**顶层** require 闭包 = 9 文件 / 3,757 行",
+        "     （其中依赖 8 文件 / 1,298 行，入口自身 2,459 行）。",
+        "     **所有命令都付这一份**（--version / doctor / ai 都一样）。",
+        "  ② 顶层边可达：lite 路径上，模块在**装载期**求值的那部分。",
+        "     **走那条路径的命令才付这一份**。",
+        "  ③ 懒加载边可达：只在**被触发的代码路径**上求值的那部分。",
+        "",
+        "⚠ 顶层与懒加载**有重叠**（顶层可达的也会被懒加载边触达），两个数字不可相加。",
+        "⚠ 「顶层边可达」**不等于**「入口冷闭包」—— 顶层边在任何模块的顶层都算。",
+        "真正所有命令都付的，只有 ①（入口自己的顶层闭包）。",
+        "",
+        "【为什么这一层区分重要】",
+        "剥洋葱要动的是「只有部分路径付的」那部分（②③），",
+        "而不是「所有命令都付的」那部分（①）—— 后者动它收益最大但风险也最大",
+        "（每个命令都受影响）。分层度量让「动哪一头」变成可决策的。",
+        "",
+        "【口径修正 2026-10-31 —— 旧数字是错的】",
+        "本段的旧值（入口冷闭包 3 文件 / 388 行；顶层边 286 文件；懒加载边 198 文件）",
+        "来自「括号深度」分类，且实测下来**两个方向都错**：",
+        "  · 低估：顶层 `try { require(...) }` 块里的 require，以及**多行解构赋值**里的",
+        "    require（`const { A, B } = require('x')` —— require( 落在花括号内），",
+        "    它们都是**装载期**重量，旧口径判成懒加载。",
+        "    实例：入口 4 个 require 在 try 块里；aiGateway 的 4 个方法分片模块是解构写法",
+        "    ⇒ 入口冷闭包少算 5 个文件，aiGateway 少算 22 个文件。",
+        "  · 虚高：旧口径的 braceDepthMap **不识别正则字面量**（只跳字符串/模板/注释），",
+        "    正则里的括号被当成代码结构 ⇒ 从文件中第一个正则起，深度整体偏移，",
+        "    后面所有函数体内的 require 都被误判成顶层边。",
+        "    实例：toolUseLoopCore.js 第 360 行起，96% 的字符深度失真 ⇒ 冷闭包虚高 2.4 倍。",
+        "  ⇒ 偏移方向取决于文件里先出现哪种字符，**不可预测** —— 这不是某个文件写得不规范，",
+        "    是判据本身没有定义（「括号深度 ≠ 函数作用域」）。",
+        "现在静态侧改用 AST 函数作用域（scripts/lib/requireGraph.js），",
+        "运行时侧改用「加载者是否正在求值」的运行时真相（scripts/lib/runtimeFootprint.js）。",
+        "实测差异最大到 2.4 倍（toolUseLoopCore 冷闭包 170 → 71 文件）。",
+        "详见设计文档 [DESIGN-ARCH-197] §1.5。"
+      ],
+      "measuredAt": "2026-10-31",
+      "budget": {
+        "version": {
+          "maxTopReachFiles": 13,
+          "maxTopReachLines": 5340,
+          "maxLazyReachFiles": 2,
+          "maxLazyReachLines": 6,
+          "baselineTopReachFiles": 13,
+          "baselineTopReachLines": 5340,
+          "baselineLazyReachFiles": 2,
+          "baselineLazyReachLines": 6
+        },
+        "doctor": {
+          "maxTopReachFiles": 47,
+          "maxTopReachLines": 20879,
+          "maxLazyReachFiles": 25,
+          "maxLazyReachLines": 16547,
+          "baselineTopReachFiles": 47,
+          "baselineTopReachLines": 20879,
+          "baselineLazyReachFiles": 25,
+          "baselineLazyReachLines": 16547
+        },
+        "ai-lite": {
+          "maxTopReachFiles": 332,
+          "maxTopReachLines": 144067,
+          "maxLazyReachFiles": 145,
+          "maxLazyReachLines": 58490,
+          "baselineTopReachFiles": 332,
+          "baselineTopReachLines": 144067,
+          "baselineLazyReachFiles": 145,
+          "baselineLazyReachLines": 58490
+        }
+      },
+      "litePath": {
+        "entryColdClosure": {
+          "files": 9,
+          "lines": 3757,
+          "depFiles": 8,
+          "depLines": 1298,
+          "note": "bin/khy.js 的顶层 require 闭包（AST 口径）；含入口自身 2,459 行"
+        },
+        "topEdgeReach": {
+          "files": 332,
+          "lines": 144067,
+          "topEdgeCount": 0,
+          "note": "运行时真相口径：加载者正在求值期间发生的加载"
+        },
+        "lazyEdgeReach": {
+          "files": 145,
+          "lines": 58490,
+          "lazyEdgeCount": 0,
+          "note": "加载者已求值完毕后才发生的加载（函数被调用时才 require）"
+        },
+        "totalLoaded": {
+          "files": 425,
+          "lines": 188294
+        }
+      },
+      "entryTopLevelRequires": [
+        {
+          "spec": "../src/bootstrap/windowsSpawnHardening",
+          "lines": 178
+        },
+        {
+          "spec": "../src/bootstrap/moduleSelfHeal",
+          "lines": 309
+        },
+        {
+          "spec": "../src/bootstrap/startupProfiler",
+          "lines": 83
+        },
+        {
+          "spec": "../src/services/domain/state/stateMachine/startupPhases.js",
+          "lines": 107
+        },
+        {
+          "spec": "../src/services/domain/state/stateMachine/debugLog.js",
+          "lines": 77
+        },
+        {
+          "spec": "../package.json",
+          "lines": 245
+        }
+      ]
+    }
+  },
+  "visual": {
+    "_note": [
+      "视觉层与逻辑层同构：同一个「芯 → 膜 → 皮」模型，用在「看得见的重」上。",
+      "逻辑侧的重量是「冷启动进内存多少行」，视觉侧的重量是「首屏渲染要付多少代价」。",
+      "两者的治理手法相同：定预算、定边界、定棘轮。",
+      "",
+      "【视觉侧的加载时机口径】逻辑侧分「顶层 require / 懒加载 require」；",
+      "视觉侧对应「顶层 import / require（静态边）」与「import()（动态边）」。",
+      "静态边决定首屏冷闭包与 bundle 体积，动态边按需加载。",
+      "桌面端是 React（ESM import）、web 前端是 Vue（SFC + 路由懒加载）、TUI 是 CJS require ——",
+      "三者用同一套口径度量。"
+    ],
+    "edgePolicy": {
+      "_note": "视觉侧方向矩阵，与逻辑侧同构：芯(V0) 不依赖膜(V1) 与皮(V2)；膜(V1) 不依赖皮(V2)。V0→V1 判 false 是有实据的：apps/khyos-desktop 的 WorkspaceSidebar（属 V0 闭包）静态 import 了文件树面板 FileTree（V1）—— 文件树是「点开才看」的面板，却进了首屏闭包。",
+      "V0->V0": true,
+      "V0->V1": false,
+      "V0->V2": false,
+      "V1->V0": true,
+      "V1->V1": true,
+      "V1->V2": false,
+      "V2->V0": true,
+      "V2->V1": true,
+      "V2->V2": true
+    },
+    "layers": [
+      {
+        "id": "V0",
+        "name": "视觉芯",
+        "role": "首屏必需：入口 + 布局骨架 + 主题 + 输入框 + 转录区（含转录内的工具行渲染）+ 落地视图。不含任何可选面板。web 前端的 V0 根取**落地视图**而非 main.js —— web 前端用集中式 viewLoaders 懒加载表，冷闭包只有几个文件，但真实首屏成本是「落地路由 chunk + 预取集」，冷闭包测不到。",
+        "roots": [
+          "apps/khyos-desktop/src/renderer/App.tsx",
+          "apps/khyos-desktop/src/renderer/components/layout/AppLayout.tsx",
+          "apps/khyos-desktop/src/renderer/components/composer/Composer.tsx",
+          "runtime/node/backend/src/cli/tui/ink-components/PromptFrame.js",
+          "runtime/node/backend/src/cli/tui/ink-components/Transcript.js",
+          "runtime/node/backend/src/cli/tui/ink-components/ToolLines.js",
+          "delivery/web/ai-frontend/src/views/Layout.vue",
+          "delivery/web/ai-frontend/src/views/UserHome.vue",
+          "delivery/channel/khyquant/frontend/src/App.vue",
+          "delivery/channel/khyquant/frontend/src/views/Dashboard.vue",
+          "runtime/node/backend/src/cli/tui/app.js"
+        ],
+        "budget": {
+          "_note": "视觉芯的首屏冷闭包（仅静态 import/require 边）重量预算。低频页面被静态引入即计入 —— 这正是要治的病。基线为 2026-10-30 实测值，只许减不许增。",
+          "perRoot": {
+            "apps/khyos-desktop/src/renderer/App.tsx": {
+              "maxFiles": 37,
+              "maxLines": 9415,
+              "baselineFiles": 37,
+              "baselineLines": 9415
+            },
+            "apps/khyos-desktop/src/renderer/components/layout/AppLayout.tsx": {
+              "maxFiles": 18,
+              "maxLines": 4535,
+              "baselineFiles": 18,
+              "baselineLines": 4535
+            },
+            "apps/khyos-desktop/src/renderer/components/composer/Composer.tsx": {
+              "maxFiles": 11,
+              "maxLines": 2382,
+              "baselineFiles": 11,
+              "baselineLines": 2382
+            },
+            "runtime/node/backend/src/cli/tui/ink-components/PromptFrame.js": {
+              "maxFiles": 4,
+              "maxLines": 1404,
+              "baselineFiles": 4,
+              "baselineLines": 1404
+            },
+            "runtime/node/backend/src/cli/tui/ink-components/Transcript.js": {
+              "maxFiles": 17,
+              "maxLines": 4178,
+              "baselineFiles": 17,
+              "baselineLines": 4178
+            },
+            "runtime/node/backend/src/cli/tui/ink-components/ToolLines.js": {
+              "maxFiles": 10,
+              "maxLines": 2681,
+              "baselineFiles": 10,
+              "baselineLines": 2681
+            },
+            "delivery/web/ai-frontend/src/views/Layout.vue": {
+              "maxFiles": 1,
+              "maxLines": 9,
+              "baselineFiles": 1,
+              "baselineLines": 9
+            },
+            "delivery/web/ai-frontend/src/views/UserHome.vue": {
+              "maxFiles": 1,
+              "maxLines": 944,
+              "baselineFiles": 1,
+              "baselineLines": 944
+            },
+            "delivery/channel/khyquant/frontend/src/App.vue": {
+              "maxFiles": 1,
+              "maxLines": 211,
+              "baselineFiles": 1,
+              "baselineLines": 211
+            },
+            "delivery/channel/khyquant/frontend/src/views/Dashboard.vue": {
+              "maxFiles": 1,
+              "maxLines": 2241,
+              "baselineFiles": 1,
+              "baselineLines": 2241
+            },
+            "runtime/node/backend/src/cli/tui/app.js": {
+              "maxFiles": 2,
+              "maxLines": 773,
+              "baselineFiles": 2,
+              "baselineLines": 773
+            }
+          },
+          "measuredAt": "2026-10-30"
+        }
+      },
+      {
+        "id": "V1",
+        "name": "视觉膜",
+        "role": "按需挂载的交互面板：侧栏、文件树、Git、浏览器、工具行；web 前端的聊天/交易视图（经 viewLoaders 懒加载表按需拉取）。",
+        "roots": [
+          "runtime/node/backend/src/cli/tui/ink-components/SidebarPanel.js",
+          "apps/khyos-desktop/src/renderer/components/filetree/FileTree.tsx",
+          "delivery/web/ai-frontend/src/views/AIChat.vue",
+          "delivery/channel/khyquant/frontend/src/views/Trading.vue"
+        ]
+      },
+      {
+        "id": "V2",
+        "name": "视觉皮",
+        "role": "完整外壳里的低频页面：设置、自动化、密钥管理、远程控制。它们在各自的入口（桌面端 App.tsx / TUI app.js）里以 React.lazy 挂载 —— 外壳本身属 V0，低频子页面属 V2。",
+        "roots": [
+          "runtime/node/backend/src/cli/tui/ink-components/App.js",
+          "apps/khyos-desktop/src/renderer/components/settings/SettingsPage.tsx",
+          "apps/khyos-desktop/src/renderer/components/automations/AutomationsPage.tsx",
+          "apps/khyos-desktop/src/renderer/components/keyManager/KeyManagerPage.tsx",
+          "delivery/web/ai-frontend/src/views/admin/Settings.vue",
+          "delivery/channel/khyquant/frontend/src/views/AdminLogin.vue"
+        ],
+        "budget": {
+          "_note": "视觉皮的「应懒加载」清单：这些页面若出现在 V0/V1 的静态冷闭包里即判违规（skin-into-visual-core）。",
+          "lazyRequired": [
+            "apps/khyos-desktop/src/renderer/components/settings/SettingsPage.tsx",
+            "apps/khyos-desktop/src/renderer/components/automations/AutomationsPage.tsx",
+            "apps/khyos-desktop/src/renderer/components/keyManager/KeyManagerPage.tsx",
+            "apps/khyos-desktop/src/renderer/components/browser/BrowserPane.tsx",
+            "apps/khyos-desktop/src/renderer/components/remote/WebRemoteControlPanel.tsx"
+          ],
+          "measuredAt": "2026-10-30"
+        }
+      }
+    ],
+    "measured": {
+      "_note": "2026-10-30 实测。ink-components/App.js 单文件 367 KB，是视觉侧最大的单点。",
+      "runtime/node/backend/src/cli/tui": {
+        "files": 204,
+        "lines": 48118
+      },
+      "runtime/node/backend/src/cli/tui/ink-components": {
+        "files": 86,
+        "lines": 26793
+      },
+      "runtime/node/backend/src/cli/tui/hooks": {
+        "files": 12,
+        "lines": 7131
+      },
+      "apps/khyos-desktop/src": {
+        "files": 104,
+        "lines": 24952
+      },
+      "delivery/web/ai-frontend/src": {
+        "files": 202,
+        "lines": 52020
+      },
+      "delivery/channel/khyquant/frontend/src": {
+        "files": 133,
+        "lines": 47114
+      },
+      "coldClosures": {
+        "_note": "各视觉入口的静态冷闭包（仅静态 import/require 边）。web 前端因路由懒加载仅 4 文件 —— 它已经剥好了；桌面端与 TUI 尚未剥。",
+        "apps/khyos-desktop/src/renderer/App.tsx": {
+          "files": 37,
+          "lines": 9415
+        },
+        "delivery/web/ai-frontend/src/main.js": {
+          "files": 4,
+          "lines": 983
+        },
+        "runtime/node/backend/src/cli/tui/app.js": {
+          "files": 2,
+          "lines": 773
+        },
+        "apps/khyos-desktop/src/renderer/components/layout/AppLayout.tsx": {
+          "files": 18,
+          "lines": 4535
+        },
+        "apps/khyos-desktop/src/renderer/components/composer/Composer.tsx": {
+          "files": 11,
+          "lines": 2382
+        },
+        "runtime/node/backend/src/cli/tui/ink-components/PromptFrame.js": {
+          "files": 4,
+          "lines": 1404
+        },
+        "runtime/node/backend/src/cli/tui/ink-components/Transcript.js": {
+          "files": 17,
+          "lines": 4178
+        },
+        "runtime/node/backend/src/cli/tui/ink-components/ToolLines.js": {
+          "files": 10,
+          "lines": 2681
+        },
+        "delivery/web/ai-frontend/src/views/Layout.vue": {
+          "files": 1,
+          "lines": 9
+        },
+        "delivery/web/ai-frontend/src/views/UserHome.vue": {
+          "files": 1,
+          "lines": 944
+        },
+        "delivery/channel/khyquant/frontend/src/App.vue": {
+          "files": 1,
+          "lines": 211
+        },
+        "delivery/channel/khyquant/frontend/src/views/Dashboard.vue": {
+          "files": 1,
+          "lines": 2241
+        }
+      }
+    },
+    "peeledSurfaces": {
+      "_note": "这些前端**已经剥好了**（在本次工作之前）—— 记录下来免得后人重复做。\n判据：集中式懒加载表 + 路由级动态 import + 契约测试。\n\n【「已剥好」需要测试护着才算数】\n没有契约测试时，有人把某个 import() 改回静态 import，首屏会静默变重且**不报错** ——\n这正是 ai-frontend 早就补上 nav.wiring.test.js 在防的那类失效。\nkhyquant 前端此前缺这个护栏，2026-10-30 补齐（routerLazyLoad.contract.test.js）。",
+      "surfaces": [
+        {
+          "name": "ai-frontend (Vue)",
+          "mechanism": "composables/useRoutePrefetch.js 的 viewLoaders 单一真源表 + router/index.js 消费同一表 + idle 预取",
+          "contractTest": "src/router/nav.wiring.test.js（断言每个路由解析到真实 chunk、viewLoaders 与预取表一致）",
+          "measuredColdClosure": {
+            "mainJs": "4 文件 / 983 行",
+            "routerIndex": "1 文件 / 618 行"
+          }
+        },
+        {
+          "name": "khyquant-frontend (Vue)",
+          "mechanism": "router/index.js 全部 component: () => import(...) + App.vue 的 preloadCriticalChunks / preloadNonCriticalChunks",
+          "contractTest": "src/__tests__/routerLazyLoad.contract.test.js（2026-10-30 补：断言 27 条路由全部懒加载、无静态 component 逃逸、动态 import 指向的文件真实存在、顶层不静态引入 view）",
+          "measuredColdClosure": {
+            "appVue": "1 文件 / 211 行",
+            "routerIndex": "1 文件 / 204 行"
+          },
+          "contractTestStatus": "本次补齐 —— 此前 ai-frontend 有契约测试而 khyquant 没有，「已剥好」这个性质当时无测试护着：有人把某个 import() 改回静态 import，首屏会静默变重且不报错。"
+        }
+      ]
+    },
+    "lazyLoadSafety": {
+      "_note": [
+        "「能不能改懒加载」的判据 —— 从三轮实战里总结出来的三条。",
+        "",
+        "背景：桌面端已剥 11 处（3 全屏页 + 7 SidePane 面板 + FileTree + CommandCenter + 2 浮层）。",
+        "每一处都要回答同一个问题：**这个组件能不能从「静态 import」改成「按需加载」？**",
+        "形状相同不代表安全 —— 归因榜上 SidePane 与 CommandCenter 同为「面板」，",
+        "但前者不能改（快捷键注册在 visible 闸门之前，条件挂载会让隐藏态丢快捷键）。",
+        "",
+        "三条判据（全部满足才可改）：",
+        "  1. 不显示时**确实不渲染任何东西**（return null 语义），而不是「渲染了但藏起来」；",
+        "  2. 挂载/卸载**不会漏掉或重复注册**订阅型副作用（事件监听、订阅、interval）；",
+        "  3. **没有依赖常驻的状态**（快捷键注册、全局单例、跨挂载周期存活的句柄）。",
+        "",
+        "第 3 条最隐蔽：SidePane 的组件注释里就写着「始终挂载 —— 快捷键注册在 visible 闸门之前，",
+        "条件挂载会让隐藏态丢快捷键」。"
+      ],
+      "safe": [
+        {
+          "file": "apps/khyos-desktop/src/renderer/App.tsx",
+          "components": [
+            "SettingsPage",
+            "AutomationsPage",
+            "KeyManagerPage",
+            "ToolExecutionPanel",
+            "DiffSummary",
+            "ElicitationPanel"
+          ],
+          "note": "低频全屏页与浮层 —— 全部按需加载（ContextUsagePanel 于 2026-11-01 整体删除，故不在名单）"
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/SidePane.tsx",
+          "components": [
+            "TerminalPanel",
+            "GitPanel",
+            "BrowserPane",
+            "SelectionChatPane",
+            "CodeViewerPane",
+            "OpenFilePane",
+            "AmoonPane"
+          ],
+          "note": "侧栏多标签面板 —— 按 tab 加载"
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/WorkspaceSidebar.tsx",
+          "components": [
+            "FileTree"
+          ],
+          "note": "文件树 —— 按 view 加载"
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/AppLayout.tsx",
+          "components": [
+            "CommandCenter"
+          ],
+          "note": "Ctrl+K 命令面板 —— 自身 if (!visible) return null"
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/TitleBar.tsx",
+          "components": [
+            "ProcessMonitorDialog"
+          ],
+          "note": "进程监视器对话框 —— 副作用有完整 cleanup（clearInterval + removeEventListener）"
+        }
+      ],
+      "unsafe": [
+        {
+          "module": "AppLayout.tsx: SidePane",
+          "reason": "Ctrl+Alt+B / Ctrl+J 快捷键注册在 visible 闸门之前 —— 条件挂载会让隐藏态丢快捷键",
+          "source": "AppLayout.tsx 内的注释明确写明"
+        },
+        {
+          "module": "Composer.tsx: ModeSelector",
+          "reason": "有 useEffect / addEventListener / window.* —— 条件挂载会漏订阅",
+          "source": "静态扫描（scripts/lib/visualLayerGraph.js 的候选分析）"
+        },
+        {
+          "module": "AppLayout.tsx: TitleBar",
+          "reason": "有 useEffect / addEventListener / window.* —— 条件挂载会漏订阅",
+          "source": "静态扫描（scripts/lib/visualLayerGraph.js 的候选分析）"
+        }
+      ],
+      "method": "【怎么找候选】不是靠肉眼，也不是靠归因排序（归因给的是重量序，不是可切清单），\n而是扫出全部条件渲染形态（`{cond && <X/>}` 与 `{cond ? <X/> : ...}`），\n再逐个量：① 传递重量 ② 副作用标记 ③ cleanup 是否完整 ④ 是否被入口直接引用 ⑤ 入边广度。\n\n【已在库里】scripts/lib/visualLayerGraph.js 的 findLazyCandidates()，\n守卫的「懒加载候选扫描」段直接消费它 —— 候选判定从此是机器做的，不靠人读代码。\n\n【实测一轮扫出 9 个条件渲染组件，最终切了 4 个】：\n  切 —— DiffSummary（2 文件/493 行）、ElicitationPanel（1 文件/151 行）、\n        ProcessMonitorDialog（2 文件/453 行，副作用有 cleanup）；\n        （另有前三批共 10 处）\n  不切 —— MessageBubble（14 文件/2602 行）：是消息列表主体，拆它等于拆首屏；\n  不切 —— ModeSelector：第三条判据不过（依赖常驻状态）；\n  不切 —— WorkspacePicker：是 Composer 的 header prop，始终渲染（非条件渲染）；\n  不切 —— Icon（329 行）：被 29 个模块静态引用，是共用基础设施。",
+      "criteria": "① 不显示时**确实不渲染任何东西**（return null 语义），而不是「渲染了但藏起来」；\n② 挂载/卸载**不会漏掉或重复注册**订阅型副作用 ——\n   **副作用带完整 cleanup 时（clearInterval / clearTimeout / removeEventListener）这条自动通过**：\n   条件挂载时 cleanup 会跑，不存在漏订阅；反过来常驻挂载会让本不该跑的副作用一直跑\n   （ProcessMonitorDialog 的 1s 轮询即如此 —— 改懒加载后，对话框关着时不再轮询）；\n③ **没有依赖常驻**的状态（快捷键注册、全局单例、跨挂载周期存活的句柄）；\n④ **不是首屏主体** —— 被入口根直接引用的组件（Composer / ModeSelector）摘掉等于拆首屏；\n⑤ **不是共用基础设施** —— 被 ≥3 个模块静态引用的组件（Icon 被 29 个引用）\n   改懒加载不仅没收益，还把「一个必用组件」变成「N 处异步等待」。",
+      "regressionGuard": {
+        "rule": "visual-lazy-regression",
+        "scope": "safe 名单里的组件必须仍是懒加载（按「文件 + 组件名」检查导入方文件里的 lazy import）",
+        "severity": "error",
+        "note": "重量棘轮是**事后**抓到（闭包变大）；本判据给**事前**信号。⚠ 匹配认的是 `.then(m => ({ default: m.X }))` 里**显式写的 X**，不是文件名 —— 现实里组件名与文件名常不同（DiffSummary 来自 DiffViewer、TerminalPanel 来自 Terminal）。"
+      }
+    },
+    "cuts": {
+      "_note": "视觉侧已完成的刀与实测收益（每刀的收益都被守卫的视觉预算棘轮锁住，只许减不许增）。",
+      "desktop": {
+        "initial": {
+          "files": 73,
+          "lines": 19385,
+          "lowFreqPagePct": 39.8
+        },
+        "now": {
+          "files": 37,
+          "lines": 9415
+        },
+        "cuts": [
+          "App.tsx 三个全屏页（Settings/Automations/KeyManager）→ React.lazy",
+          "SidePane 七个面板 → React.lazy",
+          "WorkspaceSidebar: FileTree → React.lazy",
+          "AppLayout: CommandCenter（Ctrl+K 命令面板）→ React.lazy + 条件渲染",
+          "App.tsx: ToolExecutionPanel / ContextUsagePanel → React.lazy + 条件渲染",
+          "App.tsx: ToolExecutionPanel / ContextUsagePanel → React.lazy + 条件渲染（由归因段定位）",
+          "App.tsx: DiffSummary（改动文件摘要）/ ElicitationPanel（人在环审批）→ React.lazy + 条件渲染（扫出全部 {cond && <Comp/>} 形态后逐个量传递重量）",
+          "TitleBar.tsx: ProcessMonitorDialog（进程监视器对话框）→ React.lazy + 条件渲染（副作用有完整 cleanup；顺带让「对话框关着时 1s 轮询还在跑」这个常驻副作用也停了）",
+          "App.tsx: ContextUsagePanel（月配额「Token 用量（本月配额）」面板）→ 整体删除（2026-11-01 用户拍板：视觉噪音。ZCode 原版没有独立月配额面板，用量只在 Composer「上下文已用/总量」按钮与设置页「使用统计」里；复刻端那个面板是自造展示件）"
+        ]
+      },
+      "tui": {
+        "note": "TUI 首屏本身很轻（2 文件 / 773 行，§6.6 口径修正后）。TUI 的问题是「上帝文件」（ink-components/App.js 367 KB），与首屏重量是两回事。",
+        "cuts": []
+      },
+      "web": {
+        "note": "两个 web 前端在本工作之前就已剥好（见 peeledSurfaces）。本工作为它们补上层归属与预算，并给 khyquant 补了懒加载契约测试。",
+        "cuts": []
+      }
+    },
+    "runtimeFootprintNote": "视觉侧**没有**运行时足迹守卫 —— 这是场景性质决定的，不是遗漏。\n\n逻辑侧的运行时足迹靠「跑真实命令 + 读 require.cache」采集，需要一个可独立执行的入口。\n视觉侧没有这样的入口：\n  桌面端 / web 前端 / khyquant：跑在 Electron 或浏览器里，Node 进程读不到它们的模块缓存；\n  TUI（Ink）：由 `khy` 的交互模式启动，**需要真实 TTY**，无法在无 stdin 的 CI 里跑起来。\n\n所以视觉侧的重量只能静态测（冷闭包 + 加载归因）。\n这与逻辑侧的分工是清楚的：\n  逻辑侧 —— 静态（冷闭包/方向）+ 运行时（require.cache/归因闸门），两套都有；\n  视觉侧 —— 只有静态那套。\n\n若将来要给视觉侧补运行时足迹，需要先解决「如何在无头环境里加载前端模块图」\n（例如用 vite 的 build manifest 替代 require.cache）—— 那是独立的一项工作。"
+  },
+  "coreEvidence": {
+    "_note": [
+      "「最小核心」这个说法最直接的证据：最轻使用路径实际加载了多少。",
+      "",
+      "2026-10-30 实测（node -r scripts/lib/runtimeFootprint.js bin/khy.js --version）：",
+      "  第一方模块 11 个 / 7,805 行 / 0 个外部模块 / heap 6.5 MB / rss 54 MB",
+      "",
+      "对照：后端 src 总量 3,510 文件 / 896,817 行。",
+      "  最小核心 = 总量的 **0.31%**（文件数）/ **0.870%**（行数）。",
+      "",
+      "所以「khyos 很重」与「能跑一个很轻的核心」并不矛盾 ——",
+      "重的是**外壳与可选能力**，轻的是**芯**。剥洋葱做的就是把边界画准，",
+      "让默认路径只带必要的那 11 个文件。"
+    ],
+    "measuredAt": "2026-10-30",
+    "minimalCore": {
+      "firstPartyFiles": 11,
+      "firstPartyLines": 7805,
+      "externalFiles": 0,
+      "heapUsedMB": 6.5,
+      "rssMB": 54
+    },
+    "totals": {
+      "backendSrcFiles": 3510,
+      "backendSrcLines": 896817
+    },
+    "minimalCorePct": {
+      "files": 0.31,
+      "lines": 0.87
+    }
+  }
+}

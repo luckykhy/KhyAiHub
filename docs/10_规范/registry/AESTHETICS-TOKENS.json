@@ -1,0 +1,810 @@
+{
+  "$meta": {
+    "name": "khy-os 美学令牌真源",
+    "spec": "khy-os 软件美学标准（[DESIGN-FE-012]）§3",
+    "standard": "docs/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.md",
+    "version": "1.0.0",
+    "updated": "2026-10-14",
+    "note": "本文件是『美学语义真源』的机器可读形态，只声明语义名、必需性、跨端映射与出处，不改变任何现有取值；另以 deferred 登记未来项、以 endDeviations 登记跨端偏差、以 nullSemantics 说明各端 null 的语义。",
+    "shape": "分类 → 语义令牌 → { value?, valueDark?, endDeviations?, surfaces, required, rationale, source }（$meta 另含 nullSemantics / contrast / deferred）",
+    "valueSemantics": {
+      "string": "标准固化的取值（**跨端一致**、稳定，如间距标度）——value 为字符串。",
+      "baseline": "标准定**平台基准值**（取平台自有端现状，可含亮/暗配对），非基准端允许自有偏离并在 endDeviations 登记——value/valueDark 为字符串。",
+      "omitted": "标准不固化取值；以各端真源为准，见 surfaces 给出的本地名（如 success/text 等有确定值但本标准不锁定）——**value 键省略**。",
+      "null": "取值未决，须人拍板（见 standard §7）——value 为 null。",
+      "note": "四态互斥，机器可判：键存在且为字符串 = 固化（跨端一致）或基准（基准端见 value/valueDark，非基准端见 endDeviations）；键省略 = 以各端为准；键存在且为 null = 未决。"
+    },
+    "nullSemantics": {
+      "tui": "该端本无此令牌（终端无色阶变体，亦无 radius/shadow/font/motion 维度）——守卫报 warning 提示核对，属已知结构性缺口。",
+      "web": "该端真源缺该令牌——守卫报 warning。",
+      "desktop": "本标准尚未在该端确立映射（null = 该端未确立映射，非错误）——守卫跳过不报，避免噪声。",
+      "mobile": "同上（null = 该端未确立映射，非错误）——守卫跳过不报。"
+    },
+    "contrast": {
+      "standard": "WCAG 2.2 双阈值（唯一合规口径）",
+      "body": "正文 ≥4.5:1",
+      "largeText": "大字 ≥3:1",
+      "ui": "UI 组件/图形 ≥3:1",
+      "apca": "仅暗色主题设计参考，**不入守卫**",
+      "enforcement": "warning（advisory）——与 FE-004 gate=advisory、PROCESS-008 S1 一致；对比度断言实现须显式做 var() 链递归解析 + alpha 合成"
+    },
+    "deferred": [
+      {
+        "id": "dtcg-single-source-derivation",
+        "priority": "P3",
+        "title": "DTCG 单一真源 + 构建期派生五端",
+        "why": "会把五端现有取值整体迁移为产物，任一映射错即视觉回归，与「视觉零回归」硬约束冲突；当前亦无第二个需跨端同值的主题/皮肤需求。",
+        "trigger": "出现第二个需跨端同值的主题/皮肤，或人明确要求收敛取值时重开。"
+      }
+    ],
+    "surfaces": {
+      "tui": "runtime/node/backend/src/cli/（ccTheme.js 等）",
+      "web": "delivery/web/ai-frontend/src/styles/newapi-theme.css（--khy-*）",
+      "khyquant": "delivery/channel/khyquant/frontend/src/styles/theme.css（--khy-*；独立项目，随平台分发）",
+      "desktop": "apps/khyos-desktop/src/renderer/theme/globals.css（Tailwind @theme --color-*）",
+      "mobile": "delivery/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart（Dart）"
+    },
+    "sources": {
+      "r1": ".khy/aesthetics/research/1-设计系统与设计令牌.md",
+      "r2": ".khy/aesthetics/research/2-终端与TUI美学.md",
+      "r3": ".khy/aesthetics/research/3-色彩与无障碍对比.md",
+      "r4": ".khy/aesthetics/research/4-排版与比例.md",
+      "r5": ".khy/aesthetics/research/5-动效与反馈.md",
+      "r6": ".khy/aesthetics/research/6-信息密度与数据可视化.md",
+      "fe004": "docs/10_规范/DESIGN-FE/[DESIGN-FE-004] 前端 CSS 与样式架构规范.md",
+      "fe001": "docs/10_规范/DESIGN-FE/[DESIGN-FE-001] 前端页面规范.md",
+      "taste": "docs/14_维护者/taste.md"
+    }
+  },
+  "color": {
+    "accent": {
+      "value": "#9c4116",
+      "valueDark": "#f0a868",
+      "endDeviations": {
+        "khyquant": "#1890ff",
+        "mobile": "#f0a868",
+        "desktop": "#f0a868"
+      },
+      "surfaces": {
+        "tui": "accent",
+        "web": "--khy-primary",
+        "khyquant": "--khy-primary",
+        "desktop": null,
+        "mobile": "AppColors.primary"
+      },
+      "required": true,
+      "rationale": "品牌/强调主色。**平台基准值** = Web 现状（亮 --khy-primary = #9c4116 / 暗 #f0a868，同属基准端，暗色配对不算偏离）。取值来自 Khy OS 品牌琥珀族（真源 delivery/brand/khy-brand-geometry.js 的 PALETTE）。2026-10-25 品牌主色由工程蓝整族换成琥珀：蓝→紫→品红是 2023 年后 AI 产品的通用色系，五端各画各的（Web 蓝 / 移动蓝紫 / TUI 橙 / 桌面蓝），本轮收敛为同一族。khyquant 保持金融蓝 —— 它是**独立项目**（量化交易终端），红色/绿色另有 A 股涨跌语义，不随平台品牌迁移。mobile / desktop 与基准同值，仍登记在 endDeviations 里以示「本轮同步过」而非「未映射」。见 standard §7 Q1。",
+      "source": "r1 §2.1/§2.2; newapi-theme.css 的 --khy-primary; ccTheme.js 的 SEMANTIC.accent; theme.css 的 --khy-primary; globals.css 的 --color-brand; app_colors.dart 的 AppColors.primary; delivery/brand/khy-brand-geometry.js 的 PALETTE"
+    },
+    "accent-strong": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-primary-strong",
+        "khyquant": "--khy-primary-strong",
+        "desktop": null,
+        "mobile": "AppColors.primaryStrong"
+      },
+      "required": true,
+      "rationale": "主色强调态（hover/active）。取值以各端真源为准。",
+      "source": "r1 原则 6; newapi-theme.css 的 --khy-primary-strong; theme.css 的 --khy-primary-strong"
+    },
+    "accent-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-primary-soft",
+        "khyquant": "--khy-primary-soft",
+        "desktop": null,
+        "mobile": "AppColors.primaryContainer"
+      },
+      "required": true,
+      "rationale": "主色淡底（primary-container），用于选中/信息底。",
+      "source": "r1 原则 6; newapi-theme.css 的 --khy-primary-soft; theme.css 的 --khy-primary-soft"
+    },
+    "on-accent": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-on-primary",
+        "khyquant": null,
+        "desktop": "--color-primary-foreground",
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "accent 之上的前景色（on-* 配对），须与 accent 成对达标对比度。Web 本地名 --khy-on-primary（别名 --khy-white，与 --khy-primary 配对）。注意 desktop 的 --color-primary-foreground 配对的是 --color-primary（主表面色），语义与品牌 accent 不同（desktop 无品牌强调载体）。",
+      "source": "r1 原则 6; r3 P7; globals.css 的 --color-primary-foreground; newapi-theme.css 的 --khy-on-primary"
+    },
+    "success": {
+      "surfaces": {
+        "tui": "success",
+        "web": "--khy-success",
+        "khyquant": "--khy-success",
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "语义四家族之一（成功）。TUI/Web/khyquant 已有值，取值以各端真源为准（不在此固化）。",
+      "source": "r3 P6; ccTheme.js 的 CC_COLORS.success / SEMANTIC.success; newapi-theme.css 的 --khy-success; theme.css 的 --khy-success"
+    },
+    "warning": {
+      "surfaces": {
+        "tui": "warn",
+        "web": "--khy-warning",
+        "khyquant": "--khy-warning",
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "语义四家族之一（警告）。注意 TUI 本地名是 warn、Web/khyquant 是 warning —— 命名差异登记为端自有（standard §3.1，Q1 决定不强制同值）。",
+      "source": "r3 P6; ccTheme.js 的 CC_COLORS.warning / SEMANTIC.warn; newapi-theme.css 的 --khy-warning; theme.css 的 --khy-warning"
+    },
+    "danger": {
+      "surfaces": {
+        "tui": "danger",
+        "web": "--khy-danger",
+        "khyquant": "--khy-danger",
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "语义四家族之一（错误/危险）。",
+      "source": "r3 P6; ccTheme.js 的 CC_COLORS.error / SEMANTIC.danger; newapi-theme.css 的 --khy-danger; theme.css 的 --khy-danger"
+    },
+    "info": {
+      "surfaces": {
+        "tui": "info",
+        "web": null,
+        "khyquant": "--khy-info",
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "语义四家族之一（信息）。TUI（CC_COLORS.info）与 khyquant（theme.css 的 --khy-info）已有；**Web 真源缺失** —— 缺口（r3 §现状 P6 建议补 info）。",
+      "source": "r3 §现状 P6; ccTheme.js 的 CC_COLORS.info; theme.css 的 --khy-info"
+    },
+    "success-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": "--khy-success-50",
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "成功语义的淡底（*-bg），须与 success（*-fg）成对校验对比度。khyquant 已有 --khy-success-50；Web/TUI/桌面/移动缺失，属增量。",
+      "source": "r3 P7; r1 原则 6; theme.css 的 --khy-success-50"
+    },
+    "warning-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "警告语义的淡底（*-bg），配对校验。",
+      "source": "r3 P7"
+    },
+    "danger-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "错误语义的淡底（*-bg），配对校验。",
+      "source": "r3 P7"
+    },
+    "info-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "信息语义的淡底（*-bg），配对校验。",
+      "source": "r3 P7"
+    },
+    "text": {
+      "surfaces": {
+        "tui": "text",
+        "web": "--khy-text-main",
+        "khyquant": null,
+        "desktop": "--color-foreground",
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "默认正文前景。TUI 侧刻意用终端默认前景（不覆盖），符合 KHY-AES-08；桌面端用 --color-foreground。khyquant 无 --khy-text-* 令牌（theme.css 仅有 --khy-primary*/--khy-{success,danger,warning,info}*/--khy-gray-*/--khy-white/--khy-black），故映射为缺失。**移动端记 null**：其前景色是双主题对（app_colors.dart 的 onSurfaceLight / onSurfaceDark），registry 的 surfaces 只允许字符串或 null，无法表达双值对。",
+      "source": "r2 P15; ccTheme.js 的 CC_COLORS.text; newapi-theme.css 的 --khy-text-main; globals.css 的 --color-foreground; theme.css（无 --khy-text-*）; app_colors.dart 的 onSurfaceLight / onSurfaceDark"
+    },
+    "text-strong": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-text-strong",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "最高对比文字（标题/数值）。",
+      "source": "newapi-theme.css 的 --khy-text-strong"
+    },
+    "text-secondary": {
+      "surfaces": {
+        "tui": "textSecondary",
+        "web": "--khy-text-secondary",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "次要文字。",
+      "source": "ccTheme.js 的 CC_COLORS.textSecondary; newapi-theme.css 的 --khy-text-secondary"
+    },
+    "text-muted": {
+      "surfaces": {
+        "tui": "muted",
+        "web": "--khy-text-muted",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "弱化文字（占位/次要标签）。Web 的 --khy-text-muted 对 --khy-bg-main 是已知对比度临界项（FE-001 §9）。",
+      "source": "ccTheme.js 的 SEMANTIC.muted; newapi-theme.css 的 --khy-text-muted; fe001 §9"
+    },
+    "border": {
+      "surfaces": {
+        "tui": "border",
+        "web": "--khy-border",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "边框/分割线。UI 组件边框对相邻色须 ≥3:1。",
+      "source": "r3 P3; ccTheme.js 的 SEMANTIC.border; newapi-theme.css 的 --khy-border"
+    },
+    "border-light": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-border-light",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "更弱的边框（表格行分隔）。",
+      "source": "newapi-theme.css 的 --khy-border-light"
+    },
+    "focus": {
+      "surfaces": {
+        "tui": "focus",
+        "web": ":focus-visible outline",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "键盘焦点指示。聚焦/未聚焦像素须 ≥3:1 且面积足够（≥2 CSS px 周长）。Web 侧当前用 --khy-primary 描边、非独立令牌。",
+      "source": "r3 P3; WCAG 2.2 SC 2.4.13; ccTheme.js 的 SEMANTIC.focus; newapi-theme.css 的 :focus-visible"
+    },
+    "bg-main": {
+      "surfaces": {
+        "tui": "background",
+        "web": "--khy-bg-main",
+        "khyquant": null,
+        "desktop": "--color-background",
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "页面底色。TUI 用终端默认背景（不覆盖）；桌面端用 --color-background。",
+      "source": "ccTheme.js 的 CC_COLORS.background; newapi-theme.css 的 --khy-bg-main; globals.css 的 --color-background"
+    },
+    "bg-elevated": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-bg-elevated",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "抬升表面（卡片/弹层底）。暗色下靠逐层提亮而非加深阴影表达层级。",
+      "source": "r1 原则 11; r3 P8; newapi-theme.css 的 --khy-bg-elevated"
+    },
+    "bg-soft": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-bg-soft",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "弱底（表头/hover 底）。",
+      "source": "newapi-theme.css 的 --khy-bg-soft"
+    }
+  },
+  "typography": {
+    "font-sans": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-font",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "无衬线正文族（Public Sans + CJK 回退）。与 mono 成对，优先同超家族。",
+      "source": "r4 P9; newapi-theme.css 的 --khy-font"
+    },
+    "font-mono": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-font-mono",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "等宽族（JetBrains Mono 栈），用于代码/Key/ID/模型名。表格数值列应加 tabular-nums。",
+      "source": "r4 P9/P10; newapi-theme.css 的 --khy-font-mono"
+    },
+    "text-body": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-text-md",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "正文字号。应以固定比例尺（建议 1.2 或 1.25）重建，现状阶梯非比例尺。",
+      "source": "r4 P1/P3; newapi-theme.css 的 --khy-text-md"
+    },
+    "text-title": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-text-2xl",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "页面标题字号。角色 × 档位命名，token 内应绑定行高/字重。",
+      "source": "r4 P3; newapi-theme.css 的 --khy-text-2xl"
+    },
+    "leading-tight": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-leading-tight",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "标题行高（≈1.2）。行高随字号反比调节。",
+      "source": "r4 P4; newapi-theme.css 的 --khy-leading-tight"
+    },
+    "leading-normal": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-leading-normal",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "正文行高（1.5）。中文正文宜 1.6–1.75，勿与英文共用 1.5。",
+      "source": "r4 P4/P14; newapi-theme.css 的 --khy-leading-normal"
+    },
+    "weight-regular": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "字重 400（允许 450）。现状 CSS 大量直接写字面 font-weight，未入 token。",
+      "source": "r4 P5"
+    },
+    "weight-medium": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "字重 500（允许 550），UI 文本/按钮用 medium 而非 bold。",
+      "source": "r4 P5"
+    },
+    "weight-semibold": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "字重 600（允许 650），小标题。",
+      "source": "r4 P5"
+    },
+    "weight-bold": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "字重 700，最强强调。",
+      "source": "r4 P5"
+    },
+    "tracking-tight": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-tracking-tight",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "大字收紧字距（负值）。",
+      "source": "r4 P6; newapi-theme.css 的 --khy-tracking-tight"
+    },
+    "tracking-loose": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "小字放宽字距（正值）。现状缺失，属增量。",
+      "source": "r4 P6"
+    }
+  },
+  "spacing": {
+    "space-1": {
+      "value": "4px",
+      "surfaces": {
+        "tui": "spacing.inputPaddingX",
+        "web": "--khy-space-1",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "间距标度基准单位（4px），数值成比例。",
+      "source": "r1 P9; newapi-theme.css 的 --khy-space-1"
+    },
+    "space-2": {
+      "value": "8px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-2",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "4/8 基准栅格第二档。",
+      "source": "r1 P9; newapi-theme.css 的 --khy-space-2"
+    },
+    "space-3": {
+      "value": "12px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-3",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "间距标度档。",
+      "source": "newapi-theme.css 的 --khy-space-3"
+    },
+    "space-4": {
+      "value": "16px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-4",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "间距标度档（卡片 gap）。工具类 .mt-16 映射到此。",
+      "source": "fe004 §7.1; newapi-theme.css 的 --khy-space-4"
+    },
+    "space-5": {
+      "value": "20px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-5",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "间距标度档。--khy-gap-page/--khy-gap-section 引用此档，属在用令牌。",
+      "source": "newapi-theme.css 的 --khy-space-5 / --khy-gap-page / --khy-gap-section"
+    },
+    "space-6": {
+      "value": "24px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-6",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "间距标度档。",
+      "source": "newapi-theme.css 的 --khy-space-6"
+    },
+    "space-8": {
+      "value": "32px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-8",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "间距标度大档。",
+      "source": "newapi-theme.css 的 --khy-space-8"
+    },
+    "space-10": {
+      "value": "40px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-10",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "间距标度大档。",
+      "source": "newapi-theme.css 的 --khy-space-10"
+    },
+    "space-12": {
+      "value": "48px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-12",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "间距标度大档。",
+      "source": "newapi-theme.css 的 --khy-space-12"
+    },
+    "space-16": {
+      "value": "64px",
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-space-16",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": false,
+      "rationale": "间距标度最大档（首屏呼吸感）。",
+      "source": "taste 行 22; newapi-theme.css 的 --khy-space-16"
+    }
+  },
+  "radius": {
+    "radius-sm": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-radius-sm",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppRadius.small"
+      },
+      "required": true,
+      "rationale": "小圆角档。有限档位，组件引用档位而非像素。",
+      "source": "r1 P10; newapi-theme.css 的 --khy-radius-sm; app_colors.dart 的 AppRadius.small"
+    },
+    "radius": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-radius",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppRadius.medium"
+      },
+      "required": true,
+      "rationale": "默认圆角档。",
+      "source": "r1 P10; newapi-theme.css 的 --khy-radius"
+    },
+    "radius-lg": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-radius-lg",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppRadius.large"
+      },
+      "required": true,
+      "rationale": "大圆角档（卡片/弹层）。",
+      "source": "newapi-theme.css 的 --khy-radius-lg"
+    },
+    "radius-pill": {
+      "surfaces": {
+        "tui": null,
+        "web": null,
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppRadius.xLarge"
+      },
+      "required": false,
+      "rationale": "全圆角/胶囊档。移动端**偏好**森林治愈系的更大圆角（14–20px）与 pill 形（taste 行 63，换肤时提出，属偏好非现状）；现行 app_colors.dart 的 AppRadius.xLarge = 28，非 14–20px。见 standard §7 Q3。",
+      "source": "taste 行 63; app_colors.dart 的 AppRadius.xLarge"
+    }
+  },
+  "shadow": {
+    "shadow": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-shadow",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppShadows.card"
+      },
+      "required": true,
+      "rationale": "常态抬升阴影。与 surface 层级对应；亮暗各一套值。",
+      "source": "r1 P11; newapi-theme.css 的 --khy-shadow; app_colors.dart 的 AppShadows.card"
+    },
+    "shadow-lift": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-shadow-lift",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppShadows.floating"
+      },
+      "required": true,
+      "rationale": "悬浮/模态抬升阴影（hover lift、dialog）。",
+      "source": "r1 P11; newapi-theme.css 的 --khy-shadow-lift; app_colors.dart 的 AppShadows.floating"
+    },
+    "overlay-shadow": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-overlay-shadow",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppShadows.dialog"
+      },
+      "required": false,
+      "rationale": "遮罩层阴影。移动端 AppShadows.dialog 最贴合此档。",
+      "source": "newapi-theme.css 的 --khy-overlay-shadow; app_colors.dart 的 AppShadows.dialog"
+    }
+  },
+  "motion": {
+    "duration-fast": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-duration-fast",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppDuration.overlay"
+      },
+      "required": true,
+      "rationale": "微交互时长（FE-004 §8.2 定义 150ms，已落进 Web 真源 newapi-theme.css 的 --khy-duration-fast）；移动端按数值对应 AppDuration.overlay=150ms。⚠ 移动端常量名与档位语义相反（名为 overlay 的常量值 150 归此 fast 档、名为 micro 的值 200 归 normal 档），消费方须**按值**而非按名取用。TUI 无时长令牌（终端无插值），节拍归 RUNTIME-011。",
+      "source": "r5 P3/P11; fe004 §8.2; app_colors.dart 的 AppDuration.overlay"
+    },
+    "duration-normal": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-duration-normal",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppDuration.micro"
+      },
+      "required": true,
+      "rationale": "屏幕级过渡时长（FE-004 §8.2 定义 200ms，已落进 Web 真源 --khy-duration-normal）；移动端按数值对应 AppDuration.micro=200ms / pageTransition=300ms。⚠ 同上：移动端 micro 命名易被误当最短档，须按值取用。",
+      "source": "r5 P3; fe004 §8.2; app_colors.dart 的 AppDuration.micro / AppDuration.pageTransition"
+    },
+    "duration-slow": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-duration-slow",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "AppDuration.progress"
+      },
+      "required": false,
+      "rationale": "全屏级大位移时长（FE-004 §8.2 定义 300ms，已落进 Web 真源 --khy-duration-slow）。移动端 progress=500ms 对应此档。",
+      "source": "r5 P3; fe004 §8.2; app_colors.dart 的 AppDuration.progress"
+    },
+    "ease-standard": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-easing-standard",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "**通用曲线**（FE-004 §8.2 标准曲线 cubic-bezier(0.4,0,0.2,1)，已落进 Web 真源 --khy-easing-standard）。非入场专用——入场用 ease-enter、出场用 ease-exit。",
+      "source": "r5 P4; fe004 §8.2"
+    },
+    "ease-enter": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-easing-enter",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "**入场减速**曲线（FE-004 §8.2 的 cubic-bezier(0,0,0.2,1)，已落进 Web 真源 --khy-easing-enter）。",
+      "source": "r5 P4; fe004 §8.2"
+    },
+    "ease-exit": {
+      "surfaces": {
+        "tui": null,
+        "web": "--khy-easing-exit",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "**出场加速**曲线（FE-004 §8.2 的 cubic-bezier(0.4,0,1,1)，已落进 Web 真源 --khy-easing-exit）。",
+      "source": "r5 P4; fe004 §8.2"
+    },
+    "reduced-motion": {
+      "surfaces": {
+        "tui": "（非 TTY 零动画）",
+        "web": "@media (prefers-reduced-motion: reduce)",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "系统『减少动效』偏好下关闭/替换非必要动画，且忙状态须有静态等价物。桌面端当前缺失（r5 §2 缺口）。taste 行 60：假动画是第二种谎言。",
+      "source": "r5 P2/P8; newapi-theme.css 的 @media (prefers-reduced-motion: reduce); taste 行 60"
+    }
+  },
+  "icon": {
+    "icon-size": {
+      "surfaces": {
+        "tui": "（符号前缀词表）",
+        "web": ".khy-icon --khy-icon-size",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": "emoji"
+      },
+      "required": false,
+      "rationale": "图标尺寸档（sm/md/lg）。当前无统一图标令牌，属本标准提出的增量。",
+      "source": "r2 P8; newapi-theme.css 的 .khy-icon / --khy-icon-size"
+    },
+    "icon-status": {
+      "surfaces": {
+        "tui": "●○⋅ 符号",
+        "web": ".status-dot",
+        "khyquant": null,
+        "desktop": null,
+        "mobile": null
+      },
+      "required": true,
+      "rationale": "状态图标须与语义色、文字三重编码（颜色非唯一载体）。功能性图标 ≥3:1，纯装饰可豁免。",
+      "source": "r2 P16; r3 P3/P4; newapi-theme.css 的 .status-dot"
+    }
+  }
+}

@@ -1,0 +1,436 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "updated": "2026-10-15",
+    "rule": "API-001 / API-002（DESIGN-API-002 §4 五要素登记制）",
+    "ssot": "docs/10_规范/DESIGN-API/[DESIGN-API-002] 外部错误信封与版本弃用政策.md",
+    "task": "DESIGN-ARCH-190 §五 P1-0",
+    "purpose": "对客端点清单。DESIGN-ARCH-190 称其为「后续所有工作的估算基数与守卫误报率的分母」——没有它无法估算工期，也无法判断守卫该按什么口径报警。",
+    "notes": [
+      "本表只登记**对客面**（第三方拿标准 SDK 能调，或客户用自己的账号能调）。管理面（/api/admin、/api/ai-gateway-admin 等）不属对客契约，按 DESIGN-API-002 §1 的内外部边界另行治理。",
+      "每条端点带五要素：version / request+response 字段 / auth / errorCodes / migration。缺任一要素的端点不得新增（DESIGN-API-002 §4「先登记后实现」）。",
+      "status=missing 表示该能力在文档中被承诺过但代码里没有端点承载。这不是 bug，是尚未实现的阶段；它们是 P3 的输入。",
+      "端点 errorCodes 一栏填的是 DESIGN-API-002 §2 已登记的 SCREAMING_SNAKE 码；细粒度区分在 details（scope / reason）。P1-1 已把历史上先用了 14 个蛇形码的问题闭合——见 errorCodeRegistry.mapping。"
+    ]
+  },
+
+  "errorCodeRegistry": {
+    "mappingStatus": "resolved-at-P1-1",
+    "namingRule": "code 一律 SCREAMING_SNAKE 且必须先入 DESIGN-API-002 §2 表；细粒度区分进 details（scope / reason），不进 code。",
+    "declaredInDesign": [
+      { "code": "RATE_LIMITED", "trigger": "上游 429 / 本地限流" },
+      { "code": "UNAUTHORIZED", "trigger": "401" },
+      { "code": "FORBIDDEN", "trigger": "403" },
+      { "code": "MODEL_NOT_FOUND", "trigger": "404/模型不存在" },
+      { "code": "CONTEXT_TOO_LONG", "trigger": "413/超长" },
+      { "code": "CREDITS_EXHAUSTED", "trigger": "额度不足" },
+      { "code": "UPSTREAM_ERROR", "trigger": "上游 5xx" },
+      { "code": "TIMEOUT", "trigger": "请求超时" },
+      { "code": "NETWORK_ERROR", "trigger": "连接失败" },
+      { "code": "OUTPUT_TRUNCATED", "trigger": "输出截断" },
+      { "code": "CONTENT_BLOCKED", "trigger": "安全拦截" },
+      { "code": "INTERNAL", "trigger": "未分类服务端错误" },
+      { "code": "ARREARS", "trigger": "退款后余额为负（欠费）", "addedAt": "2026-10-15", "addedBy": "P1-1" },
+      { "code": "SERVICE_UNAVAILABLE", "trigger": "配额存储不可读 / 内部校验失败", "addedAt": "2026-10-15", "addedBy": "P1-1" }
+    ],
+    "mapping": [
+      { "registered": "UNAUTHORIZED", "httpStatus": 401, "was": "UNAUTHORIZED", "details": { "reason": "UNAUTHORIZED" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "UNAUTHORIZED", "httpStatus": 401, "was": "UNAUTHORIZED", "details": { "reason": "UNAUTHORIZED" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "FORBIDDEN", "httpStatus": 403, "was": "FORBIDDEN", "details": { "reason": "FORBIDDEN" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "FORBIDDEN", "httpStatus": 403, "was": "FORBIDDEN", "details": { "reason": "FORBIDDEN" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "FORBIDDEN", "httpStatus": 403, "was": "FORBIDDEN", "details": { "reason": "FORBIDDEN" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "FORBIDDEN", "httpStatus": 403, "was": "FORBIDDEN", "details": { "reason": "FORBIDDEN" }, "emittedAt": "customerQuotaEnforcer.js" },
+      { "registered": "RATE_LIMITED", "httpStatus": 429, "was": "rate_limited_{rpm|tpm}", "details": { "scope": "rpm|tpm", "reason": "rate_limited" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "CREDITS_EXHAUSTED", "httpStatus": 429, "was": "quota_exceeded_{requests|tokens|budget}", "details": { "scope": "requests|tokens|budget", "reason": "monthly_quota_exceeded" }, "emittedAt": "dataPlaneEnforcer.js" },
+      { "registered": "CREDITS_EXHAUSTED", "httpStatus": 429, "was": "CREDITS_EXHAUSTED", "details": { "reason": "CREDITS_EXHAUSTED", "scope": "requests" }, "emittedAt": "customerQuotaEnforcer.js" },
+      { "registered": "CREDITS_EXHAUSTED", "httpStatus": 429, "was": "CREDITS_EXHAUSTED", "details": { "reason": "CREDITS_EXHAUSTED", "scope": "tokens" }, "emittedAt": "customerQuotaEnforcer.js" },
+      { "registered": "CREDITS_EXHAUSTED", "httpStatus": 429, "was": "CREDITS_EXHAUSTED", "details": { "reason": "CREDITS_EXHAUSTED", "scope": "budget" }, "emittedAt": "customerQuotaEnforcer.js" },
+      { "registered": "ARREARS", "httpStatus": 429, "was": "ARREARS", "details": { "reason": "refund_exceeds_paid", "scope": "arrears" }, "emittedAt": "customerQuotaEnforcer.js", "note": "新码，承载 P2 的欠费语义" },
+      { "registered": "SERVICE_UNAVAILABLE", "httpStatus": 503, "was": "SERVICE_UNAVAILABLE", "details": { "reason": "SERVICE_UNAVAILABLE" }, "emittedAt": "customerQuotaEnforcer.js", "note": "新码" },
+      { "registered": "SERVICE_UNAVAILABLE", "httpStatus": 503, "was": "SERVICE_UNAVAILABLE", "details": { "reason": "SERVICE_UNAVAILABLE" }, "emittedAt": "customerQuotaEnforcer.js", "note": "新码" }
+    ],
+    "pathLeakFix": {
+      "violation": "DESIGN-API-002 §5 明列「内部文件路径」为不可外露字段。P0 新增的两条 503 消息把 customersFile() / proxyAuthFile() 的绝对路径写进了响应体，等于把服务端文件系统布局告诉第三方。",
+      "foundBy": "P1-1 复查 §5 时",
+      "fix": "响应体只留 §2 的人话模板；路径与 KHY_QUOTA_FAIL_OPEN 提示移入 console.warn（运维日志）。",
+      "guardedBy": "customerQuotaEnforcer.test.js 两条断言：响应消息不得匹配 /[A-Za-z]:\\\\|\\/home\\/|\\/Users\\//，且 console.warn 必须含该路径。",
+      "status": "fixed"
+    },
+    "messageLanguageFix": {
+      "violation": "AGENTS.md 规则 2.2 与 §2 人话模板均要求面向用户的中文消息，但数据面 7 条拒绝消息全是英文（'Invalid API token' / 'Rate limit exceeded' 等）。",
+      "foundBy": "P1-1",
+      "fix": "本次映射到的码，其 message 一并改写为 §2 模板风格的中文（原因 + 可执行动作）。",
+      "status": "fixed-for-mapped-codes"
+    },
+    "residual": {
+      "webhookCodes": "POST /api/payment-webhooks/mock 的错误仍靠 message 正则判 httpStatus（routes/paymentWebhooks.js:20），未映射为机器码。→ P1-4。",
+      "upstreamCodes": "上游供应商错误尚未经 gatewayErrorClassifier 归一到 §2 表。→ 独立工作线。"
+    }
+  },
+
+  "endpoints": [
+    {
+      "id": "dataplane.chat.completions",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "protocol": "openai",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:618",
+      "version": { "current": "unversioned", "target": "/api/v1/chat/completions（DESIGN-API-002 §4 大版本分段）" },
+      "auth": {
+        "scheme": "bearer",
+        "credential": "客户托管 token（khy- 前缀）或全局 PROXY_AUTH_TOKEN",
+        "enforcedAt": "runtime/node/ai-backend/src/services/gateway/dataPlaneEnforcer.js:102 enforceInbound",
+        "notes": "无 JWT。这是唯一面向第三方程序的认证面。"
+      },
+      "request": {
+        "contentType": "application/json",
+        "fields": ["model", "messages[]", "stream", "temperature", "max_tokens", "tools", "stream_options"],
+        "note": "OpenAI 兼容形状，经 protocolConverter 归一到内部调用面"
+      },
+      "response": {
+        "contentType": "application/json | text/event-stream",
+        "fields": ["id", "object", "created", "model", "choices[]", "usage"],
+        "note": "流式为 SSE，[DONE] 结束"
+      },
+      "errorCodes": ["UNAUTHORIZED", "UNAUTHORIZED", "FORBIDDEN", "FORBIDDEN", "RATE_LIMITED", "RATE_LIMITED", "CREDITS_EXHAUSTED", "CREDITS_EXHAUSTED", "CREDITS_EXHAUSTED"],
+      "envelope": {
+        "current": "协议兼容面——HTTP 200 + 内嵌 error 对象（DESIGN-API-002 §7 明确此形态保留）",
+        "target": "§2 信封（兼容面保留 200+error 双形态，需在文档标注）"
+      },
+      "migration": "新接入方直接按 OpenAI 官方文档写，无需本仓文档；升级路径为在 base_url 上加 /api/v1 前缀（P1-1）。"
+    },
+    {
+      "id": "dataplane.messages.anthropic",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/v1/messages",
+      "protocol": "anthropic",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:620",
+      "version": { "current": "unversioned", "target": "/api/v1/messages" },
+      "auth": { "scheme": "bearer", "credential": "同 chat.completions", "enforcedAt": "dataPlaneEnforcer.js:102" },
+      "request": { "contentType": "application/json", "fields": ["model", "messages[]", "system", "max_tokens", "stream", "tools"], "note": "Anthropic 兼容形状" },
+      "response": { "contentType": "application/json | text/event-stream", "fields": ["id", "type", "role", "content[]", "model", "usage", "stop_reason"] },
+      "errorCodes": ["UNAUTHORIZED", "UNAUTHORIZED", "FORBIDDEN", "FORBIDDEN", "RATE_LIMITED", "CREDITS_EXHAUSTED"],
+      "envelope": { "current": "协议兼容面（200 + 内嵌 error）", "target": "同 chat.completions" },
+      "migration": "同 chat.completions。"
+    },
+    {
+      "id": "dataplane.responses.codex",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/v1/responses",
+      "protocol": "openai-responses",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:627",
+      "version": { "current": "unversioned", "target": "/api/v1/responses" },
+      "auth": { "scheme": "bearer", "credential": "同 chat.completions", "enforcedAt": "dataPlaneEnforcer.js:102" },
+      "request": { "contentType": "application/json", "fields": ["model", "input", "stream", "tools"], "note": "Codex/Responses 形状" },
+      "response": { "contentType": "application/json | text/event-stream", "fields": ["id", "object", "output[]", "usage"] },
+      "errorCodes": ["UNAUTHORIZED", "UNAUTHORIZED", "FORBIDDEN", "FORBIDDEN", "CREDITS_EXHAUSTED"],
+      "envelope": { "current": "协议兼容面（200 + 内嵌 error）", "target": "同 chat.completions" },
+      "migration": "同 chat.completions。"
+    },
+    {
+      "id": "dataplane.generatecontent.gemini",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/v1beta/models/{model}:generateContent",
+      "protocol": "gemini",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:624",
+      "version": { "current": "unversioned", "target": "/api/v1beta/models/{model}:generateContent" },
+      "auth": { "scheme": "bearer", "credential": "同 chat.completions", "enforcedAt": "dataPlaneEnforcer.js:102" },
+      "request": { "contentType": "application/json", "fields": ["contents[]", "systemInstruction", "generationConfig", "tools"] },
+      "response": { "contentType": "application/json", "fields": ["candidates[]", "usageMetadata"] },
+      "errorCodes": ["UNAUTHORIZED", "UNAUTHORIZED", "FORBIDDEN", "FORBIDDEN", "CREDITS_EXHAUSTED"],
+      "envelope": { "current": "协议兼容面（200 + 内嵌 error）", "target": "同 chat.completions" },
+      "migration": "同 chat.completions。",
+      "caveat": "路径带 v1beta 且用冒号方法名，无法简单加 /api/v1 前缀——P1-1 需为此端点单列迁移规则。"
+    },
+    {
+      "id": "dataplane.models.list",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "GET",
+      "path": "/v1/models",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:629",
+      "version": { "current": "unversioned", "target": "/api/v1/models" },
+      "auth": { "scheme": "bearer", "credential": "同 chat.completions", "enforcedAt": "dataPlaneEnforcer.js:102" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["object", "data[]"] },
+      "errorCodes": ["UNAUTHORIZED", "UNAUTHORIZED"],
+      "envelope": { "current": "协议兼容面", "target": "同 chat.completions" },
+      "migration": "同 chat.completions。",
+      "caveat": "P0 实测记录：该端点不在 isDataPlanePost 的四个 POST 之内，仅受一道 legacy 全局令牌门保护；open mode（无 PROXY_AUTH_TOKEN）下等于不设防。泄露的是完整模型目录与上游 adapter 清单。P1-1 必须给它单独加判定。"
+    },
+    {
+      "id": "dataplane.health",
+      "face": "data-plane",
+      "audience": "customer",
+      "status": "exists",
+      "method": "GET",
+      "path": "/health",
+      "servedBy": "runtime/node/ai-backend/src/services/gateway/proxyServer.js:631",
+      "version": { "current": "unversioned", "target": "/health（不版本化——健康检查不是契约面）" },
+      "auth": { "scheme": "none", "credential": "", "enforcedAt": "" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["status"] },
+      "errorCodes": [],
+      "envelope": { "current": "裸对象", "target": "不适用（探针，非业务响应）" },
+      "migration": "无迁移计划。"
+    },
+
+    {
+      "id": "selfservice.payments.myCustomer",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "exists",
+      "method": "GET",
+      "path": "/api/ai-gateway/payments/my-customer",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:55",
+      "mountedAt": "runtime/node/backend/server.js:669",
+      "version": { "current": "unversioned", "target": "/api/v1/ai-gateway/payments/my-customer" },
+      "auth": { "scheme": "jwt", "credential": "登录用户的 access token（authMiddleware）", "enforcedAt": "runtime/node/backend/server.js:669" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["success", "data"], "shape": "utils/apiResponse.js 信封" },
+      "errorCodes": ["UNAUTHORIZED（未登录时由 authMiddleware 产生）"],
+      "envelope": { "current": "部分 §2 形态（success/data），无 traceId 字段", "target": "§2 信封 + traceId" },
+      "migration": "加 /api/v1 前缀；响应补 ok/error 双形与 traceId，旧形保留一个发布周期。"
+    },
+    {
+      "id": "selfservice.payments.list",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "exists",
+      "method": "GET",
+      "path": "/api/ai-gateway/payments",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:69",
+      "version": { "current": "unversioned", "target": "/api/v1/ai-gateway/payments" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "server.js:669" },
+      "request": { "fields": ["status", "page", "pageSize"] },
+      "response": { "contentType": "application/json", "fields": ["success", "data.payments[]", "data.paging"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "部分 §2 形态", "target": "§2 信封 + traceId" },
+      "migration": "同 my-customer。"
+    },
+    {
+      "id": "selfservice.payments.create",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/api/ai-gateway/payments",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:91",
+      "version": { "current": "unversioned", "target": "/api/v1/ai-gateway/payments" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "server.js:669" },
+      "request": {
+        "contentType": "application/json",
+        "fields": ["customerId", "amountCny", "provider", "subject", "description", "grant{monthlyRequests,monthlyTokens,monthlyBudgetCny}", "idempotencyKey", "expiresInMinutes"],
+        "note": "idempotencyKey 自 P2 起按 customerId 定域——同客户重试幂等，跨客户同 key 不再互相取单"
+      },
+      "response": { "contentType": "application/json", "fields": ["success", "data.id", "data.amountCny", "data.status", "data.checkout"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "部分 §2 形态", "target": "§2 信封 + traceId" },
+      "migration": "同 my-customer。"
+    },
+    {
+      "id": "selfservice.payments.detail",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "exists",
+      "method": "GET",
+      "path": "/api/ai-gateway/payments/{paymentId}",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:104",
+      "version": { "current": "unversioned", "target": "/api/v1/ai-gateway/payments/{paymentId}" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "server.js:669" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["success", "data.id", "data.status", "data.events[]", "data.result"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "部分 §2 形态", "target": "§2 信封 + traceId" },
+      "migration": "同 my-customer。"
+    },
+    {
+      "id": "selfservice.payments.cancel",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "exists",
+      "method": "POST",
+      "path": "/api/ai-gateway/payments/{paymentId}/cancel",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:123",
+      "version": { "current": "unversioned", "target": "/api/v1/ai-gateway/payments/{paymentId}/cancel" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "server.js:669" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["success", "data"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "部分 §2 形态", "target": "§2 信封 + traceId" },
+      "migration": "同 my-customer。"
+    },
+    {
+      "id": "selfservice.payments.mockConfirm",
+      "face": "customer-rest",
+      "audience": "internal-dev",
+      "status": "exists",
+      "method": "POST",
+      "path": "/api/ai-gateway/payments/{paymentId}/mock/confirm",
+      "servedBy": "runtime/node/backend/src/routes/aiGatewayPayments.js:140",
+      "version": { "current": "unversioned", "target": "不上对客面——mock provider 专用" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "server.js:669" },
+      "request": { "fields": [] },
+      "response": { "contentType": "application/json", "fields": ["success", "data"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "部分 §2 形态", "target": "不适用" },
+      "migration": "上线前必须加 provider=mock 门禁，否则等同于「自己给自己发货」的自助充值端点。",
+      "severity": "blocker-for-launch"
+    },
+
+    {
+      "id": "webhook.payment.mock",
+      "face": "callback",
+      "audience": "third-party",
+      "status": "exists",
+      "method": "POST",
+      "path": "/api/payment-webhooks/mock",
+      "servedBy": "runtime/node/backend/src/routes/paymentWebhooks.js:8",
+      "mountedAt": "runtime/node/backend/server.js:659",
+      "version": { "current": "unversioned", "target": "/api/v1/payment-webhooks/{provider}" },
+      "auth": {
+        "scheme": "hmac-sha256",
+        "credential": "AI_PAYMENT_WEBHOOK_SECRET 或 KHY_PAYMENT_WEBHOOK_SECRET",
+        "header": "X-KHY-Signature（可选 sha256= 前缀）",
+        "enforcedAt": "runtime/node/backend/src/services/gateway/paymentGatewayService.js:372 verifyMockWebhookSignature",
+        "notes": "无 auth 中间件，鉴权完全靠签名。P0 起：secret 缺失即拒绝（除非显式 KHY_WEBHOOK_ALLOW_UNSIGNED=true），不再按 NODE_ENV 分级。"
+      },
+      "request": {
+        "contentType": "application/json",
+        "maxSize": "256kb",
+        "fields": ["orderId", "status(paid|failed|cancelled)", "amountCny", "eventId", "gatewayTradeNo", "paidAt"],
+        "required": ["orderId", "status"],
+        "note": "P0 起：status=paid 时 amountCny 缺失即拒（此前缺失即跳过金额比对）"
+      },
+      "response": { "contentType": "application/json", "fields": ["success", "data"] },
+      "errorCodes": ["invalid webhook signature（非信封 code，是 message 正则匹配）", "amount mismatch", "amountCny is required for a paid webhook", "orderId is required", "unsupported webhook status"],
+      "envelope": { "current": "非 §2 形态——靠 message 正则判 httpStatus（routes/paymentWebhooks.js:20）", "target": "§2 信封 + 稳定机器码" },
+      "migration": "P1-1：把 message 正则判定换成 §2 机器码；路径按 provider 分段。",
+      "severity": "blocker-for-launch"
+    },
+
+    {
+      "id": "selfservice.usage.query",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "missing",
+      "claimedBy": "DESIGN-ARCH-190 §2.1「客户能自助查用量」",
+      "method": "GET",
+      "path": "（未定义）",
+      "version": { "current": "—", "target": "/api/v1/ai-gateway/usage/summary" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "—（端点不存在）" },
+      "request": { "fields": ["from", "to", "group", "model"] },
+      "response": { "fields": ["requests", "inputTokens", "outputTokens", "billedCny"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "—", "target": "§2 信封" },
+      "migration": "新端点，直接按目标态实现（DESIGN-API-002 §6.2「新端点直接用 §2/§3 形态」）。",
+      "reuse": "admin 侧已有 GET /api/ai-gateway/usage/summary（ai-backend/src/routes/aiGatewayAdmin.js:1576）与 /usage/customers/:id（:1590），内部逻辑可复用，但需从 admin 门禁下拆出客户自助面。"
+    },
+    {
+      "id": "selfservice.keys.manage",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "missing",
+      "claimedBy": "DESIGN-ARCH-190 §2.1「客户能自助开 key / 吊销 key」",
+      "method": "GET|POST|DELETE",
+      "path": "（未定义）",
+      "version": { "current": "—", "target": "/api/v1/ai-gateway/keys" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "—" },
+      "request": { "fields": ["label"] },
+      "response": { "fields": ["id", "label", "enabled", "createdAt", "lastUsedAt", "token（仅创建/轮换时返回一次）"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "—", "target": "§2 信封" },
+      "migration": "新端点，直接按目标态实现。",
+      "reuse": "admin 侧已有 /customers/{id}/tokens 的 issue / rotate / enable / disable / delete（ai-backend/src/routes/aiGatewayAdmin.js:1495-1545），逻辑可复用，但必须加「只能操作自己的 customer」的客户归属校验。"
+    },
+    {
+      "id": "selfservice.refund.request",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "missing",
+      "claimedBy": "DESIGN-ARCH-190 §八 第 4 条「退款是上线硬阻塞」",
+      "method": "POST",
+      "path": "（未定义）",
+      "version": { "current": "—", "target": "/api/v1/ai-gateway/payments/{paymentId}/refund" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "—" },
+      "request": { "fields": ["amountCny", "reason"] },
+      "response": { "fields": ["refundId", "status", "quotaAfter"] },
+      "errorCodes": ["UNAUTHORIZED", "FORBIDDEN"],
+      "envelope": { "current": "—", "target": "§2 信封" },
+      "migration": "新端点。",
+      "reuse": "P2 已把底层修通（负余额可表达 + 欠费拦截 + 归零安全阀），缺的只是端点与审批流。未决项 17 指出「退款是否需要独立权限位与审批流」尚未拍板。",
+      "severity": "blocker-for-launch"
+    },
+    {
+      "id": "selfservice.statement.download",
+      "face": "customer-rest",
+      "audience": "customer",
+      "status": "missing",
+      "claimedBy": "DESIGN-ARCH-190 §八 第 9 条「数据保留期与删除权语义」",
+      "method": "GET",
+      "path": "（未定义）",
+      "version": { "current": "—", "target": "/api/v1/ai-gateway/statements" },
+      "auth": { "scheme": "jwt", "credential": "登录用户 access token", "enforcedAt": "—" },
+      "request": { "fields": ["month"] },
+      "response": { "fields": ["month", "lines[]", "totalCny"] },
+      "errorCodes": ["UNAUTHORIZED"],
+      "envelope": { "current": "—", "target": "§2 信封" },
+      "migration": "新端点。",
+      "reuse": "requestLogService 的逐请求 JSONL 已含出账单所需的全部字段（traceId/customerId/tokenId/model/billedCny/latencyMs），可由它渲染。"
+    }
+  ],
+
+  "gaps": [
+    {
+      "id": "GAP-SELF-SERVICE",
+      "summary": "客户自助面（用量查询 / key 管理 / 退款 / 账单下载）**四个端点全部不存在**。",
+      "evidence": "全仓仅 ai-backend/src/routes/aiGatewayAdmin.js 暴露 usage/* 与 customers/*/tokens，且该文件 router 级挂 authenticateToken + requireAdmin（:389），即仅管理员可达。",
+      "consequence": "DESIGN-ARCH-190 §2.1 对客户的承诺（自助注册、开 key、充值、查用量、下载对账单、吊销 key）目前只有「充值」一项有端点承载。",
+      "ownedBy": "P3"
+    },
+    {
+      "id": "GAP-ERROR-CODES",
+      "summary": "14 个已实现的机器码无一登记在 DESIGN-API-002 §2 表内，且命名风格不同名。",
+      "evidence": "见 errorCodeRegistry.mapping。",
+      "consequence": "客户端无法按稳定码分支。",
+      "ownedBy": "P1-1",
+      "status": "resolved-at-P1-1",
+      "resolution": "14 条逐条映射到 §2 已登记码（细粒度进 details）；新增 ARREARS 与 SERVICE_UNAVAILABLE 两码入 §2 表；顺带修掉两处 §5 路径外泄与七处英文消息。残留见 errorCodeRegistry.residual。"
+    },
+    {
+      "id": "GAP-NO-VERSION",
+      "summary": "对客路径全部未按大版本分段（无 /api/v1）。",
+      "evidence": "本表每个端点的 version.current 均为 unversioned。",
+      "consequence": "破坏性变更无法只进新版本，退无可退。",
+      "ownedBy": "P1-1"
+    },
+    {
+      "id": "GAP-NO-TRACEID",
+      "summary": "对客响应不带 traceId；dataPlaneEnforcer 的 ctx.traceId 已在生成但未贯通到响应体。",
+      "evidence": "DESIGN-API-002 §5 要求 traceId 自 HTTP 入口全程传播；当前 utils/apiResponse.js 的 _metadata 只在客户端已带 requestId 时回填。",
+      "consequence": "客户报障时无法凭 traceId 定位到自己那一次请求。",
+      "ownedBy": "P1-2"
+    },
+    {
+      "id": "GAP-MOCK-CONFIRM",
+      "summary": "mock 支付确认端点无 provider 门禁。",
+      "evidence": "POST /api/ai-gateway/payments/{id}/mock/confirm 仅需登录 JWT。",
+      "consequence": "若该端点在对客面开放，等同于自助充值。",
+      "ownedBy": "P1-4（守卫接线时一并加门禁）",
+      "severity": "blocker-for-launch"
+    }
+  ]
+}

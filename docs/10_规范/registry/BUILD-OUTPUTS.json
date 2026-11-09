@@ -60,6 +60,30 @@
       "sunset": "2026-12-31"
     },
     {
+      "id": "khyos-desktop-dist",
+      "path": "entries/khyos-desktop-dist",
+      "legacyPath": "delivery/brand/khyos-desktop/dist",
+      "group": "build",
+      "producer": "delivery/brand/khyos-desktop/scripts/build.mjs（esbuild 打包 + 单文件页内联）",
+      "rebuild": "npm run build --prefix delivery/brand/khyos-desktop",
+      "inBuildAll": true,
+      "status": "migrating",
+      "sunset": "2027-06-30",
+      "note": "品牌 3D 桌面链路的交付物（dist/khyos-desktop.html 可离线双击运行）。"
+    },
+    {
+      "id": "khyos-desktop-frames",
+      "path": "entries/khyos-desktop-frames",
+      "legacyPath": "delivery/brand/khyos-desktop/out",
+      "group": "build",
+      "producer": "delivery/brand/khyos-desktop/scripts/capture.mjs（逐场景 PNG）与 assemble.mjs（mp4/ogg 合成）",
+      "rebuild": "node delivery/brand/khyos-desktop/scripts/capture.mjs && node delivery/brand/khyos-desktop/scripts/assemble.mjs",
+      "inBuildAll": true,
+      "status": "migrating",
+      "sunset": "2027-06-30",
+      "note": "逐场景帧与预览片，删了能由 capture + assemble 重建。"
+    },
+    {
       "id": "flutter-android-build",
       "path": "entries/flutter-android",
       "legacyPath": "delivery/mobile/khy-os-client-app/build",
@@ -117,6 +141,18 @@
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2026-12-31"
+    },
+    {
+      "id": "electron-builder",
+      "path": "entries/electron/dist-electron",
+      "legacyPath": "apps/khyos-desktop/dist-electron",
+      "group": "build",
+      "producer": "apps/khyos-desktop（electron-builder 打包，build.directories.output=dist-electron）",
+      "rebuild": "npm run electron:build --prefix apps/khyos-desktop",
+      "inBuildAll": true,
+      "status": "migrating",
+      "sunset": "2026-12-31",
+      "note": "端矩阵 desktop 的 artifactOutput 指向本 id；补这条之前它悬空（登记表里只有 electron-out / electron-dist，都是编译产物、不是可分发的 exe）。"
     },
     {
       "id": "quant-frontend-dist",
@@ -309,7 +345,7 @@
       "legacyPath": "dist/portable, dist/releases",
       "group": "build",
       "producer": "extensions/scripts/khy-portable/package-portable.js（--out / --artifact-out 默认值）",
-      "rebuild": "node extensions/scripts/khy-portable/package-portable.js --kind runtime",
+      "rebuild": "node delivery/extension/scripts/khy-portable/package-portable.js --kind runtime",
       "inBuildAll": true,
       "status": "registered",
       "sunset": "2026-12-31",

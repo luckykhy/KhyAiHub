@@ -1,0 +1,498 @@
+{
+  "$schemaNote": "数据事实单一真源登记表（规则 LAYOUT-008，语义真源 docs/10_规范/DESIGN-LAY/[DESIGN-LAY-009] 数据单一真源与影子副本归并规范.md）。本表只登记「真源在哪、怎么取值、谁是授权镜像、影子副本到哪里找」，**一律不登记值本身** —— 值运行时从真源文件读。本表若也存一份值，它自己就成了第二真源，本守卫立刻失去意义。",
+  "version": 1,
+  "updated": "2026-11-02",
+  "scan": {
+    "$note": "语料范围：代码与 JSON。文档里的数值主张由 DOCS-006 / DOCS-007 负责，本表不重复判（两份真源各自负责一件事，比互相覆盖更稳）。测试目录不进语料 —— 测试固定规范值是防护，不是第二真源（与 AGENTS.md 端点检查豁免同款理由）。",
+    "include": [
+      "runtime/",
+      "delivery/",
+      "apps/",
+      "scripts/",
+      "tools/",
+      "works/ship/",
+      "entries/",
+      "docs/10_规范/registry/"
+    ],
+    "exclude": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/out/**",
+      "**/unpacked/**",
+      "**/zcode-analysis/**",
+      "**/tests/**",
+      "**/test/**",
+      "**/__tests__/**",
+      "**/*.test.js",
+      "**/*.test.cjs",
+      "**/*.test.mjs",
+      "**/*.spec.js",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/vendor/**",
+      "**/e2e-test.js",
+      "**/third_party/**"
+    ]
+  },
+  "sources": [
+    {
+      "path": "docs/10_规范/registry/DATA-SSOT.json",
+      "kind": "json",
+      "title": "数据事实单一真源登记表（本表）"
+    },
+    {
+      "path": "docs/10_规范/registry/AESTHETICS-TOKENS.json",
+      "kind": "json",
+      "title": "软件美学令牌真源"
+    },
+    {
+      "path": "docs/10_规范/registry/API-SURFACE.json",
+      "kind": "json",
+      "title": "对客端点清单"
+    },
+    {
+      "path": "docs/10_规范/registry/ARCHITECTURE-POLICY.json",
+      "kind": "json",
+      "title": "架构政策"
+    },
+    {
+      "path": "docs/10_规范/registry/ATOMIC-CAPABILITIES.json",
+      "kind": "json",
+      "title": "原子能力总清单（生成物）"
+    },
+    {
+      "path": "docs/10_规范/registry/BUILD-OUTPUTS.json",
+      "kind": "json",
+      "title": "构建产物单一根登记表"
+    },
+    {
+      "path": "docs/10_规范/registry/COPYRIGHT-MATERIALS.json",
+      "kind": "json",
+      "title": "软著登记材料候选清单"
+    },
+    {
+      "path": "docs/10_规范/registry/COPYRIGHT.json",
+      "kind": "json",
+      "title": "软著登记真源"
+    },
+    {
+      "path": "docs/10_规范/registry/CORE-LAYERS.json",
+      "kind": "json",
+      "title": "核心层登记表"
+    },
+    {
+      "path": "docs/10_规范/registry/DATA-LOCATIONS.json",
+      "kind": "json",
+      "title": "数据落点登记表"
+    },
+    {
+      "path": "docs/10_规范/registry/DIST-SYNC.json",
+      "kind": "json",
+      "title": "分发同步表"
+    },
+    {
+      "path": "docs/10_规范/registry/DOMAIN-DEPS.json",
+      "kind": "json",
+      "title": "五域依赖方向"
+    },
+    {
+      "path": "docs/10_规范/registry/FEATURE-OWNERSHIP.json",
+      "kind": "json",
+      "title": "功能归属与阶段登记表"
+    },
+    {
+      "path": "docs/10_规范/registry/MEMORY-RECORD-SCHEMA.json",
+      "kind": "json",
+      "title": "记忆记录结构"
+    },
+    {
+      "path": "docs/10_规范/registry/PROPOSAL-ARTIFACT-INDEX.json",
+      "kind": "json",
+      "title": "提案产物索引"
+    },
+    {
+      "path": "docs/10_规范/registry/RULES-REGISTRY.json",
+      "kind": "json",
+      "title": "规则单一真源登记表"
+    },
+    {
+      "path": "docs/10_规范/registry/SOURCING-PROVENANCE.json",
+      "kind": "json",
+      "title": "借鉴来源溯源表"
+    },
+    {
+      "path": "docs/10_规范/registry/VERSION-MODE.json",
+      "kind": "json",
+      "title": "版本态机读真源"
+    },
+    {
+      "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+      "kind": "code",
+      "title": "服务默认值单一真源（端点与端口）"
+    },
+    {
+      "path": "delivery/channel/khyquant/frontend/src/constants/serviceDefaults.js",
+      "kind": "code",
+      "title": "前端侧服务默认值（跨包镜像，事实的授权镜像见 facts[]）"
+    },
+    {
+      "path": "runtime/node/backend/src/services/gateway/providerPresets.js",
+      "kind": "code",
+      "title": "供应商预设端点真源"
+    },
+    {
+      "path": "runtime/node/backend/src/utils/flagRegistry/index.js",
+      "kind": "code",
+      "title": "KHY_* flag 中央注册表真源"
+    },
+    {
+      "path": "runtime/node/backend/src/services/domain/catalog/capabilityMatrix/index.js",
+      "kind": "code",
+      "title": "能力矩阵真源"
+    },
+    {
+      "path": "runtime/node/backend/src/utils/dataHome.js",
+      "kind": "code",
+      "title": "数据家寻址解析器真源（B8 根因修复处）"
+    },
+    {
+      "path": "scripts/release/canary-manifest.json",
+      "kind": "json",
+      "title": "源码金丝雀 marker 台账真源（[DESIGN-ARCH-199]；file→marker→sha256 按批次追加，stamp/verify/report 与取证流程的唯一消费源；APK 层值与其接收人映射刻意不入此文件，落 works/data/khy/canary/ledger.jsonl——两层载体分离，公开面不携带身份语义）"
+    }
+  ],
+  "facts": [
+    {
+      "id": "ai-backend-port",
+      "title": "AI 管理后端默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "AI_BACKEND_DEFAULT_PORT"
+      },
+      "mirrors": [
+        {
+          "path": "delivery/web/ai-frontend/backendDiscovery.mjs",
+          "kind": "js-const",
+          "pointer": "DEFAULT_BACKEND_PORT",
+          "reason": "前端是独立 npm 包，不能 require 后端常量；该文件自身注释也承认这是镜像。镜像须与真源锁步。"
+        },
+        {
+          "path": "runtime/node/ai-backend/server.js",
+          "kind": "js-const",
+          "pointer": "PORT",
+          "reason": "ai-backend 与 backend 是并列的独立包（各自 package.json、各自版本轨道），不能跨包 require。"
+        }
+      ],
+      "detect": {
+        "identifiers": [
+          "AI_BACKEND_DEFAULT_PORT",
+          "DEFAULT_BACKEND_PORT",
+          "DEFAULT_API_PORT",
+          "KHY_DAEMON_PORT",
+          "AI_MGMT_PORT",
+          "api-port"
+        ],
+        "paths": [
+          "runtime/node/backend/",
+          "runtime/node/ai-backend/",
+          "delivery/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true,
+        "valueAnchorNote": "启用值锚定补网：实测本事实的别名（DEFAULT_API_PORT 等）会换名字再写一遍，标识符锚点看不见新别名。"
+      },
+      "note": "本仓最热的一条事实：真源一行、后端内五处、跨包两处、CLI 帮助文本一处。改端口必须只改真源，镜像随之锁步。"
+    },
+    {
+      "id": "web-frontend-port",
+      "title": "AI 前端 dev-server 基准端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "WEB_FRONTEND_PORT"
+      },
+      "mirrors": [
+        {
+          "path": "delivery/channel/khyquant/frontend/src/constants/serviceDefaults.js",
+          "kind": "js-const",
+          "pointer": "AI_FRONTEND_BASE_PORT",
+          "reason": "前端独立包，不能 import 后端常量；基准端口允许漂移但基准值必须一致。"
+        },
+        {
+          "path": "delivery/web/ai-frontend/frontendRuntime.mjs",
+          "kind": "js-const",
+          "pointer": "DEFAULT_FRONTEND_PORT",
+          "reason": "前端独立包的 dev-server 解析器，与 backendDiscovery.mjs 同属不可 import 的一侧。"
+        }
+      ],
+      "detect": {
+        "identifiers": [
+          "WEB_FRONTEND_PORT",
+          "AI_FRONTEND_BASE_PORT",
+          "AI_FRONTEND_PORT",
+          "VITE_AI_FRONTEND_PORT",
+          "DEFAULT_FRONTEND_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/",
+          "delivery/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true
+      }
+    },
+    {
+      "id": "web-frontend-port-window",
+      "title": "AI 前端端口漂移扫描窗口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "WEB_FRONTEND_PORT_WINDOW"
+      },
+      "mirrors": [
+        {
+          "path": "delivery/channel/khyquant/frontend/src/constants/serviceDefaults.js",
+          "kind": "js-const",
+          "pointer": "AI_FRONTEND_SCAN_WINDOW",
+          "reason": "前端独立包，扫描窗口须与后端基准端口窗口同量级。"
+        }
+      ],
+      "detect": {
+        "identifiers": [
+          "WEB_FRONTEND_PORT_WINDOW",
+          "AI_FRONTEND_SCAN_WINDOW",
+          "KHY_FRONTEND_PORT_WINDOW"
+        ],
+        "paths": [
+          "runtime/node/backend/",
+          "delivery/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ]
+      }
+    },
+    {
+      "id": "bridge-port",
+      "title": "协作 bridge server 默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "BRIDGE_DEFAULT_PORT"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [
+          "BRIDGE_DEFAULT_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/src/",
+          "runtime/node/backend/scripts/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true
+      },
+      "note": "只认 BRIDGE_DEFAULT_PORT：同名的 BRIDGE_PORT 在 amoo 手机桥接语境下指 8896（另一事实），把两者混在一个标识符集合里会造出假矛盾。"
+    },
+    {
+      "id": "remote-control-port",
+      "title": "移动端远程控制默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "REMOTE_DEFAULT_PORT"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [
+          "REMOTE_DEFAULT_PORT",
+          "KHY_REMOTE_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/src/",
+          "runtime/node/backend/scripts/",
+          "apps/khyos-desktop/src/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true
+      }
+    },
+    {
+      "id": "phone-bridge-port",
+      "title": "手机桥接默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "PHONE_BRIDGE_DEFAULT_PORT"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [
+          "PHONE_BRIDGE_DEFAULT_PORT",
+          "KHY_PHONE_BRIDGE_PORT",
+          "BRIDGE_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/src/services/domain/network/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true
+      },
+      "note": "BRIDGE_PORT 在本作用域（network/）内指手机/amo(o) 桥接端口，与协作 bridge 的 BRIDGE_DEFAULT_PORT（9222）是两件事 —— 故协作桥那条事实的标识符集合里刻意不含裸 BRIDGE_PORT，两个事实因此不会互相误判。"
+    },
+    {
+      "id": "inference-server-port",
+      "title": "本地推理服务默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "INFERENCE_SERVER_PORT"
+      },
+      "mirrors": [
+        {
+          "path": "runtime/node/backend/inference_server.py",
+          "kind": "py-const",
+          "pointer": "DEFAULT_PORT",
+          "reason": "Python 进程不能 require JS 常量，只能自己读同一个环境变量名并带同一个默认值。"
+        }
+      ],
+      "detect": {
+        "identifiers": [
+          "INFERENCE_SERVER_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true
+      }
+    },
+    {
+      "id": "rule-count",
+      "title": "规则登记表条目数（真源自洽判据）",
+      "ssot": {
+        "path": "docs/10_规范/registry/RULES-REGISTRY.json",
+        "kind": "json-count",
+        "pointer": "/rules",
+        "declaredPointer": "/meta/ruleCount"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [],
+        "paths": []
+      },
+      "note": "声明与事实同处一文件：meta.ruleCount 是登记表自报的条目数，rules 数组是实际条目数。两者不等即为真源自相矛盾 —— 一处连自家人都不认的漂移。"
+    },
+    {
+      "id": "ollama-port",
+      "title": "Ollama 默认端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "DEFAULT_OLLAMA_PORT"
+      },
+      "mirrors": [
+        {
+          "path": "delivery/mobile/khy-os-client-app/lib/core/config/endpoint_defaults.dart",
+          "kind": "text-const",
+          "pointer": "kDefaultOllamaBaseUrl",
+          "reason": "手机端 Dart 包无法 import 后端常量；该文件自述是「第三方服务默认端点的单一真源」，镜像须与后端端口锁步。"
+        },
+        {
+          "path": "delivery/extension/tools/khy-markdown/khyos-md-bridge.js",
+          "kind": "js-const",
+          "pointer": "OLLAMA_DEFAULT_PORT",
+          "reason": "delivery/extension 是独立交付层，不能跨层 require 后端常量（LAYOUT 跨层 require 红线）；故此处具名声明为授权镜像，由守卫强制与后端端口锁步。"
+        }
+      ],
+      "detect": {
+        "identifiers": [
+          "DEFAULT_OLLAMA_PORT",
+          "OLLAMA_HOST",
+          "kDefaultOllamaBaseUrl",
+          "OLLAMA_DEFAULT_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/",
+          "runtime/node/ai-backend/",
+          "delivery/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": true,
+        "valueAnchorNote": "值 11434 在本仓区分度足够（Ollama 专用端口），故启用值锚定补网。"
+      },
+      "note": "端口此前只以 URL 片段藏在 OLLAMA_HOST 里，消费方要写「URL 没带端口时用哪个端口」只能把 11434 再抄一遍；现提为常量并由 OLLAMA_HOST 派生。"
+    },
+    {
+      "id": "backend-port",
+      "title": "后端 Express 监听端口",
+      "ssot": {
+        "path": "runtime/node/backend/src/constants/serviceDefaults.js",
+        "kind": "js-const",
+        "pointer": "BACKEND_PORT"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [
+          "BACKEND_PORT",
+          "DEFAULT_BACKEND_PORT",
+          "KHY_BACKEND_PORT"
+        ],
+        "paths": [
+          "runtime/node/backend/",
+          "delivery/",
+          "apps/"
+        ],
+        "exclude": [
+          "**/tests/**",
+          "**/*.test.js"
+        ],
+        "valueAnchor": false,
+        "valueAnchorNote": "不启用值锚定：值 3000 在本仓区分度不足（148 个代码文件用到，多为 UI 尺寸与超时），补网会产生 200+ 条噪声。"
+      },
+      "note": "实测端口形态的 3000 硬编码在代码内为 0 处 —— 本仓已一致从真源取值；登记它是为了把这份干净锁住，将来有人写死就会红。"
+    },
+    {
+      "id": "amoo-tool-contract",
+      "title": "Amoo / 手机桥工具名与风险契约（纯数据投影）",
+      "ssot": {
+        "path": "runtime/node/backend/src/services/domain/network/amoo/amooToolContract.json",
+        "kind": "json-count",
+        "pointer": "/tools"
+      },
+      "mirrors": [],
+      "detect": {
+        "identifiers": [],
+        "paths": []
+      },
+      "exempt": true,
+      "exemptReason": "**豁免影子副本判定**，理由：契约文件是五份工具清单的**投影**，不是它们任何一份的副本。投影源分别是 amooBridgePolicy.BRIDGE_TOOLS（PC 执行闸 22 项）、phoneBridgeCatalog 的目录（32 项）、协作桥 contracts.TOOL_SPECS（12 项 wire 工具）、手机端 Tools.NAMES（48 项）与 LoopModes.KNOWN_TOOLS（36 项）——五份清单分属四棵树（backend / delivery-extension / delivery-mobile / android），**物理上无法 import**（跨层 require 是 LAYOUT 红线，跨语言更无共享模块），故投影必须落成一份独立文件。豁免的边界：契约**不新增任何可调用能力**（不进 BRIDGE_TOOLS、不进手机端 Tools.NAMES、不进桥的 12 项 wire 面），各端清单仍是各自执行面的真源；锁步由 runtime/node/backend/src/services/domain/network/amoo/amooToolContract.test.js 的比对测试承担（口径 **D1-1 部分**：契约 + 比对测试已落地，**D1-2 三端从契约读、删各自 local 常量尚未做**，不得记为完成）。本条只登记「真源在哪」，不登记工具名与风险档的值本身。",
+      "note": "登记为真源的是**这份契约文件本身**（它是什么、覆盖什么、谁读它）；契约内容与各端清单的关系见 exemptReason。detect.identifiers 留空：本仓事实的影子副本扫描靠标识符锚点，而工具名清单是**集合**（随端演进增删），用标识符锚会把正常的清单增删误判成影子副本；集合漂移改由契约比对测试判（那条测试会因任一端多出/少掉一个工具名而红）。"
+    }
+  ]
+}
