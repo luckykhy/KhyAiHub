@@ -31,7 +31,7 @@ const _SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const _INVISIBLE_CHARS = [
   '​', // zero-width space
   '‌', // zero-width non-joiner
-  '', // zero-width joiner
+  '\u200D', // zero-width joiner — escaped on purpose: the literal char was already lost once in transit, and an empty entry here matches every line
   '⁠', // word joiner
   '﻿', // BOM / zero-width no-break space
 ];

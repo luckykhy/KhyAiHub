@@ -37,12 +37,17 @@ class StreamingToolExecutor {
    * @param {Function} [deps.isConcurrencySafe] - Check if a tool is safe for parallel exec
    * @param {Function} [deps.uuid] - ID generator
    * @param {boolean} [deps.siblingAbortOnBashError=true] - Abort sibling tools on bash error
+   * @param {Function} [deps.onToolCall] - Called when a pre-executed tool actually starts.
+   *   Without it the tool runs invisibly during the stream and the caller only learns
+   *   about it after `awaitAll()` — i.e. after it already finished (the "long blank,
+   *   then a wall of text" symptom on every client).
    */
   constructor(deps = {}) {
     this._executeTools = deps.executeTools;
     this._isConcurrencySafe = deps.isConcurrencySafe || (() => false);
     this._uuid = deps.uuid || (() => `tc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
     this._siblingAbortOnBashError = deps.siblingAbortOnBashError !== false;
+    this._onToolCall = typeof deps.onToolCall === 'function' ? deps.onToolCall : null;
 
     /** @type {Map<string, Promise<ToolResult>>} */
     this._inflight = new Map();
@@ -65,6 +70,17 @@ class StreamingToolExecutor {
      * 流式预执行后，toolUseLoop 正式执行时可直接取缓存结果
      */
     this._resultCache = new Map();
+
+    /**
+     * 结果按调用 id 索引。hash 缓存对不上是常态：流式阶段拿到的是原始名/参数
+     * （read_file），主循环用的是规范化后的（readFile + 补全 path），同一个调用
+     * 算出两个 hash，于是预执行白跑一遍、主循环再跑一遍。block id 是唯一稳定身份。
+     */
+    this._resultById = new Map();
+
+    /** 已向宿主播报过「开始」的调用（id + name/params 指纹双键），避免二次播报。 */
+    this._announcedIds = new Set();
+    this._announcedKeys = new Set();
   }
 
   /**
@@ -100,6 +116,7 @@ class StreamingToolExecutor {
    */
   _startParallel(call) {
     this._parallelCount++;
+    this._announceStart(call);
     // Create per-tool AbortController for sibling abort
     const ac = new AbortController();
     this._toolAbortControllers.set(call.id, ac);
@@ -110,6 +127,47 @@ class StreamingToolExecutor {
       this._toolAbortControllers.delete(call.id);
     });
     this._inflight.set(call.id, promise);
+  }
+
+  /**
+   * Tell the caller this tool is starting now (not when it is queued, not when it
+   * is done). Display-only: a throwing sink must never abort the execution.
+   * @param {ToolCall & { id: string }} call
+   * @private
+   */
+  _announceStart(call) {
+    if (!this._onToolCall) {
+      return;
+    }
+    try {
+      this._onToolCall({ name: call.name, params: call.params, id: call.id });
+    } catch {
+      /* display channel is best-effort */
+    }
+  }
+
+  /**
+   * Record that the host already knows about this call, so the main loop can skip
+   * its own (much later) start notification for the same call.
+   * @param {string|null} id
+   * @param {string|null} key - stable name+params fingerprint
+   */
+  markAnnounced(id, key) {
+    if (id) {
+      this._announcedIds.add(id);
+    }
+    if (key) {
+      this._announcedKeys.add(key);
+    }
+  }
+
+  /**
+   * @param {string|null} id
+   * @param {string|null} key
+   * @returns {boolean}
+   */
+  wasAnnounced(id, key) {
+    return (!!id && this._announcedIds.has(id)) || (!!key && this._announcedKeys.has(key));
   }
 
   /**
@@ -165,6 +223,7 @@ class StreamingToolExecutor {
       this._completed.push(result);
       // 缓存结果供后续 getResultByHash() 复用
       this._resultCache.set(_toolCallHash(call.name, call.params), result);
+      this._resultById.set(call.id, result);
       return result;
     } catch (err) {
       const result = {
@@ -176,6 +235,7 @@ class StreamingToolExecutor {
         elapsed: Date.now() - start,
       };
       this._completed.push(result);
+      this._resultById.set(call.id, result);
 
       // Sibling abort: if a bash/shell tool errors, cancel other inflight tools
       // to prevent wasting time on operations that depend on the failed command
@@ -229,6 +289,7 @@ class StreamingToolExecutor {
     const results = [];
     while (this._serialQueue.length > 0 && !this._aborted) {
       const call = this._serialQueue.shift();
+      this._announceStart(call);
       const result = await this._executeSingle(call);
       results.push(result);
     }
@@ -310,6 +371,18 @@ class StreamingToolExecutor {
     const hash = _toolCallHash(toolName, params);
     return this._resultCache.get(hash) || null;
   }
+
+  /**
+   * 按 block id 取预执行结果 —— 与调用身份一一对应，不受名字/参数规范化差异影响。
+   * @param {string|null} id
+   * @returns {ToolResult|null}
+   */
+  getResultById(id) {
+    if (!id) {
+      return null;
+    }
+    return this._resultById.get(id) || null;
+  }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -357,4 +430,4 @@ function _toolCallHash(toolName, params) {
   return crypto.createHash('sha1').update(s).digest('hex');
 }
 
-module.exports = { StreamingToolExecutor };
+module.exports = { StreamingToolExecutor, toolCallHash: _toolCallHash };

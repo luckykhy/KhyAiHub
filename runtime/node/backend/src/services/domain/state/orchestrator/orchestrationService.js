@@ -27,9 +27,22 @@
 
 const journal = require('./orchestrationJournal');
 const plan = require('./orchestrationPlan');
+const roleLedger = require('./orchestrationRoleLedger');
 
 const DEFAULT_RESULT_CHARS = 2000;
 const DEFAULT_STEP_MAX_RETRIES = 1; // fail → blocked immediately; `replay` is the explicit retry
+
+// Task/result pairs into memory ([RESEARCH-028] §4.1 P1-3): history tasks were not
+// recallable, so "how did we do this kind of task last time" had no carrier across
+// sessions. Default OFF — a new write-side mechanism ships dark (PROCESS-008) until
+// real run results show what is worth remembering.
+const RESULT_MEMORY_FLAG = 'KHY_ORCH_RESULT_MEMORY';
+// `project` (not `reference`): memoryTier maps it to the cross_session tier and its
+// remit is non-derivable decisions/outcomes of ongoing work, which is what a step
+// conclusion is. `reference` is for pointers to external systems.
+const RESULT_MEMORY_TYPE = 'project';
+// Runner results may carry more than the conclusion; only these keys are read.
+const CONCLUSION_KEYS = ['text', 'summary', 'conclusion', 'output', 'message'];
 
 function orchestrateEnabled(env = process.env) {
   const v = env.KHY_ORCHESTRATE;
@@ -37,6 +50,14 @@ function orchestrateEnabled(env = process.env) {
     return true;
   } // default ON
   return !(v === '0' || String(v).toLowerCase() === 'false' || String(v).toLowerCase() === 'off');
+}
+
+function _resultMemoryEnabled(env = process.env) {
+  const raw = env ? env[RESULT_MEMORY_FLAG] : undefined;
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return false;
+  }
+  return ['1', 'true', 'on', 'yes'].includes(String(raw).trim().toLowerCase());
 }
 
 function _parseJson(str, fallback) {
@@ -111,6 +132,19 @@ async function _defaultAgentRunner(step, opts) {
     params.timeout = opts.timeout;
   }
   const res = await AgentTool.execute(params, opts.agentContext || {});
+  // Coordinator-mode dispatch returns BEFORE the worker finishes: AgentTool hands
+  // back status 'running' plus a canned "Worker … completed" message and no output
+  // (spawnWorker does not await _executeWorker). Reporting that as success is what
+  // let `khy orchestrate run` mark a step done while its worker was still
+  // executing, so a non-terminal status is a failure — the step gets re-driven,
+  // never banked on a dispatch receipt.
+  if (res && res.success && res.status && res.status !== 'completed' && res.status !== 'done') {
+    return {
+      success: false,
+      output: '',
+      error: `子代理仍在运行（status=${res.status}）：只拿到派发回执，没有完成证据`,
+    };
+  }
   return {
     success: !!(res && res.success),
     output: res && res.output != null ? String(res.output) : (res && res.message) || '',
@@ -125,6 +159,111 @@ async function _defaultAgentRunner(step, opts) {
 
 function _agentRunner(opts) {
   return typeof opts.agentRunner === 'function' ? opts.agentRunner : _defaultAgentRunner;
+}
+
+/**
+ * Pull the conclusion out of a runner result. Only the final text is a memory
+ * candidate: tool-call counts, iteration tallies, trajectories and other
+ * in-flight byproducts are deliberately dropped, because task noise dilutes the
+ * recall precision of the user's memory store ([RESEARCH-028] §4.1 P1-3
+ * prerequisite "define the result boundary first").
+ *
+ * @param {object} res - successful runner return value
+ * @returns {string} conclusion text, '' when there is none
+ */
+function _resultConclusion(res) {
+  const out = res && res.output;
+  if (typeof out === 'string') {
+    return out.trim();
+  }
+  if (out && typeof out === 'object') {
+    for (const key of CONCLUSION_KEYS) {
+      if (typeof out[key] === 'string' && out[key].trim()) {
+        return out[key].trim();
+      }
+    }
+  }
+  return '';
+}
+
+function _defaultMemoryWriter(entry) {
+  const memoryEngine = require('../../../../services/memoryEngine');
+  return memoryEngine.addStructuredMemory(entry);
+}
+
+/**
+ * Persist one "task → conclusion" pair through memoryEngine's existing public
+ * API. Dedup (memoryContentDedup) and tiering (memoryTier) both live inside
+ * addStructuredMemory, so nothing is re-implemented here; the task prompt is the
+ * memory name, which makes a re-run of the same task update the stored
+ * conclusion in place instead of stacking a near-duplicate.
+ *
+ * Gated off by default and fail-soft throughout: a memory failure must never
+ * travel back into the run.
+ *
+ * @param {object} step - plan step ({id, prompt, role})
+ * @param {object} res - successful runner return value
+ * @param {object} env
+ * @param {object} opts - opts.memoryWriter is the test seam
+ */
+function _rememberStepResult(step, res, env, opts) {
+  if (!_resultMemoryEnabled(env)) {
+    return;
+  }
+  const conclusion = _resultConclusion(res);
+  const task = String((step && step.prompt) || '').trim();
+  if (!conclusion || !task) {
+    return;
+  }
+  const writer = typeof opts.memoryWriter === 'function' ? opts.memoryWriter : _defaultMemoryWriter;
+  try {
+    writer({
+      type: RESULT_MEMORY_TYPE,
+      name: _truncate(task, 60),
+      description: `编排任务结论：${_truncate(conclusion, 80)}`,
+      content: `任务：${_truncate(task, 400)}\n结论：${_truncate(conclusion, 1600)}`,
+    });
+  } catch {
+    /* fail-soft: a memory write failure never breaks the run */
+  }
+}
+
+/**
+ * Record one step outcome into the per-role ledger ([RESEARCH-028] §4.1 P2-4).
+ * The DyLAN selector the report names is deliberately NOT built — its own
+ * conclusion is "no data before it lands", so this only accumulates the success
+ * history a selector would need. Recording only, dark by default, fail-soft for
+ * the same reason as the memory write above.
+ *
+ * @param {object} step - plan step ({id, prompt, role})
+ * @param {object} res - runner return value (success/error)
+ * @param {string} runId
+ * @param {number} startedAt - Date.now() taken before the runner call
+ * @param {object} env
+ * @param {object} opts - opts.roleLedgerSink is the test seam
+ */
+function _recordRoleOutcome(step, res, runId, startedAt, env, opts) {
+  if (!roleLedger.roleLedgerEnabled(env)) {
+    return;
+  }
+  const success = !!(res && res.success);
+  const record = {
+    role: (step && step.role) || 'general',
+    success,
+    runId,
+    stepId: (step && step.id) || null,
+    durationMs: Date.now() - startedAt,
+  };
+  if (!success) {
+    record.error = (res && res.error) || 'sub-agent failed';
+  }
+  const sink =
+    typeof opts.roleLedgerSink === 'function' ? opts.roleLedgerSink : roleLedger.appendRoleOutcome;
+  try {
+    sink(record, env);
+  } catch {
+    /* fail-soft: a ledger write failure never breaks the run */
+  }
 }
 
 function _nextSeq(runId, opts) {
@@ -312,20 +451,37 @@ async function executeRun(runId, opts = {}) {
         ctx
       );
       let res;
+      const startedAt = _now();
       try {
         res = await runner(step, { ...opts, env });
       } catch (e) {
         res = { success: false, error: (e && e.message) || 'sub-agent threw' };
       }
+      _recordRoleOutcome(step, res, runId, startedAt, env, opts);
       if (res && res.success) {
-        tb.completeTask(child.id, _truncate(res.output));
-        executed += 1;
-        _appendJournal(
-          runId,
-          'step_done',
-          { stepId: step.id, childId: child.id, resultPreview: _truncate(res.output, 200) },
-          ctx
-        );
+        // taskBoard.completeTask is evidence-gated: an empty output (including a
+        // canned dispatch receipt surfaced by the runner) returns null, and the
+        // step is booked as failed — the run must not fake success.
+        const completed = tb.completeTask(child.id, _truncate(res.output));
+        if (completed) {
+          executed += 1;
+          _appendJournal(
+            runId,
+            'step_done',
+            { stepId: step.id, childId: child.id, resultPreview: _truncate(res.output, 200) },
+            ctx
+          );
+          _rememberStepResult(step, res, env, opts);
+        } else {
+          const reason = '子代理未返回可核对的完成证据（空产出），完成未过证据门';
+          tb.failTask(child.id, reason);
+          _appendJournal(
+            runId,
+            'step_failed',
+            { stepId: step.id, childId: child.id, error: reason },
+            ctx
+          );
+        }
       } else {
         const reason = String((res && res.error) || 'sub-agent failed');
         tb.failTask(child.id, reason);
