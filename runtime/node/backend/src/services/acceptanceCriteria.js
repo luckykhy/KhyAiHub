@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-147-ZKYGAJ9A
 'use strict';
 
 /**
@@ -355,6 +356,20 @@ function buildAcceptancePack(options = {}) {
       default:
         break;
     }
+  }
+
+  // Keyword mode detection only covers scaffold/analysis/goal wording, so the most
+  // common delivery shape ("fix this bug", "refactor X") arrives with modes: [] and
+  // zero criteria — the harness then skips the delivery gate entirely (it gates on
+  // criteria.length > 0). Fall back to coding_core on edit signals: both of its
+  // criteria are provable from the same tool log, so this cannot invent a failure.
+  if (criteria.length === 0 && signals.hasEditSignals) {
+    activate(
+      'coding_core',
+      'Coding core evidence',
+      CODING_ACCEPTANCE,
+      'Workspace edits detected — core evidence required.'
+    );
   }
 
   const dedupedCriteria = [];

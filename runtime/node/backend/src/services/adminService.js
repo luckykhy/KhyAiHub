@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-157-405ADZWF
 /**
  * Admin Management Service — Protected administration functions.
  *

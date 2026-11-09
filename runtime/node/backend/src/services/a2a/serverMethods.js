@@ -13,8 +13,9 @@
  *      默认实现是 `taskStore.js` 的内存版；将来要换持久化（SQLite/Redis）只换实现，不动语义。
  *   2. **executor 是唯一的业务接缝**：真正"跑 agent"的逻辑由调用方注入
  *      （`createServerMethods({ executor })`）。默认 executor 只回显 ack（诚实占位，
- *      不假装跑了 LLM）。把内置 agent 运行时（14 个 builtin agent）接进来的那一步，
- *      是独立的后续任务，不在 S3 范围内 —— 本层只保证"收到消息→建任务→能查→能撤"的闭环。
+ *      不假装跑了 LLM）。真身是 `executor.js` 的 agent 执行器（一次 runToolUseLoop），
+ *      由启动代码在门控 KHY_A2A_EXECUTOR 下经 `routes/a2a.js` 的 setServerMethods 注入。
+ *      executor 可收第三个参数 ctx（`{ task, onProgress }）` 把中间态写回任务态。
  *   3. **绝不抛不可预期的错**：语义错误（任务不存在）用显式 `A2aNotFoundError` 表达，
  *      由 `routes/a2a.js` 翻译成 404；executor 抛的错 → 任务落 failed 终态，不炸服务。
  *
@@ -33,20 +34,30 @@ class A2aNotFoundError extends Error {
 }
 
 /**
+ * 从 message/send 入参抽出首段文本（text part 以空格相接）。
+ * 默认 executor 与 agent executor（`executor.js`）共用它 —— 两边对"用户说了什么"
+ * 的解读必须一致，否则注入真身后任务输入会悄悄变样。
+ * @param {object} params message/send 的入参（message / configuration / metadata）
+ * @returns {string}
+ */
+function extractMessageText(params) {
+  const msgParts =
+    params && params.message && Array.isArray(params.message.parts) ? params.message.parts : [];
+  return msgParts
+    .filter((p) => p && p.kind === 'text')
+    .map((p) => p.text)
+    .join(' ');
+}
+
+/**
  * 默认 executor：诚实占位。把收到的首段文本回显为一个 text artifact，任务落 completed。
- * 不假装调用 LLM —— 真接入 builtin agent 运行时由注入的 executor 完成。
+ * 不假装调用 LLM —— 真接入 agent 运行时由注入的 executor（`executor.js`）完成。
  * @param {object} task   刚建好的 submitted 任务
  * @param {object} params message/send 的入参（message / configuration / metadata）
  * @returns {Promise<{ state: string, text?: string, artifacts?: object[] }>}
  */
 async function defaultExecutor(task, params) {
-  const msgParts =
-    params && params.message && Array.isArray(params.message.parts) ? params.message.parts : [];
-  const parts = msgParts;
-  const text = parts
-    .filter((p) => p && p.kind === 'text')
-    .map((p) => p.text)
-    .join(' ');
+  const text = extractMessageText(params);
   return {
     state: 'completed',
     text: text ? `received: ${text}` : 'received',
@@ -60,7 +71,8 @@ async function defaultExecutor(task, params) {
  * 构造一组 A2A 服务端方法。
  * @param {object} [opts]
  * @param {object} [opts.store]    TaskStore 实例（默认新建内存版）
- * @param {Function} [opts.executor] 业务执行器（默认 defaultExecutor）
+ * @param {Function} [opts.executor] 业务执行器（默认 defaultExecutor）；签名
+ *   `(task, params, ctx)`，ctx 为 `{ task, onProgress(state, detail) }`（可忽略）
  * @returns {{ store: object, messageSend: Function, tasksGet: Function, tasksCancel: Function }}
  */
 function createServerMethods(opts = {}) {
@@ -93,7 +105,24 @@ function createServerMethods(opts = {}) {
 
     let result;
     try {
-      result = await executor(task, params);
+      // ctx.onProgress：长任务（agent 循环）在跑动期间把中间态写回任务，使 tasks/get
+      // 轮询能看到 working + 迭代进度，而不是只能等终态。默认 executor 忽略第三个
+      // 参数，行为与加它之前逐字节一致。
+      let progressSeq = 0;
+      const onProgress = (state, detail) => {
+        const message = detail && typeof detail.message === 'string' ? detail.message : '';
+        if (!message) return;
+        progressSeq += 1;
+        store.appendStatus(task.id, state, {
+          message: {
+            kind: 'message',
+            role: 'agent',
+            messageId: `p_${task.id}_${progressSeq}`,
+            parts: [{ kind: 'text', text: message }],
+          },
+        });
+      };
+      result = await executor(task, params, { task, onProgress });
     } catch (err) {
       store.appendStatus(task.id, 'failed', {
         message: { kind: 'message', role: 'agent', messageId: `err_${task.id}`, parts: [{ kind: 'text', text: err && err.message ? err.message : 'executor failed' }] },
@@ -141,4 +170,4 @@ function createServerMethods(opts = {}) {
   return { store, messageSend, tasksGet, tasksCancel };
 }
 
-module.exports = { createServerMethods, A2aNotFoundError, defaultExecutor };
+module.exports = { createServerMethods, A2aNotFoundError, defaultExecutor, extractMessageText };

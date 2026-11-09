@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-148-HHGCH9GT
 /**
  * Account Pool Service — manages login tokens/accounts for fast switching.
  *
