@@ -6,8 +6,8 @@
   "_mayDependOn_note": "刻意声明空集：index.js 全文零 require（搬迁前置闸断言过 `require(` 计数为 0）。真身因此可原样住在共享底座而不引入任何边。",
   "fanIn": 2,
   "fanInEvidence": [
-    "services/backend/src/cli/tui/selection.js",
-    "services/backend/src/utils/stripAnsi.js"
+    "runtime/node/backend/src/cli/tui/selection.js",
+    "runtime/node/backend/src/utils/stripAnsi.js"
   ],
   "_fanIn_note": "fanIn=2 为实测（2026-09-28，第 20 批）：以 git grep -F 匹配 require  specifier 尾部 \"ansiSanitizer'\" 的非测试源文件，含 D1 侧（cli/tui/selection.js、壳自身）与 D3 侧（utils/stripAnsi.js）。跨 D1/D3 消费 + 零依赖是本单元住 D3 的依据；它不是第 19 批那类只有单一 D3 消费者的有状态服务。",
   "lifecycle": {
@@ -30,8 +30,8 @@
     "ansiSanitizer/index.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/ansiSanitizer.test.js",
-    "services/backend/tests/stripAnsi.test.js"
+    "runtime/node/backend/tests/ansiSanitizer.test.js",
+    "runtime/node/backend/tests/stripAnsi.test.js"
   ],
   "_move_note": "[RESEARCH-018] P2 第 20 批：摘掉 utils/stripAnsi.js:37 的 D3→D1 反向边（d3-purity −1）。壳与真身导出同一模块对象（require 同一实例），故 cli/tui/selection.js 等 D1 消费者的 require 串逐字节未改。"
 }

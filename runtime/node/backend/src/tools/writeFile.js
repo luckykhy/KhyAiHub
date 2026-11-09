@@ -41,15 +41,17 @@ module.exports = defineTool({
   searchHint: 'create save new file disk persist 写文件 创建文件 保存文件',
   isReadOnly: false,
   isDestructive: (input) => {
-    // Overwriting an existing file is destructive
+    // Overwriting an existing file is destructive.
+    // 判定必须看**真正要写的那个路径**：execute 里会展开 %VAR% / ~ 再写，
+    // 这里若直接 resolve 原始串，`%OUTSIDE%\important.conf` 解析出来不存在，
+    // 就会被判成「非破坏性」，覆盖既有文件不被拦。口径与落点必须一致
+    // （resolveToolPath 是共享单一真源）。
     if (!input?.path) {
       return false;
     }
     try {
-      const resolved = require('path').resolve(
-        process.env.KHYQUANT_CWD || process.cwd(),
-        input.path
-      );
+      const cwd = process.env.KHYQUANT_CWD || process.cwd();
+      const resolved = require('../utils/resolveToolPath')(input.path, cwd);
       return require('fs').existsSync(resolved);
     } catch {
       return false;
@@ -133,6 +135,23 @@ module.exports = defineTool({
 
       const filePath = path.resolve(cwd, rawPath);
       const dir = path.dirname(filePath);
+
+      // 读后写门（与 FileWriteTool 同款）：覆盖一个**既有**文件前必须先读过它。
+      // 否则模型可以在没看过内容的情况下整file覆写，把用户没预期丢掉的段落一起清掉
+      // （这是「静默毁内容」最常见的形态）。新建文件不受此门约束。
+      if (fs.existsSync(filePath)) {
+        try {
+          const { hasRead } = require('./_readTracker');
+          if (!hasRead(filePath)) {
+            return {
+              success: false,
+              error: `File exists but was not read in this session. Use the Read tool first to read "${filePath}" before overwriting it.`,
+            };
+          }
+        } catch {
+          /* _readTracker 不可用 → 跳过检查（best-effort） */
+        }
+      }
 
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
