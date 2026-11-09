@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-070-8WQ9A9R5
 class ProviderPreset {
   final String name;
   final String baseUrl;

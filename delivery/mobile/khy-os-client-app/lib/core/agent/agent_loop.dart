@@ -1,8 +1,10 @@
+// khy-canary: Khy-20261101-057-72W81KS7
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../tools/tool_engine.dart';
 import '../config/app_config.dart';
+import '../config/project_profile.g.dart';
 
 /// Agent execution phases
 enum AgentPhase { planning, executing, reflecting, complete, error }
@@ -157,17 +159,27 @@ class AgentLoop {
       '- ${t.name}: ${t.description}'
     ).join('\n');
 
-    return '''你是 khy-os AI 助手，运行在用户的 Android 手机上。
+    // 画像来自生成物 project_profile.g.dart（单一真源在 node 侧
+    // services/domain/project/projectProfile）。这里不自己渲染第二份——
+    // 两份渲染器必然漂，漂了的症状是手机上的 AI 和 PC 上的 AI 对同一条红线
+    // 给出不同表述，而没有任何一方会报错。
+    //
+    // 用户自己写了系统提示就整段照用，不把画像偷偷接在后面（同 chat_screen_new
+    // 与 stepneoCloud/agentLoop.js 的规则）。
+    final blocks = <String>[
+      if (_config.systemPrompt.isNotEmpty)
+        _config.systemPrompt
+      else ...[
+        '''你是 khy-os AI 助手，运行在用户的 Android 手机上。
 
 你的核心能力：
 1. 理解用户意图并规划执行步骤
 2. 调用手机工具完成任务（打开应用、操作剪贴板、计算等）
-3. 根据工具执行结果决定下一步
-
-可用工具：
-$toolSchemas
-
-执行策略：
+3. 根据工具执行结果决定下一步''',
+        ProjectProfileText.section(),
+      ],
+      '可用工具：\n$toolSchemas',
+      '''执行策略：
 - 对于简单请求（打开某个APP、计算等），直接调用一次工具即可
 - 对于复杂请求（多步操作），分步调用工具
 - 每次工具调用后，根据结果决定是否需要继续
@@ -176,7 +188,9 @@ $toolSchemas
 输出规则：
 - 在调用工具前，简要说明你要做什么
 - 工具调用使用 function calling 格式
-- 完成后给出简洁的中文总结''';
+- 完成后给出简洁的中文总结''',
+    ];
+    return blocks.where((b) => b.trim().isNotEmpty).join('\n\n');
   }
 
   /// Call the LLM API with tool support
