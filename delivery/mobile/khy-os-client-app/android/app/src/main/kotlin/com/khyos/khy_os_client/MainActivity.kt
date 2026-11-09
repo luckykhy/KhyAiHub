@@ -23,6 +23,7 @@ import com.khyos.khy_os_client.bridge.BridgeService
 import com.khyos.khy_os_client.bridge.HttpBridge
 import com.khyos.khy_os_client.bridge.Tools
 import com.khyos.khy_os_client.engine.LocalVisionServer
+import com.khyos.khy_os_client.vfs.VfsBridge
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.Executors
@@ -336,9 +337,22 @@ class MainActivity : FlutterActivity() {
                 "amooAskResult" -> amooAskResult(result)
                 "amooAskStop" -> amooAskStop(result)
 
-                else -> result.notImplemented()
+                // --- VFS（虚拟文件系统桥）---
+                //
+                // 走 VfsBridge.dispatch：它识别方法名、把阻塞 IO 丢到线程池、
+                // 完成后回主线程。设备通道上不认识的方法仍然走 notImplemented，
+                // 所以 device 通道的语义没有被改变。
+                else -> VfsBridge.dispatch(this, call, result)
             }
         }
+
+        // VFS 专用通道。名字与 Dart 侧 lib/core/vfs/vfs_channel.dart 里的
+        // kVfsChannelName 一一对应——通道名不一致的话，Dart 侧每次调用都会
+        // 撞 MissingPluginException，整套 VFS 形同虚设。
+        val vfsChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VfsBridge.CHANNEL)
+        vfsChannel.setMethodCallHandler { call, result -> VfsBridge.dispatch(this, call, result) }
+        // 目录事件监听要由原生往 Dart 推（vfsEvent），得先把通道句柄交给 VfsBridge。
+        VfsBridge.bindChannel(vfsChannel)
     }
 
     // --- App / URL ---
