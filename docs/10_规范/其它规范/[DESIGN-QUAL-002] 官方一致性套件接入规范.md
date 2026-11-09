@@ -75,6 +75,9 @@
 ### 步骤 A — 钉版本（可复现底线）
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：6 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # MCP：锁精确版本，本地与 CI 解析同一包
 npm install --save-dev --save-exact @modelcontextprotocol/conformance@0.1.16
 npm exec -- conformance --version

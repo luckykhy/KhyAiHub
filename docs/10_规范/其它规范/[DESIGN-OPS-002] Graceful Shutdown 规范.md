@@ -247,6 +247,9 @@ async function closeKhyResources() {
 ### 6.1 Dockerfile 配置
 
 ```dockerfile
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 明确终止信号
 STOPSIGNAL SIGTERM
 

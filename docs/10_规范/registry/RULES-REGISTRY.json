@@ -2,9 +2,9 @@
   "meta": {
     "name": "Khy OS 规则单一真源登记表",
     "spec": "[MGMT-STD-008] §1 / §4.2 / §5（第 7 步）",
-    "version": "2.14.0",
-    "updated": "2026-10-10",
-    "note": "本文件是规则语义的「指针 + 摘要」登记表，规则语义真源以各条目 ssot 为准。ssot = 语义真源（规则由谁撰写，通常为文档；代码即真源时为代码文件）；enforcement = 可选的执行/常量真源（守卫脚本或持有阈值的代码）。新增 / 修订规则须先写入此处，并经 check-gov-rules.js（GOV-TOOL-006）校验：字段齐全（含 nature/grants/benefit）、ID 全局唯一、domain/priority/status 合法、权力必有约束边界配对；再由 check-rules-registry.js（TOOLING-007）校验登记表与真源的 RULES-REGISTRY 标记行双向可达。 [2026-09-16] 补登 22 条此前由检查器执行但登记表未收录的外部规则（constraint 逐条取自各规则设计文档原文）；此前盲区见 scripts/ruleguard/lib/externalRules.js。 [2026-09-17] 新增 DOCS-004（README 内容规范）：本期 gate=manual 无执行器 —— 先定判据、后建执行器，机械化子集设计见该规则 ssot §9 第 2 步。 [2026-09-17] 新增 RUNTIME-005（CLI 错误标准化）：网关失败此前在 CLI 出口被截断成散文，机器码/通道名/钉选元原因全部丢失，见 [DESIGN-ARCH-114]。 [2026-09-18] 新增 SKILL-001（Skill 编写规范）、AGENT-001（子智能体交接契约）、PROCESS-006（新机制落地四阶段），三者均为 [DESIGN-ARCH-121] §K-01~K-12 的落地产出；本期 gate=manual 无执行器 —— 先定判据、后建执行器。SKILL-001 的核心判据来自实测：43 技能在 128K 窗口下 maxDescLen 被压到 62 字符，与「触发短语须在前 60 字符内」几乎相等，解释了技能「写了但检索不到」的静默失效。 [2026-09-18] 新增 PROCESS-007（引导式搜索与压缩保留清单，B4/B5）：本仓 docs/ 230+ 设计文档 + 796 行 AGENTS.md + 12,105 行 toolUseLoopCore.js 使「全量读」字面不可行；B5 的压缩保留清单实测**已具备机制通路**——contextCompressor.js:745 任务锚点保护 + :624 PreCompact hook 支持 additionalContext，故可由 .khy/hooks.json 注入而非仅作文档约定。ssot 为 CLAUDE.md §二 B4/B5（章程内真源，非独立文档）。 [2026-09-18] 新增 RUNTIME-007/008/009（AI 修改三模态反馈契约：修复先复现 / 新增先提问 / 删除先报部位），执行器 scripts/ci/check-agent-feedback.js，语义真源 [DESIGN-ARCH-113]。三者按 PROCESS-006 定阶段：当前 gate=advisory、severity=advisory（S1「观察者」，恒 exit 0 只记录），执行器内 STAGE 常量与登记表 severity 同步升阶。注意：设计文档 §8 原建议的 RUNTIME-005/006 已被 CLI 错误标准化与网关首选通道占用，故顺延至 007/008/009。 [2026-09-18 订正] RUNTIME-007/008/009 的 gate 由 advisory 改为 commit：`gateIncluded()` 的 GATE_ORDER 中 advisory(=4) > release(=2)，故 gate=advisory 的规则在任何门档都不会被执行（登记但不生效）。S1「观察者」用「gate=commit（会跑）+ severity=advisory（只记录不阻断）」表达，与 LAYOUT-002 同构。\n2026-09-18：新增 PROCESS-008「新机制落地阶段可校验」，落地 [DESIGN-PROCESS-002] §6 标为「待建」的 PP-1/PP-2/PP-3 守卫（exec: scripts/ci/check-rollout-stage.js）。PROCESS-006 本身保持 gate=manual 不变——它管辖 PP-5（争议样本裁决）等无法自动化的人工部分，PROCESS-008 只接管可机器校验的六条。另：本守卫自身也是「新机制」，按 PP-1 须先过 S1 观察期，故 severity=advisory、只记录不阻断；它已在 FEATURE-OWNERSHIP.json 的 rollout 段登记为 S1。\n2026-09-18 新增 PROCESS-102「下一步最该做什么决策标准」：五档瀑布 + 档内 WSJF 轻评分 + 平局停问，替代登记顺序决胜。\n2026-09-19 新增 PROCESS-009「提交时机判据（到点就提交）」：补上 Git 治理唯一缺失的一半（格式与内容已有 DESIGN-GIT-001/002/003 成对覆盖，唯独没有「什么时候该提交」的判据）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录），执行器 scripts/ci/check-commit-timing.js 内 STAGE 常量恒 exit 0；阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=commit-timing-contract）。\n2026-09-20 新增 PROCESS-010「软件著作权就绪」（ssot: [DESIGN-IP-001] 软件著作权就绪规范）：回应「项目存在大量 AI 痕迹，如何保持软著可申请性」。核心判据是登记审查拒绝的是「没有人的意愿」而非「用了 AI」，也不是「AI 做了架构决策」，故本规则不限制 AI 使用比例、也不限制 AI 的决策权，只要求人的意愿可追溯、产出结果可解释（人的意愿作为导向、提交信息不带 AI 作者署名、结果人能接住、第三方代码不得进登记材料、软件名称版本五处一致）。按 PROCESS-006 PP-1 路径，本期 gate=manual 无执行器——先定判据、后建执行器。[2026-09-20 v1.1.0] 放宽：删除原「AI 不得自行决定架构方向、算法选型、数据模型」与「不得在无人逐文件审查的情况下批量生成整个模块」两条限制，改为以「人的意愿是否作为导向」为唯一判据；C-X2 的 800 行判据删除，改为纯可解释性判据。\n[2026-09-21 v1.2.0] **执行器落地：gate 由 manual 升级为 pr，severity=advisory（S1 观察者）**，执行器 scripts/ci/check-copyright-readiness.js，入口 npm run check:copyright。7 项机器可判检查：C-M3 提交署名（只查 --range 新增提交，不碰历史 88 条）/ C-X3 第三方与生成物不进材料 / C-MAT3 无占位名 / C-MAT2 名称与版本一致 / C-X2 .vue 样式块占比 / C-E4 自留底档。两个登记真源 docs/10_规范/registry/COPYRIGHT.json（全称/简称/版本/著作权人）与 COPYRIGHT-MATERIALS.json（哪两端进材料）。按 PROCESS-006 走 S1：执行器 STAGE 常量恒 exit 0，error 级 finding 经 degradeForStage() 降为 WARN 且不参与放行（满足 PROCESS-008 PP-3「S1/S2 不得派生为 blocking」）；机制登记在 FEATURE-OWNERSHIP.json 的 copyright-readiness-guard（stage=S1），升阶只改执行器的 STAGE 常量、不需改接线。已与官方 scan_copyright_readiness.py 对账一致（.vue style≥50% = 20；全量 AI 署名 = 88/251 = 35.1%）。C-M4（痕迹内容是否成立）与 C-X1（抽 3 处能解释）为人工判据，**故意不设执行器**——机器只能验证「文件存在」，判不了语义，设守卫只会制造形式主义。\n2026-09-22 新增 PROCESS-011「规范-实现变更判定」（ssot: [DESIGN-PROCESS-003] 规范-实现变更判定规范）：补上一处空白——仓库原有四套处理「变动」的机制（[MGMT-STD-008] §4.2/§4.3/§4.5、[DESIGN-PROCESS-002] 四阶段、[DESIGN-SOURCING-001] B-L2、[DESIGN-QUAL-001] QUAL-2），但没有一套处理「不一致」：即规范写的与实现做的冲突时该改哪一边。四条触发场景 T1 规范空转 / T2 实现越界 / T3 双轨分叉 / T4 外部倒逼，四问顺序决策 Q1（该存在吗）→ Q2（可机械判定吗）→ Q3（哪边已被消费）→ Q4（多严重），Q2×Q3 决策矩阵，四种归宿（改规范/改实现/双改/接受偏差）。把 [MGMT-STD-008] §2.4「版本轨道真源 = 代码 > 文档」（裁决 X-002）这条单点先例推广为 Q3 的通用判据。本期 gate=manual 无执行器——四问裁决本质是判断而非机械比对，设守卫只会制造形式主义；可机械化的子集（T1 类残留数 / T3-e 漂移数 / deviation 四字段齐全性）列为 OPEN-1，落地 3 个月后按 [DESIGN-PROCESS-002] 评估是否建 S1 观察器。注意：登记时 PROCESS-009 已被「提交时机判据」占用、PROCESS-010 已被「软件著作权就绪」占用，故新条目顺延为 011。\n2026-09-22 新增 TOOLING-010「维护成本可观测」（ssot: [DESIGN-ARCH-127] khyos 可维护性诊断与减负方案）：把「仓库难以维护」从主观抱怨变成可复现数字，并防止减负成果反弹。四条读数：新增规则硬触点（实测 13 处，其中 6 处可派生）、改一条规则的波及文件数（样本 check-repo-layout 被 20 个文件引用）、文档 md:html 配对率（906:895）、gate 分布与永不执行条数（advisory 15 条）。按 PROCESS-006 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），恒 exit 0。配对叶子 scripts/lib/touchCostProbe.js（纯叶子、零 IO、6 个 measure* 纯函数），走盘层 scripts/ci/check-touch-cost.js。入口 npm run check:touch-cost / check:touch-cost:json。同批新增 TOOLING-009「规则接线完整性」（exec: scripts/ci/check-rule-scaffold.js，叶子 scripts/lib/ruleScaffold.js，19 项单测含双向断言与 2 次反向验证），二者共同构成 M1「触点压缩」的度量与缺口发现能力。\n[2026-09-23] 新增 PROCESS-013「构建与交付依赖须原生官方源」：回应「khyos 支持 docker-compose up 一键部署，pip/npm 与各种依赖必须原生依赖、不允许指定阿里云等镜像」。实测起点：runtime/node/backend/Dockerfile 3 处 `-i mirrors.aliyun.com`、6 个 package-lock.json 共 3005 条 resolved 指向 registry.npmmirror.com、两处运行时 fail-open 到镜像（android_build._mirror_bases / node_provisioner._mirror_base 的 `except: china = True`）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-native-registry.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=native-registry-guard）。同时新增 docker-compose.yml（默认只起 backend，前端与 ai-backend 走 profiles）与 .env.example。边界：用户本机 ~/.npmrc 的网络加速、构建机的 registry-mirrors 不属管辖范围；运行时镜像改为**显式 opt-in**（KHY_USE_CN_MIRROR=1），不再是 locale/TZ 猜测 —— 判据是「默认是否原生」，不是「是否允许存在」。\n[2026-09-23] 新增 TOOLING-011「工作流节点类型接线一致」：nodeCatalog 是节点类型的声明 SSOT 且被 5 处消费，**唯独执行器不消费**（自己硬编码 switch，default 分支把未知类型标 skipped 后继续走 default 端口 ⇒ 整图报 completed 而该节点什么都没做）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-workflow-node-parity.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=workflow-node-parity-guard）。实测（2026-09-23）：目录 11 型 == 执行器 11 型，零存量差异 ⇒ 本守卫是纯防回归闸。\n2026-09-24 新增 PROCESS-014「可交付性基线」：回应「仓库功能堆砌、交付才是最重要的」。这是本仓**第一条指向外部可交付性**的规则 —— 此前 93 条规则全部守「仓库内部自洽」，75 个 check-* 里 0 个检查「发布物是否存在」，实测 dist/ 从未产出、2 处 sigstore 签名失败被 `|| echo` 吞掉、SBOM 只 upload-artifact。语义真源成对：[DESIGN-DELIV-001] 定义 D1–D10 判据、[DESIGN-DELIV-002] 定义任务面与交付律并承载阈值 JSON 块（阈值外部化，检查器不得硬编码）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-delivery-baseline.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=delivery-baseline-guard）。该文 §4.3 关于「D1/D4/D7 引用权威外部判定、可直进 S3」的主张**未自动采纳**，留待显式人工裁决 —— 守门人不得自己给自己发豁免。另：PROCESS-014 的编号顺延自主序列（001–011/013），未并入 101/102 的「决策/提案权」支线。\n[2026-09-29] 新增 RUNTIME-011「TUI 动画节拍三方一致」：补上一处「规范写了但没人执行」的空白 —— TUI 节拍有三个可能各说各话的落点（规范表 tui/AGENTS.md §3.3 / perfTunables 默认值 / 组件兜底字面量），三者漂移时**没有任何一处会报错**，用户只看到「动画一顿一顿」。实测起点：Spinner 规范 80ms、实现 160ms，漂移 ×2.00 长期无人发现（[DESIGN-PERF-004] §2.1）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-tui-cadence.js 的 STAGE 常量恒 exit 0，判定叶子 scripts/lib/tuiCadenceGuard.js（纯函数、零 IO、绝不抛），阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=tui-cadence-guard）。九条判据对应 [DESIGN-PERF-004] §7 铁律 R1–R3；已裁决保留的漂移（Spinner 160）走 KNOWN_DRIFTS 白名单降 info 并附出处 —— 否则观察者长期挂着一条消不掉的 warning 会教会人无视它（告警疲劳比不报更糟）。⚠ S3 升档前置：[DESIGN-PERF-004] §6 A1（降低单帧成本）已落地，否则会逼人把节拍值改回去交差。⚠ 本规则的 ssot 文档 [DESIGN-PERF-004] 目前仍是未跟踪（??）状态，登记表与真源必须同批提交。",
+    "version": "2.15.0",
+    "updated": "2026-10-30",
+    "note": "本文件是规则语义的「指针 + 摘要」登记表，规则语义真源以各条目 ssot 为准。ssot = 语义真源（规则由谁撰写，通常为文档；代码即真源时为代码文件）；enforcement = 可选的执行/常量真源（守卫脚本或持有阈值的代码）。新增 / 修订规则须先写入此处，并经 check-gov-rules.js（GOV-TOOL-006）校验：字段齐全（含 nature/grants/benefit）、ID 全局唯一、domain/priority/status 合法、权力必有约束边界配对；再由 check-rules-registry.js（TOOLING-007）校验登记表与真源的 RULES-REGISTRY 标记行双向可达。 [2026-09-16] 补登 22 条此前由检查器执行但登记表未收录的外部规则（constraint 逐条取自各规则设计文档原文）；此前盲区见 scripts/ruleguard/lib/externalRules.js。 [2026-09-17] 新增 DOCS-004（README 内容规范）：本期 gate=manual 无执行器 —— 先定判据、后建执行器，机械化子集设计见该规则 ssot §9 第 2 步。 [2026-09-17] 新增 RUNTIME-005（CLI 错误标准化）：网关失败此前在 CLI 出口被截断成散文，机器码/通道名/钉选元原因全部丢失，见 [DESIGN-ARCH-114]。 [2026-09-18] 新增 SKILL-001（Skill 编写规范）、AGENT-001（子智能体交接契约）、PROCESS-006（新机制落地四阶段），三者均为 [DESIGN-ARCH-121] §K-01~K-12 的落地产出；本期 gate=manual 无执行器 —— 先定判据、后建执行器。SKILL-001 的核心判据来自实测：43 技能在 128K 窗口下 maxDescLen 被压到 62 字符，与「触发短语须在前 60 字符内」几乎相等，解释了技能「写了但检索不到」的静默失效。 [2026-09-18] 新增 PROCESS-007（引导式搜索与压缩保留清单，B4/B5）：本仓 docs/ 230+ 设计文档 + 796 行 AGENTS.md + 12,105 行 toolUseLoopCore.js 使「全量读」字面不可行；B5 的压缩保留清单实测**已具备机制通路**——contextCompressor.js:745 任务锚点保护 + :624 PreCompact hook 支持 additionalContext，故可由 .khy/hooks.json 注入而非仅作文档约定。ssot 为 CLAUDE.md §二 B4/B5（章程内真源，非独立文档）。 [2026-09-18] 新增 RUNTIME-007/008/009（AI 修改三模态反馈契约：修复先复现 / 新增先提问 / 删除先报部位），执行器 scripts/ci/check-agent-feedback.js，语义真源 [DESIGN-ARCH-113]。三者按 PROCESS-006 定阶段：当前 gate=advisory、severity=advisory（S1「观察者」，恒 exit 0 只记录），执行器内 STAGE 常量与登记表 severity 同步升阶。注意：设计文档 §8 原建议的 RUNTIME-005/006 已被 CLI 错误标准化与网关首选通道占用，故顺延至 007/008/009。 [2026-09-18 订正] RUNTIME-007/008/009 的 gate 由 advisory 改为 commit：`gateIncluded()` 的 GATE_ORDER 中 advisory(=4) > release(=2)，故 gate=advisory 的规则在任何门档都不会被执行（登记但不生效）。S1「观察者」用「gate=commit（会跑）+ severity=advisory（只记录不阻断）」表达，与 LAYOUT-002 同构。\n2026-09-18：新增 PROCESS-008「新机制落地阶段可校验」，落地 [DESIGN-PROCESS-002] §6 标为「待建」的 PP-1/PP-2/PP-3 守卫（exec: scripts/ci/check-rollout-stage.js）。PROCESS-006 本身保持 gate=manual 不变——它管辖 PP-5（争议样本裁决）等无法自动化的人工部分，PROCESS-008 只接管可机器校验的六条。另：本守卫自身也是「新机制」，按 PP-1 须先过 S1 观察期，故 severity=advisory、只记录不阻断；它已在 FEATURE-OWNERSHIP.json 的 rollout 段登记为 S1。\n2026-09-18 新增 PROCESS-102「下一步最该做什么决策标准」：五档瀑布 + 档内 WSJF 轻评分 + 平局停问，替代登记顺序决胜。\n2026-09-19 新增 PROCESS-009「提交时机判据（到点就提交）」：补上 Git 治理唯一缺失的一半（格式与内容已有 DESIGN-GIT-001/002/003 成对覆盖，唯独没有「什么时候该提交」的判据）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录），执行器 scripts/ci/check-commit-timing.js 内 STAGE 常量恒 exit 0；阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=commit-timing-contract）。\n2026-09-20 新增 PROCESS-010「软件著作权就绪」（ssot: [DESIGN-IP-001] 软件著作权就绪规范）：回应「项目存在大量 AI 痕迹，如何保持软著可申请性」。核心判据是登记审查拒绝的是「没有人的意愿」而非「用了 AI」，也不是「AI 做了架构决策」，故本规则不限制 AI 使用比例、也不限制 AI 的决策权，只要求人的意愿可追溯、产出结果可解释（人的意愿作为导向、提交信息不带 AI 作者署名、结果人能接住、第三方代码不得进登记材料、软件名称版本五处一致）。按 PROCESS-006 PP-1 路径，本期 gate=manual 无执行器——先定判据、后建执行器。[2026-09-20 v1.1.0] 放宽：删除原「AI 不得自行决定架构方向、算法选型、数据模型」与「不得在无人逐文件审查的情况下批量生成整个模块」两条限制，改为以「人的意愿是否作为导向」为唯一判据；C-X2 的 800 行判据删除，改为纯可解释性判据。\n[2026-09-21 v1.2.0] **执行器落地：gate 由 manual 升级为 pr，severity=advisory（S1 观察者）**，执行器 scripts/ci/check-copyright-readiness.js，入口 npm run check:copyright。7 项机器可判检查：C-M3 提交署名（只查 --range 新增提交，不碰历史 88 条）/ C-X3 第三方与生成物不进材料 / C-MAT3 无占位名 / C-MAT2 名称与版本一致 / C-X2 .vue 样式块占比 / C-E4 自留底档。两个登记真源 docs/10_规范/registry/COPYRIGHT.json（全称/简称/版本/著作权人）与 COPYRIGHT-MATERIALS.json（哪两端进材料）。按 PROCESS-006 走 S1：执行器 STAGE 常量恒 exit 0，error 级 finding 经 degradeForStage() 降为 WARN 且不参与放行（满足 PROCESS-008 PP-3「S1/S2 不得派生为 blocking」）；机制登记在 FEATURE-OWNERSHIP.json 的 copyright-readiness-guard（stage=S1），升阶只改执行器的 STAGE 常量、不需改接线。已与官方 scan_copyright_readiness.py 对账一致（.vue style≥50% = 20；全量 AI 署名 = 88/251 = 35.1%）。C-M4（痕迹内容是否成立）与 C-X1（抽 3 处能解释）为人工判据，**故意不设执行器**——机器只能验证「文件存在」，判不了语义，设守卫只会制造形式主义。\n2026-09-22 新增 PROCESS-011「规范-实现变更判定」（ssot: [DESIGN-PROCESS-003] 规范-实现变更判定规范）：补上一处空白——仓库原有四套处理「变动」的机制（[MGMT-STD-008] §4.2/§4.3/§4.5、[DESIGN-PROCESS-002] 四阶段、[DESIGN-SOURCING-001] B-L2、[DESIGN-QUAL-001] QUAL-2），但没有一套处理「不一致」：即规范写的与实现做的冲突时该改哪一边。四条触发场景 T1 规范空转 / T2 实现越界 / T3 双轨分叉 / T4 外部倒逼，四问顺序决策 Q1（该存在吗）→ Q2（可机械判定吗）→ Q3（哪边已被消费）→ Q4（多严重），Q2×Q3 决策矩阵，四种归宿（改规范/改实现/双改/接受偏差）。把 [MGMT-STD-008] §2.4「版本轨道真源 = 代码 > 文档」（裁决 X-002）这条单点先例推广为 Q3 的通用判据。本期 gate=manual 无执行器——四问裁决本质是判断而非机械比对，设守卫只会制造形式主义；可机械化的子集（T1 类残留数 / T3-e 漂移数 / deviation 四字段齐全性）列为 OPEN-1，落地 3 个月后按 [DESIGN-PROCESS-002] 评估是否建 S1 观察器。注意：登记时 PROCESS-009 已被「提交时机判据」占用、PROCESS-010 已被「软件著作权就绪」占用，故新条目顺延为 011。\n2026-09-22 新增 TOOLING-010「维护成本可观测」（ssot: [DESIGN-ARCH-127] khyos 可维护性诊断与减负方案）：把「仓库难以维护」从主观抱怨变成可复现数字，并防止减负成果反弹。四条读数：新增规则硬触点（实测 13 处，其中 6 处可派生）、改一条规则的波及文件数（样本 check-repo-layout 被 20 个文件引用）、文档 md:html 配对率（906:895）、gate 分布与永不执行条数（advisory 15 条）。按 PROCESS-006 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），恒 exit 0。配对叶子 scripts/lib/touchCostProbe.js（纯叶子、零 IO、6 个 measure* 纯函数），走盘层 scripts/ci/check-touch-cost.js。入口 npm run check:touch-cost / check:touch-cost:json。同批新增 TOOLING-009「规则接线完整性」（exec: scripts/ci/check-rule-scaffold.js，叶子 scripts/lib/ruleScaffold.js，19 项单测含双向断言与 2 次反向验证），二者共同构成 M1「触点压缩」的度量与缺口发现能力。\n[2026-09-23] 新增 PROCESS-013「构建与交付依赖须原生官方源」：回应「khyos 支持 docker-compose up 一键部署，pip/npm 与各种依赖必须原生依赖、不允许指定阿里云等镜像」。实测起点：runtime/node/backend/Dockerfile 3 处 `-i mirrors.aliyun.com`、6 个 package-lock.json 共 3005 条 resolved 指向 registry.npmmirror.com、两处运行时 fail-open 到镜像（android_build._mirror_bases / node_provisioner._mirror_base 的 `except: china = True`）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-native-registry.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=native-registry-guard）。同时新增 docker-compose.yml（默认只起 backend，前端与 ai-backend 走 profiles）与 .env.example。边界：用户本机 ~/.npmrc 的网络加速、构建机的 registry-mirrors 不属管辖范围；运行时镜像改为**显式 opt-in**（KHY_USE_CN_MIRROR=1），不再是 locale/TZ 猜测 —— 判据是「默认是否原生」，不是「是否允许存在」。\n[2026-09-23] 新增 TOOLING-011「工作流节点类型接线一致」：nodeCatalog 是节点类型的声明 SSOT 且被 5 处消费，**唯独执行器不消费**（自己硬编码 switch，default 分支把未知类型标 skipped 后继续走 default 端口 ⇒ 整图报 completed 而该节点什么都没做）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-workflow-node-parity.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=workflow-node-parity-guard）。实测（2026-09-23）：目录 11 型 == 执行器 11 型，零存量差异 ⇒ 本守卫是纯防回归闸。\n2026-09-24 新增 PROCESS-014「可交付性基线」：回应「仓库功能堆砌、交付才是最重要的」。这是本仓**第一条指向外部可交付性**的规则 —— 此前 93 条规则全部守「仓库内部自洽」，75 个 check-* 里 0 个检查「发布物是否存在」，实测 dist/ 从未产出、2 处 sigstore 签名失败被 `|| echo` 吞掉、SBOM 只 upload-artifact。语义真源成对：[DESIGN-DELIV-001] 定义 D1–D10 判据、[DESIGN-DELIV-002] 定义任务面与交付律并承载阈值 JSON 块（阈值外部化，检查器不得硬编码）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-delivery-baseline.js 的 STAGE 常量恒 exit 0，阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=delivery-baseline-guard）。该文 §4.3 关于「D1/D4/D7 引用权威外部判定、可直进 S3」的主张**未自动采纳**，留待显式人工裁决 —— 守门人不得自己给自己发豁免。另：PROCESS-014 的编号顺延自主序列（001–011/013），未并入 101/102 的「决策/提案权」支线。\n[2026-09-29] 新增 RUNTIME-011「TUI 动画节拍三方一致」：补上一处「规范写了但没人执行」的空白 —— TUI 节拍有三个可能各说各话的落点（规范表 tui/AGENTS.md §3.3 / perfTunables 默认值 / 组件兜底字面量），三者漂移时**没有任何一处会报错**，用户只看到「动画一顿一顿」。实测起点：Spinner 规范 80ms、实现 160ms，漂移 ×2.00 长期无人发现（[DESIGN-PERF-004] §2.1）。按 PROCESS-006 PP-1 定为 S1 观察者：gate=commit（会跑）+ severity=advisory（只记录不阻断），执行器 scripts/ci/check-tui-cadence.js 的 STAGE 常量恒 exit 0，判定叶子 scripts/lib/tuiCadenceGuard.js（纯函数、零 IO、绝不抛），阶段登记在 FEATURE-OWNERSHIP.json 的 rollout.mechanisms[]（id=tui-cadence-guard）。九条判据对应 [DESIGN-PERF-004] §7 铁律 R1–R3；已裁决保留的漂移（Spinner 160）走 KNOWN_DRIFTS 白名单降 info 并附出处 —— 否则观察者长期挂着一条消不掉的 warning 会教会人无视它（告警疲劳比不报更糟）。⚠ S3 升档前置：[DESIGN-PERF-004] §6 A1（降低单帧成本）已落地，否则会逼人把节拍值改回去交差。⚠ 本规则的 ssot 文档 [DESIGN-PERF-004] 目前仍是未跟踪（??）状态，登记表与真源必须同批提交。\n2026-10-30 新增 TOOLING-012「洋葱分层重量与芯纯净」(ssot: [DESIGN-ARCH-197])：回应「khyos 太重（无论体积还是逻辑）」。仓库原有四轴（位置 LAY-005 / 域方向 DOMAIN-DEPS / 模块边界 ARCHITECTURE-POLICY / 依赖体积 dependency-size）全部不回答「这系统有多重」—— 实测同一套位置规则下后端从 10 万行涨到 89.7 万行，守卫全绿。本规则补的是**重量轴**：按加载时机分 L0 芯 / L1 膜 / L2 皮，判据是冷闭包（仅顶层 require 边）文件数与行数 + 芯纯净性 + 视觉皮不渗入芯。实测依据：全入口冷闭包 3 文件 2602 行 vs 可达闭包 2170 文件 731286 行（差 281 倍），故必须区分顶层与懒加载 require，否则重量数字无意义。执行器 scripts/ci/check-core-layers.js，契约真源 docs/10_规范/registry/CORE-LAYERS.json。补上既有守卫盲区：archDebtScan R1 只扫 src/services/**→src/cli/**，而实测倒挂在 src/tools/**→src/cli/**（AgentTool→cli/ai.js）——「芯被外壳污染」此前无人看得见。同批落地第一刀：8 个终端几何/能力纯叶子从 cli/tui/ 下沉到 utils/terminal/，芯的可达闭包中视觉皮文件 8→0。",
     "domains": [
       "LAYOUT",
       "RUNTIME",
@@ -17,7 +17,7 @@
       "SECURITY",
       "DOCS"
     ],
-    "ruleCount": 96
+    "ruleCount": 101
   },
   "rules": [
     {
@@ -1512,6 +1512,8 @@
         "runtime/node/backend/src/services/externalAgentDirective.js",
         "runtime/node/backend/src/tools/AgentTool/claudeDelegation.js",
         "runtime/node/backend/src/services/domain/collab/proactiveCollaboration/delegationPlanner.js",
+        "runtime/node/backend/src/cli/aiMessageBuilder.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
         "runtime/node/backend/src/services/gateway/adapters/**",
         "docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md"
       ],
@@ -1525,7 +1527,8 @@
           "delegation-open-ended-permission",
           "delegation-nudge-gate",
           "delegation-boundary-not-called",
-          "delegation-bypass-spawn"
+          "delegation-bypass-spawn",
+          "delegation-cascade-ungated"
         ]
       }
     },
@@ -1841,7 +1844,7 @@
       "priority": "P2",
       "status": "active",
       "trigger": "新建或修改任一 AI 指令文件时",
-      "constraint": "指令文件必须落在读取器会扫到的位置（不得放 `_产物/` 等资产暂存区）；单文件字符数不得超过其 tier 的读取预算（own/compat 8000、eco 4000，真源 instructionFileService.js 与 instructionEcosystemRegistry.js），超限即静默截断；同一事实只允许一处真源，其余必须写成指针；非根指令文件不得自行声明优先级，优先级只能在登记表以字面路径登记；文件内引用的仓库路径、`npm run` 脚本、`khy` 子命令与 `[域-NNN]` 编号必须真实可达；`khy-metadata:pointer` 机器管理块不得手改且必须 START/END 成对；示意性命令必须落在可识别语境（✗/✓ 对照块，或紧邻标题含「示例/映射」字样）。",
+      "constraint": "指令文件必须落在读取器会扫到的位置（不得放 `_产物/` 等资产暂存区）；单文件字符数不得超过其 tier 的读取预算（own 8000、eco 4000，真源 instructionFileService.js 与 instructionEcosystemRegistry.js；compat 不设预算、全文注入，真源 constants/prompts.js），超限即截断并在注入文本留标记；同一事实只允许一处真源，其余必须写成指针；非根指令文件不得自行声明优先级，优先级只能在登记表以字面路径登记；文件内引用的仓库路径、`npm run` 脚本、`khy` 子命令与 `[域-NNN]` 编号必须真实可达；`khy-metadata:pointer` 机器管理块不得手改且必须 START/END 成对；示意性命令必须落在可识别语境（✗/✓ 对照块，或紧邻标题含「示例/映射」字样）。",
       "grants": "授权维护者在预算内自行拆分指令文件（细节移入 docs/ 只留指针）即视为合规，无需事前审批；授权在登记表以字面路径登记某指令文件的优先级后，该文件即可合法声明覆盖关系。",
       "benefit": "把「写了但 AI 读不到」的静默失效变成可判定 finding，作者在写作时就知道边界；预算、候选清单、可达性三类判据全部从既有源码常量与注册表派生，不新增第二真源；存量走基线棘轮只降不升，不阻塞在途工作。",
       "exception": "上游第三方克隆（.research-tmp/）与用户级目录（~/.khyquant/khy.md）不在管辖范围；docs/ 下的普通文档不受本条约束（归 DOCS-001 / DOCS-002）。",
@@ -3537,6 +3540,107 @@
         "script": "scripts/ci/check-doc-numbers.js",
         "findings": [
           "doc-number-value-mismatch"
+        ]
+      }
+    },
+    {
+      "id": "TOOLING-012",
+      "name": "洋葱分层重量与芯纯净",
+      "domain": "TOOLING",
+      "nature": "约束为主，兼福利",
+      "scope": "runtime/node/backend/src/**（后端模块图）、apps/khyos-desktop/src/**、delivery/web/**、delivery/channel/**、runtime/node/backend/src/cli/tui/**（视觉层）",
+      "priority": "P1",
+      "status": "active",
+      "trigger": "新增/移动/删除后端或视觉层模块、新增跨层 require、或改动冷启动入口依赖图时",
+      "constraint": "运行时按加载时机分三层：L0 芯（冷启动即入内存）、L1 膜（被调用才装载）、L2 皮（终端/桌面/Web 表现层）。L0 不得依赖 L1/L2；L1 不得依赖 L2；L1 入口的可达闭包不得渗入视觉皮文件；逻辑侧不得经皮侧 re-export 门面引用通用能力。L0/L1 的冷闭包（仅顶层 require 边）文件数与行数不得超过 CORE-LAYERS.json 的基线，只许减不许增。视觉侧同构：V0 视觉芯的首屏冷闭包（仅静态 import/require 边）不得超基线；应懒加载的低频页面不得出现在 V0/V1 的首屏冷闭包里；视觉层方向矩阵（visual.edgePolicy）必须被消费 —— 芯(V0) 不得依赖膜(V1) 与皮(V2)，膜(V1) 不得依赖皮(V2)。运行时重量（体积轴）：version / doctor --quick / ai-lite 三个场景实际加载的第一方模块数、行数、字节数与外部依赖量不得超过 CORE-LAYERS.json 的 runtimeFootprint 预算；重量闸门（归因：非入口加载者中单点可达重量最大者）不得变大。运行时读数跨会话会漂，故硬预算只给文件数（实测波动 0），行数容差 1%、字节数容差 5%。 设计文档 [DESIGN-ARCH-197] 里引用的基线数字必须与 CORE-LAYERS.json 一致（warning 级：漂移要报，但不阻断整个 PR 构建）—— 「文档说的」与「机器做的」各说各话正是本契约要消灭的漂移本身。 入口顶层 require 预算：CLI 入口（bin/khy.js）中不在任何函数体内的 require（= 模块求值时必被执行，AST 口径）其第一方模块数量与合计行数不得超过 CORE-LAYERS.json 的 entryBudget 基线，只许减不许增 —— 这份重量由**所有命令**承担（含 khy --version），不会因为「那条路径用不到」而消失。 重量分摊预算：运行时顶层边可达（装载期求值）与懒加载边可达（只在被触发路径上求值）的模块数与行数不得超过 runtimeFootprint.weightLayers 的基线 —— 分项计量才知道该动哪一头，且该预算必须真的被守卫消费（写进契约却无人读取等于没有约束）。 分类口径：静态侧「顶层 vs 懒加载」用 AST 函数作用域判定（scripts/lib/requireGraph.js），运行时侧用「加载者是否正在求值」判定（scripts/lib/runtimeFootprint.js）；解析器不可用时必须显式报 core-classifier-degraded，不得静默降级为更差的判定。视觉侧同源：加载边分类同样用 AST（scripts/lib/visualLayerGraph.js），并显式处理视觉侧特有语义 —— ESM import 与 export ... from 是提升的（恒为装载期边）、类型导入被擦除（不算运行时边）、import() 恒为动态边；回退到括号深度口径必须显式报 visual-classifier-degraded。",
+      "grants": "见约束边界：授权按本规则自行决定新模块落在芯/膜/皮哪一层，以及通用能力应下沉到 utils/ 还是留在表现层。",
+      "benefit": "系统重量从主观抱怨变成可机判的数字，且不反弹；跨层依赖在提交前即被拦下，而不是等到闭包涨到几十万行后才发现。逻辑与视觉两轴同构治理：「芯里混进外壳」与「首屏里混进用时才需要的面板」是同一个病的两种表现，共用一套判据语义。补上体积轴的事实侧度量：静态闭包是估算（「如果全加载会进多少」），运行时 require.cache 才是事实（「实际进了多少」）；加载归因进一步回答「谁把重量拽进来的」——静态图答不了「哪条懒加载边被触发了」。方向矩阵被消费才叫契约：此前 visual.edgePolicy 定义了却无人执行，是一份没人执行的契约（等于没有约束）。 文档↔契约对账判据（doc-contract-drift）：契约被 --update 更新后，文档里的旧数字会被自动报出来 —— 本轮实测到两处（91,540 → 91,608、50,860 → 50,928），人不会记得同步，而守卫会。 2026-10-31 的一次口径级自我纠错（本条规则自身的度量曾算错）：「顶层 vs 懒加载」的旧判定用「require 处的括号深度」，而括号深度 ≠ 函数作用域 —— 顶层 try{}/if{} 块里的 require 与多行解构赋值里的 require（require( 落在花括号内）被误判成懒加载（低估）；更致命的是旧口径的 braceDepthMap 不识别正则字面量，正则里的括号被当成代码结构，从文件中第一个正则起深度整体偏移、后面所有函数体内的 require 都被误判成顶层（虚高，实测 toolUseLoopCore.js 第 360 行起 96% 的字符深度失真）。偏移方向取决于文件里先出现哪种字符，因而不可预测 —— 这不是某个文件写得不规范，是判据本身没有定义。两个方向都错意味着这样的数字不能当预算：一个只涨不跌的棘轮，若基线本身错了，它锁住的是错误。修正后静态侧用 AST 函数作用域、运行时侧用「加载者是否正在求值」的运行时真相（不往被测进程塞解析器，否则污染外部依赖与 heap 读数），全部基线重算并写明「是纠正还是放松」。另补两条此前无人消费的契约：entryBudget（入口顶层 require —— 所有命令都付的那一份）与 weightLayers.budget（顶层边/懒加载边分摊 —— lite 路径实测顶层边可达 332 文件/14.4 万行 vs 懒加载边 145 文件/5.8 万行，直接指认网关适配器按需加载这一刀）。",
+      "exception": "动态 require（require(path.join(...))）不在静态图的判定范围内，不据此判违规；测试夹具与 build/dist 产物不计入闭包；纯 re-export 门面（单行转发到真源）视为层内归属。",
+      "version": "1.2.0 (2026-10-31)",
+      "formerly": "无",
+      "ssot": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-197] 剥洋葱：Khy OS 最小核心与分层重量治理.md",
+      "enforcement": "scripts/ci/check-core-layers.js + scripts/ci/check-runtime-footprint.js",
+      "owner": "architecture-team",
+      "gate": "pr",
+      "paths": [
+        "runtime/node/backend/src/**",
+        "runtime/node/backend/bin/**",
+        "scripts/ci/check-core-layers.js",
+        "docs/10_规范/registry/CORE-LAYERS.json"
+      ],
+      "exec": {
+        "script": "scripts/ci/check-core-layers.js",
+        "args": [],
+        "findings": [
+          "core-purity",
+          "core-budget-files",
+          "core-budget-lines",
+          "skin-into-core",
+          "facade-cross-layer",
+          "visual-budget-files",
+          "visual-budget-lines",
+          "skin-into-visual-core",
+          "visual-layer-direction",
+          "inversion-persists",
+          "inversion-lazy",
+          "inversion-resolved",
+          "runtime-footprint-files",
+          "runtime-footprint-lines",
+          "runtime-footprint-bytes",
+          "runtime-footprint-external-files",
+          "runtime-footprint-external-bytes",
+          "runtime-footprint-unmeasurable",
+          "runtime-footprint-probe-error",
+          "runtime-attribution-gate-files",
+          "runtime-attribution-gate-lines",
+          "runtime-attribution-gate-moved",
+          "runtime-weight-layer-top-files",
+          "runtime-weight-layer-top-lines",
+          "runtime-weight-layer-lazy-files",
+          "runtime-weight-layer-lazy-lines",
+          "core-entry-toplevel-requires",
+          "core-entry-toplevel-lines",
+          "core-entry-missing",
+          "core-classifier-degraded",
+          "visual-classifier-degraded",
+          "doc-contract-drift"
+        ]
+      }
+    },
+    {
+      "id": "LAYOUT-008",
+      "name": "数据事实单一真源与影子副本归并",
+      "domain": "LAYOUT",
+      "nature": "约束为主，兼福利",
+      "scope": "仓库内被两处及以上共用的数据事实（端口、端点、计数、清单等）：真源之外的再声明判影子副本、值不同判矛盾、登记的授权镜像与真源不一致判镜像失步；判据真源 docs/10_规范/registry/DATA-SSOT.json（登记真源位置与授权镜像，不登记值）",
+      "priority": "P1",
+      "status": "active",
+      "trigger": "新增或修改任何被多处共用的数据事实、或新增授权镜像时；或运行 npm run check:ssot-data 时",
+      "constraint": "同一事实只允许有一个真源，其余位置必须从真源取值；物理上无法 import 的跨包镜像必须登记在 DATA-SSOT.json 的 mirrors 里并写明理由，且必须与真源锁步；真源文件、真值指针、镜像登记任一失效时报红；登记表中不得另存一份值。",
+      "grants": "授权在 S1 阶段据候选清单人工判断是否归并；授权把跨包镜像登记为授权镜像而不强行跨包重构；授权对同名不同义的事实用 detect.paths 划定作用域而不改代码。",
+      "benefit": "把「单一真源」从纪律变成可判定的不变式：实测首轮命中 10 处同包影子副本（全在 runtime/node/backend 内，能 import 却各自写死）与 1 处真源自相矛盾（规则登记表 meta.ruleCount 声明 96 而实有 99），归并后影子副本归零；6 个跨包授权镜像全部锁步，仓内无登记表的逐字节副本。",
+      "exception": "测试目录与测试文件不判（测试固定规范值是防护，不是第二真源）；文档里的数值主张由 DOCS-006/DOCS-007 负责；无标识符锚点的字面量兜底判不出；同名不同义的事实（如协作桥端口与手机桥端口）以 detect.paths 划界而非全局判定；S1 阶段只记录不阻断。",
+      "version": "1.0.0 (2026-10-30)",
+      "formerly": "无",
+      "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-009] 数据单一真源与影子副本归并规范.md",
+      "owner": "architecture-team",
+      "gate": "pr",
+      "severity": "advisory",
+      "paths": [
+        "runtime/**",
+        "delivery/**",
+        "apps/**",
+        "scripts/**",
+        "docs/10_规范/registry/DATA-SSOT.json"
+      ],
+      "exec": {
+        "script": "scripts/ci/check-ssot-data.js",
+        "findings": [
+          "ssot-shadow-copy",
+          "ssot-value-contradiction",
+          "ssot-mirror-drift",
+          "ssot-source-shadow-copy",
+          "ssot-self-contradiction"
         ]
       }
     }
