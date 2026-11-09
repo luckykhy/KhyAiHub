@@ -8,7 +8,7 @@
 
 const mockExecuteTool = jest.fn();
 
-jest.mock('../../src/services/toolCalling', () => ({
+jest.mock('../../src/services/tool/toolCalling', () => ({
   executeTool: mockExecuteTool,
 }));
 

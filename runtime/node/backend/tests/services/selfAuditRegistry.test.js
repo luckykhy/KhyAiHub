@@ -146,7 +146,7 @@ test('KhySelfTool exposes a self_audit action wired to selfAuditRegistry', () =>
     'selfProfile (facet seam) requires selfAuditRegistry'
   );
 
-  // 且链路是**活的**:实跑该分面必须真的拿到 registry 的 5 条项。
+  // 且链路是**活的**:实跑该分面必须真的拿到 registry 的 6 条项(2026-10-13 起含 #8)。
   const sp = require('../../src/services/selfProfile');
   const env = sp.getSelfFacet('self_audit', { env: {} });
   assert.strictEqual(env.ok, true);
@@ -197,7 +197,7 @@ test('formatForSystemPrompt without verification stays legacy (no badges/protoco
 test('evidenceAnchors declare the exact mitigation modules/gates and are frozen', () => {
   const expected = {
     '#1': { modules: ['directiveComposer', 'directiveRegistryAudit'], gates: [] },
-    '#4': { modules: ['toolClusterActivation'], gates: ['KHY_TOOL_CLUSTER_ACTIVATION'] },
+    '#4': { modules: ['toolClusterActivation', 'tool/deferredRecallIndex'], gates: ['KHY_TOOL_CLUSTER_ACTIVATION', 'KHY_TOOL_RECALL_INDEX'] },
     '#5': { modules: ['../tools/configureErrorShape'], gates: [] },
     '#6': { modules: ['visionRoutingTruth'], gates: ['KHY_VISION_ROUTING_TRUTH'] },
     '#7': { modules: ['commandOverlapAudit', 'domain/catalog/commandCatalog/commandCatalog'], gates: ['KHY_COMMAND_PRIMARY_PANEL'] },

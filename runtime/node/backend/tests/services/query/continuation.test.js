@@ -31,6 +31,10 @@ describe('isResumableError', () => {
       expect(cont.isResumableError(et)).toBe(false);
     });
 
+  test('NON-resumable: delegation_denied (retry re-runs the denied cascade and re-prompts approval)', () => {
+    expect(cont.isResumableError('delegation_denied')).toBe(false);
+  });
+
   test.each(['timeout', 'network', 'process', 'empty_reply', 'unknown', 'rate_limit'])(
     'resumable: %s', (et) => {
       expect(cont.isResumableError(et)).toBe(true);
