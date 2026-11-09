@@ -9,7 +9,13 @@
  *   ~/.khyquant/khy.md (or KHY.md) → global user instructions
  *   <git-root>/khy.md (or KHY.md)  → project-level instructions
  *   <git-root>/.khy/rules/*.md     → rule files
- *   <cwd>/khy.md (or KHY.md)       → directory-level (when cwd ≠ git-root)
+ *   <dir>/khy.md (or KHY.md)       → every directory from cwd up to (excluding)
+ *                                    git-root, nearest first
+ *
+ * The directory tier walks cwd → git-root instead of probing cwd alone: CC reads
+ * its memory files at every level of that chain, and a two-point probe left a
+ * session started in a subdirectory with neither intermediate nor root
+ * instructions.
  *
  * Limits:
  *   - Single file: max 8000 chars (truncated with warning)
@@ -30,6 +36,7 @@ const _ecoReg = require('./instructionEcosystemRegistry');
 const {
   detectExternalIncludes,
   buildExternalIncludeWarning,
+  INCLUDE_LINE_SOURCE,
 } = require('./instructionExternalIncludes');
 
 const MAX_FILE_CHARS = 8000;
@@ -47,17 +54,45 @@ const COMPAT_FILENAMES = ['CLAUDE.md', '.claude/CLAUDE.md', 'AGENTS.md', 'agent.
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
+// git rev-parse costs ~100ms on Windows and one prompt build asks for the same
+// root several times (own tier, compat chain, section cache key), so the verdict
+// is memoized per cwd for a short TTL — same shape as prompts.js's _isGitCache.
+// A root that changes mid-session (repo moved, fresh git init) self-heals on the
+// next expiry.
+const _gitRootCache = new Map();
+const _GIT_ROOT_TTL_MS = 30000;
+
 function findGitRoot(from) {
-  try {
-    const root = execSync('git rev-parse --show-toplevel', {
-      cwd: from,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-    return root || null;
-  } catch {
-    return null;
+  const key = String(from || '');
+  const hit = _gitRootCache.get(key);
+  if (hit && Date.now() - hit.at < _GIT_ROOT_TTL_MS) {
+    return hit.root;
   }
+  let root = null;
+  try {
+    root =
+      execSync('git rev-parse --show-toplevel', {
+        cwd: from,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim() || null;
+  } catch {
+    root = null;
+  }
+  _gitRootCache.set(key, { root, at: Date.now() });
+  return root;
+}
+
+// Truncation must leave a trace inside the injected text. A bare slice hands the
+// model the head of a rule file while it believes it read all of it, and the only
+// existing notice (`/memory`'s "(截断)") is terminal-only — it never reaches the
+// prompt. The notice itself spends the budget so content.length stays <= maxChars;
+// the ecosystem tier's ECO_MAX_FILE_CHARS assertion depends on that invariant.
+function _truncationNotice(originalChars, maxChars) {
+  return (
+    `\n\n[TRUNCATED: 该文件原文 ${originalChars} 字符，超过单文件上限 ${maxChars}，` +
+    `本段只保留开头部分；完整内容用 Read 工具直接读该文件]`
+  );
 }
 
 function readFileSafe(filePath, maxChars = MAX_FILE_CHARS) {
@@ -73,7 +108,8 @@ function readFileSafe(filePath, maxChars = MAX_FILE_CHARS) {
     let content = fs.readFileSync(filePath, 'utf-8');
     let truncated = false;
     if (content.length > maxChars) {
-      content = content.slice(0, maxChars);
+      const notice = _truncationNotice(content.length, maxChars);
+      content = content.slice(0, Math.max(0, maxChars - notice.length)) + notice;
       truncated = true;
     }
     return { content, truncated, size: stat.size };
@@ -219,6 +255,51 @@ function _appHome() {
   }
 }
 
+// Directories from cwd up to git-root INCLUSIVE, nearest first. Shared by the
+// own directory tier below and the CLAUDE.md/AGENTS.md compat discovery in
+// constants/prompts.js, so both walk the same chain (CC reads its memory files
+// at every level of it). git rev-parse prints forward slashes on Windows while
+// path.resolve yields backslashes, so both ends go through one normalized form
+// before comparison — otherwise the walk silently bails on a cosmetic separator
+// difference and the root tier is lost again. Yields [cwd] when there is no git
+// root or cwd sits outside it, which is the pre-traversal behaviour.
+// @param {string} [gitRoot] pass the already-resolved root to skip the git probe.
+function instructionDirsToGitRoot(cwd, gitRoot) {
+  if (gitRoot === undefined) {
+    gitRoot = findGitRoot(cwd);
+  }
+  if (!gitRoot) {
+    return [cwd];
+  }
+  const norm = (p) => {
+    const resolved = path.resolve(p);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const root = norm(gitRoot);
+  const chain = [];
+  let current = cwd;
+  for (let depth = 0; depth < 64; depth++) {
+    const currentNorm = norm(current);
+    if (currentNorm === root) {
+      chain.push(gitRoot);
+      return chain;
+    }
+    if (!currentNorm.startsWith(root + path.sep)) {
+      // cwd sits outside the repo (other drive, symlink escape, …): keep the old
+      // single-directory probe instead of jumping straight to the root.
+      return [cwd];
+    }
+    chain.push(current);
+    const resolved = path.resolve(current);
+    const parent = path.dirname(resolved);
+    if (parent === resolved) {
+      break;
+    }
+    current = parent;
+  }
+  return [cwd];
+}
+
 // ── 生态指令层(蹭规则生态)────────────────────────────────────────────────
 //
 // 别的 agent 早就在这个仓库里写好了「该怎么干活」的规则文件(AGENTS.md / CLAUDE.md /
@@ -230,8 +311,79 @@ function _appHome() {
 // 作用域过滤)见 instructionEcosystemRegistry 的文档。门控关 → sources 为空 → 整段空转,
 // discoverInstructionFiles 的返回值与接入前逐字节相同。(_ecoReg 在文件顶部 import 组里。)
 
+// 生态层总预算(ECO_MAX_TOTAL_CHARS)砍下来的告知,与 _truncationNotice 同构,但说清
+// 这是层总预算而不是单文件上限 —— 否则模型会把「只剩开头」当成规则本来就这么短。
+// alsoFileCapped 时一并说明该文件先被 4000 砍过一次,两刀叠加不能只报一刀。
+// notice 自身占用预算,content.length <= ECO_MAX_FILE_CHARS 的不变式因此保持。
+function _ecoBudgetNotice(originalChars, alsoFileCapped) {
+  return (
+    `\n\n[TRUNCATED: 生态层总预算 ${_ecoReg.ECO_MAX_TOTAL_CHARS} 字符已用尽，` +
+    `本文件只保留开头部分（原文 ${originalChars} 字符` +
+    `${alsoFileCapped ? '，且已超单文件上限先被截过一次' : ''}）；` +
+    `完整内容用 Read 工具直接读该文件]`
+  );
+}
+
+// 生态层丢失汇总。发现层丢掉的文件(作用域/预算/目录上限)不进 results,注入文本里
+// 就零标记 —— 模型分不清「这条规则本来不存在」和「存在但被这一层丢了」。有丢弃时
+// 在生态结果头部插一条 notice 条目(见 discoverEcosystemInstructionFiles),由
+// loadInstructions 作为独立段渲染。每类原因最多列 5 个路径,防病态仓库把汇总刷爆。
+function _ecoDropNotice(dropped, injectedCount) {
+  const reasons = {
+    scoped: 'globs/applyTo/inclusion 作用域规则，非全局生效',
+    budget: `生态层总预算 ${_ecoReg.ECO_MAX_TOTAL_CHARS} 字符已用尽`,
+    'dir-cap': `每目录最多 ${_ecoReg.ECO_MAX_FILES_PER_DIR} 个文件`,
+  };
+  const lines = [
+    `⚠ [ECO-SUMMARY] 生态指令层：共发现 ${dropped.length + injectedCount} 个第三方规则文件，` +
+      `注入 ${injectedCount} 个，未注入 ${dropped.length} 个；未注入规则的完整内容请用 Read 工具直接读对应文件`,
+  ];
+  for (const [reason, why] of Object.entries(reasons)) {
+    const paths = dropped.filter((d) => d.reason === reason).map((d) => d.path);
+    if (paths.length === 0) {
+      continue;
+    }
+    const shown = paths.slice(0, 5).join('、');
+    const more = paths.length > 5 ? ` 等 ${paths.length} 个` : '';
+    lines.push(`⚠ [SKIPPED: ${reason}] ${shown}${more}（${why}）`);
+  }
+  return {
+    path: '',
+    content: lines.join('\n'),
+    level: 'ecosystem',
+    ecosystem: '',
+    label: '生态指令层汇总',
+    kind: 'notice',
+    size: 0,
+    truncated: false,
+  };
+}
+
+// 生态文件里的裸 `@path` 行:resolveIncludes 只对 khy 自己的指令文件展开(见
+// discoverInstructionFiles 第 4 步的注释),第三方文件的 @ 引用原样进提示词。
+// 模型看到一行 `@foo/bar.md` 会以为内容已内联,这里按注入文本里真实存在的行计数
+// (截断后的),由 loadInstructions 在条目旁渲染一行说明。行形状与 resolveIncludes
+// 完全一致,直接复用 instructionExternalIncludes 的同一份真源。
+const _INCLUDE_LINE = new RegExp(INCLUDE_LINE_SOURCE, 'gm');
+function _countIncludeRefs(content) {
+  const hits = String(content || '').match(_INCLUDE_LINE);
+  return hits ? hits.length : 0;
+}
+
+// 文件型 source 的存在性预检:不存在就不进候选。否则预算死掉时会把从没存在过的
+// 路径记进「整体缺席」名单 —— 汇总行对一个幽灵文件说谎,比不汇总更糟。
+function _ecoFileExists(filePath) {
+  try {
+    return fs.existsSync(filePath) && fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
 /**
- * 列出一个目录型 source 里可采纳的文件(按文件名排序,截断到 maxFiles)。
+ * 列出一个目录型 source 里的全部规则文件(按文件名排序)。
+ * 每目录 maxFiles 的上限由调用方施加并记账:超出的那份要记为 dir-cap 丢失,
+ * 不能在这里静默截掉。
  * @returns {string[]} 绝对路径
  */
 function _listEcoDirFiles(src) {
@@ -243,7 +395,6 @@ function _listEcoDirFiles(src) {
       .readdirSync(src.path)
       .filter((f) => src.exts.some((ext) => f.toLowerCase().endsWith(ext)))
       .sort()
-      .slice(0, src.maxFiles)
       .map((f) => path.join(src.path, f));
   } catch {
     return [];
@@ -253,12 +404,17 @@ function _listEcoDirFiles(src) {
 /**
  * 发现生态规则文件。纯壳:所有「在哪、要不要收」的判断都在 registry 叶子里。
  *
+ * 先列全候选文件(含每目录 maxFiles 上限之外的),再逐个读:预算死掉时要把「还没
+ * 轮到」的文件也记进 dropped,否则整体缺席在注入文本里照样零标记。
+ *
  * @param {string} projectDir 项目根(git-root || cwd)
  * @param {Set<string>} seen  已收录的 path.resolve 结果(去重,khy 自己的文件优先)
- * @returns {Array<{path,content,level:'ecosystem',ecosystem,label,kind,truncated,size}>}
+ * @returns {Array<{path,content,level:'ecosystem',ecosystem,label,kind,truncated,size,includeRefs}>}
+ *   有丢失时首个元素是 kind:'notice' 的汇总条目(无对应文件,path 为空)。
  */
 function discoverEcosystemInstructionFiles(projectDir, seen) {
   const results = [];
+  const dropped = [];
   let budget = _ecoReg.ECO_MAX_TOTAL_CHARS;
   try {
     const sources = _ecoReg.instructionEcosystemSources({
@@ -266,51 +422,80 @@ function discoverEcosystemInstructionFiles(projectDir, seen) {
       projectDir,
       env: process.env,
     });
+    const candidates = [];
     for (const src of sources) {
+      if (src.mode === 'dir') {
+        for (const [index, filePath] of _listEcoDirFiles(src).entries()) {
+          if (index >= src.maxFiles) {
+            dropped.push({ path: filePath, reason: 'dir-cap' });
+            continue;
+          }
+          candidates.push({ src, filePath });
+        }
+        continue;
+      }
+      if (_ecoFileExists(src.path)) {
+        candidates.push({ src, filePath: src.path });
+      }
+    }
+    for (const [index, candidate] of candidates.entries()) {
       if (budget <= 0) {
+        for (const rest of candidates.slice(index)) {
+          dropped.push({ path: rest.filePath, reason: 'budget' });
+        }
         break;
       }
-      const files = src.mode === 'dir' ? _listEcoDirFiles(src) : [src.path];
-      for (const filePath of files) {
-        if (budget <= 0) {
-          break;
-        }
-        const resolved = path.resolve(filePath);
-        if (seen.has(resolved)) {
-          continue;
-        }
-        const entry = readFileSafe(filePath, _ecoReg.ECO_MAX_FILE_CHARS);
-        if (!entry) {
-          continue;
-        }
-        // 带作用域的规则(Cursor alwaysApply/globs、Copilot applyTo、Kiro inclusion)
-        // 只收「全局生效」的那些 —— khy 的提示词没有 per-file 作用域。
-        if (src.scoped && !_ecoReg.evaluateScopedRule(entry.content).accept) {
-          continue;
-        }
-        let content = entry.content;
-        if (content.length > budget) {
-          content = content.slice(0, budget);
-        }
-        if (!content.trim()) {
-          continue;
-        }
-        budget -= content.length;
-        seen.add(resolved);
-        results.push({
-          path: filePath,
-          content,
-          level: 'ecosystem',
-          ecosystem: src.ecosystem,
-          label: src.label,
-          kind: src.kind,
-          truncated: entry.truncated || content.length < entry.content.length,
-          size: entry.size,
-        });
+      const { src, filePath } = candidate;
+      const resolved = path.resolve(filePath);
+      // seen 命中说明 khy 原生层已经收录同一文件 —— 没有丢,只是换了一层,不计入 dropped。
+      if (seen.has(resolved)) {
+        continue;
       }
+      const entry = readFileSafe(filePath, _ecoReg.ECO_MAX_FILE_CHARS);
+      if (!entry) {
+        continue;
+      }
+      // 带作用域的规则(Cursor alwaysApply/globs、Copilot applyTo、Kiro inclusion)
+      // 只收「全局生效」的那些 —— khy 的提示词没有 per-file 作用域。
+      if (src.scoped && !_ecoReg.evaluateScopedRule(entry.content).accept) {
+        dropped.push({ path: filePath, reason: 'scoped' });
+        continue;
+      }
+      let content = entry.content;
+      if (content.length > budget) {
+        const notice = _ecoBudgetNotice(content.length, entry.truncated);
+        // 剩余预算连一条声明都装不下时,这个文件整体出局:记 budget 后把 budget 归零,
+        // 由下一轮候选的 budget<=0 分支统一记账收尾。硬塞整条 notice 会让 budget 变负,
+        // 生态层总预算被撑爆最多一条声明的长度。
+        if (notice.length >= budget) {
+          dropped.push({ path: filePath, reason: 'budget' });
+          budget = 0;
+          continue;
+        }
+        content = content.slice(0, budget - notice.length) + notice;
+      }
+      if (!content.trim()) {
+        continue;
+      }
+      budget -= content.length;
+      seen.add(resolved);
+      results.push({
+        path: filePath,
+        content,
+        level: 'ecosystem',
+        ecosystem: src.ecosystem,
+        label: src.label,
+        kind: src.kind,
+        truncated: entry.truncated || content.length < entry.content.length,
+        size: entry.size,
+        includeRefs: _countIncludeRefs(content),
+      });
     }
   } catch {
     // 生态层永远不能拖垮 khy 自己的指令发现
+  }
+  if (dropped.length > 0) {
+    results.unshift(_ecoDropNotice(dropped, results.length));
   }
   return results;
 }
@@ -377,26 +562,28 @@ function discoverInstructionFiles(cwd) {
     }
   }
 
-  // 3. CWD: <cwd>/khy.md 或 KHY.md (only if different from git root)
-  const cwdHit = findFirstInstructionFile(cwd);
-  if (cwdHit) {
-    const cwdResolved = path.resolve(cwdHit.path);
-    if (!seen.has(cwdResolved)) {
-      const content = resolveIncludes(cwdHit.file.content, path.dirname(cwdHit.path));
-      results.push({
-        path: cwdHit.path,
-        content,
-        level: 'directory',
-        truncated: cwdHit.file.truncated,
-        size: cwdHit.file.size,
-        externalIncludes: detectExternalIncludes(
-          cwdHit.file.content,
-          path.dirname(cwdHit.path),
-          cwd
-        ),
-      });
-      seen.add(cwdResolved);
+  // 3. Directory: every <dir>/khy.md from cwd up to (excluding) git-root,
+  //    nearest first. The git-root entry itself is already in `seen` from the
+  //    project tier above, so the shared inclusive chain dedups naturally.
+  for (const dir of instructionDirsToGitRoot(cwd, gitRoot)) {
+    const dirHit = findFirstInstructionFile(dir);
+    if (!dirHit) {
+      continue;
     }
+    const dirResolved = path.resolve(dirHit.path);
+    if (seen.has(dirResolved)) {
+      continue;
+    }
+    const content = resolveIncludes(dirHit.file.content, path.dirname(dirHit.path));
+    results.push({
+      path: dirHit.path,
+      content,
+      level: 'directory',
+      truncated: dirHit.file.truncated,
+      size: dirHit.file.size,
+      externalIncludes: detectExternalIncludes(dirHit.file.content, path.dirname(dirHit.path), dir),
+    });
+    seen.add(dirResolved);
   }
 
   // 4. 生态层:别的 agent 已经写好的规则文件(最低优先级,门控默认开;关 → 空数组)。
@@ -414,6 +601,18 @@ function discoverInstructionFiles(cwd) {
  * @param {string} [cwd]
  * @returns {string} merged instructions (empty string if none found)
  */
+function _droppedByBudgetNotice(dropped) {
+  // 生态层汇总条目(kind:'notice')没有对应文件,混进「未注入」名单只会多个空路径。
+  const paths = dropped.filter((f) => f.kind !== 'notice').map((f) => f.path);
+  if (paths.length === 0) {
+    return '';
+  }
+  return (
+    `⚠ [BUDGET] 指令总预算 ${MAX_TOTAL_CHARS} 字符已用尽，以下文件未注入：` +
+    `${paths.join('、')}；完整内容用 Read 工具直接读对应文件`
+  );
+}
+
 function loadInstructions(cwd) {
   const files = discoverInstructionFiles(cwd);
   if (files.length === 0) {
@@ -431,7 +630,14 @@ function loadInstructions(cwd) {
   const sections = [];
   let totalChars = 0;
 
-  for (const file of files) {
+  for (const [index, file] of files.entries()) {
+    // 生态层丢失汇总自带完整文本、没有对应文件:不走下面的 header/预算/扫描,
+    // 作为独立段渲染即可(它排在生态块头部,见 discoverEcosystemInstructionFiles)。
+    if (file.kind === 'notice') {
+      sections.push(file.content);
+      totalChars += file.content.length;
+      continue;
+    }
     // 生态文件必须**标明出处**:模型看到的是第三方文本,来源要可归因(也让用户一眼看出
     // 哪条约束不是自己写的)。
     const label =
@@ -469,12 +675,30 @@ function loadInstructions(cwd) {
       sections.push(extWarn);
     }
 
-    // Enforce total limit
+    // 生态文件的 `@path` 行刻意不展开(discoverInstructionFiles 第 4 步),原样行进
+    // 提示词会让模型以为内容已内联 —— 在条目旁边说清,与上面的外引告知同形。
+    if (file.level === 'ecosystem' && file.includeRefs > 0) {
+      sections.push(
+        `⚠ [INCLUDE-NOT-EXPANDED] ${file.path}：含 ${file.includeRefs} 行 @ 路径引用未展开` +
+          `（生态层不替第三方规则拉取外部文件）；需要时用 Read 工具读取对应文件`
+      );
+    }
+
+    // Enforce total limit. A file that never makes it in (or is cut by the
+    // remaining budget) must say so in the prompt — a silently dropped rule file
+    // is indistinguishable from one that was never written.
     const remaining = MAX_TOTAL_CHARS - totalChars - header.length - 2;
     if (remaining <= 0) {
+      const dropNotice = _droppedByBudgetNotice(files.slice(index));
+      if (dropNotice) {
+        sections.push(dropNotice);
+      }
       break;
     }
     if (content.length > remaining) {
+      sections.push(
+        `⚠ [BUDGET] ${file.path} 超出指令总预算：原文 ${content.length} 字符，仅注入前 ${remaining} 字符；完整内容用 Read 工具直接读该文件`
+      );
       content = content.slice(0, remaining);
     }
 
@@ -483,6 +707,10 @@ function loadInstructions(cwd) {
     totalChars += section.length;
 
     if (totalChars >= MAX_TOTAL_CHARS) {
+      const dropNotice = _droppedByBudgetNotice(files.slice(index + 1));
+      if (dropNotice) {
+        sections.push(dropNotice);
+      }
       break;
     }
   }
@@ -595,14 +823,29 @@ function scanForPromptInjection(text) {
  * @returns {Array<{ path: string, level: string, size: number, truncated: boolean }>}
  */
 function getInstructionSummary(cwd) {
-  return discoverInstructionFiles(cwd).map(({ path: p, level, size, truncated, label }) => ({
-    path: p,
-    level,
-    size,
-    truncated,
-    // 生态层带上出处名(如 'Cursor'),让 /memory 能显示这条规则是蹭谁的。
-    ...(label ? { label } : {}),
-  }));
+  // kind:'notice' 是生态层丢失汇总,不是文件 —— /memory 只列真实文件,保持原输出。
+  return discoverInstructionFiles(cwd)
+    .filter((f) => f.kind !== 'notice')
+    .map(({ path: p, level, size, truncated, label }) => ({
+      path: p,
+      level,
+      size,
+      truncated,
+      // 生态层带上出处名(如 'Cursor'),让 /memory 能显示这条规则是蹭谁的。
+      ...(label ? { label } : {}),
+    }));
+}
+
+// Compat-tier search dirs: the cwd → git-root chain (nearest first) plus the
+// home dir. The /memory summary below must list exactly what
+// getProjectInstructionsSection injects, so it walks the same chain as the
+// compat reader in constants/prompts.js instead of probing [cwd, home] alone.
+function _compatSearchDirs(cwd, homeDir) {
+  const dirs = new Set(instructionDirsToGitRoot(cwd));
+  if (homeDir !== cwd) {
+    dirs.add(homeDir);
+  }
+  return [...dirs];
 }
 
 function getCompatInstructionSummary(cwd) {
@@ -610,12 +853,8 @@ function getCompatInstructionSummary(cwd) {
   const results = [];
   const seen = new Set();
   const homeDir = os.homedir();
-  const searchDirs = [cwd];
-  if (homeDir !== cwd) {
-    searchDirs.push(homeDir);
-  }
 
-  for (const dir of searchDirs) {
+  for (const dir of _compatSearchDirs(cwd, homeDir)) {
     for (const filename of COMPAT_FILENAMES) {
       const filePath = path.join(dir, filename);
       const resolved = path.resolve(filePath);
@@ -711,7 +950,7 @@ function _resolveInstructionTarget(target, scope, cwd) {
  * @param {'khy'|'agent'} [opts.target='khy'] - target file family (agent → agent.md).
  * @param {string} [opts.cwd]
  * @param {Date} [opts.now] - injectable clock for deterministic tests.
- * @returns {{ success:boolean, file?:string, created?:boolean, note?:string, scope?:string, error?:string, threats?:Array }}
+ * @returns {{ success:boolean, file?:string, created?:boolean, note?:string, scope?:string, error?:string, threats?:Array, warning?:string }}
  */
 function appendQuickMemory(note, opts = {}) {
   const text = String(note || '').trim();
@@ -768,6 +1007,21 @@ function appendQuickMemory(note, opts = {}) {
     }
 
     fs.writeFileSync(file, content, 'utf-8');
+    // Past MAX_FILE_CHARS the overflow never reaches the prompt (readFileSafe keeps
+    // only the head), so a plain `success: true` would tell the user "remembered"
+    // about a note the model can never see. Report it instead of staying silent.
+    if (content.length > MAX_FILE_CHARS) {
+      return {
+        success: true,
+        file,
+        created,
+        note: text,
+        scope,
+        warning:
+          `已写入 ${file}，但该文件现有 ${content.length} 字符，超过单文件上限 ${MAX_FILE_CHARS}：` +
+          `超出部分不会进入系统提示词，本条记忆可能到不了模型。请精简该文件，或拆分到 .khy/rules/*.md`,
+      };
+    }
     return { success: true, file, created, note: text, scope };
   } catch (err) {
     return { success: false, error: `写入失败: ${err.message}` };
@@ -786,6 +1040,7 @@ module.exports = {
   discoverRuleFiles,
   discoverEcosystemInstructionFiles,
   scanForPromptInjection,
+  instructionDirsToGitRoot,
   FILENAMES,
   AGENT_FILENAMES,
   COMPAT_FILENAMES,

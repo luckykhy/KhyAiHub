@@ -608,48 +608,62 @@ Tips:
       .toLowerCase();
     const _explicitAdapter = !!preferredAdapter;
 
-    // ── Claude Code delegation (健壮探测 + 自动回退 + 透明上报) ──────────────────
-    // Two triggers per design: (1) explicit — model set subagent_type:'claude';
-    // (2) auto — no explicit adapter and the task heuristically suits Claude Code
-    // (feature-flag gated, default off). Either way: if Claude Code is unavailable
-    // or not chosen, we DON'T force it — we fall cleanly back to Khy's own best
-    // adapter and record why. Never hard-fails on a missing `claude` CLI.
+    // ── 外部编码 CLI 委派（claude / codex / opencode）：三面统一过委派准入 ──────────
+    // `subagent_type:'codex'` 此前直接 `preferredAdapter = 'codex'` 直连适配器、
+    // 不过任何闸门（2026-10-15 实测），是「活被甩出去」的第三条通路。现在三种写法
+    // ——`subagent_type`、`role`、`preferred_adapter`——收敛到同一个决策点：
+    //   G1 用户点名：凭据是本轮 turn 的运行时票券（services/delegationTicket.js），
+    //     模型自写 `[委派闸门 G1]` 换不到放行；turnId 由 loop 经 traceContext 下发。
+    //   G2 能力缺失 / G3 隔离要求：模型给结构化证据，事后可复查。
+    // 缺闸门 ⇒ 回退 khy 自做（role 降为 general，交能力注册表选自家适配器）。
     let _delegationNote = null;
+    const _turnId = (_context && _context.traceContext && _context.traceContext.turnId) || '';
     try {
-      const { decideClaudeDelegation } = require('./claudeDelegation');
-      if (role === 'claude') {
-        const d = decideClaudeDelegation({
+      const cd = require('./claudeDelegation');
+      const _delegationTools = cd._defaultDelegationTools();
+      const _isExternal = (id) => cd.isDelegatableExternalAgent(id, _delegationTools);
+      // preferred_adapter / adapter 直填外部 CLI 名，与 subagent_type 等价，同样要过闸门
+      const _requestedExternal = _isExternal(preferredAdapter)
+        ? String(preferredAdapter).toLowerCase()
+        : _isExternal(role)
+          ? String(role).toLowerCase()
+          : '';
+
+      if (_requestedExternal) {
+        const d = cd.decideExternalDelegation({
+          agentId: _requestedExternal,
           prompt: params.prompt || '',
           role,
-          explicitlyRequested: true,
+          turnId: _turnId,
         });
         if (d.delegate) {
-          preferredAdapter = 'claude';
+          role = _requestedExternal;
+          preferredAdapter = d.adapter || _requestedExternal;
           _delegationNote = {
             delegated: true,
-            delegatedTo: 'claude-code',
+            delegatedTo: preferredAdapter,
             reason: d.reason,
             mode: d.mode,
           };
         } else {
-          // Unavailable: demote to a general Khy agent and let capability
-          // auto-selection (below) pick the best AVAILABLE adapter.
+          // 未过闸门 / 外部 CLI 不可用：降为 khy 自家路由，并把原因如实上报。
           role = 'general';
           preferredAdapter = '';
           _delegationNote = { delegated: false, delegatedTo: null, reason: d.reason, mode: d.mode };
         }
       } else if (!_explicitAdapter && (role === 'general' || role === 'implement')) {
-        const d = decideClaudeDelegation({
+        const d = cd.decideClaudeDelegation({
           prompt: params.prompt || '',
           role,
           explicitlyRequested: false,
+          turnId: _turnId,
         });
         if (d.delegate) {
           role = 'claude';
-          preferredAdapter = 'claude';
+          preferredAdapter = d.adapter || 'claude';
           _delegationNote = {
             delegated: true,
-            delegatedTo: 'claude-code',
+            delegatedTo: preferredAdapter,
             reason: d.reason,
             mode: d.mode,
           };
@@ -659,15 +673,6 @@ Tips:
       /* delegation decision is best-effort; fall through to normal routing */
     }
 
-    if (!preferredAdapter && role === 'codex') {
-      preferredAdapter = 'codex';
-    }
-    if (!preferredAdapter && role === 'claude') {
-      preferredAdapter = 'claude';
-    }
-    if (!preferredAdapter && role === 'opencode') {
-      preferredAdapter = 'opencode';
-    }
     // Capability-aware auto-selection when no explicit adapter is set
     if (!preferredAdapter) {
       try {
@@ -811,19 +816,32 @@ Tips:
             timeout: timeoutMs,
             preferredAdapter,
             preferredModel,
+            // Host approval channel: without it the delegation gate inside the
+            // gateway funnel sees no interactive channel and would fail-closed
+            // every legitimate external delegation in coordinator mode.
+            onControlRequest,
             parentContext: _context?._agentContext || null,
           });
+          const workerFailed = worker.status === 'error';
           return {
-            success: true,
+            success: !workerFailed,
             workerId: worker.id,
             subagent_type: subagentType,
             role: worker.role,
             preferredAdapter: worker.preferredAdapter || preferredAdapter || null,
             preferredModel: worker.preferredModel || preferredModel || null,
             status: worker.status,
+            ...(workerFailed
+              ? {
+                  errorType: worker.errorType || 'worker_error',
+                  errorDetail: worker.errorDetail || worker.error || 'worker failed',
+                }
+              : {}),
             output: worker.result || worker.message,
             ...AgentTool.flattenDelegation(_delegationNote),
-            message: `Worker ${worker.id} completed as ${subagentType}.`,
+            message: workerFailed
+              ? `Worker ${worker.id} failed as ${subagentType}: ${worker.errorDetail || worker.error || 'unknown error'}`
+              : `Worker ${worker.id} completed as ${subagentType}.`,
           };
         }
       } catch {
@@ -969,6 +987,14 @@ Tips:
         ? agentDef.getSystemPrompt()
         : roleHints[role] || roleHints.general;
 
+    // Point ② partial-salvage source. Declared in the function body, NOT inside
+    // the try below: the sibling catch reads it, and a block-scoped `let` there
+    // throws ReferenceError instead of returning the honest failure the catch is
+    // supposed to produce (probe: probe-catch-path.cjs). Only ever filled while
+    // the result-footer gate is on, so gate-off leaves it empty and every
+    // downstream path stays byte-identical.
+    let _partialText = '';
+
     try {
       const toolUseLoop = require('../../services/toolUseLoop');
 
@@ -1054,10 +1080,6 @@ Tips:
         })();
         let _textBuf = '';
         let _lastTextPreview = '';
-        // Point ② partial-salvage source: the sub-agent's accumulated prose,
-        // captured only when the result-footer gate is on, so gate-off stays
-        // byte-identical (empty buffer → no salvage section).
-        let _partialText = '';
         const _onTextDelta = (chunk) => {
           if (!progressCallback || !_subAgentTextStream || !_subAgentTextStream.isEnabled()) {
             return;
@@ -1129,6 +1151,12 @@ Tips:
                   : {}),
               ...(candidate.model ? { preferredModel: candidate.model } : {}),
               _agentContext: agentCtx,
+              // [DESIGN-ARCH-112] agents/types.js:46 declares omitClaudeMd for
+              // the read-only agents (Explore/Plan/reading/research/map); this
+              // pass-through is the field's execution surface (RUNTIME-010
+              // A2-4). Without it a haiku Explore instance carried the full
+              // `# claudeMd` block on every spawn.
+              omitProjectInstructions: agentDef?.omitClaudeMd === true,
             });
           } catch (chatErr) {
             // If this candidate failed and we have more, try next
@@ -1208,7 +1236,13 @@ Tips:
           // fan-out, gated on !_isSubagent) so a sub-agent's recursion only
           // happens via the explicit, depth-bounded Agent tool — never
           // auto-fanned-out.
-          chatOpts: { _isSubagent: true },
+          chatOpts: {
+            _isSubagent: true,
+            // Delegation approval: the sub-agent's own per-turn chat reaches the
+            // gateway funnel through this channel, so the external-delegation
+            // gate can ask the host instead of failing closed.
+            ...(onControlRequest ? { onControlRequest } : {}),
+          },
           // Subagent permission bubbling: child shell approvals reach the host channel
           onControlRequest,
           // Watchdog on: internal controller (parent forwarded into it).
@@ -1364,8 +1398,19 @@ Tips:
         }
 
         const elapsed = Date.now() - startTime;
+        // 循环自陈「没跑完」时不许把进度事件也报成已完成（agentTreeView 的 done
+        // 直接决定 COMPLETED/ERROR 两态）。
+        const _unfinished = _loopUnfinishedReason(result);
         if (progressCallback) {
-          progressCallback({ type: 'done', success: true, toolCalls: toolLog.length, elapsed });
+          progressCallback({
+            type: 'done',
+            success: !_unfinished,
+            toolCalls: toolLog.length,
+            elapsed,
+            ...(_unfinished
+              ? { error: _UNFINISHED_REASON_TEXT[_unfinished] || `未完成（${_unfinished}）` }
+              : {}),
+          });
         }
 
         // Extract structured metadata from the tool log
@@ -1410,7 +1455,7 @@ Tips:
         }
 
         return {
-          success: true,
+          success: !_unfinished,
           subagent_type: subagentType,
           role,
           output,
@@ -1419,9 +1464,22 @@ Tips:
           toolCallLog: toolLog,
           filesModified,
           planCompletion,
+          ..._loopTerminalFlags(result),
           ..._delegationFields,
           elapsed: _fmtElapsed(elapsed),
-          message: `Agent (${subagentType}) completed in ${_fmtElapsed(elapsed)} with ${toolLog.length} tool uses.`,
+          ...(_unfinished
+            ? {
+                error: _unfinishedErrorText(_unfinished, {
+                  output,
+                  elapsed: _fmtElapsed(elapsed),
+                  toolCalls: toolLog.length,
+                  filesModified,
+                }),
+              }
+            : {}),
+          message: _unfinished
+            ? `Agent (${subagentType}) 未完成（${_UNFINISHED_REASON_TEXT[_unfinished] || _unfinished}）：${_fmtElapsed(elapsed)}，${toolLog.length} 次工具调用。`
+            : `Agent (${subagentType}) completed in ${_fmtElapsed(elapsed)} with ${toolLog.length} tool uses.`,
         };
       }
 
@@ -1565,9 +1623,14 @@ Tips:
         route
       );
 
+      // 循环自陈未完成（撞轮次上限等）时模型是通的：本地启发式兜底的前提是「所有模型
+      // 不可用」，对未完成跑兜底只会把「没跑完」谎报成「无可用模型」，还会丢掉已产出
+      // 的部分成果。
+      const unfinished = _loopUnfinishedReason(result);
+
       // If the model-based execution failed, try local mode fallback
       const reworked = result.success === false;
-      if (!result.success) {
+      if (!result.success && !unfinished) {
         const localResult = await _localModeFallback(agent.task, role, route.progressCallback);
         if (localResult) {
           if (agentStats) {
@@ -1589,13 +1652,18 @@ Tips:
         }
       }
 
-      // Return structured result for aggregation
+      // Return structured result for aggregation.
+      // orchestrator.execute() 只按「有没有抛错」判失败，循环自陈的未完成终态必须
+      // 在这里就落成 success:false 并原样透出标志——否则 _runOrchestrated 的
+      // successCount 会把撞轮次上限的子任务记成成功，而同一终态在 a2a executor
+      // 是判 failed 的（services/a2a/executor.js）。
       return {
         text: result.output || '',
         toolCalls: result.toolCalls || 0,
         iterations: result.iterations || 0,
         elapsed: result.elapsed || '0s',
-        success: result.success !== false,
+        success: result.success !== false && !unfinished,
+        ..._loopTerminalFlags(result),
         error: result.error || null,
         filesModified: result.filesModified || [],
       };
@@ -1799,8 +1867,15 @@ Tips:
     const formatted = _formatAggregatedResult(aggregated);
 
     const elapsed = Date.now() - startTime;
+    // execute() 对「不抛错」恒返 success:true（软失败口径见 subAgentTaskReassign
+    // 的 isFailedOutcome：outcome.success===false 或 result.success===false 两形态都认），
+    // 所以完成判定必须再看执行器自陈的 result.success，否则「N 个子任务全没跑完但
+    // 无一抛错」会被记成 N 成功 0 失败。
     const successCount = childResults.filter(
-      (r) => r.status === 'fulfilled' && r.value?.success
+      (r) =>
+        r.status === 'fulfilled' &&
+        r.value?.success !== false &&
+        r.value?.result?.success !== false
     ).length;
     const failCount = params.subtasks.length - successCount;
 
@@ -2048,6 +2123,115 @@ function _formatAggregatedResult(aggregated) {
   }
 
   return `## Subtask Results\n\n${sections.join('\n\n')}`;
+}
+
+// ── 富循环终态归类 ──────────────────────────────────────────────────
+
+/**
+ * runToolUseLoop 的「没跑完」出口都带一个诚实标志（读 toolUseLoopCore 各 return
+ * 归纳）：撞迭代预算 maxIterationsReached+truncated、绝对/空闲超时 timeLimitReached、
+ * token 预算停止 budgetStopped、循环保护 stopped+loopDetected、工具连续失败
+ * consecutiveFailureBailout、grace 轮没写出答案 graceFallback、答复被长度截断
+ * truncated。AgentTool 过去只读 finalResponse/iterations 就把 success 钉成 true，
+ * 父智能体与编排层于是把「15 轮触顶」报成已完成——同一批标志在 a2a executor 落
+ * failed（services/a2a/executor.js:131-141）。
+ *
+ * 与 a2a 的口径只对齐一条：recoveredFromInterruptedChannel 是瞬断后确实交了答案
+ * 的路径，两边都不算失败。cancelled/interrupted 在 a2a 落 state:'canceled'，
+ * 本侧落 success:false——分态不同，但两边都不把取消说成成功。返回 null = 循环
+ * 自陈已完成。
+ */
+function _loopUnfinishedReason(loopResult) {
+  if (!loopResult || loopResult.recoveredFromInterruptedChannel) {
+    return null;
+  }
+  if (loopResult.maxIterationsReached) {
+    return loopResult.absoluteLimit ? 'time-limit' : 'max-iterations';
+  }
+  if (loopResult.timeLimitReached) {
+    return 'idle-timeout';
+  }
+  if (loopResult.budgetStopped) {
+    return 'token-budget-stop';
+  }
+  if (loopResult.loopDetected) {
+    return 'loop-guard';
+  }
+  if (loopResult.consecutiveFailureBailout) {
+    return 'consecutive-tool-failures';
+  }
+  if (loopResult.graceFallback) {
+    return 'no-final-answer';
+  }
+  if (loopResult.errorType) {
+    return String(loopResult.errorType);
+  }
+  if (loopResult.stopped || loopResult.cancelled || loopResult.interrupted) {
+    return 'stopped';
+  }
+  if (loopResult.truncated) {
+    return 'truncated';
+  }
+  return null;
+}
+
+const _UNFINISHED_REASON_TEXT = {
+  'max-iterations': '达到迭代上限，任务未完成',
+  'time-limit': '达到绝对时间上限，任务未完成',
+  'idle-timeout': '空闲超时，任务未完成',
+  'token-budget-stop': 'token 预算用尽，任务未完成',
+  'loop-guard': '触发循环保护后停止，任务未完成',
+  'consecutive-tool-failures': '工具连续失败后退出，任务未完成',
+  'no-final-answer': '未产出最终答复',
+  stopped: '被中止，任务未完成',
+  truncated: '最终答复被长度截断，内容不完整',
+};
+
+// 父循环的 _buildToolResultMessage 在 success:false 时只拼 result.error、不呈现
+// output（实测 failed 分支只输出 `Error: <error>`），所以未完成必须把已产出的
+// 部分成果写进 error，否则父智能体会看不见子代理已经做了什么。
+const _UNFINISHED_EXCERPT_MAX = 2000;
+
+function _unfinishedErrorText(reason, { output, elapsed, toolCalls, filesModified }) {
+  const label = _UNFINISHED_REASON_TEXT[reason] || `未完成（${reason}）`;
+  const excerpt = String(output || '').trim();
+  const clipped =
+    excerpt.length > _UNFINISHED_EXCERPT_MAX
+      ? `${excerpt.slice(0, _UNFINISHED_EXCERPT_MAX)}\n… [部分结果已省略 ${excerpt.length - _UNFINISHED_EXCERPT_MAX} 字符]`
+      : excerpt;
+  const changed = filesModified && filesModified.length ? `，改动 ${filesModified.length} 个文件` : '';
+  return [
+    `${label}：已运行 ${elapsed}，${toolCalls} 次工具调用${changed}。`,
+    clipped || '（本次未产出可用正文）',
+    '可把任务拆小重试、运行 khy gateway status 检查通道，或调大迭代/空闲超时上限。',
+  ].join('\n');
+}
+
+// 只挑已知终态键透出，不把整个 loopResult 泄进返回面。
+const _LOOP_TERMINAL_FLAGS = [
+  'maxIterationsReached',
+  'truncated',
+  'timeLimitReached',
+  'budgetStopped',
+  'graceFallback',
+  'consecutiveFailureBailout',
+  'loopDetected',
+  'stopped',
+  'cancelled',
+  'interrupted',
+  'errorType',
+  'absoluteLimit',
+];
+
+function _loopTerminalFlags(loopResult) {
+  const flags = {};
+  for (const key of _LOOP_TERMINAL_FLAGS) {
+    const value = loopResult ? loopResult[key] : undefined;
+    if (value !== undefined && value !== null && value !== false) {
+      flags[key] = value;
+    }
+  }
+  return flags;
 }
 
 // ── Model candidate builder ──────────────────────────────────────────
@@ -2298,6 +2482,12 @@ module.exports.AGENT_TOOL_NAMES = AGENT_TOOL_NAMES;
 module.exports._maxSubagentFanout = _maxSubagentFanout;
 module.exports._mapSettledLimited = _mapSettledLimited;
 module.exports._fmtElapsed = _fmtElapsed;
+// Exposed for unit tests — the rich-loop terminal-state verdict, so the
+// "loop said it did not finish ⇒ not a success" mapping can be pinned against
+// every toolUseLoopCore exit shape without driving a real sub-agent.
+module.exports._loopUnfinishedReason = _loopUnfinishedReason;
+module.exports._loopTerminalFlags = _loopTerminalFlags;
+module.exports._unfinishedErrorText = _unfinishedErrorText;
 // Exposed for unit tests — seed/inspect the background-agent registry without
 // dispatching a real sub-agent (see tests/backgroundAgentOutput.test.js).
 // Returning the live Map is deliberate: it is the same SSOT the producer writes,

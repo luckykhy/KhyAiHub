@@ -648,8 +648,32 @@ function _extractChangedFiles(toolCallLog) {
   return _listEditedFiles(toolCallLog);
 }
 
+// The tool loop self-reports "ran out of room" on its return face (see the
+// returns in toolUseLoopCore): iteration ceiling, absolute/idle time limit,
+// token-budget stop, grace empty-reply fallback, consecutive-failure bailout,
+// loop protection. Those are unfinished deliveries just like the thrown-error
+// class (errorType/stopped). The criterion is aligned with a2a/executor.js's
+// `unfinished` face and the REPL completion panel's `_panelSuccess`: before this
+// only the thrown-error class was recognized here, so the same loopResult read
+// pass in the harness and failed in a2a, and unfinished loops were telemetried
+// as success. cancelled/interrupted/recoveredFromInterruptedChannel are
+// deliberately absent — user abort, or an answer delivered after recovery.
+const LOOP_UNFINISHED_SIGNALS = [
+  'maxIterationsReached',
+  'timeLimitReached',
+  'truncated',
+  'consecutiveFailureBailout',
+  'graceFallback',
+  'budgetStopped',
+  'loopDetected',
+];
+
 function buildHarnessDeliveryVerdict(input = {}) {
-  const runtimeFailed = !!input.loopResult?.errorType || !!input.loopResult?.stopped;
+  const runtimeStopSignal =
+    input.loopResult?.errorType ||
+    LOOP_UNFINISHED_SIGNALS.find((signal) => !!input.loopResult?.[signal]) ||
+    (input.loopResult?.stopped ? 'stop signal' : null);
+  const runtimeFailed = !!runtimeStopSignal;
   const blockedBy = [];
   const warningSources = [];
 
@@ -691,7 +715,7 @@ function buildHarnessDeliveryVerdict(input = {}) {
 
   const summaryParts = [];
   if (runtimeFailed) {
-    summaryParts.push(`runtime reported ${input.loopResult?.errorType || 'stop signal'}`);
+    summaryParts.push(`runtime reported ${runtimeStopSignal}`);
   }
   if (input.deliveryGateReport) {
     summaryParts.push(
@@ -872,4 +896,8 @@ module.exports = {
   _globSync,
   _extractChangedFiles,
   CUSTOM_VALIDATORS,
+  // Exposed for unit tests — the unfinished-signal face the runtime criterion
+  // reads, so adding/removing a signal cannot drift silently between the list
+  // and the verdict (tests/services/loopUnfinishedSignals.test.js pins both).
+  LOOP_UNFINISHED_SIGNALS,
 };

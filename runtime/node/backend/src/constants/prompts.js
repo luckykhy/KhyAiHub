@@ -999,7 +999,15 @@ function _collectPromptFeatureSet(opts = {}) {
 }
 
 function listOnDemandPromptSectionIds(opts = {}) {
-  return ON_DEMAND_PROMPT_SECTION_IDS.filter((id) => _collectPromptFeatureSet(opts).has(id));
+  const ids = ON_DEMAND_PROMPT_SECTION_IDS.filter((id) => _collectPromptFeatureSet(opts).has(id));
+  // 工具发现段无条件宣称「You have access to 100+ tools」并命令模型用 ToolRecommend/ToolSearch。
+  // 这两个工具不在本次上线清单里时（工具表预算裁剪 / 弱模型 curated / 收尾轮 / 只读子代理），
+  // 整段必须消失——否则正是「提示词命令模型去调线上并不存在的工具」那一类 bug，且
+  // 「100+ tools」与真实清单公然矛盾，会主动误导模型高估自己的能力面。
+  const _t = Array.isArray(opts.enabledTools) ? opts.enabledTools.map(String) : null;
+  return _t && !_t.some((n) => /^(toolsearch|toolrecommend)$/i.test(n))
+    ? ids.filter((id) => id !== 'tool_discovery')
+    : ids;
 }
 
 function _buildOptionalSectionText(id) {
@@ -1250,16 +1258,16 @@ function _buildUsingYourToolsSection(enabledTools) {
     );
   }
   items.push(
-    "Use the Agent tool with specialized agents when the task at hand matches the agent's description. Subagents are valuable for parallelizing independent queries or for protecting the main context window from excessive results, but they should not be used excessively when not needed. Importantly, avoid duplicating work that subagents are already doing - if you delegate research to a subagent, do not also perform the same searches yourself."
+    ...(hasAgent ? ["Use the Agent tool with specialized agents when the task at hand matches the agent's description. Subagents are valuable for parallelizing independent queries or for protecting the main context window from excessive results, but they should not be used excessively when not needed. Importantly, avoid duplicating work that subagents are already doing - if you delegate research to a subagent, do not also perform the same searches yourself."] : [])
   );
   items.push(
-    'For simple, directed codebase searches (e.g. for a specific file/class/function) use the Glob or Grep directly.'
+    ...(hasGlob || hasGrep ? ['For simple, directed codebase searches (e.g. for a specific file/class/function) use the Glob or Grep directly.'] : [])
   );
   items.push(
-    'For broader codebase exploration and deep research, use the Agent tool with subagent_type=Explore. This is slower than using the Glob or Grep directly, so use this only when a simple, directed search proves to be insufficient or when your task will clearly require more than 3 queries.'
+    ...(hasAgent ? ['For broader codebase exploration and deep research, use the Agent tool with subagent_type=Explore. This is slower than using the Glob or Grep directly, so use this only when a simple, directed search proves to be insufficient or when your task will clearly require more than 3 queries.'] : [])
   );
   items.push(
-    '/<skill-name> (e.g., /commit) is shorthand for users to invoke a user-invocable skill. When executed, the skill gets expanded to a full prompt. Use the Skill tool to execute them. IMPORTANT: Only use Skill for skills listed in its user-invocable skills section - do not guess or use built-in CLI commands.'
+    ...(toolSet.has('Skill') || toolSet.has('skill') ? ['/<skill-name> (e.g., /commit) is shorthand for users to invoke a user-invocable skill. When executed, the skill gets expanded to a full prompt. Use the Skill tool to execute them. IMPORTANT: Only use Skill for skills listed in its user-invocable skills section - do not guess or use built-in CLI commands.'] : [])
   );
   items.push(
     'You can call multiple tools in a single response. If you intend to call multiple tools and there are no dependencies between them, make all independent tool calls in parallel. Maximize use of parallel tool calls where possible to increase efficiency. However, if some tool calls depend on previous calls to inform dependent values, do NOT call these tools in parallel and instead call them sequentially. For instance, if one operation must complete before another starts, run these operations sequentially instead.'
@@ -1732,6 +1740,55 @@ function _checkIsGit(cwd) {
 
 // ─── khy.md / CLAUDE.md / AGENTS.md 项目指令加载 ───
 
+// Compat-ecosystem instruction filenames. Order = conflict precedence:
+// KHY (handled by instructionFileService) > CLAUDE > AGENTS
+const COMPAT_INSTRUCTION_FILENAMES = ['CLAUDE.md', '.claude/CLAUDE.md', 'AGENTS.md'];
+
+/**
+ * Compat-tier candidate paths (cwd → git-root chain + home, deduped by resolve).
+ * The reader and the section cache key share this one list: only the reader used
+ * to know these paths while projectInstructionsSectionCacheKey stamped own-tier
+ * files alone, so editing AGENTS.md never changed the key — the section cache
+ * holds one entry per id and kept injecting the old text (measured: byte-identical
+ * cacheKey before/after an AGENTS.md-only edit).
+ *
+ * The dir set walks cwd → git-root (nearest first) because CC reads its memory
+ * files at every level of that chain; the two-point probe ([cwd, home]) dropped
+ * the repo-root CLAUDE.md/AGENTS.md for any session started in a subdirectory —
+ * this repo keeps its engineering rules only in those root files (no root
+ * khy.md, no .khy/rules), so subdirectory sessions delivered without them.
+ * instructionFileService owns the chain so the native and compat tiers cannot
+ * drift apart; [cwd, home] when the service is unavailable.
+ * @returns {string[]}
+ */
+function _compatInstructionPaths(cwd) {
+  const homeDir = os.homedir();
+  const dirs = new Set();
+  try {
+    for (const dir of require('../services/instructionFileService').instructionDirsToGitRoot(cwd)) {
+      dirs.add(dir);
+    }
+  } catch {
+    dirs.add(cwd);
+  }
+  if (homeDir !== cwd) {
+    dirs.add(homeDir);
+  }
+  const paths = [];
+  const seen = new Set();
+  for (const dir of dirs) {
+    for (const filename of COMPAT_INSTRUCTION_FILENAMES) {
+      const resolved = path.resolve(dir, filename);
+      if (seen.has(resolved)) {
+        continue;
+      }
+      seen.add(resolved);
+      paths.push(path.join(dir, filename));
+    }
+  }
+  return paths;
+}
+
 /**
  * 搜索兼容指令文件（不含 KHY.md，后者由 instructionFileService 处理）。
  * @returns {Array<{ relPath: string, content: string }>}
@@ -1740,37 +1797,20 @@ function _findCompatInstructionFiles(cwd) {
   const fs = require('fs');
   const homeDir = os.homedir();
   const candidates = [];
-  const seen = new Set();
 
-  // 兼容生态中的 instruction files。顺序即冲突时的优先级：
-  // KHY（由 instructionFileService 处理） > CLAUDE > AGENTS
-  const filenames = ['CLAUDE.md', '.claude/CLAUDE.md', 'AGENTS.md'];
-  const searchDirs = [cwd];
-  if (homeDir !== cwd) {
-    searchDirs.push(homeDir);
-  }
-
-  for (const dir of searchDirs) {
-    for (const filename of filenames) {
-      const filePath = path.join(dir, filename);
-      const resolved = path.resolve(filePath);
-      if (seen.has(resolved)) {
-        continue;
-      }
-      try {
-        if (fs.existsSync(filePath)) {
-          const content = fs.readFileSync(filePath, 'utf-8').trim();
-          if (content) {
-            seen.add(resolved);
-            const relPath = filePath.startsWith(homeDir)
-              ? filePath.replace(homeDir, '~')
-              : filePath;
-            candidates.push({ relPath, content });
-          }
+  for (const filePath of _compatInstructionPaths(cwd)) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf-8').trim();
+        if (content) {
+          const relPath = filePath.startsWith(homeDir)
+            ? filePath.replace(homeDir, '~')
+            : filePath;
+          candidates.push({ relPath, content });
         }
-      } catch {
-        /* ignore */
       }
+    } catch {
+      /* ignore */
     }
   }
 
@@ -1861,6 +1901,7 @@ function getProjectInstructionsSection(cwd) {
 
   // (B) CLAUDE.md / AGENTS.md 兼容 — 保持与 CC/agent 生态兼容
   // 冲突优先级固定为：KHY > CLAUDE > AGENTS
+  const injectedCompat = [];
   for (const candidate of _findCompatInstructionFiles(cwd)) {
     const compatContent = hasKhyLanguageDirective
       ? _stripCompatLanguageSections(candidate.content)
@@ -1868,18 +1909,31 @@ function getProjectInstructionsSection(cwd) {
     if (!compatContent) {
       continue;
     }
+    injectedCompat.push({ relPath: candidate.relPath, chars: compatContent.length });
     parts.push(`Contents of ${candidate.relPath}:\n\n${compatContent}`);
   }
 
   if (parts.length === 0) {
     return null;
   }
-  return `# claudeMd
+  // The compat tier carries no char budget (adjudicated in [DESIGN-DOC-002] §1.2;
+  // axiom A5 forbids inventing thresholds), so every byte a file grows lands in
+  // every later turn. Stating each file's injected size in the section head makes
+  // "how big is this rule file, did all of it arrive" checkable from the prompt
+  // itself instead of guesswork.
+  const manifest = injectedCompat.length
+    ? '[INSTRUCTION FILES] compat 层不设字符预算、不截断，以下文件全文注入：\n' +
+      injectedCompat.map((f) => `- ${f.relPath}: ${f.chars} 字符`).join('\n')
+    : '';
+  const blocks = [`# claudeMd
 Codebase and user instructions are shown below. Be sure to adhere to these instructions.
 IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.
-Conflict precedence is fixed as: KHY instructions > CLAUDE instructions > AGENTS instructions.
-
-${parts.join('\n\n')}`;
+Conflict precedence is fixed as: KHY instructions > CLAUDE instructions > AGENTS instructions.`];
+  if (manifest) {
+    blocks.push(manifest);
+  }
+  blocks.push(parts.join('\n\n'));
+  return blocks.join('\n\n');
 }
 
 // ─── Persona section (C1) ───
@@ -2381,7 +2435,7 @@ You are a general-purpose AI assistant. When the user sends a greeting, respond 
 - A step is one tool call or one batch of independent calls; narrate per step, not per call.
 - After three or more consecutive steps, report a brief checkpoint of completed and remaining work.
 - When uncertainty materially changes the result, present numbered options in priority order; the final option is always "和我一起讨论 / 其它（请说明）".
-- For several distinct steps, maintain a live checklist with TodoWrite or TaskCreate/TaskUpdate and keep exactly one item in progress.
+- For several distinct steps, maintain a live checklist with the available checklist tool (if one is provided) and keep exactly one item in progress.
 
 ## Create means create — do not silently edit existing files
 - "做一个 / 创建 / 新建 / build / create a X (page/component/script/file)" means CREATE A NEW FILE.
@@ -2752,6 +2806,19 @@ function projectInstructionsSectionCacheKey(cwd) {
         return { path: p };
       }
     });
+    // Compat files (CLAUDE.md / AGENTS.md…) are injected in full by
+    // getProjectInstructionsSection but never appear in discoverInstructionFiles'
+    // own-tier list — without their mtime:size in the stamp, editing AGENTS.md
+    // alone leaves the key unchanged, and the section cache (one entry per id)
+    // keeps serving the previous text for the rest of the session.
+    for (const p of _compatInstructionPaths(cwd)) {
+      try {
+        const st = fs.statSync(p);
+        stats.push({ path: p, mtimeMs: st.mtimeMs, size: st.size });
+      } catch {
+        stats.push({ path: p });
+      }
+    }
     const stamp = stampFromStats(stats);
     return stamp ? combineStamp([cwd, stamp]) : cwd;
   } catch {
@@ -2800,6 +2867,11 @@ async function getSystemPrompt(opts = {}) {
     isLowTierModel = false,
     compactPrompt = false,
     deferredToolsHint = '',
+    // Read-only sub-agents (agentDef.omitClaudeMd, agents/types.js:46) drop the
+    // project-instructions block: a haiku Explore instance should not spend its
+    // context budget on repo rules it will never act on. Excluding the
+    // descriptor (rather than nulling its text) leaves nothing cached for them.
+    omitProjectInstructions = false,
   } = opts;
 
   const outputStyleConfig = await getOutputStyleConfig(outputStyleName);
@@ -2888,11 +2960,15 @@ async function getSystemPrompt(opts = {}) {
       () => getMcpInstructionsSection(mcpClients),
       'MCP servers connect/disconnect between turns'
     ),
-    systemPromptSection(
-      'project_instructions',
-      () => getProjectInstructionsSection(cwd),
-      projectInstructionsSectionCacheKey(cwd)
-    ),
+    ...(omitProjectInstructions
+      ? []
+      : [
+          systemPromptSection(
+            'project_instructions',
+            () => getProjectInstructionsSection(cwd),
+            projectInstructionsSectionCacheKey(cwd)
+          ),
+        ]),
     // References (opencode-aligned cross-directory resources): a config table of
     // alias → path/repository injected so the agent knows what external resources
     // exist and that `@alias` mentions them. cacheKey folds references.json mtimes

@@ -48,7 +48,7 @@ function _extractToolOutput(result) {
   // Priority 1: well-known text output fields
   const direct = result.output || result.content || result.result;
   if (direct != null && direct !== '') {
-    return direct;
+    return _withSuccessWarning(direct, result);
   }
 
   // Priority 2: common structured data fields
@@ -74,7 +74,7 @@ function _extractToolOutput(result) {
     result.entries ||
     result.selected;
   if (structured != null && structured !== '') {
-    return structured;
+    return _withSuccessWarning(structured, result);
   }
 
   // Priority 3: fall back to JSON of all non-meta fields
@@ -89,10 +89,41 @@ function _extractToolOutput(result) {
     }
   }
   if (Object.keys(payload).length > 0) {
-    return JSON.stringify(payload);
+    return _withSuccessWarning(JSON.stringify(payload), result);
   }
 
-  return null;
+  // Success carrying nothing but a warning (partial success) — the warning IS
+  // the payload; returning null here renders as a bare "Success".
+  return _successWarningText(result) || null;
+}
+
+// A successful result may still carry an `error` warning (partial success,
+// stderr on a zero-exit command). The failure branch of the message builder
+// owns error rendering; on the success branch the field filters above would
+// drop it, so re-attach it as a warning line. Skipped when the payload already
+// carries the text — normalizeToolResult folds a bare error into `content`
+// (Priority 4), which would otherwise be echoed twice.
+function _successWarningText(result) {
+  if (!result.success) {
+    return '';
+  }
+  const err = result.error;
+  if (err == null || err === '' || err === false) {
+    return '';
+  }
+  return typeof err === 'string' ? err : err.message || JSON.stringify(err);
+}
+
+function _withSuccessWarning(payload, result) {
+  const warning = _successWarningText(result);
+  if (!warning) {
+    return payload;
+  }
+  const text = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  if (text.includes(warning)) {
+    return payload;
+  }
+  return `${text}\n[Warning: ${warning}]`;
 }
 
 /**

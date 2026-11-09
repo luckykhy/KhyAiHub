@@ -3,8 +3,15 @@
 /**
  * toolResultCompressor — pre-send compression for tool results.
  *
- * Before tool results enter the LLM conversation history, we truncate and
- * compress them to save tokens. This follows Y-code's pattern of:
+ * DORMANT: no live caller in src/ (repo-wide search, 2026-11-06); correction
+ * recorded in [DESIGN-ARCH-161] §5.4. The paths that actually truncate tool
+ * results are deliveryFormatter.js smartTruncation (D13 per-tool limits) and
+ * contextRouter.js preCompressToolResults (sourceTextCompressor whitespace) —
+ * their thresholds and omission text differ from this file's, so do not infer
+ * runtime behavior from the strategy below, and do not rewire it without first
+ * merging the two strategies.
+ *
+ * Unwired Y-code pattern this module was written for:
  * 1. Pre-truncating large results before sending to LLM
  * 2. Keeping head + tail with a placeholder in the middle
  * 3. Replacing very large results with a preview summary

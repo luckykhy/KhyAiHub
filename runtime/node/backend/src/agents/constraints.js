@@ -98,7 +98,8 @@ Your role is EXCLUSIVELY to ${role}. You do NOT have access to file editing tool
  * re-planning the overall goal or expanding scope.
  *
  * Injected (never copy-pasted) into every spawned sub-agent's system prompt via
- * AgentTool.buildSubagentSystemPrompt, so this rule lives in exactly one place.
+ * AgentTool.buildSubagentSystemPrompt and workerAgent.buildWorkerPrompt, so this
+ * rule lives in exactly one place.
  */
 const SUBAGENT_EXECUTION_SCOPE = `=== SUB-AGENT EXECUTION SCOPE (you are an executor, not the strategist) ===
 - You run in your OWN isolated context and cannot see the parent conversation. The prompt you received already contains everything you need — treat it as the complete, self-contained brief.
