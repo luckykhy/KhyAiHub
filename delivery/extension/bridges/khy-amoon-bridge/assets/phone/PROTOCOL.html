@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: PROTOCOL.md -->
+<title>khy-amoon/1 — 文件与 HTTP 信封 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>bridges<span class="sep">›</span>khy-amoon-bridge<span class="sep">›</span>assets<span class="sep">›</span>phone<span class="sep">›</span>khy-amoon/1 — 文件与 HTTP 信封</div>
+      <header class="hero reveal"><h1>khy-amoon/1 — 文件与 HTTP 信封</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-amoon-1-文件与-http-信封">khy-amoon/1 — 文件与 HTTP 信封</a></li><li class="lvl-2"><a href="#文件信箱">文件信箱</a></li><li class="lvl-2"><a href="#http">HTTP</a></li><li class="lvl-2"><a href="#受限工具">受限工具</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-amoon-1-文件与-http-信封">khy-amoon/1 — 文件与 HTTP 信封<a class="anchor" href="#khy-amoon-1-文件与-http-信封" aria-label="锚点">#</a></h1>
+<h2 id="文件信箱">文件信箱<a class="anchor" href="#文件信箱" aria-label="锚点">#</a></h2>
+<p>目录：<code>/sdcard/khy-amoon-bridge/{inbox,outbox,working,done,failed,tmp,blobs}</code>。</p>
+<table><thead><tr><th>文件</th><th>方向</th><th>字段</th></tr></thead><tbody><tr><td><code>cmd_&lt;id&gt;.json</code></td><td>amoon → PC</td><td><code>v=1,id,tool,args,ts?,expires_at?,reply_to?,nonce?</code></td></tr><tr><td><code>res_&lt;id&gt;.json</code></td><td>PC → amoon</td><td><code>v=1,id,tool,ok,ts,duration_ms,data?,error?,replayed?</code></td></tr><tr><td><code>msg_&lt;id&gt;.json</code></td><td>KhyOS → amoon</td><td>`v=1,id,kind=text</td></tr><tr><td><code>ack_&lt;id&gt;.json</code></td><td>amoon → PC</td><td><code>v=1,id,kind=ack,ts</code></td></tr><tr><td><code>reply_&lt;id&gt;.json</code></td><td>amoon → PC</td><td><code>v=1,id,kind=reply,text?,ts</code></td></tr></tbody></table>
+<ul><li><code>id</code> 只允许 <code>[A-Za-z0-9_-]{8,64}</code>。</li><li>写入：先写 <code>tmp/</code>，再 <code>mv</code> 到目标目录。不要直接写 <code>inbox/</code>/<code>outbox/</code>。</li><li>文件通道没有 Bearer，固定映射为 <code>file</code> scope：只允许 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>。</li><li><code>ack</code>/<code>reply</code> 可能被任何能写 <code>/sdcard</code> 的应用伪造，PC 一律标 <code>unverified</code>，不得据此执行命令。</li></ul>
+<h2 id="http">HTTP<a class="anchor" href="#http" aria-label="锚点">#</a></h2>
+<p><code>http://127.0.0.1:&lt;port&gt;</code> 经 <code>adb reverse</code> 到 PC 的 <code>127.0.0.1</code>。</p>
+<ul><li><code>GET /health</code>：无鉴权，只返回 <code>{ok:true}</code>。</li><li><code>GET /v1/status</code>、<code>GET /v1/tools</code>、<code>POST /v1/call</code>、<code>GET /v1/jobs/:id</code>：Bearer。</li><li><code>POST /v1/rotate</code> / <code>POST /v1/rotate/commit</code>、<code>GET /v1/audit/tail</code>：仅 operator。</li><li>phone token 默认 scope 只有 <code>ping</code>/<code>bridge_status</code>/<code>mailbox_status</code>；<code>khy_ask</code> 默认关闭。</li><li><code>POST /v1/rotate</code> 是两阶段的：先返回新 token（旧 token 仍有效），推送成功后再</li></ul>
+<p><code>POST /v1/rotate/commit {record_id}</code> 使旧 token 失效。</p>
+<h2 id="受限工具">受限工具<a class="anchor" href="#受限工具" aria-label="锚点">#</a></h2>
+<p>operator 可以调用 <code>phone_info</code>、<code>phone_app_list</code>、<code>phone_ls</code>、<code>phone_exec</code>：</p>
+<ul><li><code>phone_info</code>：只读设备信息。</li><li><code>phone_app_list</code>：只读包列表 + 前台 activity。</li><li><code>phone_ls</code>：只列白名单目录（<code>/sdcard</code> 顶层、khy-amoon-bridge、Download、Documents、</li></ul>
+<p>Pictures、DCIM）。</p>
+<ul><li><code>phone_exec</code>：固定 op（echo/getprop/wm_size/pm_list/dumpsys_battery），<strong>不是 shell</strong>。</li></ul>
+<p><code>phone_shell</code>、<code>phone_su</code>、任意文件读写/app 控制不存在。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../delivery/channel/khyquant/PACKAGING.html"><div class="dir">← 上一篇</div><div class="ttl">KHY-Quant pip 打包说明</div></a><a class="next" href="../../../../../../delivery/extension/bridges/khy-amoon-bridge/assets/phone/README-AMOON.html"><div class="dir">下一篇 →</div><div class="ttl">amoon 手机侧说明（khy-amoon-bridge）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="delivery/extension/bridges/khy-amoon-bridge/assets/phone/PROTOCOL.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

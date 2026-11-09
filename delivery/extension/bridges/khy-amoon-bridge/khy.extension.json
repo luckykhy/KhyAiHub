@@ -1,0 +1,59 @@
+{
+  "id": "khy-amoon-bridge",
+  "name": "KHY Amoon Bridge",
+  "displayName": "KhyOS ↔ 手机 amoon 桥",
+  "version": "0.1.0",
+  "description": "KhyOS ↔ 手机 amoon 桥：MCP stdio 薄服务 + per-user daemon（Phase 1：8 个核心工具 + 4 个受限只读手机工具）",
+  "kind": "runtime",
+  "namespace": "amoon",
+  "engines": {
+    "khy": ">=1.1.0"
+  },
+  "main": "extension.js",
+  "capabilities": [
+    "mcp"
+  ],
+  "provides": [
+    "amoon-bridge"
+  ],
+  "tools": [
+    "ping",
+    "bridge_status",
+    "khy_ask",
+    "phone_screenshot",
+    "phone_ui_dump",
+    "phone_info",
+    "phone_app_list",
+    "phone_ls",
+    "phone_exec",
+    "amoon_send",
+    "amoon_inbox",
+    "mailbox_status"
+  ],
+  "mcp": {
+    "transport": "stdio",
+    "command": "node",
+    "args": [
+      "bin/mcp-server.js"
+    ],
+    "tools": [
+      "ping",
+      "bridge_status",
+      "khy_ask",
+      "phone_screenshot",
+      "phone_ui_dump",
+      "phone_info",
+      "phone_app_list",
+      "phone_ls",
+      "phone_exec",
+      "amoon_send",
+      "amoon_inbox",
+      "mailbox_status"
+    ]
+  },
+  "permissions": {
+    "network": true,
+    "spawn": true
+  },
+  "_note": "id 必须等于叶子目录名（scripts/ci/check-repo-layout.js:724）；kind=runtime 的 main 必须在磁盘上存在（同文件 :731-735）。本文件 extension.js 只导出无副作用的 activate()/deactivate()，不是 MCP 入口。mcp 块是声明，不是自动注册：核里没有 manifest.mcp 消费者，注册必须走 `khy mcp add`（scripts/install.ps1 生成绝对路径），因为 KhyOS 启动 MCP server 时不传 cwd。不写 schemaVersion 2.0（v1 宽松契约）；v2.0 还会额外要求 commands 等字段。namespace=amoon 在本仓库内唯一（已扫描 delivery/extension 下全部 manifest）。"
+}
