@@ -72,7 +72,9 @@ describe('等级文案:短徽标给卡、长标签留给旧形态', () => {
   });
 
   test('标题与尾注:等级徽标 + 工具名,缺一不编', () => {
-    expect(pn.cardTitle(L2_INPUT)).toBe('⛔ 高危操作需要授权');
+    // L2 徽标用「◉」而非「⛔」：后者的显示宽度在多数终端里算 2 列，会把卡片首列撑歪
+    // （产品侧与本用例在同一个迁移提交里改过，断言没跟上）。
+    expect(pn.cardTitle(L2_INPUT)).toBe('◉ 高危操作需要授权');
     expect(pn.cardTitle({ level: 'L1' })).toBe('⚠ 需要授权');
     expect(pn.cardTitleTail(L2_INPUT, 'shellCommand')).toBe('红灯 L2 · shellCommand');
     expect(pn.cardTitleTail({}, 'Write')).toBe('Write');
@@ -167,7 +169,7 @@ describe('buildRecord — 输出区记录是无损的,且不重抄卡', () => {
 
   test('首行 = 需要授权 + 工具 + 等级徽标', () => {
     expect(pn.buildRecord(L2_INPUT, 'shellCommand', 80).split('\n')[0]).toBe(
-      '⛔ 需要授权 · shellCommand · 红灯 L2'
+      '◉ 需要授权 · shellCommand · 红灯 L2'
     );
   });
 

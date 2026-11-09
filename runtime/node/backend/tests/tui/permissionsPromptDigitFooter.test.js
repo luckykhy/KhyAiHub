@@ -101,6 +101,20 @@ const L1_REQ = {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// 固定 60ms 在全量串行跑里会被 GC/调度抖动击穿(实测 2026-10-11:挂载帧没画完就断言、
+// 首个数字键在 useInput 接上之前被丢 → Enter 落在默认行,期望 allow-always 实得 allow)。
+// 改轮询到位(口径同 completionMenuSize 的挂载轮询):帧画出来才算挂载完;画面动了或
+// 授权回调翻了才算按键被消费。本文件每个按键都必有可见后果(数字键移光标 / Enter·Esc
+// resolve),补发只发生在「毫无反应 = 被丢」时,已消费的按键绝不会走到补发,不会重复触发。
+async function waitFor(cond, timeoutMs = 4000) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (cond()) return true;
+    if (Date.now() > deadline) return false;
+    await wait(25);
+  }
+}
+
 async function mount(request, envOverride) {
   const saved = process.env.KHY_PERMISSION_ALLOW_FIRST_HIGHRISK;
   if (envOverride === undefined) delete process.env.KHY_PERMISSION_ALLOW_FIRST_HIGHRISK;
@@ -115,10 +129,19 @@ async function mount(request, envOverride) {
     React.createElement(Comp, { request, onResolve: (v) => { hit = true; resolved = v; } }),
     { stdout, stdin, exitOnCtrlC: false, patchConsole: false }
   );
-  await wait(60);
+  // footer 的「Enter」是三种变体公共字样 —— 等它出现才算挂载帧画完,超时则让断言报真差异。
+  await waitFor(() => stripAnsi(stdout.getBuffer()).includes('Enter'));
   return {
     frame: stripAnsi(stdout.getBuffer()),
-    press: async (bytes) => { stdin.press(bytes); await wait(60); },
+    press: async (bytes) => {
+      const before = stdout.getBuffer();
+      stdin.press(bytes);
+      const consumed = await waitFor(() => hit || stdout.getBuffer() !== before, 1000);
+      if (!consumed) {
+        stdin.press(bytes); // 上一次 emit('readable') 落在监听器接上之前,补发一次
+        await waitFor(() => hit || stdout.getBuffer() !== before, 1000);
+      }
+    },
     got: () => ({ hit, resolved }),
     unmount: () => instance.unmount(),
     restore: () => {

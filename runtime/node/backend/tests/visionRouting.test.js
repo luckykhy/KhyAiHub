@@ -205,6 +205,27 @@ test('跨 pool 钉位(relay/gpt-4o-mini)→ 切换并携带 poolHint=relay 供 a
   assert.strictEqual(d.poolHint, 'relay');
 });
 
+test('视觉端点 pin(khy-vision/step-2-16k)两道注入下确实触发，poolHint=khy-vision', () => {
+  // The exact shape visionEndpointStore.visionRoutingEnvPatch injects into the
+  // per-request routing env. step-2-16k carries no VISION_NAME_HINTS fragment,
+  // so the pin branch only fires because KHY_VISION_MODELS also names it — the
+  // second injection is load-bearing, not belt-and-braces. Dropping either
+  // variable here turns this into a silent ocr-fallback.
+  const d = decideVisionRouting({
+    hasImage: true,
+    currentModel: 'text-only-model',
+    candidateModels: [],
+    env: {
+      KHY_VISION_FALLBACK_MODEL: 'khy-vision/step-2-16k',
+      KHY_VISION_MODELS: 'khy-vision/step-2-16k',
+    },
+  });
+  assert.strictEqual(d.action, 'switch-model');
+  assert.strictEqual(d.model, 'khy-vision/step-2-16k');
+  assert.strictEqual(d.reason, 'switched_to_pinned_vision_model');
+  assert.strictEqual(d.poolHint, 'khy-vision', 'poolHint 是端点切换的载体');
+});
+
 test('裸名钉位(gpt-4o)→ poolHint=null(默认同 pool,aiGateway 清空 scope 不钉回旧 pool)', () => {
   const d = decideVisionRouting({
     hasImage: true,
