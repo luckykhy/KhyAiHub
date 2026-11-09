@@ -1,6 +1,8 @@
-﻿import 'package:flutter/material.dart';
+﻿// khy-canary: Khy-20261101-113-J3CZ1K11
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/models.dart';
+import '../../core/config/endpoint_defaults.dart';
 import '../../core/gateway/provider_adapter.dart';
 
 /// 独立模式屏幕
@@ -241,8 +243,11 @@ class _IndependentScreenState extends ConsumerState<IndependentScreen> {
                   avatar: const Icon(Icons.api, size: 18),
                   label: const Text('Ollama'),
                   onPressed: () {
-                    _baseUrlController.text = 'http://localhost:11434/v1';
-                    _modelController.text = 'llama3.2';
+                    // 引用单一真源而不是写字面量：适配器默认值也是它。
+                    // 两边各写一份，改了一处另一处不跟着变，而用户的请求会
+                    // 静默发去一个他没选的地方。
+                    _baseUrlController.text = kDefaultOllamaBaseUrl;
+                    _modelController.text = kDefaultOllamaModel;
                   },
                 ),
                 ActionChip(

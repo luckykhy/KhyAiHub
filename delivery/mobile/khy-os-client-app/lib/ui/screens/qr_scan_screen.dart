@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-117-J2X25VQ7
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 

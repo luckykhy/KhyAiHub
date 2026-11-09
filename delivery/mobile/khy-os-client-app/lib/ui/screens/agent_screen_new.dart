@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-107-W8W13062
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import '../../core/network/dns_resolver.dart';
 import '../../core/network/network_autofix.dart';
 import '../../core/services/app_logger.dart';
 import '../../core/config/built_in_keys.dart';
+import '../../core/agent/tool_verdict.dart';
 import '../../core/tools/tool_engine.dart';
 import '../../core/tools/builtin_tools.dart';
 import '../../core/tools/write_diff.dart';
@@ -446,19 +448,13 @@ class _AgentScreenNewState extends ConsumerState<AgentScreenNew> {
           _toolCards.last = updatedCard;
           if (mounted) setState(() {});
 
-          // Feed back to LLM
-          if (useTextProtocol) {
-            messages.add({
-              'role': 'user',
-              'content': ToolProtocol.formatToolResult(result),
-            });
-          } else {
-            messages.add({
-              'tool_call_id': '${DateTime.now().millisecondsSinceEpoch}',
-              'role': 'tool',
-              'content': result.jsonOutput,
-            });
-          }
+          // Feed back to LLM — 同一条核对收口，见 tool_verdict.dart。
+          messages.add(ToolVerdictFactory.toolMessage(
+            tool: toolName,
+            result: result,
+            useTextProtocol: useTextProtocol,
+            callId: '${DateTime.now().millisecondsSinceEpoch}',
+          ));
         }
       }
 

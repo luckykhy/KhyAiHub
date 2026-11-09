@@ -1,6 +1,8 @@
-﻿import 'package:flutter/material.dart';
+﻿// khy-canary: Khy-20261101-110-C54CY3NF
+import 'package:flutter/material.dart';
 import '../../core/gateway/khyos_api.dart';
 import '../../core/gateway/pairing.dart';
+import '../widgets/khy_brand_mark.dart';
 import 'qr_scan_screen.dart';
 
 class ConnectionScreen extends StatefulWidget {
@@ -22,12 +24,72 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   final _pairingController = TextEditingController();
   bool _isConnecting = false;
   String? _error;
+  /// 连接进度的可读描述：动作 + 目标 + 进度（RUNTIME-002）。
+  String? _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreLastAddress();
+  }
 
   @override
   void dispose() {
     _addressController.dispose();
     _pairingController.dispose();
     super.dispose();
+  }
+
+  /// 装好即连：把上次成功的地址填回输入框，并直接试连。
+  /// 用户不必重新查 IP；失败时地址保留在框里，重试按钮立即可用。
+  Future<void> _restoreLastAddress() async {
+    KhyOsConnection? saved;
+    try {
+      saved = await widget.api.loadConnection();
+    } catch (_) {
+      return;
+    }
+    final address = (saved?.apiBaseUrl ?? '').trim();
+    if (!mounted || address.isEmpty) return;
+    _addressController.text = address;
+    await _autoConnect(address);
+  }
+
+  /// 有界自动重连：最多 3 次，间隔递增。任何异常都如实落到 _error，
+  /// 不把「试过了」显示成「连上了」。
+  Future<void> _autoConnect(String address) async {
+    const maxAttempts = 3;
+    for (var attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      if (!mounted) return;
+      setState(() {
+        _isConnecting = true;
+        _error = null;
+        _progress = '连接 $address（第 $attempt/$maxAttempts 次）…';
+      });
+      try {
+        await widget.api.verifyAndSave(address);
+        if (!mounted) return;
+        setState(() => _progress = null);
+        widget.onConnected();
+        return;
+      } catch (e) {
+        if (attempt >= maxAttempts) {
+          if (mounted) {
+            setState(() {
+              _error = '连接 $address 失败（已试 $maxAttempts 次）：$e\n'
+                  '手机与电脑需在同一局域网；可点「Connect」重试，或改用配对码。';
+              _progress = null;
+            });
+          }
+          break;
+        }
+        await Future<void>.delayed(Duration(seconds: attempt * 2));
+      }
+    }
+    if (mounted && _progress != null) {
+      setState(() => _progress = null);
+    }
+    if (mounted) setState(() => _isConnecting = false);
   }
 
   Future<void> _connect() async {
@@ -37,17 +99,24 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     setState(() {
       _isConnecting = true;
       _error = null;
+      _progress = '连接 $address…';
     });
 
     try {
       await widget.api.verifyAndSave(address);
       if (mounted) {
+        setState(() => _progress = null);
         widget.onConnected();
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
-      if (mounted) setState(() => _isConnecting = false);
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _progress = null;
+        });
+      }
     }
   }
 
@@ -100,35 +169,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [cs.primary, cs.tertiary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cs.primary.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'K',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+                // 品牌块：墨黑底 + 琥珀主标（与 Web / 桌面端 / TUI 同一枚主标）。
+                const KhyBrandTile(size: 80, radius: 20, markScale: 0.66),
                 const SizedBox(height: 24),
                 Text(
                   'khy-os',
@@ -210,6 +252,27 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                     ],
                   ),
                 ),
+                if (_progress != null) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          _progress!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),
                   Container(

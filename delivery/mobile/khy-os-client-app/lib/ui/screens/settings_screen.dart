@@ -1,11 +1,14 @@
-﻿import 'package:flutter/material.dart';
+﻿// khy-canary: Khy-20261101-118-1HFCCV2E
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import '../../core/config/app_config.dart';
+import '../widgets/project_info_card.dart';
 import '../../core/config/provider_presets.dart';
 import '../../core/gateway/khyos_api.dart';
 import '../screens/connection_screen.dart';
 import '../screens/network_diagnostic_screen.dart';
+import '../widgets/khy_brand_mark.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -270,17 +273,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text('K', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, height: 1)),
-                  ),
-                ),
+                // 品牌块：墨黑底 + 琥珀主标（与 Web / 桌面端 / TUI 同一枚主标）。
+                leading: const KhyBrandTile(size: 48, radius: 12),
                 title: const Text('khy-os'),
                 subtitle: const Text('v0.1.0 · AI Client'),
               ),
@@ -317,6 +311,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          // 共享 widget，不在这里再写一份：这屏有两个设置界面，早先只改了
+          // settings_screen，真机上用户看到的却是 settings_screen_new——
+          // 卡片等于没落地。共用一份不会再出现"改了没生效"。
+          const ProjectInfoCard(),
           const SizedBox(height: 32),
         ],
       ),
