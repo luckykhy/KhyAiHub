@@ -1,0 +1,378 @@
+#!/system/bin/sh
+# kb — KhyOS amoon bridge phone client.
+#
+# Two channels:
+#   1. HTTP:  Bearer token -> http://127.0.0.1:<port>/v1/call (adb reverse).
+#   2. File:  write <root>/inbox/cmd_<id>.json, poll <root>/outbox/res_<id>.json.
+# HTTP is tried first when curl and a token exist; any failure falls back to the
+# file mailbox and says so on stderr.
+#
+# stdout carries JSON only; diagnostics go to stderr.
+# POSIX sh / Android toybox: no bashisms, no jq, no openssl.
+#
+# Usage:
+#   sh kb <tool> '<json args>'
+#   sh kb health | tools | status | post <file> | pull [id] | ask <text>
+
+set -u
+
+KB_ROOT="${KB_ROOT:-/sdcard/khy-amoon-bridge}"
+PORT_DEFAULT="18765"
+TIMEOUT="${KB_TIMEOUT:-60}"
+
+KB_TMP="$KB_ROOT/tmp"
+if ! mkdir -p "$KB_TMP" 2>/dev/null; then
+  KB_TMP="/data/local/tmp"
+fi
+
+cleanup() {
+  rm -f "$KB_TMP/kb.$$".* 2>/dev/null
+}
+trap cleanup 0
+
+say_err() {
+  printf '%s\n' "$*" >&2
+}
+
+fail_json() {
+  printf '{"ok":false,"error":{"code":"%s","message":"%s"}}\n' "$1" "$2"
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+kb — KhyOS amoon 桥的手机端客户端（POSIX sh / toybox）
+
+用法:
+  sh kb <tool> '<json args>'   调用一个工具（先试 HTTP，失败回退文件信箱）
+  sh kb health                探测通道（HTTP /health，失败则检查文件信箱）
+  sh kb tools                 打印本机工具清单（tools.json）
+  sh kb status                打印本机通道与目录状态
+  sh kb post <file>           把准备好的命令信封放进 inbox/
+  sh kb pull [id]             打印 outbox 里的结果（默认最新一条）
+  sh kb ask <text>            khy_ask 快捷方式（默认关闭，会被拒绝）
+
+环境变量:
+  KB_ROOT     信箱根目录（默认 /sdcard/khy-amoon-bridge）
+  KB_TIMEOUT  等待结果的秒数（默认 60）
+
+只读允许的工具: ping / bridge_status / mailbox_status
+stdout 只输出 JSON；诊断信息走 stderr。
+EOF
+}
+
+have_curl() {
+  command -v curl >/dev/null 2>&1
+}
+
+# The contract path is `token`; this bundle writes `token.txt`. Prefer the
+# contract path when both exist so a later PC-side rotate wins.
+detect_token() {
+  if [ -f "$KB_ROOT/token" ]; then
+    tr -d '\r\n' < "$KB_ROOT/token"
+    return 0
+  fi
+  if [ -f "$KB_ROOT/token.txt" ]; then
+    tr -d '\r\n' < "$KB_ROOT/token.txt"
+    return 0
+  fi
+  return 0
+}
+
+# config.json is the contract's source of truth; port.txt is this bundle's
+# lightweight copy. Prefer config.json when both exist.
+detect_port() {
+  if [ -f "$KB_ROOT/config.json" ]; then
+    _p=$(tr ',{}' '\n\n\n' < "$KB_ROOT/config.json" 2>/dev/null \
+      | awk -F: '/"port"/ { gsub(/[^0-9]/, "", $2); if ($2 != "") { print $2; exit } }')
+    if [ -n "$_p" ]; then
+      printf '%s' "$_p"
+      return 0
+    fi
+  fi
+  if [ -f "$KB_ROOT/port.txt" ]; then
+    _p=$(tr -cd '0-9' < "$KB_ROOT/port.txt" 2>/dev/null)
+    if [ -n "$_p" ]; then
+      printf '%s' "$_p"
+      return 0
+    fi
+  fi
+  printf '%s' "$PORT_DEFAULT"
+}
+
+mkid() {
+  _t=$(date +%s)
+  _r=$(awk 'BEGIN { srand(); printf "%05d", int(rand() * 100000) }' 2>/dev/null)
+  if [ -z "$_r" ]; then
+    _r="00000"
+  fi
+  printf 'kb%s%s%s' "$_t" "$$" "$_r"
+}
+
+# Escape one file's content as a JSON string body (no surrounding quotes).
+# Backslash, quote and tab are escaped; lines are joined with a literal \n.
+json_escape_file() {
+  awk '
+    BEGIN { first = 1 }
+    {
+      line = $0
+      sub(/\r$/, "", line)
+      n = length(line)
+      out = ""
+      for (i = 1; i <= n; i++) {
+        c = substr(line, i, 1)
+        if (c == "\\") out = out "\\\\"
+        else if (c == "\"") out = out "\\\""
+        else if (c == "\t") out = out "\\t"
+        else out = out c
+      }
+      if (!first) printf "\\n"
+      printf "%s", out
+      first = 0
+    }
+  ' "$1"
+}
+
+count_files() {
+  ls -1 "$1" 2>/dev/null | wc -l | tr -d ' '
+}
+
+# ── file channel ────────────────────────────────────────────────────────────
+
+file_call() {
+  _tool="$1"
+  _args="$2"
+  mkdir -p "$KB_ROOT/inbox" "$KB_ROOT/outbox" "$KB_ROOT/tmp" 2>/dev/null \
+    || fail_json io_error "无法创建信箱目录（$KB_ROOT）"
+
+  _id=$(mkid)
+  _now=$(date +%s)
+  _exp=$((_now + TIMEOUT))
+  _cmd="$KB_ROOT/tmp/cmd_$_id.json.tmp.$$"
+  printf '{"v":1,"id":"%s","tool":"%s","args":%s,"ts":%s,"expires_at":%s}\n' \
+    "$_id" "$_tool" "$_args" "$_now" "$_exp" > "$_cmd" \
+    || fail_json io_error "无法写入临时命令文件"
+  mv -f "$_cmd" "$KB_ROOT/inbox/cmd_$_id.json" \
+    || fail_json io_error "无法把命令投递到 inbox"
+
+  _res="$KB_ROOT/outbox/res_$_id.json"
+  _waited=0
+  while [ "$_waited" -lt "$TIMEOUT" ]; do
+    if [ -f "$_res" ]; then
+      cat "$_res"
+      return 0
+    fi
+    sleep 1
+    _waited=$((_waited + 1))
+  done
+  fail_json timeout "文件信箱等待结果超时（${TIMEOUT}s），命令 id=$_id"
+}
+
+# ── commands ────────────────────────────────────────────────────────────────
+
+cmd_call() {
+  _tool="${1:-}"
+  _args="${2:-}"
+  if [ -z "$_tool" ]; then
+    fail_json invalid_args "缺少工具名：sh kb <tool> '<json args>'"
+  fi
+  case "$_tool" in
+    *[!a-z0-9_]*)
+      fail_json invalid_args "工具名只允许小写字母、数字和下划线"
+      ;;
+  esac
+  if [ -z "$_args" ]; then
+    _args='{}'
+  fi
+  case "$_args" in
+    \{*) ;;
+    *) fail_json invalid_args "args 必须是 JSON 对象字符串，例如 '{\"verbose\":true}'" ;;
+  esac
+
+  _port=$(detect_port)
+  _token=$(detect_token)
+  _id=$(mkid)
+  _body="$KB_TMP/kb.$$.body.json"
+  printf '{"id":"%s","tool":"%s","args":%s}\n' "$_id" "$_tool" "$_args" > "$_body" \
+    || fail_json io_error "无法写入临时请求体"
+
+  if [ -n "$_token" ] && have_curl; then
+    _out="$KB_TMP/kb.$$.http.json"
+    _err="$KB_TMP/kb.$$.http.err"
+    if curl --noproxy '*' -sS --max-time "$TIMEOUT" \
+        -H "Authorization: Bearer $_token" \
+        -H 'Content-Type: application/json' \
+        --data-binary "@$_body" \
+        "http://127.0.0.1:$_port/v1/call" > "$_out" 2> "$_err"; then
+      if [ -s "$_out" ]; then
+        cat "$_out"
+        return 0
+      fi
+    fi
+    say_err "HTTP 通道不可用（port=$_port），回退到文件信箱"
+  elif [ -z "$_token" ]; then
+    say_err "未找到 token（$KB_ROOT/token.txt），使用文件信箱"
+  else
+    say_err "curl 不可用，使用文件信箱"
+  fi
+
+  file_call "$_tool" "$_args"
+}
+
+cmd_health() {
+  _port=$(detect_port)
+  if have_curl; then
+    _out="$KB_TMP/kb.$$.health.json"
+    if curl --noproxy '*' -sS --max-time 3 \
+        "http://127.0.0.1:$_port/health" > "$_out" 2>/dev/null && [ -s "$_out" ]; then
+      _body=$(cat "$_out")
+      printf '{"ok":true,"channel":"http","port":%s,"health":%s}\n' "$_port" "$_body"
+      return 0
+    fi
+  fi
+  if [ -d "$KB_ROOT/inbox" ]; then
+    # Prove a write into inbox itself (not /data/local/tmp): Phase 0 requires
+    # amoon to be able to write the mailbox, not merely see the directory.
+    _probe="$KB_ROOT/inbox/.kb_probe.$$"
+    if ( printf 'ok\n' > "$_probe" ) 2>/dev/null && [ -f "$_probe" ]; then
+      rm -f "$_probe" 2>/dev/null || true
+      printf '{"ok":true,"channel":"file","port":%s,"note":"HTTP 不可达；inbox 可写"}\n' "$_port"
+      return 0
+    fi
+    rm -f "$_probe" 2>/dev/null || true
+  fi
+  printf '{"ok":false,"channel":"none","port":%s,"error":"HTTP 与文件信箱都不可用"}\n' "$_port"
+  return 1
+}
+
+cmd_tools() {
+  if [ -f "$KB_ROOT/tools.json" ]; then
+    cat "$KB_ROOT/tools.json"
+    printf '\n'
+    return 0
+  fi
+  printf '{"ok":true,"tools":["ping","bridge_status","mailbox_status"],"note":"本地 tools.json 缺失，展示内置清单"}\n'
+}
+
+cmd_status() {
+  _port=$(detect_port)
+  _token=$(detect_token)
+  if [ -n "$_token" ]; then
+    _token_present=true
+  else
+    _token_present=false
+  fi
+  if have_curl; then
+    _curl=true
+  else
+    _curl=false
+  fi
+  printf '{"ok":true,"root":"%s","protocol":"khy-amoon/1","port":%s,"token_present":%s,"curl":%s,"inbox":%s,"outbox":%s,"working":%s,"failed":%s}\n' \
+    "$KB_ROOT" "$_port" "$_token_present" "$_curl" \
+    "$(count_files "$KB_ROOT/inbox")" \
+    "$(count_files "$KB_ROOT/outbox")" \
+    "$(count_files "$KB_ROOT/working")" \
+    "$(count_files "$KB_ROOT/failed")"
+}
+
+cmd_post() {
+  _src="${1:-}"
+  if [ -z "$_src" ]; then
+    fail_json invalid_args "用法：sh kb post <json-file>"
+  fi
+  if [ ! -f "$_src" ]; then
+    fail_json not_found "文件不存在：$_src"
+  fi
+  _first=$(head -c 1 "$_src" 2>/dev/null)
+  if [ "$_first" != "{" ]; then
+    fail_json invalid_args "命令文件必须是 JSON 对象"
+  fi
+  _base=$(basename "$_src")
+  case "$_base" in
+    cmd_*.json) ;;
+    *) _base="cmd_$(mkid).json" ;;
+  esac
+  mkdir -p "$KB_ROOT/tmp" "$KB_ROOT/inbox" 2>/dev/null || fail_json io_error "无法创建目录"
+  _tmp="$KB_ROOT/tmp/${_base}.tmp.$$"
+  cp "$_src" "$_tmp" || fail_json io_error "无法复制命令文件"
+  mv -f "$_tmp" "$KB_ROOT/inbox/$_base" || fail_json io_error "无法投递命令"
+  printf '{"ok":true,"posted":"%s"}\n' "$_base"
+}
+
+cmd_pull() {
+  _id="${1:-}"
+  if [ -n "$_id" ]; then
+    _f="$KB_ROOT/outbox/res_$_id.json"
+    if [ ! -f "$_f" ]; then
+      fail_json not_found "结果不存在：$_id"
+    fi
+    cat "$_f"
+    return 0
+  fi
+  _f=$(ls -1t "$KB_ROOT"/outbox/res_*.json 2>/dev/null | head -n 1)
+  if [ -z "$_f" ]; then
+    fail_json not_found "outbox 里没有结果"
+  fi
+  cat "$_f"
+}
+
+cmd_ask() {
+  _text="${1:-}"
+  if [ -z "$_text" ]; then
+    fail_json invalid_args "用法：sh kb ask <text>"
+  fi
+  _qf="$KB_TMP/kb.$$.question.txt"
+  printf '%s' "$_text" > "$_qf" || fail_json io_error "无法写入问题文本"
+  _esc=$(json_escape_file "$_qf")
+  cmd_call khy_ask "{\"question\":\"$_esc\"}"
+}
+
+# ── dispatch ────────────────────────────────────────────────────────────────
+
+if [ "$#" -eq 0 ]; then
+  usage
+  exit 2
+fi
+
+case "${1:-}" in
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
+  health)
+    cmd_health
+    exit $?
+    ;;
+  tools)
+    cmd_tools
+    exit $?
+    ;;
+  status)
+    cmd_status
+    exit $?
+    ;;
+  post)
+    shift
+    cmd_post "${1:-}"
+    exit $?
+    ;;
+  pull)
+    shift
+    cmd_pull "${1:-}"
+    exit $?
+    ;;
+  ask)
+    shift
+    cmd_ask "${1:-}"
+    exit $?
+    ;;
+  call)
+    shift
+    cmd_call "${1:-}" "${2:-}"
+    exit $?
+    ;;
+  *)
+    cmd_call "${1:-}" "${2:-}"
+    exit $?
+    ;;
+esac

@@ -10,16 +10,24 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* 隐藏所有滚动条 */
+  /* 滚动条保留为细条：全局 display:none 会让长表格/长行情列表看不出还能滚动 */
   *::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    width: 4px;
+    height: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.45);
+    border-radius: 2px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.45) transparent;
   }
 
   /* 防止滚动穿透 */

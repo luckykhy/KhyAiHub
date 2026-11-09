@@ -27,6 +27,27 @@
   --khy-gray-800: #1f1f1f;
   --khy-gray-900: #141414;
 
+  /* Trading skin — the always-dark palette behind Trading.css,
+     SimpleTradingInterface.css and the trading panels. Kept out of the
+     prefers-color-scheme flip below on purpose: those surfaces always paint
+     near-white text, and flipping --khy-gray-900 turned them into white text
+     on a #e8e8e8 background. */
+  --surface-trading-bg: #141414;
+  --surface-trading-bg-alt: #1f1f1f;
+  --surface-trading-border: #262626;
+  --surface-trading-border-strong: #434343;
+  --surface-trading-text: #d9d9d9;
+  --surface-trading-text-secondary: #8c8c8c;
+  --surface-trading-text-tertiary: #595959;
+
+  /* Trade / quote semantics — A-share convention (红买红涨、绿卖绿跌), held in
+     one place so the buy button, the order tag and the price digits can never
+     point opposite ways again. */
+  --khy-trade-buy: var(--khy-danger);
+  --khy-trade-sell: var(--khy-success);
+  --khy-quote-up: var(--khy-danger);
+  --khy-quote-down: var(--khy-success);
+
   /* 主色调 - 专业金融蓝 */
   --primary-color: var(--khy-primary);
   --primary-light: #40a9ff;
@@ -107,7 +128,7 @@
   
   /* 字体 */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', 'Droid Sans Mono', Consolas, 'Courier New', monospace;
 }
 
 /* 全局重置和基础样式 */
@@ -390,7 +411,9 @@ body {
   }
 }
 
-/* 深色模式支持（预留） */
+/* Dark mode — live, not a placeholder. It flips the semantic roles (text/bg/
+   border) and the gray scale for the light-theme pages; the trading skin is
+   carved out of that flip via the --surface-trading-* tokens above. */
 @media (prefers-color-scheme: dark) {
   :root {
     /* Gray scale — dark mode inversion (FE-001 G2) */

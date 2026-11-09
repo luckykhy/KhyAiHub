@@ -830,12 +830,12 @@
         style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e4e7ed;"
       >
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-          <span style="font-weight: 600; font-size: 14px;">ML Model Management</span>
+          <span style="font-weight: 600; font-size: 14px;">ML 模型管理</span>
           <el-tag
             :type="retrainStatus.status === 'running' ? 'warning' : retrainStatus.status === 'completed' ? 'success' : 'info'"
             size="small"
           >
-            {{ retrainStatus.status === 'running' ? 'Training...' : retrainStatus.status === 'completed' ? 'Ready' : 'Idle' }}
+            {{ retrainStatus.status === 'running' ? '训练中' : retrainStatus.status === 'completed' ? '就绪' : '空闲' }}
           </el-tag>
         </div>
         <el-button
@@ -846,7 +846,7 @@
           @click="triggerRetrain"
         >
           <el-icon><Refresh /></el-icon>
-          {{ retrainStatus.status === 'running' ? 'Retraining in progress...' : 'Retrain Models' }}
+          {{ retrainStatus.status === 'running' ? '重新训练中…' : '重新训练模型' }}
         </el-button>
         <div
           v-if="retrainStatus.status === 'running' && retrainStatus.logs && retrainStatus.logs.length > 0"
@@ -863,13 +863,13 @@
           v-if="retrainStatus.status === 'completed'"
           style="margin-top: 6px; font-size: 12px; color: var(--khy-success);"
         >
-          Training completed at {{ retrainStatus.finishedAt }}
+          训练完成于 {{ retrainStatus.finishedAt }}
         </div>
         <div
           v-if="retrainStatus.status === 'failed'"
           style="margin-top: 6px; font-size: 12px; color: var(--khy-danger);"
         >
-          Training failed. Check logs for details.
+          训练失败：请查看日志获取详情
         </div>
       </div>
 
@@ -2438,7 +2438,7 @@ onUnmounted(() => {
 .bot-avatar {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, var(--khy-gray-900) 0%, #2d2d2d 100%);
+  background: linear-gradient(135deg, var(--surface-trading-bg) 0%, #2d2d2d 100%);
   border: 4px solid #FFD700;
   border-radius: 50%;
   display: flex;
@@ -2467,7 +2467,7 @@ onUnmounted(() => {
 }
 
 .bot-avatar.expanded {
-  background: linear-gradient(135deg, #2d2d2d 0%, var(--khy-gray-900) 100%);
+  background: linear-gradient(135deg, #2d2d2d 0%, var(--surface-trading-bg) 100%);
   border-color: #FFD700;
 }
 
@@ -2611,29 +2611,12 @@ onUnmounted(() => {
 }
 
 .panel-header {
-  background: linear-gradient(135deg, 
-    #C71585 0%,    /* 深粉红 */
-    #D2691E 15%,   /* 深橙色 */
-    #B8860B 30%,   /* 深金色 */
-    #228B22 45%,   /* 森林绿 */
-    #008B8B 60%,   /* 深青色 */
-    #4169E1 75%,   /* 皇家蓝 */
-    #6A5ACD 90%,   /* 石板蓝 */
-    #8B008B 100%   /* 深洋红 */
-  );
-  background-size: 200% 200%;
-  animation: rainbow-flow 8s ease infinite;
+  background: linear-gradient(135deg, var(--khy-primary) 0%, var(--khy-primary-strong) 100%);
   color: white;
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-@keyframes rainbow-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 .header-left h3 {

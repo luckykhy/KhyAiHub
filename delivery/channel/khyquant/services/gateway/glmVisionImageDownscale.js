@@ -33,6 +33,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const crypto = require('crypto');
 
 // GLM 视觉端合并预算上限(inputs + max_new_tokens)。留出输出与安全余量后,把图片
 // 目标 token 压到 TARGET_IMAGE_TOKENS 以内。16384 - 1024(输出) - 保守余量 ≈ 12000。
@@ -169,6 +170,16 @@ function computeScaleFactor(width, height, env = process.env) {
   return Math.max(0.05, Math.min(1, scale));
 }
 
+// 临时文件 stamp:进程内单调计数器 + 随机后缀。旧写法是 `${process.pid}_${buf.length}`,
+// 挡不住同进程并发——worker thread 与主线程**共享 pid**,且各自持有独立的模块实例
+// (计数器都从 0 起),于是两张等字节图必然撞名。计数器管同线程连续调用,随机段管跨线程。
+// 用 crypto 而非 Math.random:同 tmpdir 下可预见的文件名等于谁都能抢写。
+let _tmpStampSeq = 0;
+function _nextTmpStamp() {
+  _tmpStampSeq += 1;
+  return `${process.pid}_${_tmpStampSeq}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
 /**
  * 用平台自带 CLI 把 PNG buffer 等比缩放到 (targetW × targetH),返回新 PNG buffer。
  * 找不到可用工具 / 失败 → 返回 null(调用方 fail-soft 用原图)。
@@ -183,7 +194,7 @@ function _downscaleBufferViaPlatform(buf, targetW, targetH) {
   let outFile;
   try {
     fs.mkdirSync(tmpDir, { recursive: true });
-    const stamp = `${process.pid}_${buf.length}`;
+    const stamp = _nextTmpStamp();
     inFile = path.join(tmpDir, `in_${stamp}.png`);
     outFile = path.join(tmpDir, `out_${stamp}.png`);
     fs.writeFileSync(inFile, buf);

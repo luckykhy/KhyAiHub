@@ -7,7 +7,7 @@
 
   flex-direction: column;
 
-  background: var(--khy-gray-900);
+  background: var(--surface-trading-bg);
 
   color: #e0e0e0;
 
@@ -105,7 +105,7 @@
 
   border-radius: 4px;
 
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -143,7 +143,9 @@
 
 .price-up {
 
-  color: #ff6b6b;
+  color: var(--khy-quote-up);
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -151,7 +153,9 @@
 
 .price-down {
 
-  color: #51cf66;
+  color: var(--khy-quote-down);
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -397,7 +401,7 @@
 
   font-weight: 600;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -405,7 +409,9 @@
 
 .crosshair-info .value.price-up {
 
-  color: #ff6b6b;
+  color: var(--khy-quote-up);
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -413,7 +419,9 @@
 
 .crosshair-info .value.price-down {
 
-  color: #51cf66;
+  color: var(--khy-quote-down);
+
+  font-variant-numeric: tabular-nums;
 
 }
 
@@ -447,7 +455,7 @@
 
   flex-basis: 300px;
 
-  background: linear-gradient(135deg, var(--khy-gray-900) 0%, #2d2d2d 100%);
+  background: linear-gradient(135deg, var(--surface-trading-bg) 0%, #2d2d2d 100%);
 
   border-radius: 8px;
 
@@ -867,7 +875,7 @@
 
   color: #e0e0e0;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
   font-weight: 600;
 
@@ -879,11 +887,11 @@
 
 .signal-time {
 
-  color: var(--khy-gray-400);
+  color: var(--surface-trading-text-secondary);
 
   font-size: 11px;
 
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: var(--font-family-mono);
 
 }
 
@@ -1141,7 +1149,7 @@
 
 :deep(.el-dialog__header) {
 
-  background-color: var(--khy-gray-700);
+  background-color: var(--surface-trading-border);
 
   border-bottom: 1px solid #404040;
 

@@ -40,7 +40,7 @@
         >
           <template #default="{ row }">
             <el-tag
-              :type="row.side === 'buy' ? 'success' : 'danger'"
+              :type="row.side === 'buy' ? 'danger' : 'success'"
               size="small"
             >
               {{ row.side === 'buy' ? '买' : '卖' }}

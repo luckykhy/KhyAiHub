@@ -448,9 +448,9 @@
 
                 {{ replayCurrentDate }} | {{ replayProgress }}% |
 
-                <span style="color:var(--khy-success);">买入: {{ replayBuyCount }}</span> /
+                <span style="color:var(--khy-trade-buy);">买入: {{ replayBuyCount }}</span> /
 
-                <span style="color:var(--khy-danger);">卖出: {{ replaySellCount }}</span>
+                <span style="color:var(--khy-trade-sell);">卖出: {{ replaySellCount }}</span>
 
               </span>
             </div>
@@ -641,7 +641,7 @@
             <div class="drawer-content">
               <div class="drawer-section">
                 <h3 class="drawer-section-title">
-                  Quick Trade — {{ currentStock.code }}
+                  快速下单 — {{ currentStock.code }}
                 </h3>
 
                 <div class="drawer-price-row">
