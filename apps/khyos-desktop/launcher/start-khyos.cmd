@@ -54,6 +54,19 @@ if defined RUNNING (
 )
 
 :launch
+rem Bring out/ up to date before a cold start: rebuild only when src/ is newer,
+rem otherwise this costs one timestamp comparison. A failed build still falls
+rem through to the old artifacts - the window must stay openable, and the error
+rem is already on the console.
+rem Only the cold-start path reaches here (the single-instance handoff returns
+rem above), so the build can never race a running instance over out/.
+where node >nul 2>nul
+if errorlevel 1 goto :skip_ensure
+if not exist "%APP_DIR%\scripts\watch-rebuild.cjs" goto :skip_ensure
+pushd "%APP_DIR%"
+node scripts\watch-rebuild.cjs --ensure
+popd
+:skip_ensure
 if exist "%APP_DIR%\out\main\index.js" (
     pushd "%APP_DIR%"
     start "" "%ELECTRON%" . --disable-gpu --disable-software-rasterizer --in-process-gpu

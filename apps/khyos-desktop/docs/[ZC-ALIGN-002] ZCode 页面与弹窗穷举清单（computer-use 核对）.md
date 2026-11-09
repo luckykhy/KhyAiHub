@@ -73,7 +73,7 @@
 | E4 | 输入区（占位「向 ZCode 提问，使用 @ 添加上下文…」） | chat.placeholder.newTask | ✓ s-2 a56 | 失真（复刻占位文案不同） |
 | E5 | 工具行：+ 添加上下文 / 模式选择（完全访问 has_menu）/ 模型选择器（Agnes AI 中国站/agnes-3.0-flash）/ 发送 | 092 §7.2/§7.3 | ✓ s-2 a44-a53 | 失真（复刻无 模型/模式/上下文/停止 四件套） |
 | E5b | Composer 底部工具行 2（会话页）：+ 添加上下文 / 完全访问 / 上下文用量 / 模型选择器 / **思考强度下拉（低/高/最高/off）** / 停止生成 | 092 §7.2/§7.4 | ✓ s-3 a46-a59 | 失真（复刻无思考强度下拉与停止生成） |
-| E6 | 上下文用量（「上下文已用 X / 总量 Y」pressable 统计） | chat.contextUsage | ✓ s-3 a55（249,664/1,000,000） | 有（Composer 工具行按钮 host 真源估算 + Token 用量面板 host 真数据，第十三轮：面板可长按 400ms 拖出为悬浮、位置 settings 持久化） |
+| E6 | 上下文用量（「上下文已用 X / 总量 Y」pressable 统计） | chat.contextUsage | ✓ s-3 a55（249,664/1,000,000） | 有（Composer 工具行按钮 host 真源估算；第十三轮加的消息流底部「Token 用量（本月配额）」面板已于 2026-11-01 按用户要求整体删除 —— 视觉噪音，非 ZCode 原版元素） |
 | E7 | 停止生成按钮（生成中出现） | chat | ✓ s-3 a46 | 缺 |
 | E8 | 快捷命令 chip 行（「computer-use 逐一核对：顶栏侧边面板…」胶囊，主内容区右上角） | 092 §7.14/quickPick | ✓ s-3 截图（顶栏下方） | 缺 |
 
@@ -103,7 +103,7 @@
 | G0 | **添加上下文菜单**（「+」按钮下拉，4 项：**添加附件 / 使用 @ 添加上下文 / 使用 / 选择能力 / 使用 $ 选择技能**） | chat.composer.insert*Shortcut | ✓ s-22 a14-a29（截图 frame-aefbfed7） | 缺（复刻无此按钮菜单） |
 | G0b | **模式选择菜单**（GLM provider 4 项：**变更前确认「改文件前先问我。」/ 自动编辑「自动编辑文件。」/ 计划模式「编辑前先出计划。」/ 完全访问「减少确认次数。」✓**） | mode.description.glm.*（092 §7.3） | ✓ s-19 a14-a29（截图 frame-57bc7297） | 失真（复刻 ModeSelector 形态/文案不同） |
 | G0c | **模型选择菜单**（分组头「BigModel 体验」+ radio「GLM-5.3-Flash 视觉」+ 分隔线 + 子菜单 Sense Nova (商汤)/Agnes AI/Agnes AI 中国站 + 「管理模型」+ tooltip 快捷键 **Ctrl+M**） | model + 092 §7.14 | ✓ s-12/s-16（截图 frame-cb1d437e/frame-c556a42b） | 缺 |
-| G0d | **上下文用量弹窗**（「上下文容量 26.4万/100万 (26.4%)」滑条 + 分解 7 项：消息 84.8%/MCP 工具 6.5%/系统工具 6.3%/系统提示词 0.6%/技能 0.4%/其他 1.4% + 「平均缓存命中率 95%」+ 「今日余额 150% 配额 升级/查看 150% 配额活动说明」+ 「GLM-5.3-Flash 100% 9月14日」） | chat.contextUsage.breakdown.*（092 §7.2） | ✓ s-5/s-6 a14-a41（弹窗实拍） | 缺（复刻 ContextUsagePanel 无此结构） |
+| G0d | **上下文用量弹窗**（「上下文容量 26.4万/100万 (26.4%)」滑条 + 分解 7 项：消息 84.8%/MCP 工具 6.5%/系统工具 6.3%/系统提示词 0.6%/技能 0.4%/其他 1.4% + 「平均缓存命中率 95%」+ 「今日余额 150% 配额 升级/查看 150% 配额活动说明」+ 「GLM-5.3-Flash 100% 9月14日」） | chat.contextUsage.breakdown.*（092 §7.2） | ✓ s-5/s-6 a14-a41（弹窗实拍） | 缺（复刻无此结构；原消息流底部 ContextUsagePanel 已于 2026-11-01 整体删除） |
 | G0e | **升级套餐弹窗**（「升级套餐」网页面板，zcode.z.ai/coding-plan?provider=bigmodel&embedded=app 嵌入；个人套餐 5 卡：Start Plan ¥0.00/GLM Coding Lite ¥118.00 起/GLM Coding Pro ¥538.00 起/GLM Coding Max ¥1,078.00 起 + 团队套餐 标准版 ¥598.00 起/高级版 ¥1,198.00 起，各带积分与权益列表 + 「选择套餐」按钮 + 「已有权益」disabled） | codingPlan（30）/manualClaimPlan（55） | ✓ s-7 a20-a113（实拍） | 未实现（092 §7.14 替换策略：结构复刻、数据接 tokenUsageService、套餐名改 KhyOS 自有方案） |
 | G0f | **CUA 状态悬浮窗**（「ZCode 正在操作电脑」独立小窗 313×70，电脑控制执行期间出现在屏幕右上，含 base64 data:URL 渲染） | cuaPermission/chat.cuaReadiness | ✓ s-11 window_id 4458558 实拍 | 缺（复刻无对应物） |
 | G0g | **思考强度下拉**（Composer 工具行「高」combobox，可切 低/高，092 称 Thought Level Ctrl+T） | 092 §7.4 / reasoning.variants | ✓ s-6 a77/s-17 a47（低→高 实测切换） | 失真（复刻是按钮非下拉、文案「最高」vs 实测「高」） |
