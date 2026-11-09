@@ -107,11 +107,102 @@ test('classify: 登记表为 undefined 时不炸（回滚能力）', () => {
   assert.strictEqual(r.name, 'khy-os');
 });
 
-test('classify: 登记按精确匹配，不按前缀（子目录不继承父登记）', () => {
+test('classify: 已登记项目根 → 子目录会话归入该项目（2026-10-20 语义）', () => {
   const regs = [{ path: 'D:\\Portable\\khy-os', name: 'khy-os' }];
-  const r = M.classifyWorkspacePath('D:\\Portable\\khy-os\\apps\\backend', regs);
+  const r = M.classifyWorkspacePath('D:\\Portable\\khy-os\\runtime\\node\\backend', regs);
+  assert.strictEqual(r.bucket, 'registered');
+  assert.strictEqual(r.name, 'khy-os');
+  // 分桶键必须是登记的项目根，不是 cwd 本身 —— 否则子目录会话又裂成一行
+  assert.strictEqual(r.rootPath, 'D:\\Portable\\khy-os');
+  assert.strictEqual(r.inferred, false);
+});
+
+test('classify: 未登记路径的 rootPath 等于自身（保持精确分桶）', () => {
+  const r = M.classifyWorkspacePath('D:\\Portable\\khy-os\\apps', []);
   assert.strictEqual(r.bucket, 'inferred');
-  assert.strictEqual(r.name, 'backend');
+  assert.strictEqual(r.rootPath, 'D:\\Portable\\khy-os\\apps');
+});
+
+// ── findProjectRoot / isUnderPath：项目根前缀匹配 ──────────────
+
+test('isUnderPath: 段边界匹配，兄弟前缀目录不误吸', () => {
+  assert.strictEqual(M.isUnderPath('D:\\a\\b', 'D:\\a\\b'), true);
+  assert.strictEqual(M.isUnderPath('D:\\a\\b\\c', 'D:\\a\\b'), true);
+  // 反模式钉住：裸 startsWith 会把 D:\a\bc 吸进 D:\a\b
+  assert.strictEqual(M.isUnderPath('D:\\a\\bc', 'D:\\a\\b'), false);
+  assert.strictEqual(M.isUnderPath('D:\\a\\b', 'D:\\a\\b\\c'), false);
+});
+
+test('isUnderPath: 分隔符混用与 Windows 大小写不敏感', () => {
+  assert.strictEqual(M.isUnderPath('D:/Portable/khy-os/apps', 'D:\\Portable\\khy-os'), true);
+  assert.strictEqual(M.isUnderPath('d:\\portable\\KHY-OS\\apps', 'D:\\Portable\\khy-os'), true);
+  // POSIX 大小写敏感，不能被折叠
+  assert.strictEqual(M.isUnderPath('/home/u/Proj/x', '/home/u/proj'), false);
+});
+
+test('isUnderPath: 尾部多余分隔符不影响判定', () => {
+  assert.strictEqual(M.isUnderPath('D:\\a\\b\\c', 'D:\\a\\b\\'), true);
+  assert.strictEqual(M.isUnderPath('D:\\a\\b\\', 'D:\\a\\b'), true);
+});
+
+test('findProjectRoot: 最长前缀胜出（更具体的登记更接近用户意图）', () => {
+  const regs = [
+    { path: 'D:\\a', name: 'outer' },
+    { path: 'D:\\a\\b', name: 'inner' },
+  ];
+  assert.strictEqual(M.findProjectRoot('D:\\a\\b\\c', regs).name, 'inner');
+  assert.strictEqual(M.findProjectRoot('D:\\a\\x', regs).name, 'outer');
+  assert.strictEqual(M.findProjectRoot('D:\\z', regs), undefined);
+});
+
+test('findProjectRoot: 空 path / 空登记表返回 undefined（不炸）', () => {
+  assert.strictEqual(M.findProjectRoot('D:\\a', []), undefined);
+  assert.strictEqual(M.findProjectRoot('', [{ path: 'D:\\a', name: 'a' }]), undefined);
+  assert.strictEqual(M.findProjectRoot('D:\\a', [{ path: '', name: 'x' }]), undefined);
+});
+
+test('parentPath: 上一级，盘符根不再上溯', () => {
+  assert.strictEqual(M.parentPath('D:\\Portable\\khy-os\\apps'), 'D:\\Portable\\khy-os');
+  assert.strictEqual(M.parentPath('D:\\Portable\\khy-os\\'), 'D:\\Portable');
+  assert.strictEqual(M.parentPath('D:\\Portable'), 'D:\\');
+  assert.strictEqual(M.parentPath('D:\\'), 'D:\\');
+  assert.strictEqual(M.parentPath('/home/u'), '/home');
+  assert.strictEqual(M.parentPath('/'), '/');
+});
+
+// ── transientRoots：系统临时目录（位置事实，不是名字形状） ──────
+
+test('classify: 系统临时目录下的路径 → transient', () => {
+  const opts = { transientRoots: ['C:\\Users\\u\\AppData\\Local\\Temp'] };
+  const r = M.classifyWorkspacePath('C:\\Users\\u\\AppData\\Local\\Temp\\agprobe-1792032717941', [], opts);
+  assert.strictEqual(r.bucket, 'transient');
+  assert.strictEqual(r.name, '');
+});
+
+test('classify: 不在临时根下的路径不受影响', () => {
+  const opts = { transientRoots: ['C:\\Users\\u\\AppData\\Local\\Temp'] };
+  const r = M.classifyWorkspacePath('C:\\Users\\u\\Documents\\proj', [], opts);
+  assert.strictEqual(r.bucket, 'inferred');
+  assert.strictEqual(r.name, 'proj');
+});
+
+test('classify: 段边界 —— Temp 的兄弟目录 Temp2 不被吸进临时根', () => {
+  const opts = { transientRoots: ['C:\\Temp'] };
+  assert.strictEqual(M.classifyWorkspacePath('C:\\Temp2\\proj', [], opts).bucket, 'inferred');
+});
+
+test('classify: 登记优先于临时目录位置（用户意图 > 位置事实）', () => {
+  const opts = { transientRoots: ['C:\\Temp'] };
+  const regs = [{ path: 'C:\\Temp\\my-proj', name: 'my-proj' }];
+  const r = M.classifyWorkspacePath('C:\\Temp\\my-proj\\sub', regs, opts);
+  assert.strictEqual(r.bucket, 'registered');
+  assert.strictEqual(r.name, 'my-proj');
+});
+
+test('classify: 不传 options 时行为不变（回滚能力）', () => {
+  const r = M.classifyWorkspacePath('C:\\Users\\u\\AppData\\Local\\Temp\\agprobe-1', []);
+  assert.strictEqual(r.bucket, 'inferred');
+  assert.strictEqual(r.name, 'agprobe-1');
 });
 
 // ── inferredColorKey：稳定散列 ─────────────────────────────────
@@ -161,4 +252,14 @@ test('WorkspaceSidebar.tsx 已改为消费判定层，不再内联 baseName 分�
     /name:\s*p\s*\?\s*baseName\(p\)/,
     '不得保留「项目名 = 路径末段」的内联分桶（旧实现）',
   );
+});
+
+test('WorkspaceSidebar.tsx 按 rootPath 分桶（子目录归并已接线）', () => {
+  const sidebar = readFileSync(
+    join(__dirname, '..', 'src', 'renderer', 'components', 'layout', 'WorkspaceSidebar.tsx'),
+    'utf-8',
+  );
+  // 分桶键必须是判定层给的 rootPath；用 cwd 本身作 key 会让子目录会话再裂开
+  assert.match(sidebar, /c\.rootPath/, '应以 classifyWorkspacePath 的 rootPath 作分桶键');
+  assert.match(sidebar, /parentPath/, '登记对话框应能上溯到项目根文件夹');
 });

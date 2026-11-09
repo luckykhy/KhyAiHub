@@ -11,6 +11,7 @@ import {
   startToolExecution,
   updateToolExecution,
   clearExecutions,
+  hydrateToolExecutions,
 } from '../src/renderer/state/toolExecutionSlice'
 
 let root: Root | null = null
@@ -42,4 +43,5 @@ export {
   startToolExecution,
   updateToolExecution,
   clearExecutions,
+  hydrateToolExecutions,
 }
