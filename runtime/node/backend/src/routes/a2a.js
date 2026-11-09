@@ -28,6 +28,11 @@
  *
  * 门控 KHY_A2A_ENABLED（default-on）：关 → 全部 404（与 wellKnown 同口径）。
  *
+ * executor 接线：默认回显（`serverMethods.js` 的 defaultExecutor，诚实占位）。门控
+ * KHY_A2A_EXECUTOR（default-off）下由启动代码经 {@link setServerMethods} 注入真
+ * executor（`services/a2a/executor.js`：一次 runToolUseLoop，审批 / shell 安全 /
+ * 循环检测全走循环正门，无绕开后门）。未设门控时本文件行为与接线前逐字节一致。
+ *
  * @module routes/a2a
  */
 
@@ -37,9 +42,25 @@ const router = express.Router();
 const { createServerMethods, A2aNotFoundError } = require('../services/a2a/serverMethods');
 const agentCardSpec = require('../services/a2a/agentCardSpec');
 
-// 单例（一次启动一个服务端任务面）。executor 默认占位，真接 builtin agent 运行时时
-// 由启动代码用 createServerMethods({ executor }) 重建并挂到 app.locals。
-const methods = createServerMethods();
+// 单例（一次启动一个服务端任务面）。executor 默认占位；真接 agent 运行时时由启动代码
+// 经 setServerMethods() 重建并挂进来（门控 KHY_A2A_EXECUTOR，default-off；未设时
+// 下面这行无参构造的默认回显行为逐字节不变）。
+let methods = createServerMethods();
+
+/**
+ * 用注入了 executor 的方法组替换当前方法组（启动代码专用）。
+ *
+ * 只在启动期调用：运行期热换会让在途请求落到另一份任务存储上，tasks/get 随之查不到
+ * 自己刚建的任务。门控关时启动代码根本不调用它，默认回显路径不受影响。
+ * @param {{ messageSend: Function }} next
+ * @returns {{ store: object, messageSend: Function, tasksGet: Function, tasksCancel: Function }}
+ */
+function setServerMethods(next) {
+  if (next && typeof next.messageSend === 'function') {
+    methods = next;
+  }
+  return methods;
+}
 
 /** 读取开关：A2A 服务端任务面是否启用（与 wellKnown 同门控）。 */
 function isEnabled(env = process.env) {
@@ -120,4 +141,6 @@ router.post('/tasks/:id/cancel', maybeAuth, (req, res) => {
 });
 
 module.exports = router;
-module.exports.methods = methods;
+module.exports.setServerMethods = setServerMethods;
+// 活读取方法组：注入之后读它要拿到注入后的那份，而不是模块加载期的快照。
+Object.defineProperty(module.exports, 'methods', { get: () => methods, enumerable: true, configurable: true });

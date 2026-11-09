@@ -110,6 +110,8 @@ const ROUTER_COMMANDS = [
   'turn-rollback',
   'publish',
   'mobile',
+  'phone',
+  'amoo',
   'restore',
   'companion',
   'repo',
@@ -174,6 +176,7 @@ const ROUTER_COMMANDS = [
   'deps',
   'dep',
   'dependency',
+  'devenv',
   'workflow',
   'wf',
   // Claude Code aligned commands
@@ -264,10 +267,30 @@ const ROUTER_COMMANDS = [
 
 const ROUTER_SUB_COMMANDS = {
   data: ['fetch', 'list'],
+  // 与 handlers/vision.js 的 manifest.subCommands 双保险：预扫描缓存冷启动时
+  // getRouterSubCommands() 的自动补充拿不到 manifest，这一行保证补全仍可见。
+  vision: ['config'],
   cache: ['clear'],
-  health: ['tui'],
+  health: ['tui', 'session'],
   inertia: ['run'],
   md: ['open', 'register', 'unregister'],
+  recap: ['narrative'],
+  // 手机侧两条出站命令：StepBridge 桥接面 / Amoo 协作层。
+  // 子命令表与 cli/handlers/phone.js、cli/handlers/amoo.js 的 manifest 同源，
+  // 漏改会让补全与 featureCapabilityMap 看不到新子命令。
+  phone: [
+    'help',
+    'status',
+    'ping',
+    'probe',
+    'tools',
+    'call',
+    'setup',
+    'revive',
+    'connect',
+    'devices',
+  ],
+  amoo: ['help', 'status', 'plan', 'send', 'client', 'prompts', 'workspace'],
   tools: ['list', 'ls', 'status', 'install', 'add', 'update', 'upgrade', 'path', 'where', 'help'],
   project: ['map', 'analyze', 'structure', 'index', 'scan', 'help'],
   backtest: ['list'],
@@ -432,6 +455,7 @@ const ROUTER_SUB_COMMANDS = {
   deps: ['list', 'ls', 'versions', 'version', 'check', 'probe', 'install', 'add', 'help'],
   dep: ['list', 'ls', 'versions', 'version', 'check', 'probe', 'install', 'add', 'help'],
   dependency: ['list', 'ls', 'versions', 'version', 'check', 'probe', 'install', 'add', 'help'],
+  devenv: ['scan', 'missing', 'install', 'export', 'import', 'help'],
   workflow: [
     'import',
     'add',
@@ -853,6 +877,7 @@ const ROUTER_SUB_COMMANDS = {
     'api-keys',
     'dependencies',
     'custom-providers',
+    'vision-config',
     'model-overrides',
     'model-config',
     'cron',
@@ -938,6 +963,8 @@ const CATEGORY_BY_COMMAND = {
   state: 'dev',
   khyos: 'dev',
   mobile: 'system',
+  phone: 'system',
+  amoo: 'system',
   shell: 'system',
 
   agent: 'workflow',
@@ -1149,7 +1176,7 @@ const BUILTIN_SLASH_COMMANDS = [
   {
     cmd: '/recap',
     label: '会话回顾',
-    desc: '回顾当前会话发生了什么(主题/决策/改动文件/命令/未决问题/洞见)，对齐 Claude Code /recap(khy 用确定性抽取,无模型也可用,绝不阻塞等模型)',
+    desc: '回顾当前会话发生了什么(主题/决策/改动文件/命令/未决问题/洞见)，对齐 Claude Code /recap(khy 用确定性抽取,无模型也可用,绝不阻塞等模型)；子命令 narrative 生成任务叙事(热奈特话语层 DESIGN-ARCH-130，句句带证据锚点)',
     route: 'recap',
     category: 'workflow',
   },
@@ -2164,19 +2191,55 @@ function _cloneArray(values) {
   return Array.isArray(values) ? [...values] : [];
 }
 
+/**
+ * The LAZY accessor for the self-registering command list (P1-2 startup perf).
+ *
+ * Why it must be lazy: consumers of this module call the two functions below
+ * during their OWN module load — `cli/featureCapabilityMap.js:4` builds
+ * KNOWN_COMMANDS from `getRouterCommandNames()`, and `cli/replSession.js:170`
+ * puts featureCapabilityMap on the startup graph. Triggering commandAutoRegistry's
+ * full handlers/ prescan from here would charge the pre-login startup graph
+ * 100-290ms (measured `require('./featureCapabilityMap')` line item; almost all
+ * of it is commandAutoRegistry's readFileSync over 157 sources).
+ *
+ * How: try `peekCachedCommandNames()` first — it only reads the prescan cache and
+ * does NOT touch registry state (a hit does not even run init()); only a miss or
+ * a disabled cache (KHY_COMMAND_REGISTRY_CACHE=0) falls back to
+ * `getCommandNames()`, i.e. the historical behaviour (full prescan, with the
+ * registry writing the cache back). Both paths yield a byte-identical command
+ * set (the cache IS the result of the previous full prescan).
+ *
+ * Correctness never rests on the cache: commandAutoRegistry.dispatch() force-
+ * rescans and refreshes the cache whenever a command cannot be found, so a stale
+ * cache can at worst delay one command by a single miss — it can never lose it.
+ *
+ * @returns {string[]} self-registered command names; registry unavailable → []
+ *                     (falls back to the static list)
+ */
+function _autoRegistryCommandNames() {
+  try {
+    const autoRegistry = require('../cli/commandAutoRegistry');
+    if (typeof autoRegistry.peekCachedCommandNames === 'function') {
+      const cached = autoRegistry.peekCachedCommandNames();
+      if (cached) {
+        return cached;
+      }
+    }
+    return autoRegistry.getCommandNames();
+  } catch {
+    /* best-effort; auto-registry unavailable → fall back to static list */
+    return [];
+  }
+}
+
 function getRouterCommandNames() {
   const names = [...ROUTER_COMMANDS];
   // Auto-supplement from self-registering command manifests.
   // Handlers that export a manifest don't need manual entries above.
-  try {
-    const autoRegistry = require('../cli/commandAutoRegistry');
-    for (const name of autoRegistry.getCommandNames()) {
-      if (!names.includes(name)) {
-        names.push(name);
-      }
+  for (const name of _autoRegistryCommandNames()) {
+    if (!names.includes(name)) {
+      names.push(name);
     }
-  } catch {
-    /* best-effort; auto-registry unavailable → fall back to static list */
   }
   return names;
 }
@@ -2187,9 +2250,16 @@ function getRouterSubCommands() {
     out[name] = _cloneArray(values);
   }
   // Auto-subCommand declarations from self-registering command manifests.
+  // Same lazy accessor: consumers reach this function during their module load
+  // (see _autoRegistryCommandNames).
   try {
     const autoRegistry = require('../cli/commandAutoRegistry');
-    for (const def of autoRegistry.getCompletions()) {
+    const completions =
+      typeof autoRegistry.peekCachedCompletions === 'function'
+        ? autoRegistry.peekCachedCompletions()
+        : null;
+    const defs = completions || autoRegistry.getCompletions();
+    for (const def of defs) {
       if (def.subCommands && def.subCommands.length > 0 && !out[def.name]) {
         out[def.name] = [...def.subCommands];
       }
