@@ -155,6 +155,29 @@ test('Z-06b 对照组:真有钉选失败时,钉选披露行必须仍在', () => 
   assert.match(text, /路由: 钉选 strict\(GATEWAY_PREFERRED_ADAPTER=trae\),本轮不回退/);
 });
 
+// ── W8 · 人话化门 H 的逐字节回退（[DESIGN-ARCH-198] §2.7）──────────────────
+test('Z-12 门 H 关 → Z-06b 首屏第 3 行逐字节回退今日（脱敏原文）', () => {
+  const result = {
+    success: false,
+    errorType: 'unavailable',
+    preferredAdapter: 'trae',
+    attempts: [
+      failedAttempt({
+        adapterKey: 'trae',
+        errorType: 'unavailable',
+        error: 'trae disabled by configuration',
+      }),
+    ],
+  };
+  const off = renderCliFailureEnvelope(buildCliFailureEnvelope({ result, env: { KHY_FAILURE_HUMAN_TEXT: '0' } }));
+  const on = renderCliFailureEnvelope(buildCliFailureEnvelope({ result, env: ENV_ON }));
+  assert.ok(off.includes('通道: trae [unavailable] — trae disabled by configuration'), off);
+  assert.notStrictEqual(on, off);
+  assert.ok(on.includes('通道不可用：该通道未注册、未启用或未安装'), on);
+  // 路由披露行不受人话化影响
+  assert.match(on, /路由: 钉选 strict\(GATEWAY_PREFERRED_ADAPTER=trae\),本轮不回退/);
+});
+
 test('Z-07 零尝试但 errorType 已明说是 auth → 照实报 AUTH_FAILED,不被新码吞掉', () => {
   const e = buildCliFailureEnvelope({
     result: zeroAttempt({ errorType: 'auth' }),

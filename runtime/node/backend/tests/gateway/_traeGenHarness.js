@@ -33,6 +33,7 @@ function loadTraeAdapter(opts = {}) {
     installed = false,
     officialCredential = null,
     cwBroken = false,
+    cwWorking = false,
   } = opts;
 
   const realOs = jest.requireActual('os');
@@ -109,6 +110,20 @@ function loadTraeAdapter(opts = {}) {
     }));
   }
 
+  // `cwWorking`：注入**能用的**假 CW SDK（_fakeCwSdk.js）。此前只有 cwBroken 一支，
+  // 于是 `new CodeWhispererStreaming(...)` / `middlewareStack.add(...)` / `client.send(...)`
+  // 这段真正的热路径从未被覆盖——而它正是 [MGMT-RPT-035] L5 想抽的共享面。
+  let cwRecord = null;
+  if (cwWorking) {
+    const { makeFakeCwModule } = require('./_fakeCwSdk');
+    const fake = makeFakeCwModule(Array.isArray(cwWorking) ? cwWorking : null);
+    cwRecord = fake.__record;
+    jest.doMock('../../src/services/gateway/adapters/_cwStreamParser', () => {
+      const real = jest.requireActual('../../src/services/gateway/adapters/_cwStreamParser');
+      return { ...real, getCWModule: jest.fn(async () => fake) };
+    });
+  }
+
   if (token) {
     const storageDir = path.join(tempHome, '.config', 'Trae', 'User', 'globalStorage');
     fs.mkdirSync(storageDir, { recursive: true });
@@ -136,6 +151,7 @@ function loadTraeAdapter(opts = {}) {
     httpSeam,
     official,
     tempHome,
+    cwRecord,
     cleanup() {
       try {
         fs.rmSync(tempHome, { recursive: true, force: true });

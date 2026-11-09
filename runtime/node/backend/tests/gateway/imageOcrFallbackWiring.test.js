@@ -29,30 +29,19 @@ const BE = require('path').resolve(__dirname, '..', '..');
 const genLeaf = require(BE + '/src/services/gateway/aiGatewayGenerateMethod');
 const h = require('./_ocrGatewayHarness');
 
-// 关掉会额外发起 adapter 调用/改变路由的旁路门,保留 OCR 兜底主路径默认行为。
-const env = h.envSandbox(['KHY_TOOL_CAP_PROBE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_FALLBACK_MODEL']);
+const { env, beforeAll, afterAll } = h.makeOcrFallbackSandbox();
 const runner = h.makeRunner({ prompt: '请识别这张图片里的信息', model: 'text-only-model', tag: 'ocrfb' });
 
-let rec;
-function wire({ describeFails = false } = {}) {
-  rec = h.makeRecordingAdapter({ content: '已据识别文本作答', captureImages: true, describe: true, describeFails });
-  h.wireSingle(rec);
-}
+const wire = h.makeWire();
+const wireFailing = h.makeWire({ describeFails: true });
 
 describe('image → OCR fallback wiring (text-only model, vision unavailable)', () => {
-  before(() => {
-    env.save();
-    env.set({ KHY_TOOL_CAP_PROBE: 'off', KHY_GLM_VISION_MODEL: 'off', KHY_VISION_FALLBACK_MODEL: '' });
-  });
-
-  after(() => env.restore());
+  before(beforeAll);
+  after(afterAll);
 
   test('① 无视觉候选 → 剥图 + 注入 OCR 文本,原文本模型据此作答', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => [{ text: '发票金额 ¥1234.56 日期 2026-07-11', confidence: 92, needsAiFallback: false }],
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => [{ text: '发票金额 ¥1234.56 日期 2026-07-11', confidence: 92, needsAiFallback: false }], h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
     const res = await runner.run();
 
@@ -64,11 +53,8 @@ describe('image → OCR fallback wiring (text-only model, vision unavailable)', 
   });
 
   test('①b 低置信 OCR(needsAiFallback)→ 注入文本 + 追加诚实低置信告诫,绝不当铁定事实', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => [{ text: '模糊的发票 88.20', confidence: 41, needsAiFallback: true }],
-      collectProviderSiblingModels: () => ['text-only-sibling-a', 'text-only-sibling-b'],
-    });
-    wire();
+    h.stubOcrDeps(genLeaf, () => [{ text: '模糊的发票 88.20', confidence: 41, needsAiFallback: true }], h.TEXT_ONLY_SIBLINGS);
+    const rec = wire();
 
     const res = await runner.run();
 
@@ -79,11 +65,8 @@ describe('image → OCR fallback wiring (text-only model, vision unavailable)', 
   });
 
   test('② 有视觉候选但不可达(404/无 key)→ 描述级联穷尽后剥图 + OCR 兜底', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => [{ text: '发票金额 ¥1234.56 日期 2026-07-11', confidence: 90, needsAiFallback: false }],
-      collectProviderSiblingModels: () => ['gpt-4o-vision-sibling'],
-    });
-    wire({ describeFails: true });
+    h.stubOcrDeps(genLeaf, () => [{ text: '发票金额 ¥1234.56 日期 2026-07-11', confidence: 90, needsAiFallback: false }], ['gpt-4o-vision-sibling']);
+    const rec = wireFailing();
 
     const res = await runner.run();
 
@@ -93,11 +76,8 @@ describe('image → OCR fallback wiring (text-only model, vision unavailable)', 
   });
 
   test('③ 视觉不可达且 OCR 取不到文字 → 剥图 + 注入诚实「收到图但读不出」说明(绝不静默)', async () => {
-    genLeaf.setAiGatewayGenerateMethodDeps({
-      extractImageOcrDetails: () => [], // 非文字类图像 / 缺字库 → 无文本
-      collectProviderSiblingModels: () => ['gpt-4o-vision-sibling'],
-    });
-    wire({ describeFails: true });
+    h.stubOcrDeps(genLeaf, () => [], ['gpt-4o-vision-sibling']); // 非文字类图像 / 缺字库 → 无文本
+    const rec = wireFailing();
 
     const res = await runner.run();
 

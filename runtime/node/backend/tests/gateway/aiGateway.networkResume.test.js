@@ -20,24 +20,8 @@
  *  - single resume cycle: recovery re-run failure reports honestly
  */
 
-function createAdapterEntry(key, generateImpl, detectImpl) {
-  const generate = jest.fn(generateImpl);
-  const detect = typeof detectImpl === 'function' ? detectImpl : () => true;
-  return {
-    key,
-    enabled: true,
-    available: true,
-    priority: 1,
-    adapter: {
-      detect: () => detect(),
-      detectAsync: async (force) => detect(),
-      listModels: async () => [{ id: 'm1' }],
-      getStatus: () => ({ name: key, available: true }),
-      generate,
-    },
-    _generateMock: generate,
-  };
-}
+const rh = require('./_gatewayRetryHarness');
+const { createAdapterEntry } = rh;
 
 function netFail(key) {
   return {
@@ -49,23 +33,6 @@ function netFail(key) {
     adapter: key,
     attempts: [],
   };
-}
-
-// Keep these tests hermetic (same rationale as the cascade-jitter tests).
-function neutralizeCuratedDefaultModel() {
-  const modelCuration = require('../../src/services/gateway/modelCuration');
-  modelCuration.getAdapterOverride = () => null;
-}
-
-function neutralizeCacheEconomyStore() {
-  const cacheEconomyStore = require('../../src/services/gateway/cacheEconomyStore');
-  cacheEconomyStore.getVerdict = () => 'insufficient_data';
-  cacheEconomyStore.record = () => {};
-}
-
-function neutralizeApiKeyPool() {
-  const apiKeyPool = require('../../src/services/apiKeyPool');
-  apiKeyPool.init = () => { throw new Error('apiKeyPool disabled for hermetic resume tests'); };
 }
 
 const ENV_KEYS = [
@@ -90,27 +57,11 @@ const savedEnv = {};
 describe('Gateway network-recovery resume (KHY_GATEWAY_NETWORK_RESUME)', () => {
   let gateway;
 
-  const setupGateway = () => {
-    gateway = require('../../src/services/gateway/aiGateway');
-    gateway._initialized = true;
-    gateway._initPromise = null;
-    gateway._adapters = [];
-    gateway._lastRefreshTime = Date.now();
-    gateway._adapterFailures = {};
-    gateway._adapterLastError = {};
-    gateway._requestLog = {};
-    gateway._localAdapters = new Set();
-    gateway._serializedAdapterKeys = new Set();
-    gateway.refreshAdapters = async () => {};
-    gateway._enforceRateLimit = async () => {};
-  };
-
   beforeEach(() => {
     jest.resetModules();
     jest.restoreAllMocks();
 
-    ENV_KEYS.forEach((k) => { savedEnv[k] = process.env[k]; });
-    ENV_KEYS.forEach((k) => { delete process.env[k]; });
+    Object.assign(savedEnv, rh.saveAndClearEnv(ENV_KEYS));
 
     // Isolate the resume feature: skip the within-request jitter rounds so the
     // request reaches the resume wait immediately, and use short resume timing.
@@ -121,17 +72,14 @@ describe('Gateway network-recovery resume (KHY_GATEWAY_NETWORK_RESUME)', () => {
     process.env.KHY_GATEWAY_NETWORK_RESUME_PROBE_TIMEOUT_MS = '2000';
     process.env.KHY_GATEWAY_RESUME_MAX_CYCLES = '2';
 
-    setupGateway();
-    neutralizeCuratedDefaultModel();
-    neutralizeCacheEconomyStore();
-    neutralizeApiKeyPool();
+    gateway = rh.resetGatewayForTest();
+    rh.neutralizeCuratedDefaultModel();
+    rh.neutralizeCacheEconomyStore();
+    rh.neutralizeApiKeyPool('apiKeyPool disabled for hermetic resume tests');
   });
 
   afterEach(() => {
-    ENV_KEYS.forEach((k) => {
-      if (savedEnv[k] === undefined) delete process.env[k];
-      else process.env[k] = savedEnv[k];
-    });
+    rh.restoreEnv(ENV_KEYS, savedEnv);
     jest.restoreAllMocks();
   });
 

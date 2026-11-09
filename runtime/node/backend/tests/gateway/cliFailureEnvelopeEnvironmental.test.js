@@ -177,6 +177,26 @@ test('E-08 environmental 字段形状严格:仅 ===true 生效(字符串 "true" 
   }
 });
 
+// ── W8 · 人话化门 H 的逐字节回退（[DESIGN-ARCH-198] §2.7）──────────────────
+test('E-09 门 H 关 → 首屏第 3 行逐字节回退今日（脱敏原文）', () => {
+  const attempts = [
+    { adapterKey: 'api', success: false, errorType: 'network', error: 'ECONNRESET 10.0.0.1:443' },
+  ];
+  const on = renderCliFailureEnvelope(
+    buildCliFailureEnvelope({ result: outageResult({ attempts }), env: {} })
+  );
+  const off = renderCliFailureEnvelope(
+    buildCliFailureEnvelope({ result: outageResult({ attempts }), env: { KHY_FAILURE_HUMAN_TEXT: '0' } })
+  );
+  // 门关 = 今日行为（原文）；门开 = 人话 ⇒ 两者必须不同，否则门没接线（假绿）。
+  assert.notStrictEqual(on, off);
+  assert.ok(off.includes('通道: api [network] — ECONNRESET 10.0.0.1:443'), off);
+  assert.ok(on.includes('网络连接失败'), on);
+  // 环境级标题与 hint 不受人话化影响
+  assert.ok(on.includes(ENV_TITLE));
+  assert.ok(off.includes(ENV_TITLE));
+});
+
 test('E-09 绝不抛:畸形 routeFact / 畸形 result 一律安全', () => {
   const hostile = [
     { result: outageResult({ routeFact: 'environmental' }), env: ENV },

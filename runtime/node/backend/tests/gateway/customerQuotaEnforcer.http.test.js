@@ -188,7 +188,7 @@ describe('proxyServer customer quota enforcement (HTTP)', () => {
     });
 
     expect(resp.statusCode).toBe(429);
-    expect(resp.body.error.code).toBe('monthly_requests_exceeded');
+    expect(resp.body.error.code).toBe('CREDITS_EXHAUSTED');
     expect(resp.body.error.type).toBe('quota_exceeded');
     expect(resp.body.error.message).toContain('cus_http1');
     expect(resp.body.error.message).toContain('月度请求数已超限');
@@ -214,7 +214,7 @@ describe('proxyServer customer quota enforcement (HTTP)', () => {
     });
 
     expect(resp.statusCode).toBe(403);
-    expect(resp.body.error.code).toBe('customer_disabled');
+    expect(resp.body.error.code).toBe('FORBIDDEN');
     expect(resp.body.error.message).toContain('已被停用');
     expect(gatewayMock.generate).not.toHaveBeenCalled();
   });
