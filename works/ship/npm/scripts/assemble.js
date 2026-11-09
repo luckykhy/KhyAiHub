@@ -15,7 +15,10 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const npmRoot = path.resolve(__dirname, '..');
-const repoRoot = path.resolve(npmRoot, '..', '..');
+// 方案 P 后本包住在 works/ship/npm/（比搬家前的 packaging/npm/ 深一级），
+// 到仓库根要往上三级。曾经按 packaging/npm/ 算两级，require runtimeStaging
+// 时落到 works/scripts/... 直接 MODULE_NOT_FOUND。
+const repoRoot = path.resolve(npmRoot, '..', '..', '..');
 const { assembleRuntime } = require(path.join(repoRoot, 'scripts', 'release', 'lib', 'runtimeStaging.js'));
 
 const build = spawnSync(process.execPath, [
