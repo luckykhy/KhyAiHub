@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-183-9CXPQA2Q
 /**
  * AI chat attachment store.
  *
@@ -20,6 +21,40 @@ const path = require('path');
 const { getDataDir } = require('../utils/dataHome');
 
 const ID_RE = /^[a-f0-9]{32}$/;
+
+// Upper bound on what we will read into memory just to shrink it. Anything
+// larger stays on disk and falls back to the reference-line path.
+const IMAGE_NORMALIZE_MAX_BYTES = 64 * 1024 * 1024;
+
+function _normalizeImageBytes(buf) {
+  try {
+    return require('./imageNormalize').normalizeImageBuffer(buf);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Long-edge normalization for a committed image file. Rewrites the stored bytes
+ * in place (platform resize always emits PNG) and reports the new mime/size.
+ * Fail-soft: a failed normalize leaves the original file untouched.
+ */
+function _normalizeCommittedImage(storedPath, size) {
+  try {
+    if (Number(size) > IMAGE_NORMALIZE_MAX_BYTES) {
+      return null;
+    }
+    const buf = fs.readFileSync(storedPath);
+    const norm = _normalizeImageBytes(buf);
+    if (!norm) {
+      return null;
+    }
+    fs.writeFileSync(storedPath, norm.buf);
+    return { mimeType: norm.mimeType, sizeBytes: norm.buf.length };
+  } catch {
+    return null;
+  }
+}
 
 // Per-file ceiling. Generous by default (videos/projects are large) but bounded
 // so a single upload can't exhaust the disk. Env-tunable, no magic constant.
@@ -206,6 +241,19 @@ function commitUpload({ tempPath, originalName, mimeType, size }) {
 
   const kind = classifyKind(mimeType, originalName);
 
+  // Pasted screenshots often exceed the vision long-edge convention. Shrink
+  // before the bytes are persisted so every later consumer (inline base64,
+  // re-download, OCR) sees the same reduced image.
+  let storedMime = String(mimeType || 'application/octet-stream');
+  let storedSize = realSize;
+  if (kind === 'image') {
+    const norm = _normalizeCommittedImage(storedPath, realSize);
+    if (norm) {
+      storedMime = norm.mimeType;
+      storedSize = norm.sizeBytes;
+    }
+  }
+
   let textExcerpt = null;
   let truncated = false;
   if (isTextLike(kind)) {
@@ -230,8 +278,8 @@ function commitUpload({ tempPath, originalName, mimeType, size }) {
     originalName: String(originalName || storedName),
     storedName,
     storedPath,
-    mimeType: String(mimeType || 'application/octet-stream'),
-    size: realSize,
+    mimeType: storedMime,
+    size: storedSize,
     kind,
     textExcerpt,
     textTruncated: truncated,
@@ -475,10 +523,22 @@ function resolveForChat(ids) {
     if (manifest.kind === 'image') {
       let inlined = false;
       try {
-        if ((manifest.size || 0) <= maxInlineImageBytes()) {
-          const b64 = fs.readFileSync(manifest.storedPath).toString('base64');
-          images.push(`data:${manifest.mimeType || 'image/png'};base64,${b64}`);
-          inlined = true;
+        // Read within the normalize ceiling, then let the long-edge cap decide.
+        // Manifests written before this mechanism existed also benefit here.
+        if ((manifest.size || 0) <= IMAGE_NORMALIZE_MAX_BYTES) {
+          const buf = fs.readFileSync(manifest.storedPath);
+          const norm = _normalizeImageBytes(buf);
+          const cap = maxInlineImageBytes();
+          // Never trade a multimodal inline for nothing: keep the original when
+          // the re-encoded PNG would cross the inline ceiling and the original
+          // already fits under it.
+          const useNorm = norm && (norm.buf.length <= cap || buf.length > cap);
+          const out = useNorm ? norm.buf : buf;
+          const mime = useNorm ? norm.mimeType : manifest.mimeType || 'image/png';
+          if (out.length <= cap) {
+            images.push(`data:${mime};base64,${out.toString('base64')}`);
+            inlined = true;
+          }
         }
       } catch {
         inlined = false;

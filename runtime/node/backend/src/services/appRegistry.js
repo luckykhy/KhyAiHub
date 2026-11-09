@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-197-RRJB69HB
 /**
  * App Registry — manages installable applications on the khy platform.
  *

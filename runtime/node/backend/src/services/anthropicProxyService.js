@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-190-7ZZGNQG4
 'use strict';
 
 const https = require('https');

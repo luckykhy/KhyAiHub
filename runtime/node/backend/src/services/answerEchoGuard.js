@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-188-G16RX815
 'use strict';
 
 // [AI-弱模型·照抄] 本文件是纯叶子:改动照 roundAdvanceAssessor.js / streamRepetitionGuard.js 的形状——

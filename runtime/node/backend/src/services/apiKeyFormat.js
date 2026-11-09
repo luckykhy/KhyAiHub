@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-193-RHMQGADC
 'use strict';
 
 const KEY_FIELD_CANDIDATES = Object.freeze([

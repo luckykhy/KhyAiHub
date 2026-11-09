@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-194-GSRH5F6E
 /**
  * API Key Pool — request-level round-robin selection with cooldown.
  *
