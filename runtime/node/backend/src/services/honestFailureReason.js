@@ -50,10 +50,72 @@ const SECRET_PATTERNS = [
 ];
 
 /**
+ * 失败墙「保留换行」门（[DESIGN-ARCH-198] W3）。默认开；关 → 逐字节回退今日的压平行为。
+ */
+function _keepWallLinesEnabled(env = process.env) {
+  const e = env || {};
+  try {
+    const reg = require('./flagRegistry');
+    if (
+      reg &&
+      typeof reg.isRegistryEnabled === 'function' &&
+      reg.isRegistryEnabled(e) &&
+      typeof reg.isFlagEnabled === 'function'
+    ) {
+      return reg.isFlagEnabled('KHY_FAILURE_WALL_KEEP_LINES', e);
+    }
+  } catch {
+    /* 注册表不可用 → 本地 CANON */
+  }
+  const raw = e.KHY_FAILURE_WALL_KEEP_LINES;
+  const v = String(raw === undefined || raw === null ? 'true' : raw)
+    .trim()
+    .toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+/**
+ * 失败墙「标签去重」门（[DESIGN-ARCH-198] W3）。默认开；关 → 逐字节回退今日的叠标签行为。
+ *
+ * 与视觉路径的既有门 `KHY_VISION_FAILURE_CAUSE_DEDUP` **同款**（那里剥的是
+ * visionFailureSummary 墙自己的标签）——本门管的是**通用**失败文案路径
+ * （resolveFriendlyFailureMessage 前置「具体原因：」时，cause 可能已自带
+ * 「真实失败原因:」标签 → 叠成「具体原因：真实失败原因:」）。
+ */
+function _causeDedupEnabled(env = process.env) {
+  const e = env || {};
+  try {
+    const reg = require('./flagRegistry');
+    if (
+      reg &&
+      typeof reg.isRegistryEnabled === 'function' &&
+      reg.isRegistryEnabled(e) &&
+      typeof reg.isFlagEnabled === 'function'
+    ) {
+      return reg.isFlagEnabled('KHY_FAILURE_CAUSE_DEDUP', e);
+    }
+  } catch {
+    /* 注册表不可用 → 本地 CANON */
+  }
+  const raw = e.KHY_FAILURE_CAUSE_DEDUP;
+  const v = String(raw === undefined || raw === null ? 'true' : raw)
+    .trim()
+    .toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+/**
  * 把任意失败原因串脱敏 + 归一:剥离密钥、压平空白、限长。保留 ECONNREFUSED /
  * ETIMEDOUT / HTTP 状态码 / host:port 这类「具体且可操作」的真因。
+ *
+ * ⚠ [DESIGN-ARCH-198] §2.2（W3）：**多行失败墙不再被压扁**。
+ * 压平空白（`/\s+/g → ' '`）会把「真实失败原因:」那张**列表**折成一行，
+ * 列表结构全失、再按字符数腰斩（末条适配器只剩「cursor [unavail…」）。
+ * 列表是**结构化信息**，不该被当散文压。
+ * 门控 `KHY_FAILURE_WALL_KEEP_LINES`（默认开；关 → 逐字节回退今日的压平+限长）。
+ * 开了之后：保留换行、按**行**截断（保住每行完整），总长仍受上限约束。
  */
-function sanitizeCause(raw, maxLen = 220) {
+function sanitizeCause(raw, maxLen = 220, env = process.env) {
   let s = raw == null ? '' : String(raw);
   if (!s) {
     return '';
@@ -72,6 +134,35 @@ function sanitizeCause(raw, maxLen = 220) {
     }
   } catch {
     /* fail-soft → legacy s(仅 legacy 脱敏) */
+  }
+  if (_keepWallLinesEnabled(env)) {
+    // 保留换行：只压掉行内的连续空白，行尾空白清掉。
+    s = s
+      .split('\n')
+      .map((line) => line.replace(/[ \t]+/g, ' ').replace(/\s+$/, ''))
+      .join('\n')
+      .trim();
+    if (s.includes('\n')) {
+      // ── 多行 = 一张**列表**（失败墙）────────────────────────────────────
+      // 旧口径的 220 字上限是给**单行散文**设的；套到列表上会腰斩末行
+      // （实测末条适配器被切成「cursor [unavail…」/「Fre…」）。
+      // 列表的每一项本身已是结构化条目（构建器每项 ≤180 字），
+      // 故此处**按行**保完整：单行不腰斩，超出部分**整行丢弃**并如实标出丢了多少行。
+      const lines = s.split('\n');
+      const MAX_LINES = 12;
+      if (lines.length > MAX_LINES) {
+        const dropped = lines.length - MAX_LINES;
+        const kept = lines.slice(0, MAX_LINES);
+        kept.push(`…另有 ${dropped} 条失败记录未显示`);
+        return kept.join('\n');
+      }
+      return s;
+    }
+    // 单行散文：沿用总长上限（今日口径）。
+    if (s.length > maxLen) {
+      s = `${s.slice(0, maxLen)}…`;
+    }
+    return s;
   }
   s = s.replace(/\s+/g, ' ').trim();
   if (s.length > maxLen) {
@@ -97,7 +188,7 @@ function resolveFriendlyFailureMessage({ errorType, cause, legacyFriendly, optio
     if (!_enabled(env)) {
       return legacy;
     }
-    const clean = sanitizeCause(cause);
+    const clean = sanitizeCause(cause, 220, env);
     if (!clean) {
       return legacy;
     } // 无真因 → 诚实回退,绝不编造
@@ -105,11 +196,40 @@ function resolveFriendlyFailureMessage({ errorType, cause, legacyFriendly, optio
       .trim()
       .toLowerCase();
     const prefix = CATEGORY_PREFIX[type];
-    // 真因已包含类别前缀语义(避免「网络请求未能完成。具体原因：网络…」重复)时不再加前缀。
-    if (prefix && !clean.includes(prefix)) {
-      return `${prefix}。具体原因：${clean}`;
+    // ⚠ [DESIGN-ARCH-198] §2.2（W3）：cause **已自带**「真实失败原因:」标签时
+    // 不再叠加「具体原因：」→ 消除「具体原因：真实失败原因:」双标签 stutter。
+    // 与视觉路径的既有门 `KHY_VISION_FAILURE_CAUSE_DEDUP` 同款（那里剥的是
+    // visionFailureSummary 墙自己的标签）——本门管**通用**路径。
+    // 门关 → 逐字节回退今日的叠标签行为。
+    //
+    // ⚠ 关键：**不剥**「真实失败原因:」这个标签本身 —— 它是**信息**（说明下面这些是
+    // 各适配器的真实失败原因），剥掉就只剩一堆裸条目，用户看不懂那是什么。
+    // 该剥的是**外层冗余**的「具体原因：」前缀。
+    const _hasOwnLabel = /^\s*真实失败原因\s*[:：]/.test(clean);
+    let _body = clean;
+    if (!_body) {
+      return legacy;
     }
-    return `具体原因：${clean}`;
+    // ⚠ [DESIGN-ARCH-198] §2.2（W3/W8）：cause **已自带**「真实失败原因:」标签时
+    // 不再叠加「具体原因：」→ 消除「具体原因：真实失败原因:」双标签 stutter。
+    // 该判定必须**早于**下面的类别前缀分支：否则 prefix 存在时会先命中
+    // `${prefix}。具体原因：${body}`，双标签照旧出现。
+    // 完整规则：prefix 存在 → `${prefix}。${body}`；prefix 缺省 → 原样返回 `${body}`
+    // （与今日 :218 路径逐字节一致）。写成无条件的 `${prefix}。${body}` 会在 prefix
+    // 缺省时产出 `undefined。…`（errorType='unknown' + 带标签 cause 今日即如此）。
+    //
+    // ⚠ 关键：**不剥**「真实失败原因:」这个标签本身 —— 它是**信息**（说明下面这些是
+    // 各适配器的真实失败原因），剥掉就只剩一堆裸条目，用户看不懂那是什么。
+    // 该剥的是**外层冗余**的「具体原因：」前缀。
+    // 门关 → 逐字节回退今日的叠标签行为。
+    if (_hasOwnLabel && _causeDedupEnabled(env)) {
+      return prefix ? `${prefix}。${_body}` : _body;
+    }
+    // 真因已包含类别前缀语义(避免「网络请求未能完成。具体原因：网络…」重复)时不再加前缀。
+    if (prefix && !_body.includes(prefix)) {
+      return `${prefix}。具体原因：${_body}`;
+    }
+    return `具体原因：${_body}`;
   } catch {
     return legacy;
   }

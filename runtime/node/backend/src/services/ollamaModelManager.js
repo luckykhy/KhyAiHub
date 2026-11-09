@@ -10,7 +10,7 @@ const http = require('http');
 const os = require('os');
 const path = require('path');
 
-const { OLLAMA_HOST } = require('../constants/serviceDefaults');
+const { OLLAMA_HOST, DEFAULT_OLLAMA_PORT } = require('../constants/serviceDefaults');
 const { withTempDir } = require('../utils/ephemeralTmp');
 const TIMEOUT_MS = 15_000;
 const GGUF_MAGIC = Buffer.from('GGUF');
@@ -126,7 +126,7 @@ function ollamaRequest(method, apiPath, body = null) {
     const url = new URL(apiPath, OLLAMA_HOST);
     const options = {
       hostname: url.hostname === 'localhost' ? '127.0.0.1' : url.hostname,
-      port: url.port || 11434,
+      port: url.port || DEFAULT_OLLAMA_PORT,
       path: `${url.pathname}${url.search || ''}`,
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -312,7 +312,7 @@ function pullModel(modelName, onProgress) {
     const req = http.request(
       {
         hostname: url.hostname,
-        port: url.port || 11434,
+        port: url.port || DEFAULT_OLLAMA_PORT,
         path: url.pathname,
         method: 'POST',
         headers: {

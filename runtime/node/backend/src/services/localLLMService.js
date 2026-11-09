@@ -1542,8 +1542,16 @@ async function generateRunner(prompt, options) {
     fullPrompt = `<|im_start|>user\n${prompt}<|im_end|>\n<|im_start|>assistant\n`;
   }
 
+  // 默认值走 gateway/samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../gateway/samplingDefaults').getDefaults('creative', 'generateRunner');
+  } catch {
+    _sd = null;
+  }
+
   // Local model: reasonable token budget (avoid excessive thinking on simple queries)
-  const numPredict = options.maxTokens ?? 1024;
+  const numPredict = options.maxTokens ?? (_sd ? _sd.maxTokens : 1024);
   const inferenceTimeout = options.timeoutMs ?? 60_000;
 
   const res = await runnerPost(
@@ -1552,8 +1560,8 @@ async function generateRunner(prompt, options) {
     {
       Prompt: fullPrompt,
       Options: {
-        temperature: options.temperature ?? 0.6,
-        top_p: options.top_p ?? 0.85,
+        temperature: options.temperature ?? (_sd ? _sd.temperature : 0.6),
+        top_p: options.top_p ?? (_sd ? _sd.top_p : 0.85),
         num_predict: numPredict,
         stop: ['<|im_end|>', '<|endoftext|>'],
       },
@@ -1778,17 +1786,34 @@ async function generateOllama(prompt, options) {
 
   const url = new URL('/api/chat', OLLAMA_HOST);
   const enableThinking = options.think !== false;
+  // 默认值走 gateway/samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  // think 开/关是同一通道的两种模式，温度分属创意档与精确档两个条目。
+  let _sdThink = null;
+  let _sdDirect = null;
+  try {
+    const _samplingDefaults = require('../gateway/samplingDefaults');
+    _sdThink = _samplingDefaults.getDefaults('creative', 'generateOllamaThink');
+    _sdDirect = _samplingDefaults.getDefaults('precise', 'generateOllamaDirect');
+  } catch {
+    /* 叶不可用 → 下方逐字节回退 legacy 字面量 */
+  }
+  const _thinkTemp = _sdThink ? _sdThink.temperature : 0.6;
+  const _directTemp = _sdDirect ? _sdDirect.temperature : 0.1;
+  // top_p/maxTokens 是通道级（两种模式同值），故只从 think 条目取一处、两模式共用；
+  // 改一头必须同时改另一头，samplingDefaults.test.js 的双模式不变量用例盯着这件事。
+  const _chatTopP = _sdThink ? _sdThink.top_p : 0.85;
+  const _chatMaxTokens = _sdThink ? _sdThink.maxTokens : 2048;
   const body = JSON.stringify({
     model: OLLAMA_MODEL,
     messages: allMessages,
     stream: false,
     think: enableThinking,
     options: {
-      temperature: options.temperature ?? (enableThinking ? 0.6 : 0.1),
-      top_p: options.top_p ?? 0.85,
+      temperature: options.temperature ?? (enableThinking ? _thinkTemp : _directTemp),
+      top_p: options.top_p ?? _chatTopP,
       num_predict: enableThinking
-        ? Math.max(options.maxTokens ?? 2048, 4096)
-        : (options.maxTokens ?? 2048),
+        ? Math.max(options.maxTokens ?? _chatMaxTokens, 4096)
+        : (options.maxTokens ?? _chatMaxTokens),
     },
   });
 
@@ -2191,10 +2216,17 @@ async function generateNodeLlama(prompt, options) {
   const { LlamaChatSession } = await import('node-llama-cpp');
   const sequence = _context.getSequence();
   const session = new LlamaChatSession({ contextSequence: sequence });
+  // 默认值走 gateway/samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../gateway/samplingDefaults').getDefaults('precise', 'generateNodeLlama');
+  } catch {
+    _sd = null;
+  }
   return session.prompt(prompt, {
-    temperature: options.temperature ?? 0.1,
-    topP: options.top_p ?? 0.85,
-    maxTokens: options.maxTokens ?? 2048,
+    temperature: options.temperature ?? (_sd ? _sd.temperature : 0.1),
+    topP: options.top_p ?? (_sd ? _sd.top_p : 0.85),
+    maxTokens: options.maxTokens ?? (_sd ? _sd.maxTokens : 2048),
   });
 }
 
@@ -2211,11 +2243,19 @@ async function generatePython(prompt, options) {
   }
   allMessages.push(...messages);
 
+  // 默认值走 gateway/samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../gateway/samplingDefaults').getDefaults('precise', 'generatePython');
+  } catch {
+    _sd = null;
+  }
+
   const res = await httpPost('/v1/chat/completions', {
     messages: allMessages,
-    temperature: options.temperature ?? 0.1,
-    top_p: options.top_p ?? 0.85,
-    max_tokens: options.maxTokens ?? 2048,
+    temperature: options.temperature ?? (_sd ? _sd.temperature : 0.1),
+    top_p: options.top_p ?? (_sd ? _sd.top_p : 0.85),
+    max_tokens: options.maxTokens ?? (_sd ? _sd.maxTokens : 2048),
   });
 
   if (res.status === 200 && res.data?.choices?.[0]) {

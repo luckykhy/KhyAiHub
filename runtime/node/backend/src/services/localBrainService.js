@@ -2349,10 +2349,11 @@ async function _rawWebSearch(query) {
 }
 
 /**
- * 统一检索：联网 + 本地项目文件（grep）+ 会话历史（FTS5）三源并行，跨源去重后
- * 映射回 _webSearchFallback 期望的 { title, snippet, url } 形状（本地命中 url 为空、
- * 带 source 标签）。纯编排在 services/search/unifiedSearch.js，本函数只负责注入真实
- * 检索器并把统一项映射回旧形状。任一环节失败由调用方 fail-soft 兜底。
+ * 统一检索：联网 + 本地项目文件（grep）+ 会话历史（FTS5）三源并行，改述类查询
+ * 再追加记忆域混合检索（第四源），跨源去重后映射回 _webSearchFallback 期望的
+ * { title, snippet, url } 形状（本地命中 url 为空、带 source 标签）。纯编排在
+ * services/domain/query/search/unifiedSearch.js，本函数只负责注入真实检索器并把
+ * 统一项映射回旧形状。任一环节失败由调用方 fail-soft 兜底。
  * @returns {Promise<Array|null>}
  */
 async function _unifiedWebSearch(query) {
@@ -2384,6 +2385,21 @@ async function _unifiedWebSearch(query) {
         return idx.searchMessages(q, { limit: cap });
       } catch {
         return [];
+      }
+    },
+    // 第四源：记忆域的混合检索入口（词法池 ∪ 语义 top-K，scoring.rankMemories 的
+    // 公开壳）。只消费入口、不碰其内部实现；嵌入调用在域内统一走 embeddingClient。
+    // unifiedSearch 只对改述类查询调用它，精确查询的嵌入成本为零。
+    // 整体不可用（require 失败/抛错）时返回 null —— unifiedSearch 的 fail-soft
+    // 契约据此当空源处理，退化为现三源；嵌入端点不可达时的词法降级发生在记忆域
+    // 入口内部（其 F4 契约），不在这里重复实现。
+    memorySearch(q, opts = {}) {
+      try {
+        const engine = require('./domain/memory/memoryEngine');
+        const limit = Number.isFinite(opts.limit) && opts.limit > 0 ? Math.floor(opts.limit) : 10;
+        return engine.retrieveProactive(q, { limit });
+      } catch {
+        return null;
       }
     },
   };
