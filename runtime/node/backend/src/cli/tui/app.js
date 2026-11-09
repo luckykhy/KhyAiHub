@@ -109,11 +109,17 @@ async function startInkApp(options = {}) {
   const { isCcMode } = require('./utils/ccMode');
   const isCc = isCcMode();
 
-  // App is a .jsx component; require AFTER registerJsx() so babel transpiles it.
+  // ⚠ App 的模块图**故意不在这里 require**（P1-9「首帧不等资源」）。
+  // 实测（冷机，同机同条件）：`require('./ink-components/App')` 连它自己的顶层
+  // 依赖图一共 835ms，而 App.js 头注自己记的 App 首帧渲染是 10s+。旧顺序把这两个
+  // 成本**串在首帧之前** —— 启动屏（轻量那一帧）明明只需要 ink + BootScreen，
+  // 却要先把整棵 App 的模块图装载完才画得出来，等于「画面等资源」。
+  // 现在 App/CcApp 的 require 挪到下方**预热帧之后**：ink 一就绪就落地那一帧，
+  // App 的模块图与整棵树的渲染都在它**之后**发生（画面先出来，资源后到）。
+  // 可见版式零变化：预热帧的组件、props、render options 一字未动。
+  // App is a .jsx component; require AFTER registerJsx() so babel transpiles it
+  // (and AFTER the warm-up frame below, so the first paint never waits for it).
   // CC 模式下渲染 CcApp（Claude Code 复刻），否则渲染 Legacy App。
-  const App = isCc
-    ? require('./ink-components/CcApp')
-    : require('./ink-components/App');
 
   // React development 渲染每帧调 performance.measure 且从不清理 → 数小时后累积到百万条
   // (MaxPerformanceEntryBufferExceededWarning 实证),内存/性能持续劣化 → TUI 越用越卡、搜索
@@ -181,18 +187,16 @@ async function startInkApp(options = {}) {
   // entirely and this stays byte-identical to today.
   const scrollbackPreserve = require('./scrollbackPreserve');
   const sidebarRail = require('./runtime/sidebarRail');
+  // 透传闸写入侧:收集叶要区分「ink 帧」与「handler 直接写」,否则帧被吞、屏幕冻住。
+  const inkWriteGate = require('./commandOutputSink');
   const _realOut = process.stdout;
   const _clearNormalizer = scrollbackPreserve.createClearTerminalNormalizer(
     process.env,
     process.platform,
     {
-      // 第三层(全屏帧整段转录重发抑制)的校验源:ink 实例的 fullStaticOutput。
-      // render() 的同步首帧不可能命中 fullscreen 分支(lastOutputHeight 从 0 起步),
-      // 而 inkRuntime.setApp/setRenderStdout 紧跟 render() 之后注册 —— 真正能触发
-      // fullscreen 分支的帧到来时实例必已注册。
-      // 关键修复:实例未注册/fullStaticOutput 不可用时返回 '' 而非 null —— 空串是合法快照
-      // (会话尚无 static),校验平凡成立,第四层尾切照常生效;若返回 null 则整层跳过,
-      // win32 ED2 清屏会把旧视口滚进 scrollback 形成重复帧(用户报「启动时重复两次」)。
+      // 第三层(全屏帧整段转录重发抑制)校验源=ink 实例 fullStaticOutput;实例注册紧跟
+      // render() 之后,真正能触发 fullscreen 的帧到来时必已注册。不可用时返 ''(合法
+      // 空快照,校验平凡成立)而非 null,否则整层跳过 → win32 ED2 把旧视口滚进 scrollback。
       getStaticSnapshot: () => {
         try {
           const inst = inkRuntime.getInkInstance();
@@ -225,7 +229,9 @@ async function startInkApp(options = {}) {
           let rail = '';
           try { pre = sidebarRail.clearBytes(forceRailPaint); } catch { pre = ''; } // 辅助 UI,永不拖垮渲染
           try { rail = sidebarRail.paintBytes(forceRailPaint); } catch { rail = ''; }
-          return target.write((pre || rail) ? pre + normalized + rail : normalized, ...rest);
+          // 闸内代写:收集叶只收非 ink 的写,帧必须透传。
+          const out = (pre || rail) ? pre + normalized + rail : normalized;
+          return inkWriteGate.runInkWrite(() => target.write(out, ...rest));
         };
       }
       const v = Reflect.get(target, prop, target);
@@ -322,12 +328,43 @@ async function startInkApp(options = {}) {
   // so a later classic-REPL turn in this process is not left log-silent.
   let _restoreConsoleLogs = () => false;
   try {
-    const _mute = require('./consoleMute').muteConsoleForSession(
-      require('../../utils/logger'), process.env
-    );
-    if (_mute.muted) {
-      _restoreConsoleLogs = _mute.restore;
+    // 只注入「已在 require.cache」的门面实例；未装载就只设进程级全局（同 bin/khy.js
+    // 的 T1 手法），等门面在构造那一刻读取 —— TUI 挂载这里为设一个级别而 require
+    // 整套 winston，正是本次要避免的开销。require.resolve 判据本身不触发装载；
+    // 解析失败同样退回全局。
+    let _loggerInstance = null;
+    try {
+      const _loggerPath = require.resolve('../../utils/logger');
+      if (require.cache[_loggerPath]) _loggerInstance = require('../../utils/logger');
+    } catch { /* 门面不可解析 → 走全局 */ }
+
+    if (_loggerInstance) {
+      const _mute = require('./consoleMute').muteConsoleForSession(_loggerInstance, process.env);
+      if (_mute.muted) {
+        _restoreConsoleLogs = _mute.restore;
+        process.once('exit', () => { try { _restoreConsoleLogs(); } catch { /* exiting */ } });
+      }
+    } else if (String(process.env.KHY_TUI_CONSOLE_LOG || '').trim() !== '1') {
+      // 未装载：只设全局（'silent' 与实例静音同级；逃生阀与 consoleMute 保持一致）。
+      // 退出/降级还原 prev（未设过则 delete）；会话期间门面若被别的模块装载，它构造时
+      // 读到 'silent'，还原时顺手拨回 prev —— 否则回落到经典 REPL 后控制台一直静默。
+      const _prevGlobal = global.__khyCliConsoleLevel;
+      let _restored = false;
+      _restoreConsoleLogs = () => {
+        if (_restored) return true;
+        _restored = true;
+        try {
+          if (_prevGlobal === undefined) delete global.__khyCliConsoleLevel;
+          else global.__khyCliConsoleLevel = _prevGlobal;
+        } catch { /* 全局不可写：退出路径不受影响 */ }
+        try {
+          const p = require.resolve('../../utils/logger');
+          if (require.cache[p]) require('../../utils/logger').setConsoleLevel(_prevGlobal || 'info');
+        } catch { /* 未装载/不可解析 → 全局还原已足够 */ }
+        return true;
+      };
       process.once('exit', () => { try { _restoreConsoleLogs(); } catch { /* exiting */ } });
+      global.__khyCliConsoleLevel = 'silent';
     }
   } catch { /* logging volume is cosmetic — never block the TUI on it */ }
 
@@ -379,6 +416,13 @@ async function startInkApp(options = {}) {
     } catch {
       /* 预热帧失败 → 逐字节回退到「直接渲染 App」的旧行为 */
     }
+
+    // App / CcApp 的模块图在这里才装载（见上方 :107 的说明）：预热帧已经落地，
+    // 首帧不再为这 835ms 的 require 图等待。require 抛异常时下方 App 分支同样
+    // 走 finally 的降级阶梯，与旧行为一致。
+    const App = isCc
+      ? require('./ink-components/CcApp')
+      : require('./ink-components/App');
 
     app = render(React.createElement(App, { options }), {
       stdout: _tuiStdout,
