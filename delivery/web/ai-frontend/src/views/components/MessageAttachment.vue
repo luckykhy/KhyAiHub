@@ -13,7 +13,7 @@
     class="chat-attachment-chip chat-attachment-expired"
     :title="`附件已不可用：${att.name}`"
   >
-    <el-icon class="chat-attachment-ico"><component :is="iconFor(att.kind)" /></el-icon>
+    <FileTypeIcon class="chat-attachment-ico" :format="attachmentFormat(att)" :size="13" />
     <span class="chat-attachment-name">{{ att.name }}</span>
     <span class="chat-attachment-badge">附件已不可用</span>
   </span>
@@ -24,7 +24,7 @@
     :title="att.name"
     @click="onChipClick"
   >
-    <el-icon class="chat-attachment-ico"><component :is="iconFor(att.kind)" /></el-icon>
+    <FileTypeIcon class="chat-attachment-ico" :format="attachmentFormat(att)" :size="13" />
     <span class="chat-attachment-name">{{ att.name }}</span>
   </button>
 </template>
@@ -36,28 +36,17 @@
 // authedFetch → blob → objectURL。blob 地址按附件 url 模块级缓存，同回合
 // 多处引用只取一次；超过上限按插入序回收最早的 objectURL。
 import { ref, onMounted } from 'vue';
-import { Picture, VideoCamera, Headset, Document, Files, Folder } from '@element-plus/icons-vue';
 import request from '@/api/request';
 import { authedFetch } from '@/api/authedFetch';
-import { isImageAttachment, downloadFileName } from '@/utils/attachmentView';
+import { isImageAttachment, downloadFileName, attachmentFormat } from '@/utils/attachmentView';
+import FileTypeIcon from '@/components/FileTypeIcon.vue';
 
 const props = defineProps({
   att: { type: Object, required: true },
 });
 
-const ICONS = {
-  image: Picture,
-  video: VideoCamera,
-  audio: Headset,
-  document: Document,
-  text: Document,
-  code: Document,
-  archive: Folder,
-  other: Files,
-};
-function iconFor(kind) {
-  return ICONS[kind] || Files;
-}
+// 图标按**格式**取（pdf / docx / xlsx / pptx / md / txt …各不同），不再按后端的
+// 粗分 kind —— 那一套里 document / text / code 三个 kind 共用一个 Document 图标。
 
 function resolveApiUrl(path) {
   const base = String(request.defaults.baseURL || '').trim();

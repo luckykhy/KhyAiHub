@@ -2,8 +2,9 @@
   AgentStatePanel.vue (C2) — lightweight 2D digital-human status panel.
 
   A pure-CSS four-state status orb (idle / listening / thinking / speaking)
-  plus four Element Plus info cards: Persona, Memory, Tools, Activity. No 3D,
-  no WebGL, no three.js — only Vue 3 + Element Plus + CSS theme tokens.
+  plus four Element Plus info cards: 人格档案 (persona), 记忆 (memory),
+  工具 (tools), 活动 (activity). No 3D, no WebGL, no three.js — only Vue 3 +
+  Element Plus + CSS theme tokens.
 
   All data is fed in via props from AIChat.vue's existing stream/ws dispatch;
   this component holds no transport logic of its own. The Persona card is
@@ -22,13 +23,16 @@
     <!-- Persona card -->
     <el-card class="state-card" shadow="never">
       <template #header>
-        <span class="card-title">Persona</span>
+        <span class="card-title">人格档案</span>
       </template>
       <div v-if="persona && persona.present">
         <div v-for="sec in persona.sections" :key="sec.title" class="persona-sec">
           <div class="persona-sec-title">{{ sec.title }}</div>
           <div v-for="(line, i) in sec.lines" :key="i" class="persona-sec-line">{{ line }}</div>
         </div>
+      </div>
+      <div v-else-if="personaError" class="card-empty card-empty--error">
+        {{ personaError }}
       </div>
       <div v-else class="card-empty">
         未设置 AI 人格档案（可选）—— 配置后可定制小K的语气与回答风格
@@ -38,7 +42,7 @@
     <!-- Memory card -->
     <el-card class="state-card" shadow="never">
       <template #header>
-        <span class="card-title">Memory</span>
+        <span class="card-title">记忆</span>
         <span class="card-count">{{ memoryItems.length }}</span>
       </template>
       <div v-if="memoryItems.length">
@@ -50,7 +54,7 @@
     <!-- Tools card -->
     <el-card class="state-card" shadow="never">
       <template #header>
-        <span class="card-title">Tools</span>
+        <span class="card-title">工具</span>
         <span class="card-count">{{ toolCalls.length }}</span>
       </template>
       <div v-if="toolCalls.length">
@@ -64,7 +68,7 @@
     <!-- Activity card -->
     <el-card class="state-card" shadow="never">
       <template #header>
-        <span class="card-title">Activity</span>
+        <span class="card-title">活动</span>
       </template>
       <div v-if="activity.length">
         <div v-for="(a, i) in activity.slice(-5)" :key="i" class="card-line">{{ a }}</div>
@@ -80,19 +84,38 @@ import { computed } from 'vue';
 const props = defineProps({
   orbState: { type: String, default: 'idle' },
   persona: { type: Object, default: () => ({ present: false, sections: [] }) },
+  // 面板本身不发请求，拿不到失败原因；由喂数据的 AIChat 把 loadError 传进来，
+  // 否则一次 500 会显示成「未设置人格档案」。
+  personaError: { type: String, default: '' },
   memoryItems: { type: Array, default: () => [] },
   toolCalls: { type: Array, default: () => [] },
   activity: { type: Array, default: () => [] },
+  // 「在分析什么」：AIChat 把最后一条 thinkingTail / 当前工具的动词+目标喂进来
+  // （规则 2.4）。空字符串就退回「分析用户意图」，不能停在「思考中」。
+  thinkingTail: { type: String, default: '' },
+  // 本轮已等待秒数，撑起 orb 标签里的进度位。
+  waitSeconds: { type: Number, default: 0 },
 });
 
+// 目标 + 耗时（RUNTIME-002）：四个词都是「动作状态」而不是「在干什么」，
+// thinking 态额外接一句真实分析内容。
 const ORB_LABELS = {
-  idle: '待命',
-  listening: '聆听中',
-  thinking: '思考中',
-  speaking: '回应中',
+  idle: () => '待命 · 本轮无进行中的请求',
+  listening: (s) => `接收提问 · 第 ${s}s`,
+  thinking: (s, tail) => `分析中 · ${tail || '分析用户意图'} · 第 ${s}s`,
+  speaking: (s) => `生成回复 · 已输出 · 第 ${s}s`,
 };
 
-const orbLabel = computed(() => ORB_LABELS[props.orbState] || ORB_LABELS.idle);
+// thinking 态的一句话说明可能很长，压成一行末尾（否则侧栏被撑开）。
+function trimTail(text) {
+  const one = String(text || '').trim().replace(/\s+/g, ' ');
+  return one.length > 40 ? `${one.slice(0, 40)}…` : one;
+}
+
+const orbLabel = computed(() => {
+  const fn = ORB_LABELS[props.orbState] || ORB_LABELS.idle;
+  return fn(props.waitSeconds, trimTail(props.thinkingTail));
+});
 </script>
 
 <style scoped>
@@ -211,6 +234,11 @@ const orbLabel = computed(() => ORB_LABELS[props.orbState] || ORB_LABELS.idle);
 .card-empty {
   font-size: 12px;
   color: var(--khy-text-secondary, var(--khy-gray-300));
+}
+
+.card-empty--error {
+  color: var(--el-color-danger, var(--khy-danger, #f56c6c));
+  line-height: 1.5;
 }
 
 .persona-sec {

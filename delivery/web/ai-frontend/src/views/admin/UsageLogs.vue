@@ -17,29 +17,37 @@
 
     <!-- Summary metric cards -->
     <div class="metric-row">
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--blue"><KhyIcon kind="data" size="md" /></div>
+      <div class="metric-card metric-card--blue">
+        <div class="metric-icon metric-icon--blue">
+          <KhyIcon kind="data" size="md" color="var(--khy-primary)" />
+        </div>
         <div class="metric-body">
           <div class="metric-label">请求数</div>
           <div class="metric-value">{{ totals.requests || 0 }}</div>
         </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--green"><KhyIcon kind="coins" size="md" /></div>
+      <div class="metric-card metric-card--green">
+        <div class="metric-icon metric-icon--green">
+          <KhyIcon kind="coins" size="md" color="var(--khy-success)" />
+        </div>
         <div class="metric-body">
           <div class="metric-label">总 Tokens</div>
           <div class="metric-value">{{ formatNumber(totals.totalTokens || 0) }}</div>
         </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--orange"><KhyIcon kind="wallet" size="md" /></div>
+      <div class="metric-card metric-card--amber">
+        <div class="metric-icon metric-icon--amber">
+          <KhyIcon kind="wallet" size="md" color="var(--khy-warning)" />
+        </div>
         <div class="metric-body">
           <div class="metric-label">计费金额（CNY）</div>
           <div class="metric-value">¥{{ (totals.billedCny || 0).toFixed(4) }}</div>
         </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--red"><KhyIcon kind="warning" size="md" /></div>
+      <div class="metric-card metric-card--rose">
+        <div class="metric-icon metric-icon--rose">
+          <KhyIcon kind="warning" size="md" color="var(--khy-rose)" />
+        </div>
         <div class="metric-body">
           <div class="metric-label">错误数</div>
           <div class="metric-value">{{ totals.errors || 0 }}</div>
@@ -78,13 +86,24 @@
 
     <!-- Table -->
     <el-card class="table-card" shadow="never">
-      <el-table
-        v-loading="billing.loading.value"
-        :data="logs.items"
-        empty-text="暂无日志"
-        size="small"
-        stripe
-      >
+      <el-table v-loading="billing.loading.value" :data="logs.items" size="small" stripe>
+        <template #empty>
+          <!-- 与 Marketplace 同款:失败态与真空态分开,不让表格在读取失败时也断「暂无日志」。
+               失败态只给标题:错误正文已由页顶的 LoadErrorBanner 承担。 -->
+          <KhyEmpty
+            v-if="billing.loadError.value"
+            compact
+            icon-props="{ kind: 'warning' }"
+            title="读取用量日志失败"
+          />
+          <KhyEmpty
+            v-else
+            compact
+            icon-props="{ kind: 'data' }"
+            title="暂无日志"
+            description="换个时间范围或清掉筛选条件再查一次。"
+          />
+        </template>
         <el-table-column label="时间" prop="ts" width="180">
           <template #default="{ row }">{{ formatTime(row.ts) }}</template>
         </el-table-column>
@@ -141,6 +160,7 @@ import { Refresh } from '@element-plus/icons-vue';
 import { useGatewayBilling } from '@/composables/useGatewayBilling';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
 import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
+import KhyEmpty from '@/components/KhyEmpty.vue';
 
 const billing = useGatewayBilling();
 const logs = billing.logs;
@@ -231,8 +251,6 @@ onMounted(load);
 <style scoped>
 .usage-logs-page {
   padding: 4px;
-  max-width: 1320px;
-  margin: 0 auto;
 }
 
 .metric-row {
@@ -242,39 +260,14 @@ onMounted(load);
   margin-bottom: 16px;
 }
 
+/* 底 / 左边框 / 图标胶囊 / 数值字号一律来自主题的 .metric-card 与 .metric-icon 体系,
+   本页只保留网格密度 —— 原先在此重定义同名 .metric-icon(42px 实色渐变 + 白图标,
+   且渐变两端同色)会让同一屏的「指标」和第二张图里的长相不一致。 */
 .metric-card {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  border-radius: var(--khy-radius, 12px);
-  background: var(--khy-bg-elevated);
-  border: 1px solid var(--khy-border);
-}
-
-.metric-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  font-size: 20px;
-  color: var(--khy-white);
-  flex-shrink: 0;
-}
-
-.metric-icon--blue {
-  background: linear-gradient(135deg, var(--khy-primary), var(--khy-primary));
-}
-.metric-icon--green {
-  background: linear-gradient(135deg, var(--khy-success), var(--khy-success));
-}
-.metric-icon--orange {
-  background: linear-gradient(135deg, var(--khy-warning), var(--khy-warning));
-}
-.metric-icon--red {
-  background: linear-gradient(135deg, var(--khy-danger), var(--khy-danger));
 }
 
 .metric-label {
@@ -283,10 +276,7 @@ onMounted(load);
 }
 
 .metric-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--khy-text-strong);
-  line-height: 1.2;
+  margin-top: 2px;
 }
 
 .filter-card {

@@ -11,6 +11,16 @@
       scope="admin"
     />
 
+    <!-- 读取失败优先于任何空态：本页有 5 处「还没有…」的空断言，一旦某次读取
+         挂了却只显示它们，用户会去配置一台根本没问题的机器。 -->
+    <LoadErrorBanner :message="gw.loadError.value">
+      <template #action>
+        <el-button :loading="bootstrapBusy" size="small" @click="bootstrapGateway"
+          >重试</el-button
+        >
+      </template>
+    </LoadErrorBanner>
+
     <!-- 按功能领域分类的标签栏。仅作分区选择器：pane 保持为空，真正的 section
          内容留在原位并靠 v-show 按当前分类显隐（避免搬动 400+ 行大块、无需重定位
          弹窗）。scoped CSS 隐藏空的 .el-tabs__content。 -->
@@ -601,13 +611,13 @@
       <!-- Legacy rich per-provider card: full per-model curation (默认 view). -->
       <template v-if="usesLegacyModelCard">
         <KhyEmpty
-          v-if="!availableModelGroups.length"
+          v-if="!availableModelGroups.length && !gw.loadError.value"
           description="确认对应适配器已在本地安装并登录后，模型会自动出现在这里，供网关统一编排。"
           :icon="KhyIcon"
           :icon-props="{ kind: 'coins', size: 'xl' }"
           title="还没有可用模型"
         />
-        <div v-else v-loading="modelEditBusy" class="model-group-list">
+        <div v-else-if="availableModelGroups.length" v-loading="modelEditBusy" class="model-group-list">
           <div v-for="group in availableModelGroups" :key="group.key" class="model-group">
             <div class="model-group-head">
               <span class="status-dot status-dot--green"></span>
@@ -701,7 +711,7 @@
            provider / key / capability / tier / status / connection. -->
       <template v-else>
         <KhyEmpty
-          v-if="!pivotedModelGroups.length"
+          v-if="!pivotedModelGroups.length && !gw.loadError.value"
           compact
           icon-props="{ kind: modelSearch.trim() ? 'search' : 'coins' }"
           :title="modelSearch.trim() ? '没有匹配的模型' : '暂无可用模型'"
@@ -711,7 +721,7 @@
               : '先在下方“API 密钥池”接入供应商 Key,模型会自动收录。'
           "
         />
-        <div v-else class="model-pivot-list">
+        <div v-else-if="pivotedModelGroups.length" class="model-pivot-list">
           <div v-for="group in pivotedModelGroups" :key="group.groupKey" class="model-pivot-group">
             <div class="model-pivot-group-head">
               <span class="status-dot status-dot--green"></span>
@@ -874,7 +884,7 @@
           </div>
         </div>
       </div>
-      <KhyEmpty v-else compact icon-props="{ kind: 'lock' }" title="密钥池还是空的" description="在上方接入供应商 Key,模型才能经网关统一调度。" />
+      <KhyEmpty v-else-if="!gw.loadError.value" compact icon-props="{ kind: 'lock' }" title="密钥池还是空的" description="在上方接入供应商 Key,模型才能经网关统一调度。" />
 
       <!-- Registered custom OpenAI-compatible providers -->
       <div
@@ -1422,7 +1432,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <KhyEmpty v-if="!gw.plugins.value?.length" compact icon-props="{ kind: 'tools' }" title="暂无已加载插件" description="本地安装的适配器插件会自动出现在这里。" />
+      <KhyEmpty v-if="!gw.plugins.value?.length && !gw.loadError.value" compact icon-props="{ kind: 'tools' }" title="暂无已加载插件" description="本地安装的适配器插件会自动出现在这里。" />
     </el-card>
 
     <!-- Plugin Editor Dialog -->
@@ -1650,7 +1660,7 @@
         </div>
       </div>
       <KhyEmpty
-        v-else
+        v-else-if="!gw.loadError.value"
         compact
         description="通过 IDE 登录后导入，或等待系统自动收录，账号会显示在这里参与网关调度。"
         :icon-props="{ kind: 'link' }"
@@ -1877,6 +1887,7 @@ import KhyIcon from '@/components/KhyIcon.vue';
 import request from '@/api/request';
 import KhyEmpty from '@/components/KhyEmpty.vue';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 import { usePacedProgress } from '@khy/ui-shared/progress';
@@ -1909,6 +1920,9 @@ watch(activeTab, (v) => {
 });
 
 const gw = useGateway();
+// 「重试」按钮自己的忙碌态：失败横幅常驻，不能拿 gw.loading（只覆盖 status 读取）
+// 冒充整页重载的进度。
+const bootstrapBusy = ref(false);
 
 // CC-Switch 应用矩阵（DESIGN-ARCH-101）：卡片 → 12 agent 的统一应用面。
 const ccs = useCcSwitch();
@@ -3657,15 +3671,20 @@ async function handleRemoveAccount(id) {
 }
 
 async function bootstrapGateway() {
-  await loadRelayModelConfig();
-  await loadCodexConfig();
-  await gw.fetchAll();
-  await ccs.fetchAll();
-  // Eager-load curation overrides so the pivot views reflect hide/rename/add on
-  // first paint (fetchAll does not pull them — they are otherwise lazy-loaded).
-  await gw.fetchModelOverrides();
-  syncConfigForm(gw.config.value);
-  loadModelSlots();
+  bootstrapBusy.value = true;
+  try {
+    await loadRelayModelConfig();
+    await loadCodexConfig();
+    await gw.fetchAll();
+    await ccs.fetchAll();
+    // Eager-load curation overrides so the pivot views reflect hide/rename/add on
+    // first paint (fetchAll does not pull them — they are otherwise lazy-loaded).
+    await gw.fetchModelOverrides();
+    syncConfigForm(gw.config.value);
+    loadModelSlots();
+  } finally {
+    bootstrapBusy.value = false;
+  }
 }
 
 onMounted(bootstrapGateway);
@@ -3683,10 +3702,7 @@ onActivated(() => {
 </script>
 
 <style scoped>
-.ai-gateway-admin {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* 页宽由 .khy-page 的 --khy-page-max 统一,不再本页自写 max-width。 */
 
 /* 分类标签栏只当分区选择器用：pane 内容为空，靠 v-show 显隐真正的 section。
    隐藏空的 .el-tabs__content，只保留标签头（nav）。 */
@@ -3951,7 +3967,7 @@ onActivated(() => {
 }
 .pool-section {
   border: 1px solid var(--khy-border-light);
-  border-radius: 12px;
+  border-radius: var(--khy-radius-md);
   background: linear-gradient(180deg, var(--khy-white), var(--khy-bg-hover));
   padding: 12px;
 }

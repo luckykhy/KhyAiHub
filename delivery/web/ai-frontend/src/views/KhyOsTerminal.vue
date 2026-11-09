@@ -64,6 +64,8 @@ let authed = false;
 let resizeObserver = null;
 let manualClose = false;
 let wheelHandler = null;
+// 非 ready 状态下被丢弃的按键数（只用于提示节流，不对外暴露）。
+let droppedKeystrokes = 0;
 
 // 内核 agent 通道状态(服务端 khyos_agent_info):kernel shell 的 `ai <问题>`
 // 由这个大脑作答 —— gateway = 已配置的真模型,rule = 内置规则兜底。
@@ -80,7 +82,7 @@ const agentChipText = computed(() => {
 const statusTag = computed(() => {
   switch (status.value) {
     case 'booting':
-      return { type: 'warning', label: '启动中' };
+      return { type: 'warning', label: `启动中 · ${bootStage.value} · 已等待 ${bootSeconds.value}s` };
     case 'ready':
       return { type: 'success', label: '已连接' };
     case 'error':
@@ -93,6 +95,26 @@ const statusTag = computed(() => {
       return { type: 'info', label: '未连接' };
   }
 });
+
+// 启动阶段读数（RUNTIME-002）：光一个「启动中」在 QEMU 冷启动要等几十秒的场合，
+// 分不清「还在起」和「已经卡死」——补上阶段名与已等待秒数。
+const bootStage = ref('连接内核通道');
+const bootSeconds = ref(0);
+let _bootClockTimer = null;
+function startBootClock(stage) {
+  stopBootClock();
+  bootStage.value = stage;
+  bootSeconds.value = 0;
+  _bootClockTimer = setInterval(() => {
+    bootSeconds.value += 1;
+  }, 1000);
+}
+function stopBootClock() {
+  if (_bootClockTimer) {
+    clearInterval(_bootClockTimer);
+    _bootClockTimer = null;
+  }
+}
 
 function b64encode(str) {
   // str is a binary string of bytes; encode to base64.
@@ -125,6 +147,7 @@ function connect() {
   manualClose = false;
   authed = false;
   status.value = 'booting';
+  startBootClock('连接内核通道');
 
   ws = new WebSocket(resolveWsUrl('/ws'));
 
@@ -144,6 +167,7 @@ function connect() {
     if (type === 'auth_ok') {
       authed = true;
       connecting.value = false;
+      startBootClock('内核启动中');
       // Boot the kernel for this session.
       ws.send(JSON.stringify({ type: 'khyos_start' }));
       return;
@@ -171,6 +195,7 @@ function connect() {
     }
     if (type === 'khyos_status') {
       status.value = msg.status || status.value;
+      if (msg.status === 'ready') stopBootClock();
       if (msg.status === 'error') writeLine(`\x1b[31m[内核] ${msg.message || '启动失败'}\x1b[0m`);
       if (msg.status === 'exited') writeLine(`\x1b[90m[内核] QEMU 已退出\x1b[0m`);
       return;
@@ -189,9 +214,25 @@ function connect() {
   ws.onclose = () => {
     connecting.value = false;
     authed = false;
-    if (!manualClose && status.value === 'ready') {
+    stopBootClock();
+    if (manualClose) return; // 人工断开：终局已由 closeSocket/reconnect 写过，不重复报
+    // 任何非人工关闭都要落终局。原先只判 status==='ready'，于是「booting 阶段
+    // 断网」会永远停在「启动中」——此刻已经没有任何东西在推进了。
+    if (status.value === 'booting') {
+      status.value = 'error';
+      writeLine(
+        '\x1b[31m启动中断：连接在内核就绪前断开，查看启动日志后点「重新连接」。\x1b[0m'
+      );
+      return;
+    }
+    if (status.value === 'ready') {
       status.value = 'exited';
       writeLine('\x1b[90m连接已断开。点击「重新连接」继续。\x1b[0m');
+      return;
+    }
+    if (status.value !== 'error' && status.value !== 'exited' && status.value !== 'stopped') {
+      status.value = 'error';
+      writeLine('\x1b[31m连接已断开。点击「重新连接」继续。\x1b[0m');
     }
   };
 }
@@ -272,6 +313,12 @@ onMounted(() => {
   term.onData((data) => {
     if (ws && authed && status.value === 'ready') {
       ws.send(JSON.stringify({ type: 'khyos_input', data: b64encode(data) }));
+      return;
+    }
+    // 非 ready 时静默丢弃会让用户以为键盘坏了。每 3 次提示一次，别刷屏。
+    droppedKeystrokes += 1;
+    if (droppedKeystrokes === 1 || droppedKeystrokes % 3 === 0) {
+      writeLine(`\x1b[33m内核未就绪（${status.value}），本次输入未送达（第 ${droppedKeystrokes} 次）。\x1b[0m`);
     }
   });
 
@@ -309,6 +356,7 @@ onBeforeUnmount(() => {
     }
   }
   closeSocket();
+  stopBootClock();
   if (resizeObserver) {
     try {
       resizeObserver.disconnect();

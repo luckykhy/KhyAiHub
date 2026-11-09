@@ -159,11 +159,64 @@ export function describeToolEvent(payload = {}) {
     return { type: 'status', text: `工具调用：${tool}` };
   }
   if (type === 'tool_result') {
-    const ok = payload?.success !== false;
-    const head = `工具结果：${tool} ${ok ? '完成' : '失败'}`;
-    return { type: ok ? 'status' : 'error', text: detail ? `${head} — ${detail}` : head };
+    const outcome = toolResultOutcome(payload);
+    const head =
+      outcome === 'error'
+        ? `工具结果：${tool} 失败`
+        : outcome === 'unknown'
+          ? `工具结果：${tool} 结果未返回（原因未标注）`
+          : `工具结果：${tool} 完成`;
+    return {
+      type: outcome === 'error' ? 'error' : 'status',
+      text: detail ? `${head} — ${detail}` : head,
+    };
   }
   return null;
+}
+
+/**
+ * 工具结果的三态判定。
+ *
+ * `success !== false` 把「字段没填」和「明确成功」当成同一件事，于是后端漏发
+ * success 会被渲染成绿勾「完成」——一个从未被证实的结论。缺失只能是 unknown。
+ * @param {{success?:boolean}} payload
+ * @returns {'ok'|'error'|'unknown'}
+ */
+export function toolResultOutcome(payload) {
+  const v = payload?.success;
+  if (v === true) return 'ok';
+  if (v === false) return 'error';
+  return 'unknown';
+}
+
+/**
+ * 收口孤儿步骤：一轮结束时仍停在 running 的步骤，其结果永远不会来了（连接断了、
+ * 页面切走了、后端崩了）。把它落成 unknown 并补上真实耗时，而不是留一个永远
+ * 转圈的图标。幂等：只动仍为 running 的步骤，可重复调用。
+ *
+ * @param {Array<object>} steps
+ * @param {string} [reason] 收口原因（写进 step.note）
+ * @param {number} [now] 注入时间戳，便于测试
+ * @returns {number} 本次收口的步骤数
+ */
+export function settleOrphanSteps(
+  steps,
+  reason = '结果未返回（可能因中断/超时）',
+  now = Date.now()
+) {
+  const list = Array.isArray(steps) ? steps : [];
+  let settled = 0;
+  for (const step of list) {
+    if (!step || typeof step !== 'object') continue;
+    if (step.status !== 'running') continue;
+    step.status = 'unknown';
+    step.note = reason;
+    step.endedAt = now;
+    step.durationMs =
+      Number.isFinite(step.startedAt) && now >= step.startedAt ? now - step.startedAt : null;
+    settled += 1;
+  }
+  return settled;
 }
 
 const _SECRET_KEY_RE = /(key|token|secret|password|passwd|authorization|api[_-]?key)/i;
@@ -240,11 +293,16 @@ export function formatToolParams(input, opts = {}) {
  * `steps` array (#6 「无流式进度反馈，用户难以一眼看清进度」). Instead of forcing
  * the user to read every log row, this collapses the run into one counted line:
  * how many tool steps have settled vs. are still running vs. failed. Reads the
- * clean `status` field ('running' | 'ok' | 'error'), never fragile log text.
+ * clean `status` field ('running' | 'ok' | 'error' | 'unknown'), never fragile log text.
  * Returns null when there are no steps (nothing to summarize). Pure, never throws.
  *
+ * 刻意不写 `done/total`：`total` 是「已到达的步骤数」，会随新步骤到达而变大 ——
+ * 于是同一条进度读数会倒退（1/1 → 1/2 → 2/3），用户看到的是「刚干完又变多了」。
+ * 各分段计数只增不减，读数单调。只有后端明确给出计划步数（payload.plan.total）时
+ * 才允许 n/m 那种写法；本函数没有这个输入，所以只报分段。
+ *
  * @param {Array<{status?:string}>} steps
- * @returns {{total:number,done:number,running:number,failed:number,active:boolean,label:string}|null}
+ * @returns {{total:number,done:number,running:number,failed:number,unknown:number,active:boolean,label:string}|null}
  */
 export function summarizeToolProgress(steps) {
   const list = Array.isArray(steps) ? steps : [];
@@ -252,23 +310,26 @@ export function summarizeToolProgress(steps) {
   let done = 0;
   let running = 0;
   let failed = 0;
+  let unknown = 0;
   for (const s of list) {
     if (!s || typeof s !== 'object') continue;
     total += 1;
     if (s.status === 'running') {
       running += 1;
     } else if (s.status === 'error') {
-      done += 1;
       failed += 1;
+    } else if (s.status === 'unknown') {
+      unknown += 1;
     } else {
       done += 1; // 'ok' or any settled state
     }
   }
   if (total === 0) return null;
-  const parts = [`工具 ${done}/${total}`];
-  if (running > 0) parts.push(`${running} 进行中`);
-  if (failed > 0) parts.push(`${failed} 失败`);
-  return { total, done, running, failed, active: running > 0, label: parts.join(' · ') };
+  const parts = [`已完成 ${done} 个`];
+  if (running > 0) parts.push(`${running} 个进行中`);
+  if (failed > 0) parts.push(`${failed} 个失败`);
+  if (unknown > 0) parts.push(`${unknown} 个结果未返回`);
+  return { total, done, running, failed, unknown, active: running > 0, label: parts.join(' · ') };
 }
 
 export function resolveAiChatThinkingEvent(channel, payload = {}) {

@@ -57,7 +57,7 @@
             :type="monitor.connected.value ? 'success' : 'default'"
             @click="toggleMonitorStream"
           >
-            {{ monitor.connected.value ? '实时中' : '连接实时流' }}
+            {{ streamButtonText }}
           </el-button>
         </div>
       </template>
@@ -96,11 +96,8 @@
         </el-table-column>
         <el-table-column label="状态" width="70">
           <template #default="{ row }">
-            <el-tag
-              size="small"
-              :type="row.success ? 'success' : row.success === false ? 'danger' : 'info'"
-            >
-              {{ row.success ? '成功' : row.success === false ? '失败' : '执行中' }}
+            <el-tag size="small" :type="traceStatusType(row)">
+              {{ traceStatusText(row) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -125,7 +122,7 @@
 </template>
 
 <script setup>
-import { onActivated, onDeactivated, onMounted, onUnmounted } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted } from 'vue';
 import { useAIMonitor } from '@/composables/useAIMonitor';
 
 // The adapter table data comes from the parent's shared useGateway() instance
@@ -149,13 +146,38 @@ async function loadInitial() {
   ]);
 }
 
+// trace 行的 success 三态。这些行是历史记录，不是正在跑的活 —— 后端没填这个
+// 字段就是「不知道」，说成「执行中」会让用户一直等一条早已结束的请求。
+function traceStatusType(row) {
+  if (row?.success === true) return 'success';
+  if (row?.success === false) return 'danger';
+  return 'info';
+}
+function traceStatusText(row) {
+  if (row?.success === true) return '成功';
+  if (row?.success === false) return '失败';
+  return '未知';
+}
+
 function toggleMonitorStream() {
   if (monitor.connected.value) {
     monitor.disconnect();
+  } else if (monitor.linkStatus.value === 'failed') {
+    // 重连预算已用尽，按钮给的就是「手动重试」——不再假装点下去会自动重连。
+    monitor.retryNow();
   } else {
     monitor.connectSSE();
   }
 }
+
+// 按钮文案跟着链路终态走：耗尽后必须说「已停止自动重试，请点此重试」，而不是
+// 回到「连接实时流」让人以为后台还在重连。
+const streamButtonText = computed(() => {
+  if (monitor.connected.value) return '实时中';
+  if (monitor.linkStatus.value === 'failed') return '已停止自动重试，请点此重试';
+  if (monitor.linkStatus.value === 'connecting') return '重连中…';
+  return '连接实时流';
+});
 
 onMounted(loadInitial);
 
