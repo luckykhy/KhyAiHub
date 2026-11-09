@@ -150,11 +150,13 @@ onBeforeUnmount(clearConfirm);
   background: var(--el-fill-color-light, #f5f7fa);
   color: var(--el-text-color-secondary, #909399);
 }
-/* 按色调而非原始状态着色：状态→色调的映射只在 model.js 里维护一份。 */
-.khy-card__status[data-tone='running'] { background: var(--el-color-primary-light-9, #ecf5ff); color: var(--el-color-primary, #409eff); }
-.khy-card__status[data-tone='warn'] { background: var(--el-color-warning-light-9, #fdf6ec); color: var(--el-color-warning, #e6a23c); }
-.khy-card__status[data-tone='ok'] { background: var(--el-color-success-light-9, #f0f9eb); color: var(--el-color-success, #67c23a); }
-.khy-card__status[data-tone='error'] { background: var(--el-color-danger-light-9, #fef0f0); color: var(--el-color-danger, #f56c6c); }
+/* 按色调而非原始状态着色：状态→色调的映射只在 model.js 里维护一份。
+   色值统一走 --khy-* 语义三色，不再直连 --el-color-* —— 否则同一个「成功」
+   在本组件是 #059669、在隔壁 EP 组件是 #67c23a，同屏两组绿。 */
+.khy-card__status[data-tone='running'] { background: var(--el-color-primary-light-9); color: var(--khy-primary); }
+.khy-card__status[data-tone='warn'] { background: var(--el-color-warning-light-9); color: var(--khy-warning); }
+.khy-card__status[data-tone='ok'] { background: var(--el-color-success-light-9); color: var(--khy-success); }
+.khy-card__status[data-tone='error'] { background: var(--el-color-danger-light-9); color: var(--khy-danger); }
 
 .khy-card__meta {
   display: flex;

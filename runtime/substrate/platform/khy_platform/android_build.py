@@ -256,7 +256,7 @@ def _project_candidates() -> list:
     刻意不再把 <仓库根>/apps/khy-mobile 列为候选：该目录已是无源码检出的幽灵端
     （0 个 git 跟踪文件，dist/ 只是 delivery/channel/khyquant/frontend 的编译副本），
     把它当作默认工程会让 `khy build android` 静默构建一个空壳。真实的随身端是
-    Flutter 工程 apps/khy-os-client-app，走 `npm run android:release`。
+    Flutter 工程 delivery/mobile/khy-os-client-app，走 `npm run android:release`。
     本工具仍保留为「构建外部 Capacitor 工程」的入口 —— 用 KHY_ANDROID_PROJECT
     显式指定即可。见 [DESIGN-ARCH-117] khy-多端入口矩阵。
     """
@@ -750,7 +750,7 @@ def run_android_build(argv: Sequence[str]) -> int:
         _step(1, "定位", "Capacitor 工程", "失败")
         _action_required("没有指定 Capacitor 工程（且当前目录不是）", [
             "构建随身 App 请改用 Flutter 工程：npm run android:release",
-            "  → 打包 apps/khy-os-client-app（APK + AAB + 签名校验）",
+            "  → 打包 delivery/mobile/khy-os-client-app（APK + AAB + 签名校验）",
             "如需构建外部 Capacitor 工程，用环境变量显式指定：",
             "  KHY_ANDROID_PROJECT=<工程目录> khy build android",
             "注意：<仓库根>/apps/khy-mobile 已无源码检出（0 个 git 跟踪文件），不是可用工程",

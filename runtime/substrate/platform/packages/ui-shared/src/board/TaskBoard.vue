@@ -31,7 +31,11 @@
       有 {{ model.unmapped }} 张卡片的状态不在看板列映射内，未归入任何列（已单独标出，未丢弃）。
     </p>
 
-    <p v-if="loading && model.cards.length === 0" class="khy-board__placeholder">正在加载任务看板…</p>
+    <!-- 动作 + 目标写明。这里没有可报的进度信号（看板是一次性全量读取，没有 n/m、
+         也没有已用秒数），所以不编一个百分比凑数 —— 假进度比没有进度更糟。 -->
+    <p v-if="loading && model.cards.length === 0" class="khy-board__placeholder">
+      读取任务看板数据…
+    </p>
 
     <p v-else-if="model.cards.length === 0" class="khy-board__placeholder">{{ emptyText }}</p>
 
@@ -267,10 +271,11 @@ function onAction(payload) {
   color: var(--el-text-color-regular, #606266);
   font-size: 12px;
 }
-.khy-board__stat--run { color: var(--el-color-primary, #409eff); }
-.khy-board__stat--pause { color: var(--el-color-warning, #e6a23c); }
-.khy-board__stat--done { color: var(--el-color-success, #67c23a); }
-.khy-board__stat--fail { color: var(--el-color-danger, #f56c6c); }
+/* 与 TaskCard 同一组 --khy-* 语义色：看板统计条与卡片状态必须是同一组绿/琥珀/红。 */
+.khy-board__stat--run { color: var(--khy-primary); }
+.khy-board__stat--pause { color: var(--khy-warning); }
+.khy-board__stat--done { color: var(--khy-success); }
+.khy-board__stat--fail { color: var(--khy-danger); }
 
 .khy-board__tools {
   display: flex;
