@@ -207,12 +207,21 @@ function _writeDiskCache(env, ttlMs, gitPath, _stat) {
 /**
  * Scan `PATH` for a git executable with existsSync only (zero process spawn, ~1ms).
  * First hit wins; on Windows `git.exe` is preferred over an extension-less `git`.
+ *
+ * ⚠ 候选必须是**普通文件**：`existsSync` 对目录同样返回 true，而 PATH 上常有一
+ *   个名为 `git` 的**目录**（如 portable Git 的 `<root>\Tools\git`）。把它当成
+ *   可执行文件返回会让下游全部 git 能力静默失效——spawn 报 ENOENT，而调用方
+ *   多半把它当成「本机没装 git」而诚实降级，于是 git status / git context /
+ *   git commit 全部失效且没有任何报错线索。故此处对每个命中再做一次 isFile
+ *   判定，目录直接跳过、继续扫下一个候选。
+ *
  * @param {Object} env
  * @param {string} platform
  * @param {Function} _exists
+ * @param {Function} [_stat] - statSync 注入（测试用）；缺省用真实 statSync
  * @returns {string|null}
  */
-function _scanPathForGit(env, platform, _exists) {
+function _scanPathForGit(env, platform, _exists, _stat) {
   const raw = env && (env.PATH || env.Path || env.path);
   if (!raw || typeof raw !== 'string') {
     return null;
@@ -225,12 +234,34 @@ function _scanPathForGit(env, platform, _exists) {
   for (const dir of dirs) {
     for (const name of names) {
       const candidate = path.join(dir, name);
-      if (_existsSafe(candidate, _exists)) {
+      if (!_existsSafe(candidate, _exists)) {
+        continue;
+      }
+      if (_isRegularFile(candidate, _stat)) {
         return candidate;
       }
+      // 命中但不是普通文件（目录）→ 跳过，继续扫下一个候选。
     }
   }
   return null;
+}
+
+/**
+ * 判定候选路径是否为普通文件（不是目录）。绝不抛：判定失败一律当作「不是
+ * 普通文件」，宁可继续扫下一个候选，也不要把目录交给下游去 spawn。
+ *
+ * @param {string} candidate
+ * @param {Function} [_stat] - statSync 注入（测试用）
+ * @returns {boolean}
+ */
+function _isRegularFile(candidate, _stat) {
+  const stat = _stat || statSync;
+  try {
+    const st = stat(candidate);
+    return Boolean(st && typeof st.isFile === 'function' && st.isFile());
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -371,7 +402,12 @@ function _resolveFromCandidates(candidates, opts) {
  */
 function _resolveSystemGit(opts) {
   if (opts.pathScanOn) {
-    const scanned = _scanPathForGit(opts.env, opts.platform || process.platform, opts._exists);
+    const scanned = _scanPathForGit(
+      opts.env,
+      opts.platform || process.platform,
+      opts._exists,
+      opts._stat
+    );
     if (scanned) {
       return scanned;
     }
@@ -456,4 +492,9 @@ module.exports = {
   // gitContextService / hudRenderer so the value is not re-declared per file.
   GIT_DISK_CACHE_TTL_MS,
   GIT_DISK_CACHE_TTL_MAX_MS,
+  // Internal — exported for unit tests only. The PATH scan is skipped in
+  // injected mode (behaviour stays byte-identical there), so the
+  // "a directory named `git` must not be taken for an executable" rule is
+  // pinned by calling this leaf directly rather than through the resolver.
+  _scanPathForGit,
 };

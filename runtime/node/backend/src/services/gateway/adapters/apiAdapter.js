@@ -938,7 +938,33 @@ async function listModels() {
     /* ignore */
   }
 
-  return rows;
+  // 同一 (provider, model) 在两条采集腿里各出一行：MultiFreeService 的内置 provider
+  // 走两段 `${provider}:${model}`，apiKeyPool/customProviderRegistry 走三段
+  // `api:${poolKey}:${model}`（如 opencode-zen 免费层永远两腿都在）。两者经
+  // parseProviderModel 解析到同一条路由，列表里却出现两份，选中哪份都只是重复。
+  // 保留三段行：它带 contextWindow / maxOutputTokens / 免费层稳定性标注；只删
+  // 与之同尾的两段行，单腿存在的模型不受影响。
+  const canonicalPoolModels = new Set();
+  for (const row of rows) {
+    const m = /^api:([a-z0-9_-]+):(.+)$/i.exec(String(row && row.id ? row.id : ''));
+    if (m) {
+      canonicalPoolModels.add(`${m[1].toLowerCase()}:${m[2]}`);
+    }
+  }
+  if (canonicalPoolModels.size === 0) {
+    return rows;
+  }
+  return rows.filter((row) => {
+    const id = String(row && row.id ? row.id : '');
+    if (/^api:/i.test(id)) {
+      return true;
+    }
+    const sep = id.indexOf(':');
+    if (sep <= 0) {
+      return true;
+    }
+    return !canonicalPoolModels.has(`${id.slice(0, sep).toLowerCase()}:${id.slice(sep + 1)}`);
+  });
 }
 
 /**

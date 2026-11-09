@@ -27,9 +27,15 @@
  *
  * 门控 KHY_GLM_VISION_IMAGE_DOWNSCALE(parent = KHY_GLM_VISION_MODEL,默认开;
  * 0/false/off/no → 关)。关门 / 异常 → 原样透传(逐字节回退今日行为)。
+ *
+ * 三个启发旋钮 TARGET_IMAGE_TOKENS / SAFETY_SHRINK / PIXELS_PER_TOKEN 可分别经
+ * KHY_GLM_VISION_IMAGE_TOKEN_TARGET / KHY_GLM_VISION_TOKEN_SAFETY /
+ * KHY_GLM_VISION_PIXELS_PER_TOKEN 覆盖(默认值一字不动;导出的常量恒为默认值,复现脚本
+ * 快照依赖它们,env 只在读取时生效)。
  */
 
 const { execFileSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -47,6 +53,25 @@ const PIXELS_PER_TOKEN = 100;
 
 // 缩放后再乘一个安全系数,进一步远离预算边界(应对估算误差)。
 const SAFETY_SHRINK = 0.92;
+
+// ── 上面三个启发旋钮的 env 化边界(默认值一字不动,env 只在读取时生效)──
+// TARGET 上界 = 合并预算 - max_new_tokens 上限,不是随手取的大数:GLM 视觉端把
+// max_new_tokens 限制在 [1,1024](0.1.180 修的 code 1210 第一形态),而合并预算是
+// `inputs tokens + max_new_tokens <= COMBINED_TOKEN_BUDGET`。图片目标 token 一旦越过
+// 16384-1024,无论输出多小都必然 400(`Given: N inputs tokens and 1024 max_new_tokens`)
+// —— 调大旋钮救不了超预算,只会把 1210 从「图太大」变成「图白缩了」。
+const MAX_NEW_TOKENS_LIMIT = 1024;
+const MAX_TARGET_IMAGE_TOKENS = COMBINED_TOKEN_BUDGET - MAX_NEW_TOKENS_LIMIT;
+const MIN_TARGET_IMAGE_TOKENS = 1;
+// 安全系数是 (0,1] 的比例:下界收到 0.01,允许用户调得很激进,但不接受 0/负数
+// (那等于「一步缩到没」,与 computeScaleFactor 取 min 的语义相反)。
+const MIN_SAFETY_SHRINK = 0.01;
+// 面积系数「每 token 多少像素」必须为正,否则估算除零/负 token。
+const MIN_PIXELS_PER_TOKEN = 1;
+// 上界与 flagRegistry 里 KHY_GLM_VISION_PIXELS_PER_TOKEN 的 max 对齐(对账断言见
+// glmVisionImageDownscale.test.js):该值越大 token 估得越少,不设上界时 env 传超大值会把
+// token 估到约等于 0,「要不要缩」的判断随之失灵,又撞回 1210。
+const MAX_PIXELS_PER_TOKEN = 100000;
 
 // 「统一归一化所有输入图」的最大边上限(px)。所有 GLM 视觉输入图都等比收敛到最大边 ≤ 此值:
 // 既稳稳避开 token 上限,又给识别一个清晰稳定的分辨率(1512px 在 GLM-4V 上兼顾清晰度与预算)。
@@ -111,6 +136,80 @@ function _diag(msg) {
 }
 
 /**
+ * 旋钮 env「设了但读不出数」时留痕并回退默认。**未设置**(undefined/空串)不报警——
+ * 那是绝大多数安装的常态,刷屏只会把真问题埋掉。
+ * @param {string} name
+ * @param {*} raw
+ * @param {number} dflt
+ */
+function _diagUnparsable(name, raw, dflt) {
+  if (raw == null || String(raw).trim() === '') {
+    return;
+  }
+  _diag(`${name}='${String(raw).trim()}' is not a number; falling back to default ${dflt}`);
+}
+
+/**
+ * 图片目标 token 上限,可经 KHY_GLM_VISION_IMAGE_TOKEN_TARGET 覆盖,
+ * 夹在 [1, COMBINED_TOKEN_BUDGET - MAX_NEW_TOKENS_LIMIT]。
+ * 上界的理由见 MAX_TARGET_IMAGE_TOKENS 注释:越过 16384-1024 必然 400。
+ * @param {object} [env]
+ * @returns {number}
+ */
+function getTargetImageTokens(env = process.env) {
+  try {
+    const raw = (env && env.KHY_GLM_VISION_IMAGE_TOKEN_TARGET) ?? '';
+    const parsed = parseInt(String(raw), 10);
+    if (!Number.isFinite(parsed)) {
+      _diagUnparsable('KHY_GLM_VISION_IMAGE_TOKEN_TARGET', raw, TARGET_IMAGE_TOKENS);
+      return TARGET_IMAGE_TOKENS;
+    }
+    return Math.max(MIN_TARGET_IMAGE_TOKENS, Math.min(MAX_TARGET_IMAGE_TOKENS, parsed));
+  } catch {
+    return TARGET_IMAGE_TOKENS;
+  }
+}
+
+/**
+ * 缩放后再乘的安全系数,可经 KHY_GLM_VISION_TOKEN_SAFETY 覆盖,夹在 (0,1]。
+ * @param {object} [env]
+ * @returns {number}
+ */
+function getSafetyShrink(env = process.env) {
+  try {
+    const raw = (env && env.KHY_GLM_VISION_TOKEN_SAFETY) ?? '';
+    const parsed = parseFloat(String(raw).trim());
+    if (!Number.isFinite(parsed)) {
+      _diagUnparsable('KHY_GLM_VISION_TOKEN_SAFETY', raw, SAFETY_SHRINK);
+      return SAFETY_SHRINK;
+    }
+    return Math.max(MIN_SAFETY_SHRINK, Math.min(1, parsed));
+  } catch {
+    return SAFETY_SHRINK;
+  }
+}
+
+/**
+ * 「每 token 多少像素」的面积系数,可经 KHY_GLM_VISION_PIXELS_PER_TOKEN 覆盖,夹 [1, 100000]。
+ * 上界与 flagRegistry 该条目的 max 对齐(registry.resolveNumeric 不走这条路,叶子自解析)。
+ * @param {object} [env]
+ * @returns {number}
+ */
+function getPixelsPerToken(env = process.env) {
+  try {
+    const raw = (env && env.KHY_GLM_VISION_PIXELS_PER_TOKEN) ?? '';
+    const parsed = parseInt(String(raw), 10);
+    if (!Number.isFinite(parsed)) {
+      _diagUnparsable('KHY_GLM_VISION_PIXELS_PER_TOKEN', raw, PIXELS_PER_TOKEN);
+      return PIXELS_PER_TOKEN;
+    }
+    return Math.max(MIN_PIXELS_PER_TOKEN, Math.min(MAX_PIXELS_PER_TOKEN, parsed));
+  } catch {
+    return PIXELS_PER_TOKEN;
+  }
+}
+
+/**
  * 门控 KHY_GLM_VISION_IMAGE_DOWNSCALE:默认开;0/false/off/no → 关。异常 → 关门(false)。
  * @param {object} [env]
  * @returns {boolean}
@@ -132,15 +231,16 @@ function downscaleEnabled(env = process.env) {
  * 由宽高估算 GLM 视觉 input token(线性面积模型)。
  * @param {number} width
  * @param {number} height
+ * @param {object} [env]
  * @returns {number}
  */
-function estimateVisionTokens(width, height) {
+function estimateVisionTokens(width, height, env = process.env) {
   const w = Number(width);
   const h = Number(height);
   if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
     return 0;
   }
-  return Math.ceil((w * h) / PIXELS_PER_TOKEN);
+  return Math.ceil((w * h) / getPixelsPerToken(env));
 }
 
 /**
@@ -163,9 +263,10 @@ function computeScaleFactor(width, height, env = process.env) {
 
   // ① 预算约束。
   let budgetScale = 1;
-  const tokens = estimateVisionTokens(w, h);
-  if (tokens > TARGET_IMAGE_TOKENS) {
-    budgetScale = Math.sqrt(TARGET_IMAGE_TOKENS / tokens) * SAFETY_SHRINK;
+  const tokens = estimateVisionTokens(w, h, env);
+  const target = getTargetImageTokens(env);
+  if (tokens > target) {
+    budgetScale = Math.sqrt(target / tokens) * getSafetyShrink(env);
   }
 
   // ② 统一最大边归一化(默认开)。
@@ -183,9 +284,24 @@ function computeScaleFactor(width, height, env = process.env) {
   return Math.max(0.05, Math.min(1, scale));
 }
 
+// 临时文件 stamp:进程内单调计数器 + 随机后缀。旧写法是 `${process.pid}_${buf.length}`,
+// 挡不住同进程并发——worker thread 与主线程**共享 pid**,且各自持有独立的模块实例
+// (计数器都从 0 起),于是两张等字节图必然撞名。计数器管同线程连续调用,随机段管跨线程。
+// 用 crypto 而非 Math.random:同 tmpdir 下可预见的文件名等于谁都能抢写。
+let _tmpStampSeq = 0;
+function _nextTmpStamp() {
+  _tmpStampSeq += 1;
+  return `${process.pid}_${_tmpStampSeq}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
 /**
  * 用平台自带 CLI 把 PNG buffer 等比缩放到 (targetW × targetH),返回新 PNG buffer。
  * 找不到可用工具 / 失败 → 返回 null(调用方 fail-soft 用原图)。
+ *
+ * in_/out_ 文件名每次调用都必须唯一(stamp 生成见 _nextTmpStamp),否则同进程并发的两张
+ * 等字节图会写同一对文件:后写的 in_ 覆盖前者的输入、先完成的读走/删走别人的 out_,
+ * 表现为「用户问图 A、收到图 B」(或直接 null)。
+ *
  * @param {Buffer} buf
  * @param {number} targetW
  * @param {number} targetH
@@ -197,7 +313,7 @@ function _downscaleBufferViaPlatform(buf, targetW, targetH) {
   let outFile;
   try {
     fs.mkdirSync(tmpDir, { recursive: true });
-    const stamp = `${process.pid}_${buf.length}`;
+    const stamp = _nextTmpStamp();
     inFile = path.join(tmpDir, `in_${stamp}.png`);
     outFile = path.join(tmpDir, `out_${stamp}.png`);
     fs.writeFileSync(inFile, buf);
@@ -432,11 +548,11 @@ function _downscaleOneBase64(base64, env = process.env) {
     return null;
   }
 
-  const est = estimateVisionTokens(w, h);
+  const est = estimateVisionTokens(w, h, env);
   const scale = computeScaleFactor(w, h, env);
   if (scale >= 1) {
     _diag(
-      `image ${w}x${h} est=${est}tok within budget (target=${TARGET_IMAGE_TOKENS}, maxEdge=${getMaxEdge(env)}); no downscale`
+      `image ${w}x${h} est=${est}tok within budget (target=${getTargetImageTokens(env)}, maxEdge=${getMaxEdge(env)}); no downscale`
     );
     return null; // 预算内且未超最大边,不缩
   }
@@ -453,7 +569,7 @@ function _downscaleOneBase64(base64, env = process.env) {
 
   const newBase64 = shrunk.toString('base64');
   _diag(
-    `downscaled ${w}x${h} (est=${est}tok) -> ${targetW}x${targetH} (~${estimateVisionTokens(targetW, targetH)}tok), bytes ${buf.length}->${shrunk.length}`
+    `downscaled ${w}x${h} (est=${est}tok) -> ${targetW}x${targetH} (~${estimateVisionTokens(targetW, targetH, env)}tok), bytes ${buf.length}->${shrunk.length}`
   );
   return { base64: newBase64, mimeType: 'image/png' }; // 平台缩放统一存回 PNG
 }
@@ -584,9 +700,14 @@ module.exports = {
   downscaleEnabled,
   normalizeAllEnabled,
   getMaxEdge,
+  getTargetImageTokens,
+  getSafetyShrink,
+  getPixelsPerToken,
   estimateVisionTokens,
   computeScaleFactor,
   COMBINED_TOKEN_BUDGET,
   TARGET_IMAGE_TOKENS,
+  SAFETY_SHRINK,
+  PIXELS_PER_TOKEN,
   DEFAULT_MAX_EDGE,
 };

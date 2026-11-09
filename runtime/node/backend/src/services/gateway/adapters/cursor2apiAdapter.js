@@ -229,12 +229,19 @@ async function generate(prompt, options = {}) {
   const cfg = getConfig(options);
 
   // Build request body via protocol pipeline
+  // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../samplingDefaults').getDefaults('toolCall', 'cursor2api');
+  } catch {
+    _sd = null;
+  }
   const { body } = _openaiHandler.buildRequestBody(prompt, {
     ...options,
     model: cfg.model,
     stream: !!options.onChunk,
-    max_tokens: options.maxTokens ?? 4096,
-    temperature: options.temperature ?? 0.3,
+    max_tokens: options.maxTokens ?? (_sd ? _sd.maxTokens : 4096),
+    temperature: options.temperature ?? (_sd ? _sd.temperature : 0.3),
   });
   const hasTools = Array.isArray(body.tools) && body.tools.length > 0;
 

@@ -2064,8 +2064,12 @@ async function runClaudeAttempt({
 // Eliminates CLI subprocess overhead (~5s startup + control_request protocol).
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildDirectToolDefs() {
-  const deferEnabled = _deferralActive();
+function buildDirectToolDefs(opts = {}) {
+  // defer_loading 存根与 tool_search 私有 server tool 只对官方 Anthropic 端点有意义：
+  // 服务端要能按需回填完整 schema。中转端点两者都不认（收到即 400，而
+  // _maybeRetryWithoutBetas 的正则匹配不上、不会重试），故这里把端点判别并进 deferEnabled。
+  const deferEnabled =
+    _deferralActive() && require('./_anthropicToolWire').isOfficialAnthropicBase(opts.baseUrl);
   try {
     const registry = require('../../../tools/index');
     const pool = registry.assembleToolPool(undefined, 'coding');
@@ -2352,7 +2356,11 @@ async function callAnthropicStream(
   const _postHeaders = () => ({
     ..._buildAnthropicAuthHeaders(apiKey, authScheme),
     'anthropic-version': '2024-10-22',
-    ...(_deferralActive() ? { 'anthropic-beta': _buildBetaHeader(body.model) } : {}),
+    // tool-search beta 头只对官方端点下发：中转端点既不认这个 beta，也没有服务端
+    // 按需加载 schema 的能力（deferEnabled 已把端点判别并进去，这里与它同源）。
+    ...(_deferralActive() && require('./_anthropicToolWire').isOfficialAnthropicBase(baseUrl)
+      ? { 'anthropic-beta': _buildBetaHeader(body.model) }
+      : {}),
     'Content-Type': 'application/json',
   });
 
@@ -2563,7 +2571,7 @@ async function runClaudeDirect(prompt, options = {}) {
   const promptForModel = useDirectFastPath
     ? rawUserMessage || String(prompt || '')
     : applyAgenticGuidancePrefix(prompt, rawUserMessage);
-  const tools = useDirectFastPath ? [] : buildDirectToolDefs();
+  const tools = useDirectFastPath ? [] : require('./_directToolSurface').resolveDirectToolSurface(options, () => buildDirectToolDefs({ baseUrl }), { baseUrl });
   const inheritedSystem = String(options.system || '').trim();
   let system = useDirectFastPath
     ? inheritedSystem ||
@@ -3469,7 +3477,7 @@ module.exports = {
   __test__: {
     // 暴露给 tests/gateway/contribToolDefs.test.js：拓展声明的工具是否真的进了
     // 模型可见清单。不导出就只能靠肉眼读代码断言「这段在执行路径上」。
-    buildDirectToolDefs: () => buildDirectToolDefs(),
+    buildDirectToolDefs: (opts) => buildDirectToolDefs(opts),
     getRuntimeDiagnosticsFile: () => _runtimeDiagnosticsStore.getFile(),
     readPersistedRuntimeDiagnostics: (options = {}) =>
       _runtimeDiagnosticsStore.readDiagnostic(options),

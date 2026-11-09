@@ -2081,14 +2081,21 @@ async function runCodexDirect(prompt, options = {}) {
     }
     const toolChoice = _forceFirstToolCall ? 'required' : 'auto';
 
+    // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+    let _sd;
+    try {
+      _sd = require('../samplingDefaults').getDefaults('creative', 'codexDirect');
+    } catch {
+      _sd = null;
+    }
     const requestBody = {
       model,
       instructions: systemPrompt,
       input,
       tools: toolDefs,
       tool_choice: toolChoice,
-      max_output_tokens: options.maxTokens || 4096,
-      temperature: options.temperature ?? 0.7,
+      max_output_tokens: options.maxTokens || (_sd ? _sd.maxTokens : 4096),
+      temperature: options.temperature ?? (_sd ? _sd.temperature : 0.7),
       stream: false,
       reasoning: { summary: 'detailed' },
     };

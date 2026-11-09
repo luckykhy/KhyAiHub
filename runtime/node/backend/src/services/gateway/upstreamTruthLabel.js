@@ -38,12 +38,37 @@ const _GENERIC_TYPES = new Set(['', 'network', 'unknown', 'server_error']);
 const _RULE_ONLY_TYPES = new Set(['auth', 'bad_request']);
 
 // 已知上游语义 → 中文标签 + 一句可操作建议。顺序敏感：更具体的在前。
+//
+// ⚠ [DESIGN-ARCH-198] §2.3（W4）：补「上游免费额度用尽」「缺少 API Key」两类。
+// 断桥(2026-11-01 实测)：这两类**认不出** →
+//   ① FreeUsageLimitError 落到 generic 分支 → 拿得到标签、advice 为空
+//      → aiChatCore 的 _honestContinueHint 拿不到建议 → 回落通用「输入「继续」」
+//      （而额度用尽**重试无用**，等配额恢复/换通道才是出路）；
+//   ② AuthError/Missing API key 因 auth 属 ruleOnly（只有命中已知语义才改写）
+//      → **完全认不出**（实测返 null）→ 用户只看到裸 [auth]。
+// 只改**展示标签与建议**，**不改** errorType 分类（分类是熔断语义，动它会改重试行为）。
+// 门控 KHY_UPSTREAM_QUOTA_TRUTH（默认开；关 → 这两条规则不参与匹配 → 逐字节回退今日行为）。
 const _RULES = [
   {
     re: /endpoint is unavailable|upstream request failed/i,
     label: '上游端点不可用',
     transient: true,
     advice: '属瞬态，稍后重试可自愈；也可 /model 换一个更稳的通道',
+  },
+  {
+    // 上游免费额度用尽（按出口 IP 计，2026-10-24 实测）→ 非瞬态，重试无用。
+    re: /freeusage limite?rror|free usage limit|quota exceeded|insufficient_quota|usage limit reached/i,
+    label: '上游免费额度用尽',
+    transient: false,
+    advice: '额度按出口 IP 计，重试无用；请等配额恢复，或 /model 换用付费/其它通道',
+    gate: 'KHY_UPSTREAM_QUOTA_TRUTH',
+  },
+  {
+    re: /missing api[ _-]?key|no api[ _-]?key|apikey not (?:found|provided)|api key not configured/i,
+    label: '缺少 API Key',
+    transient: false,
+    advice: '请运行 ai config 配置该通道的 API Key，配好即可继续',
+    gate: 'KHY_UPSTREAM_QUOTA_TRUTH',
   },
   {
     re: /free tier can only be used|freetiererror/i,
@@ -71,6 +96,32 @@ function _parseBody(raw) {
   } catch {
     return null;
   }
+}
+
+/**
+ * 规则级门控（[DESIGN-ARCH-198] W4）。flagRegistry 优先（集中真源），失败 → 本地 CANON。
+ * 绝不抛。
+ */
+function _ruleGateEnabled(name, env = process.env) {
+  const e = env || {};
+  try {
+    const reg = require('../flagRegistry');
+    if (
+      reg &&
+      typeof reg.isRegistryEnabled === 'function' &&
+      reg.isRegistryEnabled(e) &&
+      typeof reg.isFlagEnabled === 'function'
+    ) {
+      return reg.isFlagEnabled(name, e);
+    }
+  } catch {
+    /* 注册表不可用 → 本地 CANON */
+  }
+  const raw = e[name];
+  const v = String(raw === undefined || raw === null ? 'true' : raw)
+    .trim()
+    .toLowerCase();
+  return !_OFF.has(v);
 }
 
 /** 取 body.error（OpenAI / OpenCode Zen 两种信封都落在 error 字段）。 */
@@ -116,6 +167,10 @@ function describeUpstream(raw, opts = {}) {
     const hay = `${upstreamType} ${upstreamMsg} ${text}`;
 
     for (const r of _RULES) {
+      // 规则级门（[DESIGN-ARCH-198] W4）：关掉 → 该规则不参与匹配 → 逐字节回退今日行为。
+      if (r.gate && !_ruleGateEnabled(r.gate, env)) {
+        continue;
+      }
       if (r.re.test(hay)) {
         return { label: r.label, message: upstreamMsg, advice: r.advice, transient: r.transient };
       }
