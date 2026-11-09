@@ -93,7 +93,10 @@
 <table><thead><tr><th>#</th><th>问题</th><th>选项</th><th>代价</th></tr></thead><tbody><tr><td>Q-1</td><td>OAuth 身份存哪</td><td>A 新增 <code>oauthAccounts</code>（推荐）/ B 复用 <code>aliases</code></td><td>A 动 User 模型（加列 + sync）；B 污染登录键空间</td></tr><tr><td>Q-2</td><td>GitHub 不返回 email 时怎么建号</td><td>占位邮箱 <code>github_&lt;id&gt;@oauth.local</code> / 要求用户补邮箱 / 允许 email 为空（需改模型 <code>allowNull</code>）</td><td>各影响注册表单与唯一约束</td></tr><tr><td>Q-3</td><td>OAuth 账号如何设密码</td><td>允许 <code>/change-password</code> 对无密码账号免校验旧密码 / 另立「设密码」端点</td><td>影响 AUTH 安全面</td></tr><tr><td>Q-4</td><td>桌面应用是否复用 web 后端</td><td>复用同一后端 / 桌面独立鉴权</td><td>影响 B4/B5 工作量与 IPC 设计</td></tr><tr><td>Q-5</td><td>C 片「必须登录」的清单由谁定</td><td>逐页评审 / 先按现状收窄</td><td>影响 C 片工作量</td></tr><tr><td>Q-6</td><td>D 片桌面端是否本轮做</td><td>做 / 拆到独立提案</td><td><strong>已由 §12 实测判定并收口</strong>：生产冷启非瓶颈（0.8–1.5s）⇒ 不做优化、不拆提案；dev 模式 2.9–9.5s 是 Vite 固有代价，也不是「待优化项」</td></tr></tbody></table>
 <hr>
 <h2 id="10-复现方式-实施时可直接粘贴">10. 复现方式（实施时可直接粘贴）<a class="anchor" href="#10-复现方式-实施时可直接粘贴" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 现状证据复核</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：79 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 现状证据复核</span>
 sed -n <span class="hljs-string">&#x27;62,90p&#x27;</span> runtime/node/backend/src/routes/auth.js          <span class="hljs-comment"># oauthProviders: []</span>
 grep -niE <span class="hljs-string">&quot;oauth|github|gitee&quot;</span> .env.example                       <span class="hljs-comment"># 空</span>
 sed -n <span class="hljs-string">&#x27;95,109p&#x27;</span> runtime/substrate/platform/packages/shared/src/models/User.js  <span class="hljs-comment"># aliases / displayName</span>

@@ -85,7 +85,10 @@
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>给 <code>waitPortOpen</code>/<code>waitWebBackendHealthy</code> 各自再放宽</td><td>单阶段上界放宽会直接推高 §1.3 总和，把假阴性从「可能」变「稳定」；要让用户看见进度，而不是把黑箱等得更久</td></tr><tr><td>在 daemon 里用「启动失败即 process.exit」的早期兜底替代看门狗</td><td>等于把看门狗的判定交给每个阶段自己——卡死恰恰发生在「阶段自己不知道自己卡了」的地方；看门狗必须独立于阶段推进</td></tr><tr><td>把 phase 状态存进独立文件或让 <code>/status</code> 与 runtime 各记一份</td><td>两个真源必然漂移（本仓 <code>main/index.ts:85-89</code> 的「一处真源」纪律同源）；phase 只活在 daemon 进程内，经 <code>writeRuntime</code> 与 <code>buildStatusPayload</code> 同源广播</td></tr><tr><td>新测试用 jest 全局（裸 <code>describe</code>/<code>test</code>/<code>expect</code>）</td><td><code>services/backend</code> CI 走 <code>node --test tests/**/*.test.js</code>（shell 展开 1288 文件），jest 全局未定义 → 落地即红；§1.4 五个存量红文件就是现成受害者</td></tr><tr><td>往既有 jest 风格文件里追加 node:test 用例</td><td>一个文件被两套 runner 扫到，双跑双红；要加就另建文件</td></tr><tr><td>把「连接 deepseek-eyes...」这类 pending 行静音</td><td>静音会吞掉唯一的过程信号；要的是给它墙钟和终结行，不是删它</td></tr></tbody></table>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 回归锚点（改动前后数字必须不变）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 回归锚点（改动前后数字必须不变）</span>
 &amp; <span class="hljs-variable">$node</span> --<span class="hljs-built_in">test</span> services/backend/tests/aiManageDaemonFrontendReuse.test.js   <span class="hljs-comment"># 基线 6/6</span>
 &amp; <span class="hljs-variable">$node</span> --<span class="hljs-built_in">test</span> services/backend/tests/cli/handlers/gatewayManageDaemonLeaf.test.js  <span class="hljs-comment"># 基线 4/4</span>
 

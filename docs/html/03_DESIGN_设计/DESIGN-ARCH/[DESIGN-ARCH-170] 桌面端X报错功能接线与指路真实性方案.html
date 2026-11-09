@@ -137,7 +137,10 @@
 <table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>自动探测编辑器</strong>（遍历 PATH 找 code.exe）</td><td>① 与既有单一来源链（settings.desktopEditor → KHY_EDITOR）冲突成第二真源；② 探测结果因机器而异，用户想用 cursor 却被打开 code，行为不可预测；③ <code>execFile</code> 一个探测出来的可执行文件扩大攻击面。缺省时的正确行为是<strong>把指路的路修通</strong>（§3.1），不是替用户猜</td></tr><tr><td><strong>把 <code>https://khyquant.top/feedback</code> 硬写进 main</strong></td><td>serviceDefaults.js:22-23 自述 MUST import；<code>CLOUD_FALLBACK_ENDPOINTS</code>（:25-28）就是为域名迁移预留的，硬编码让 main 在迁移日必漏</td></tr><tr><td><strong>渲染层吞 <code>ok:false</code> 继续显示笼统文案</strong></td><td>本次病灶 2b 的成因本身。错误必须原样到达用户——笼统文案让用户去查一个不存在的「未配置」问题，比不报错更糟</td></tr><tr><td><strong>加 <code>KHY_XXX</code> env 开关做回滚</strong></td><td>撞门预算棘轮（<code>check-tui-gates.js:32</code>，MAX_GATES 只降不升）；且 B-P1 的「新增配置键」判据会把 bugfix 从豁免变成非豁免。「让功能变正确」不构成用户可见权衡，回滚能力用 revert 承担</td></tr><tr><td><strong>在 main 硬写 <code>~/.khyquant/logs</code> 修日志入口</strong></td><td>dataHome.js:24/:60-65 明确正在把散落的硬编码收敛到唯一解析器；新增硬编码 = 逆着治理方向开倒车</td></tr><tr><td><strong>用 <code>__dirname</code> 数跳级修 root</strong></td><td>本次病灶 2a 的成因本身。<code>out/</code> 深度随构建形态漂移；用 <code>app.getAppPath()</code>（package.json 所在目录）做语义化锚点</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># D6（preload↔main 两侧一致）+ D9（品牌文本）——本次零新增 IPC，应原样绿</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
+<span class="hljs-comment"># D6（preload↔main 两侧一致）+ D9（品牌文本）——本次零新增 IPC，应原样绿</span>
 node --<span class="hljs-built_in">test</span> apps/khyos-desktop/tests/desktopUiContract.test.cjs
 
 <span class="hljs-comment"># 设计令牌门禁——新字段全走 CSS 变量，零新增 finding</span>

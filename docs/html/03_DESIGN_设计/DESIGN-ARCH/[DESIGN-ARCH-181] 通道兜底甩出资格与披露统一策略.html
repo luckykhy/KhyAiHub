@@ -98,7 +98,10 @@
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>见 <code>network</code> 就停（不加跨通道复现条件）</strong></td><td>单通道 <code>network</code> 是<strong>通道级</strong>故障（该端点死了），甩下一通道恰恰是对的。停的条件必须是「≥2 个不同远端 key 同型失败」或环境特征码——「一次失败就宣布网络全断」会把单点故障误判成环境故障，让本可兜底的请求直接失败</td></tr><tr><td><strong>把环境级判定做成「再探一个 HTTP 请求」</strong></td><td>增加热路径延迟且探针本身也可能失败；跨通道复现证据（D2-A）零成本、纯离线可测。探针是反模式，证据聚合才是</td></tr><tr><td><strong>把披露塞进状态帧就算完</strong></td><td>139 已踩过：「状态行转瞬即逝、不可存留」（139 §6）。披露必须进<strong>可存留</strong>面（routeFact 字段 / notice 行 / 信封）</td></tr><tr><td><strong>给「环境级跳过」记真实失败</strong></td><td>会毒化熔断与健康度（把网络问题记成通道坏）。必须 <code>virtualSkip:true</code> 同型（照抄 <code>:3998-4006</code>）</td></tr><tr><td><strong>在成功回复正文里注入「本次由 X 完成」</strong></td><td>污染下游：复制、diff、二次解析都会吃到注入行。用独立 notice 行</td></tr><tr><td><strong>为「甩快点」把桥接类提到队列最前</strong></td><td>桥接类有本机进程副作用（spawn CLI/IDE），且 139 病史显示「自动甩到未选通道」正是用户投诉源。提升资格只属于进程级 failover（S5）既有条件，不得新开</td></tr><tr><td><strong>三期收紧 <code>bad_request</code> 时直接踢出 DEAD_ENDPOINT 集合</strong></td><td>会让「中继站拒特定请求格式 → 换通道可成功」的既有场景卡死（<code>adaptiveParamStrip</code> 的存在证明这类真实存在）。必须先有 <code>cascade</code> 样本细分「端点语义 vs 请求语义」，再按证据收紧</td></tr><tr><td><strong>把本策略实现成新的「总调度器」</strong></td><td>收拢是「多调用点消费同一叶子」，不是「新造一层路由」。routing 的真源仍是 <code>aiGatewayRoutingMethods.js</code></td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 叶子单测（node:test，落地即绿；CI 的 test:node 全量 glob 会扫到）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 叶子单测（node:test，落地即绿；CI 的 test:node 全量 glob 会扫到）</span>
 node --<span class="hljs-built_in">test</span> runtime/node/backend/tests/gateway/fallbackEligibilityPolicy.test.js
 node --<span class="hljs-built_in">test</span> runtime/node/backend/tests/gateway/environmentOutageSignal.test.js   <span class="hljs-comment"># 若拆文件</span>
 
