@@ -135,7 +135,15 @@ function checkObservedDirs(l) {
 
   for (const d of dirs) {
     if (!d.path) continue;
-    if (!exists(d.path)) {
+    // 「必须还在」只对**装着东西**的目录成立。observedVendorDirs 是一份带
+    // measuredAt 的实测快照，快照里记着一个空 vendor/ 占位目录、而它后来
+    // 被工具链建了又删了——这是常态，不是「vendored 代码被悄悄删掉」。
+    // 空目录消失没有东西可丢，只有登记过内容的目录消失才说明台账没跟上，
+    // 那才是这条 error 的本意。state 'empty' 且没有 contents 的条目按空目录
+    // 处理：它的消失不判红。
+    const holdsContent = d.state === 'ledgered'
+      || (Array.isArray(d.contents) && d.contents.length > 0);
+    if (holdsContent && !exists(d.path)) {
       add('error', 'observed-dir-missing', LEDGER_REL, 0, `observedVendorDirs 记录的目录不存在：${d.path}`);
     }
     // 有内容但未登记的目录必须进 knownGaps，否则等于绕过台账

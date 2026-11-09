@@ -410,6 +410,8 @@ const ROOT_CATALOG = {
   'khy.sh': { category: 'contract', reason: 'POSIX CLI 入口壳', reviewBy: '2026-12-31' },
   'khy-cli.bat': { category: 'contract', reason: 'Windows CLI 备用入口壳', reviewBy: '2026-12-31' },
   'khy-env.bat': { category: 'contract', reason: 'KHY_* 环境契约单一真源（四个入口共用，止住数据家分叉）', reviewBy: '2026-12-31' },
+  // 2026-10-25 补登：Web UI 双击入口（与 khy.bat 同根，参数透传给 khy web open）。
+  'start-web.cmd': { category: 'contract', reason: 'Web UI 双击入口壳（与 khy.bat 同根，共用 khy-env.bat 环境契约）', reviewBy: '2026-12-31' },
   'KhyOS-Desktop.lnk': { category: 'artifact', reason: '桌面端启动快捷方式（指向 dist-electron 构建产物；无空格，见 root-junk 规则）', reviewBy: '2026-12-31' },
   'install-khy.ps1': { category: 'contract', reason: 'PowerShell 安装脚本', reviewBy: '2026-12-31' },
   'portable-setup.bat': { category: 'contract', reason: '便携版初始化（Win）', reviewBy: '2026-12-31' },
@@ -428,6 +430,10 @@ const ROOT_CATALOG = {
   // Windows 资源管理器快捷方式（827 B，指向本仓自身 D:\Portable\khy-os），
   // 未跟踪也未忽略——纯本机产物，无仓库语义。D9 批拟删除或改 gitignore。
   'khy-os.lnk': { category: 'localdata', reason: 'Windows 快捷方式（未跟踪，指向本仓自身；纯本机产物，无仓库语义）', reviewBy: '2026-12-31' },
+  // 2026-10-27 补登：Mavis 工具画布资产本机态（canvas-assets/，工具按根路径读写）。
+  // 10-25 误入暂存区的 jpg 已按 HK-3 隔离进 works/data/khy/T4-transient/tmp/housekeeping/20261027/；
+  // 未跟踪面由 .gitignore 的 /.mavis/ 规则兜住。此前 Q-1（root-uncatalogued）一直报它。
+  '.mavis': { category: 'localdata', reason: 'Mavis 工具画布资产本机态（canvas-assets/；工具按根路径读写，误入暂存区资产已按 HK-3 隔离，未跟踪面由 /.mavis/ 规则覆盖）', reviewBy: '2026-12-31' },
   // 2026-11-04 补登：Qoder 工具本机态（tmp/acc-e2e/ 验收证据 + tmp/probe-*.cjs 探针）。
   // 与 .opencode/.zcode/.workbuddy 同性质——工具按根路径读写，搬走即断工具链。
   // 全部 31 个文件都在 .qoder/tmp/ 下，由 .gitignore:102 的 `tmp/` 规则覆盖，
@@ -970,6 +976,18 @@ const EXTENSION_ID_ALLOWLIST = new Map([
   ['runtime/node/backend/src/cli/handlers/publish.js', new Set(['khy-alpine-iso'])],
   // 历史 bug 案例数据集：files[] 记的是**当年那次事故**改了哪些文件，是史料不是分派。
   ['runtime/node/backend/src/data/bugCases.js', new Set(['khy-alpine-iso'])],
+  // 同机另一条桥的**守护进程状态目录**，不是核要用的拓展能力。
+  //
+  // phone.js 的 _probeAmoonSegment 是只读探针：读 %LOCALAPPDATA%/khy-amoon-bridge 下的
+  // runtime.json 与 capability.json，汇报那条桥装没装、跑没跑，绝不启动它、绝不影响本命令成败。
+  // 它要定位的是 daemon 的 stateDir；而 findProvider('amoon-bridge') 返回的是拓展**源码**
+  // 目录（delivery/extension/bridges/khy-amoon-bridge）——两者不是同一个东西。该桥确有
+  // provides: ["amoon-bridge"]，所以「按服务名问一句」是能做的，但问出来的是源码位，
+  // 拿 ext.id 反推 stateDir 只在拓展可发现时成立；pip 安装若未随包分发 bridges，
+  // 会把「装着但探不到」误报成「未安装」——为了一条守卫读数退化一个诊断，不划算。
+  // KHY_AMOON_HOME 是既定的覆盖入口。理想解是桥的 daemon 改用统一 dataHome（B8：
+  // 数据家只有一个），那是独立的一次变更，不混进体积/结构化输出这条线。
+  ['runtime/node/backend/src/cli/handlers/phone.js', new Set(['khy-amoon-bridge'])],
 ]);
 
 /** 该文件的该 id 是否已登记豁免。 */

@@ -492,10 +492,50 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
 // ══════════════════════════════════════════════════════════ 检查 7 · C-E4
 // works/record/evidence/ 自留底档（AI 参与范围自述 / 设计决策索引 / 发布记录）
 // 主动记录比被追问好：被要求补充开发过程说明时，它就是「如实申报」的证据。
+// ── 2026-10-24 修两处分支错误（实测：守卫把「已入库的底档」当成没留痕）────
+// ① 分支①的触发条件查的是**仓库根 `evidence/`**，而裁决 D-E1 立的真源是
+//    `works/record/evidence/` —— 仓库根根本没有 evidence/ 目录，于是分支①
+//    **永远不触发**，入库底档从未被校验过（守卫宣称守的东西实际没人守）。
+// ② 分支②用 `fs.existsSync(p)` 直接判登记路径，而那些路径是**相对
+//    `docs/10_规范/registry/`** 的（COPYRIGHT.json 的 $note 明写「自
+//    docs/10_规范/registry/ 出发上溯 4 层到 Portable 根」）。拿 cwd 去解析
+//    会算到仓库外两层，3 条真实存在的底档指针被误报成「没有一处真实存在」。
+// 两处都是「判据写错」而非「材料没留」，故本次只改判据、不动材料。
+const EVIDENCE_REL = 'works/record/evidence';
+const EVIDENCE_DIR = path.join(REPO_ROOT, EVIDENCE_REL);
+/** 登记真源所在目录 —— evidence 段相对路径的解析基准。 */
+const REG_DIR = path.join(REPO_ROOT, path.dirname(REG_REL));
+
+/**
+ * 底档目录是否被 .gitignore 忽略。
+ * 权威判据问 git 自己（.gitignore 语义含通配 / 否定 / 任意层级目录匹配，
+ * 正则判不准）；git 不可用时才回退到正则。
+ */
+function evidenceDirIgnored() {
+  try {
+    execFileSync(
+      'git',
+      ['-C', REPO_ROOT, 'check-ignore', '-q', '--', EVIDENCE_REL + '/README.md'],
+      { stdio: 'ignore' }
+    );
+    return true; // check-ignore 退出码 0 = 该路径被忽略
+  } catch (e) {
+    if (e && e.status === 1) return false; // 退出码 1 = 未被忽略
+    // 其它状态（git 不可用等）→ 回退正则
+    const gi = read('.gitignore') || '';
+    return /^\s*evidence\/?\s*$/m.test(gi);
+  }
+}
+
+/** 把 evidence 段登记的路径按「registry 目录」基准解析成绝对路径。 */
+function resolveRegistryPath(p) {
+  if (!p) return null;
+  return path.isAbsolute(p) ? p : path.resolve(REG_DIR, p);
+}
+
 (function checkEvidence() {
-  const gi = read('.gitignore') || '';
-  const ignored = /^\s*evidence\/?\s*$/m.test(gi);
-  const localDir = fs.existsSync(path.join(REPO_ROOT, 'evidence'));
+  const ignored = evidenceDirIgnored();
+  const localDir = fs.existsSync(EVIDENCE_DIR);
 
   // ── 分支 ①：仓库内 works/record/evidence/ —— 2026-09-28 人工裁决 D-E1 起，这是**真源**，
   // 且必须入库（证据的证明力来自「与代码同一提交图 + 逐文件时间戳」；
@@ -530,7 +570,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
           files.push(path.relative(REPO_ROOT, full).replace(/\\/g, '/'));
         }
       }
-    })(path.join(REPO_ROOT, 'evidence'), 0);
+    })(EVIDENCE_DIR, 0);
 
     const slots = [
       { 名: '导览 README', re: /(^|\/)README\.md$/ },
@@ -623,8 +663,17 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
         .filter(([k, v]) => !k.startsWith('$') && typeof v === 'string' && v)
         .map(([, v]) => v);
       if (outOfRepo.length) {
-        // 登记者须是真实存在的路径（防「登记一个不存在的目录」当作已留痕）
-        const alive = outOfRepo.filter((p) => fs.existsSync(p));
+        // 登记者须是真实存在的路径（防「登记一个不存在的目录」当作已留痕）。
+        // 解析基准 = 登记真源所在目录（COPYRIGHT.json 的 evidence 段按此声明），
+        // 不是进程 cwd —— 拿 cwd 解析会把 3 条真实存在的底档误报成全缺。
+        const alive = outOfRepo.filter((p) => {
+          const abs = resolveRegistryPath(p);
+          return abs && fs.existsSync(abs);
+        });
+        const missing = outOfRepo.filter((p) => {
+          const abs = resolveRegistryPath(p);
+          return !abs || !fs.existsSync(abs);
+        });
         if (alive.length) {
           findings.push({
             severity: SEV_WARNING,
@@ -634,6 +683,17 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
             line: lineOf(regRaw, '"evidence"'),
             message: `C-E4：自留底档登记为仓库外路径，已核验存在（${alive.length}/${outOfRepo.length} 处）：${alive.slice(0, 3).join(' ｜ ')}（路径在本机，CI 上不存在时本项会退化为提示而非报错）。底档不入提交是设计意图，不是遗漏。`,
           });
+          if (missing.length) {
+            add(
+              SEV_WARNING,
+              'copyright-evidence-registry-partial',
+              REG_REL,
+              lineOf(regRaw, '"evidence"'),
+              `C-E4：evidence 段有 ${missing.length}/${outOfRepo.length} 条登记路径解析后不存在 —— ` +
+                '「声明已留痕却没留」。修法：改正路径，或补出底档。缺失：' +
+                missing.map((p) => `${p} → ${resolveRegistryPath(p)}`).join(' ｜ ')
+            );
+          }
           return;
         }
         add(
@@ -641,7 +701,8 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
           'copyright-evidence-registry',
           REG_REL,
           lineOf(regRaw, '"evidence"'),
-          'C-E4：COPYRIGHT.json 的 evidence 段登记了路径，但**没有一处真实存在** —— 这等于「声明已留痕却没留」。修法：改正路径，或补出底档。'
+          'C-E4：COPYRIGHT.json 的 evidence 段登记了路径，但**没有一处真实存在** —— 这等于「声明已留痕却没留」。修法：改正路径，或补出底档。缺失：' +
+            missing.map((p) => `${p} → ${resolveRegistryPath(p)}`).join(' ｜ ')
         );
         return;
       }

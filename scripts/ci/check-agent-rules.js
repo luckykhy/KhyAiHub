@@ -35,6 +35,15 @@ const CODE_EXTS = new Set([
   // (install-khy.ps1 shipped `node D:\Code\...\khy.js`) breaks every install
   // that is not the author's machine. Scanned for Rule 1c.
   '.ps1', '.sh', '.bat', '.cmd',
+  // Flutter/Dart 客户端。2026-10-26 补：此前这份清单没有 .dart，于是
+  // delivery/mobile/ 下整个 App——系统提示、文件工具、桥的原生通道、提供商
+  // 注册表——四条 AI 工程规则一条都没被扫过。不是"扫过没问题"，是"没扫"，
+  // 而门读到的是绿灯。
+  //
+  // 实测补上后不撞既有代码：Rule 1 的 HARD_ENDPOINT_PATTERNS 只匹配
+  // localhost / 127.0.0.1 / 0.0.0.0，不匹配 built_in_keys.dart 里那 8 个
+  // 公网 baseUrl；Rule 4（滚动区）是 TUI 专属，Dart 无从触发。
+  '.dart',
 ]);
 
 const IGNORE_DIRS = new Set([
@@ -46,6 +55,14 @@ const IGNORE_DIRS = new Set([
   '.tmp',
   'coverage',
   'logs',
+  // Flutter 的构建缓存。与 `.ai/` 同一条理由（见下）：这里放的是**机器生成的
+  // 数据**，不是本仓作者的源码。.dart_tool/flutter_build/*/outputs.json 逐字
+  // 记录本机绝对路径（vm_snapshot_data、各 ABI 的 app.so），
+  // hooks_runner/objective_c/*/input.json 还带 pub.dev 缓存路径——每换一台
+  // 机器就全变。把这些报成 no-hardcoded-abs-path 是纯假阳性：改不动（改了
+  // 下次构建又写回），也不该改。假报告比漏报告更贵（axiom A4）：它把门钉红，
+  // 训练读报告的人跳过真发现。
+  '.dart_tool',
   // Third-party / generated trees. These hold code this repo does not author and
   // cannot refactor, so every hit in them is unactionable noise. A single
   // unignored Python virtualenv produced 30 `no-hardcoded-endpoint` errors from
@@ -143,10 +160,16 @@ const SOFT_TERMINATION_SIGNALS = [
   /\b(?:timedOut|isTimedOut|didTimeout|hasTimedOut|timeoutHit)\s*=\s*true\b/,
 ];
 
+// Rule 2 的自动覆盖面。词表逐条抄自 AGENTS.md 规则 2 正文点名禁用的含糊措辞 ——
+// 原来只抄了前 3 条中文 + 3 条英文，于是「正在加载…」「请稍候…」这些同样被规则
+// 禁用的说法直接漏网，而守卫读起来却像是覆盖了规则 2。
 const GENERIC_STATUS_TOKENS = [
   '正在工作',
   '处理中',
   '尝试连接',
+  '请稍候',
+  '正在加载',
+  '加载中',
   'loading',
   'processing',
   'connecting',
@@ -175,6 +198,89 @@ const STATUS_CONTEXT_HINTS = [
   /\bon(?:Chunk|Status|Wait|Fallback)\s*:/,
   /(?:^|[({,\s])(?:status|message|text|detail|label|title|subtitle)\s*[:=]/i,
 ];
+
+// ── Vue 模板上下文 ──────────────────────────────────────────────────────────
+//
+// 上面的 STATUS_CONTEXT_HINTS 全是「JS 代码里把文案递给某个出口」的形状
+// （console.log / :label= / text= …）。Vue 单文件组件的模板正文不是这个形状：
+// `<span>加载中…</span>` 里没有任何一个 hint 会命中，于是前端 198 个 .vue 模板里
+// 写什么都零覆盖 —— 守卫在一处它声称在管的界面上完全不咬。
+//
+// 这里补的是「这行是不是模板里给用户看的字」。关键约束：只认**展示文本**
+// （文本节点 + 静态字符串属性值）。`:loading="busy"` / `v-if="connecting"` 是绑定
+// 表达式，里面那个 'loading' 是 prop 名不是给用户看的话 —— 按 token 命中它们会
+// 一次刷出 30+ 条假阳性，那种守卫只会教会读者忽略它。
+const VUE_TAG_RE = /<(\/?)([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+const VUE_DISPLAY_ATTRS =
+  /(?<!:)\b(?:title|placeholder|label|description|text|content|message|hint|subtitle|empty-text|emptyText)\s*=\s*(["'])(?:(?!\1).)*\1/g;
+
+/**
+ * 把 .vue 每一行归类为 template / script / style，并标记它是否含展示文本。
+ * 需要跨行跟踪标签开闭，所以是一次性的每文件计算，不是逐行正则。
+ * @param {string[]} lines
+ * @returns {{zone:(lineNo:number)=>string|null, hasDisplayText:(lineNo:number)=>boolean}}
+ */
+function makeVueTemplateContext(lines) {
+  const zones = new Array(lines.length + 1).fill(null);
+  const display = new Array(lines.length + 1).fill(false);
+  let zone = null;
+  // <template> 可以嵌套（`<template #default="scope">` 这类插槽模板）。
+  // 原来只记「当前在哪个区」，嵌套块的 </template> 把**外层** template 一起关掉了 ——
+  // 于是外层 template 剩下的模板行不再被识别成模板（实测 53% 的模板行因此漏检，
+  // 规则看起来在跑，实际只覆盖了模板的前半段）。用深度计数：闭标签只关自己那一层。
+  let templateDepth = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const rawOpen = line.match(/^\s*<(template|script|style)(?=[\s>])/);
+    // 已经在 template 区里时再遇到 <template ...>，那是**嵌套**的插槽模板
+    // （<template #default="scope">），不是顶层块：它只加深，不重置深度。
+    const isNestedTemplate = rawOpen && rawOpen[1] === 'template' && zone === 'template';
+    if (rawOpen && !isNestedTemplate) {
+      zone = rawOpen[1];
+      templateDepth = zone === 'template' ? 1 : 0;
+    }
+    zones[i + 1] = zone;
+
+    if (zone === 'template') {
+      const stripped = line.replace(/<!--[\s\S]*?-->/g, '');
+      // 文本节点：> 与 < 之间不含标签符号的片段（`>加载中…<`）。
+      const textNodes = (stripped.match(/>([^<>]+)</g) || []).map((s) => s.slice(1, -1));
+      const attrValues = (stripped.match(VUE_DISPLAY_ATTRS) || []).map((s) =>
+        s.slice(s.indexOf('=') + 1).trim().replace(/^["']|["']$/g, '')
+      );
+      // 「是不是展示文本」不该看**有没有中文**：页面上被读到的字也可能是英文
+      // （`<span>Loading...</span>`）。原来用 /[\u4e00-\u9fff] 判定，含英文的展示文本
+      // 直接被排除，于是同一批词表在 JS 分支能抓到、在模板分支永远抓不到。
+      // 判据改成「有非空文字」，具体是否命中词表由后面的 token 检查决定。
+      display[i + 1] = [...textNodes, ...attrValues].some((v) => v && v.trim().length > 0);
+    }
+
+    // 本行的区标签（影响后续行）：嵌套 <template ...> 加深，</template> 减浅。
+    const nestedOpens =
+      (line.match(/<template(?=[\s>])/g) || []).length -
+      (rawOpen && rawOpen[1] === 'template' && !isNestedTemplate ? 1 : 0);
+    const templateCloses = (line.match(/<\/template\s*>/g) || []).length;
+    if (nestedOpens > 0) {
+      templateDepth += nestedOpens;
+    }
+    if (templateCloses > 0) {
+      templateDepth = Math.max(0, templateDepth - templateCloses);
+      if (templateDepth === 0 && zone === 'template') {
+        zone = null;
+      }
+    }
+    if (zone === 'script' && /<\/script\s*>/.test(line)) {
+      zone = null;
+    }
+    if (zone === 'style' && /<\/style\s*>/.test(line)) {
+      zone = null;
+    }
+  }
+  return {
+    zone: (lineNo) => zones[lineNo],
+    hasDisplayText: (lineNo) => display[lineNo] === true,
+  };
+}
 
 function run(cmd) {
   try {
@@ -309,7 +415,62 @@ function isTestLikePath(normPath = '') {
   return /(?:^|\/)(?:__tests__|tests)\//.test(normPath)
     || /\.(?:test|spec)\.[^.]+$/.test(normPath)
     // e2e-test.cjs, my-test.js, etc. — hyphenated "-test"/"-spec" before the extension
-    || /-(?:test|spec)\.[^.]+$/i.test(normPath);
+    || /-(?:test|spec)\.[^.]+$/i.test(normPath)
+    // Dart 的约定是下划线：foo_test.dart（flutter_test 的既有惯例，整个 App 的
+    // 测试都这么命名）。不认它，每个提到端点的 Dart 测试都是假阳性——
+    // 而测试里出现 http://localhost:11434 是**为了断言默认值正确**，
+    // 正是该出现的地方。2026-10-26 补 .dart 进 CODE_EXTS 时实测踩到。
+    || /_test\.dart$/.test(normPath);
+}
+
+/**
+ * PowerShell 块注释（`<# … #>`）内部的行号集合。
+ *
+ * 为什么需要：守卫刻意扫 `.ps1`（CODE_EXTS 里写着理由：安装脚本逐字发给用户，
+ * 里面硬编码路径会让非作者机器直接坏掉），但它的「注释行」识别只认
+ * `//`、`/*`、`*`、`#` 四种行首前缀 —— PowerShell 的块注释正文既不以 `#`
+ * 开头也不以 `*` 开头，于是**块注释里的说明文字会被当成代码**判红。
+ *
+ * 实测（2026-10-25）：khy-amoon-bridge/scripts/start.ps1 的文件头
+ * `<# 流程说明 #>` 里那句「轮询 runtime.json 与 http://127.0.0.1:<port>/health」
+ * 被判成硬编码端点。注释不是接线，也不是端点。
+ *
+ * @param {string[]} lines
+ * @returns {Set<number>} 处于块注释内的行号（1 起）
+ */
+function makePowerShellBlockCommentLines(lines) {
+  const inBlock = new Set();
+  let open = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const lineNo = i + 1;
+    if (open) {
+      inBlock.add(lineNo);
+      if (line.includes('#>')) open = false;
+      continue;
+    }
+    const openIdx = line.indexOf('<#');
+    if (openIdx < 0) continue;
+    // 同一行内闭合时整行都在注释里；否则从这一行起进入块注释。
+    inBlock.add(lineNo);
+    if (line.indexOf('#>', openIdx) < 0) open = true;
+  }
+  return inBlock;
+}
+
+/**
+ * 示例配置文件（`*.example.*` / `*.sample.*`）。
+ *
+ * 为什么给它们 Rule 1（端点）的豁免：这类文件的存在意义就是**给出一份可复制的
+ * 样例**，里面写死回环端口是它的内容而不是它的接线；真实值由写入方按运行期
+ * 端口填（khy-amoon-bridge 的 daemon.js:390 就是 `http://127.0.0.1:${port}`）。
+ * 本仓其它守卫（check-staged-secrets.js）对 `.example` 也是同样处理。
+ *
+ * 只豁免 Rule 1：Rule 1b（生产域名）与 Rule 1c（本机绝对路径）在示例文件里
+ * 仍然是真问题——那两处的字面量会跟着样例被抄走。
+ */
+function isExampleConfigPath(normPath = '') {
+  return /\.(?:example|sample)\.[^.]+$/i.test(normPath);
 }
 
 function isLikelyUserFacingStatusLine(line = '') {
@@ -428,9 +589,26 @@ function checkFile(relPath, findings) {
   const isSelf = isSelfScript(normPath);
   const skipOpaqueStatusCheck = isSelf;
   const isTestFile = isTestLikePath(normPath);
+  const isExampleFile = isExampleConfigPath(normPath);
+  // PowerShell 块注释是一次性的每文件计算（跨行跟踪 <# … #>），不是逐行正则。
+  const psCommentLines = /\.ps1$/i.test(normPath) ? makePowerShellBlockCommentLines(lines) : new Set();
 
   // Rule 1: serviceDefaults.js IS the single source of truth — exempt it entirely
-  const isSourceOfTruth = normPath.endsWith('constants/serviceDefaults.js');
+  //
+  // 2026-10-26 补 Dart 侧的对应物 endpoint_defaults.dart：补 .dart 进 CODE_EXTS 后
+  // 它立刻被抓——而那个文件存在的唯一理由就是当第三方默认端点的真源
+  // （Ollama 的 11434 等）。让真源文件被自己守护的规则判成违规，结果只能是
+  // 要么把值拆成 'http://' + host + ':' + port 这种障眼法，要么整个规则被
+  // 加宽到失去意义。两条都不接受，所以照 serviceDefaults.js 的先例整体豁免。
+  //
+  // 豁免只给这一个文件：别处再出现字面量照样红。
+  const isSourceOfTruth = normPath.endsWith('constants/serviceDefaults.js') ||
+    normPath.endsWith('lib/core/config/endpoint_defaults.dart');
+
+  // Frontend templates are their own "is user-facing" question, answered once per
+  // file (needs cross-line <template> tracking, so it cannot be a per-line regex).
+  const isVueFile = /\.vue$/i.test(normPath);
+  const vueCtx = isVueFile ? makeVueTemplateContext(lines) : null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -440,32 +618,48 @@ function checkFile(relPath, findings) {
     // (the opposite of a hidden hardcode), and test code never runs in production
     // so it cannot become a runtime fork. Consistent with Rule 1b and the
     // opaque-status rule below, which already exempt test files.
-    if (!isSourceOfTruth && !isTestFile) {
+    if (!isSourceOfTruth && !isTestFile && !isExampleFile) {
+      // 整行豁免先算一次，再进形态循环。
+      //
+      // 为什么提上来：原来每条豁免都写在形态循环**里面**，`continue` 只是跳到
+      // 下一个形态。于是「一行同时命中两个形态」时，第二个形态仍会把这一行判红
+      // —— 注释行、示例行都可能被第二个形态捞回来（2026-10-25 实测：
+      // PowerShell 块注释里的说明文字被判成硬编码端点）。
+      //
+      // 豁免条件全部是**整行**性质（注释 / 插值 / 示例文本 / 变量端口），
+      // 所以提上来与原语义一致，且顺带补上了「多形态只跳一个」的漏洞。
+      const trimmed = line.trim();
+      const lineExempt =
+        psCommentLines.has(lineNo)                            // PowerShell <# … #> 块注释内
+        || /^\s*(\/\/|\/?\*|\*|#)/.test(trimmed)             // comment line
+        || /\$\{.*\}/.test(line)                             // template string with interpolation
+        || /new URL\(/.test(line)                            // URL constructor for parsing (not network)
+        // Allow printSuccess/printInfo/console.log display lines with dynamic vars
+        || (/(?:printSuccess|printInfo|printError|console\.log)\(/.test(line) && /\$\{/.test(line))
+        // Allow user-facing example text in error/help messages (e.g., "例如 127.0.0.1:7890")
+        || /例如|e\.g\.|example|示例/i.test(line)
+        // Allow Chinese "如 <url>" example phrasing (e.g. "本地 SD (如 http://127.0.0.1:7860)")
+        || /如\s*https?:\/\//.test(line)
+        // Allow proxy-config guidance that shows how to export/set a proxy env var
+        // (e.g. "export HTTPS_PROXY=http://127.0.0.1:7890") — instruction text, not a runtime fork
+        || /(?:export|set)\s+\w*PROXY\w*\s*=/i.test(line)
+        // Allow string concatenation with an env/variable port (e.g.
+        // 'http://localhost:' + port): nothing is pinned there. But NOT when a
+        // quoted numeric port is the fallback (`+ (process.env.PORT || '3000')`)
+        // — that re-pins the default port in a non-SoT module, so the backend
+        // default and this copy silently drift apart. Import the port from
+        // constants/serviceDefaults instead.
+        || (/['"]https?:\/\/(?:localhost|127\.0\.0\.1):\s*['"]?\s*\+/.test(line)
+          && !/\|\|\s*['"]\d{2,5}['"]/.test(line))
+        // 端口是**运行期占位符**而不是字面量：PowerShell 的 -f 格式化
+        // （"http://127.0.0.1:{0}/health" -f $Port）、printf 的 %s/%d、
+        // 以及 <port> / {PORT} 形态——端口那时才由变量给，没有被钉住
+        // （2026-10-25 实测：khy-amoon-bridge 的三个 PowerShell 入口都这么写，
+        // 全被误判成硬编码端点）。
+        || /https?:\/\/(?:localhost|127\.0\.0\.1):(?:\{0\}|\{[A-Za-z_][\w]*\}|%[sd]|<[A-Za-z_][\w]*>|\$\{[^}]+\}|\$[A-Za-z_][\w]*)/.test(line);
+      if (lineExempt) continue;
       for (const re of HARD_ENDPOINT_PATTERNS) {
         if (re.test(line)) {
-          // Skip lines that are: JSDoc/comments, template literals with ${}, or
-          // string interpolation with dynamic port/host variables
-          const trimmed = line.trim();
-          if (/^\s*(\/\/|\/?\*|\*|#)/.test(trimmed)) continue; // comment line
-          if (/\$\{.*\}/.test(line)) continue; // template string with interpolation
-          if (/new URL\(/.test(line)) continue; // URL constructor for parsing (not network)
-          // Allow printSuccess/printInfo/console.log display lines with dynamic vars
-          if (/(?:printSuccess|printInfo|printError|console\.log)\(/.test(line) && /\$\{/.test(line)) continue;
-          // Allow user-facing example text in error/help messages (e.g., "例如 127.0.0.1:7890")
-          if (/例如|e\.g\.|example|示例/i.test(line)) continue;
-          // Allow Chinese "如 <url>" example phrasing (e.g. "本地 SD (如 http://127.0.0.1:7860)")
-          if (/如\s*https?:\/\//.test(line)) continue;
-          // Allow proxy-config guidance that shows how to export/set a proxy env var
-          // (e.g. "export HTTPS_PROXY=http://127.0.0.1:7890") — instruction text, not a runtime fork
-          if (/(?:export|set)\s+\w*PROXY\w*\s*=/i.test(line)) continue;
-          // Allow string concatenation with an env/variable port (e.g.
-          // 'http://localhost:' + port): nothing is pinned there. But NOT when a
-          // quoted numeric port is the fallback (`+ (process.env.PORT || '3000')`)
-          // — that re-pins the default port in a non-SoT module, so the backend
-          // default and this copy silently drift apart. Import the port from
-          // constants/serviceDefaults instead.
-          if (/['"]https?:\/\/(?:localhost|127\.0\.0\.1):\s*['"]?\s*\+/.test(line)
-              && !/\|\|\s*['"]\d{2,5}['"]/.test(line)) continue;
           // A process.env/os.getenv fallback is intentionally not exempt here.
           // Purely dynamic env-based endpoints never match HARD_ENDPOINT_PATTERNS;
           // reaching this branch means the same line still pins a numeric default.
@@ -539,7 +733,7 @@ function checkFile(relPath, findings) {
     // that deliberately pin a path as a fixture.
     if (!isSelf && !isTestFile) {
       const trimmed = line.trim();
-      const isComment = /^\s*(\/\/|\/?\*|\*|#)/.test(trimmed);
+      const isComment = /^\s*(\/\/|\/?\*|\*|#)/.test(trimmed) || psCommentLines.has(lineNo);
       const isExample = /例如|e\.g\.|example|示例|@see|如\s|placeholder|占位/i.test(line);
       if (!isComment && !isExample) {
         for (const { re, kind } of ABS_PATH_PATTERNS) {
@@ -583,22 +777,64 @@ function checkFile(relPath, findings) {
       }
     }
 
-    if (!skipOpaqueStatusCheck && !isTestFile && isLikelyUserFacingStatusLine(line)) {
-      for (const literal of quotedLiteralsInLine(line)) {
-        const lower = literal.toLowerCase();
-        const hit = GENERIC_STATUS_TOKENS.some((token) => lower.includes(String(token).toLowerCase()));
-        if (!hit) continue;
-        if (hasStatusDetail(literal)) continue;
+        // Rule 2: generic status text with no action/target/progress.
+    //
+    // .vue 文件分两半判：<script> 走 JS 侧那套（console/print/:label= …）；
+    // <template> 只认展示文本（文本节点 + 静态字符串属性）。绑定表达式
+    // （`:loading="busy"`、`v-if="connecting"`、`class="is-loading"`）里那个
+    // 'loading' 是 prop 名/表达式，不是给用户看的话 —— 按它命中会一次刷出几十条
+    // 假阳性，而那种守卫只会教会读者忽略它。
+    const inVueTemplate = !!vueCtx && vueCtx.zone(lineNo) === 'template';
+    const jsSideStatusLine = !vueCtx || vueCtx.zone(lineNo) !== 'template';
+    if (
+      !skipOpaqueStatusCheck &&
+      !isTestFile &&
+      (inVueTemplate || (jsSideStatusLine && isLikelyUserFacingStatusLine(line)))
+    ) {
+      if (!inVueTemplate) {
+        for (const literal of quotedLiteralsInLine(line)) {
+          const lower = literal.toLowerCase();
+          const hit = GENERIC_STATUS_TOKENS.some((token) =>
+            lower.includes(String(token).toLowerCase())
+          );
+          if (!hit) continue;
+          if (hasStatusDetail(literal)) continue;
 
-        pushFinding(
-          findings,
-          'warning',
-          'no-opaque-status',
-          relPath,
-          lineNo,
-          'Generic status text detected without explicit action/target/progress.',
-          line.trim(),
+          pushFinding(
+            findings,
+            'warning',
+            'no-opaque-status',
+            relPath,
+            lineNo,
+            'Generic status text detected without explicit action/target/progress.',
+            line.trim()
+          );
+        }
+      } else if (vueCtx && vueCtx.hasDisplayText(lineNo)) {
+        // 模板文本节点与静态属性值：这才是页面上真的会被读到的字。
+        const stripped = line.replace(/<!--[\s\S]*?-->/g, '');
+        const textNodes = (stripped.match(/>([^<>]+)</g) || []).map((s) => s.slice(1, -1));
+        const attrValues = (stripped.match(VUE_DISPLAY_ATTRS) || []).map((s) =>
+          s.slice(s.indexOf('=') + 1).trim().replace(/^["']|["']$/g, '')
         );
+        for (const shown of [...textNodes, ...attrValues]) {
+          if (!shown) continue;
+          if (hasStatusDetail(shown)) continue;
+          // 与 JS 分支同口径：两侧都小写再比。模板里写 `<span>Loading...</span>`
+          // 应当与 `console.log('Loading...')` 一样被抓到（词表是小写的）。
+          const shownLower = shown.toLowerCase();
+          if (!GENERIC_STATUS_TOKENS.some((token) => shownLower.includes(String(token).toLowerCase()))) continue;
+          pushFinding(
+            findings,
+            'warning',
+            'no-opaque-status',
+            relPath,
+            lineNo,
+            'Generic status text in a Vue template without explicit action/target/progress.',
+            line.trim()
+          );
+          break;
+        }
       }
     }
   }

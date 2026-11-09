@@ -324,7 +324,16 @@ function verifyPypi(declared) {
  * doctor 判据：声明的 goldenPath 以 `khy doctor` 收尾，所以这里判的就是它。
  * `counts.fail` 是项目自己的硬失败口径（level=error 的检查项），
  * 只有它为 0 才算"陌生机器上装完能起来"。warn 不判红（那是环境差异，不是交付缺陷）。
+ *
+ * ⚠ 必须读 `scope`（doctor --json 自带）：`khy doctor` 现在默认只跑**本地快检**
+ * （scope=fast，深检丢后台，见 handlers/init.js 的 P1-13 拆分），`--deep` 才是全量
+ * （scope=deep）。不读 scope 就判，等于把「这次到底查了哪些项」这一事实丢在门外：
+ * 覆盖面变窄时门禁照样 PASS，而 PASS 文案还在宣称"全部通过"。所以：
+ *   · scope 缺失或不在已知档位 ⇒ 判红（判不出覆盖面就没资格判通过）；
+ *   · 判决文案如实写明判的是哪一档。
  */
+const DOCTOR_KNOWN_SCOPES = new Set(['fast', 'deep']);
+
 function judgeDoctor(doc, steps, entryLabel) {
   const text = `${doc.out}${doc.err}`;
   if (doc.status !== 0) {
@@ -336,8 +345,24 @@ function judgeDoctor(doc, steps, entryLabel) {
   } catch {
     return { status: 'FAIL', reason: 'khy doctor --json 输出不是合法 JSON ⇒ 无法判定自检结果', steps };
   }
+  const scope = String(parsed.scope || '').trim();
   const counts = parsed.counts || {};
-  steps.push(`doctor: ok=${counts.ok} warn=${counts.warn} fail=${counts.fail}（入口 ${entryLabel}）`);
+  steps.push(`doctor: scope=${scope || '(未声明)'} ok=${counts.ok} warn=${counts.warn} fail=${counts.fail}（入口 ${entryLabel}）`);
+  if (!scope) {
+    return {
+      status: 'FAIL',
+      reason: 'khy doctor --json 没有 scope 字段 ⇒ 无法判定这次自检覆盖了哪些项（红着的门等于没有门）',
+      steps,
+    };
+  }
+  if (!DOCTOR_KNOWN_SCOPES.has(scope)) {
+    return {
+      status: 'FAIL',
+      reason: `khy doctor --json 的 scope=${scope} 不在已知档位（${[...DOCTOR_KNOWN_SCOPES].join('/')}）⇒ 判据漂移`,
+      steps,
+    };
+  }
+  const scopeLabel = scope === 'deep' ? '全量检查' : '本地快检';
   if (Number(counts.fail) > 0) {
     // 列出**具体哪几项**失败。只报计数等于把定位工作全推给读者：装机差异、
     // 打包布局错位、首次运行状态三类原因的修法完全不同，读者需要知道是哪一类。
@@ -357,11 +382,15 @@ function judgeDoctor(doc, steps, entryLabel) {
     if (soft.length > 6) steps.push(`…另有 ${soft.length - 6} 项指引级未通过（不参与硬失败计数）`);
     return {
       status: 'FAIL',
-      reason: `干净装出来的环境有 ${counts.fail} 项硬失败（doctor status=${parsed.status}）⇒ 陌生人装完起不来`,
+      reason: `干净装出来的环境有 ${counts.fail} 项硬失败（doctor status=${parsed.status}，scope=${scope}）⇒ 陌生人装完起不来`,
       steps,
     };
   }
-  return { status: 'PASS', reason: `安装 → khy --version → khy doctor 全部通过（${counts.total} 项检查，0 硬失败）`, steps };
+  return {
+    status: 'PASS',
+    reason: `安装 → khy --version → khy doctor ${scopeLabel}（scope=${scope}）全部通过（${counts.total} 项检查，0 硬失败）`,
+    steps,
+  };
 }
 
 /**
