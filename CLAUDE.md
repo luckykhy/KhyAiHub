@@ -153,6 +153,37 @@ AI 生成原型、**自行决定架构与算法**、按人的提示词反复修�
 > 与 R1 同一思路：R1 说「禁止 AI 自动 commit/push」，这条说「禁止 AI 自动决定版本语义」。
 > 都是**对外可见的判断归人，机械执行归 AI**。
 
+### B8 数据家只有一个，临时文件不进仓库根
+
+**状态目录一律经 `utils/dataHome` 解析器取址，临时脚本/探针一律放
+`works/data/khy/T4-transient/tmp/`。禁止在仓库根（或任何子目录）造
+`.khy` / `.khyos` / `.khy-runtime`。**
+
+为什么单独立一条：这不是卫生问题，是**复发了六次没修掉根因**的问题。
+
+| 时间 | 发生了什么 |
+|---|---|
+| 2026-10-02 | W9′ 把项目数据家迁进 `works/data/khy`，`getProjectDataHome()` 默认值随之改掉 |
+| 2026-10-05 ~ 10-11 | 先后六次清理仓库根的两棵影子树，每次归档进 `.khyos/housekeeping/<日期>*` |
+| 2026-10-12 | 第七次。**但这次修的是根因**：10 处 `path.join(process.cwd(), '.khy')` / `'.khyos'` 字面路径 |
+
+根因是那 10 处 cwd 相对的写者（`healAuditService` / `healEscalationService` /
+`dbHealthService`×3 / `sessionTraceSummary` / `a2aAgentLifecycle` / `a2aConfig` /
+`DiscoverSkillsTool` / `credentials` 扫描）。它们形如
+`path.join(process.cwd(), '.khy')` / `'.khyos'`，任何 cwd=仓库根 的进程都会另造一棵树，
+于是「在仓库根敲 `khy`」和「在别处敲 `khy`」看到的是两套会话、两套缓存、两份
+heal 审计——`khy doctor` 的结论也随你从哪个目录敲而变。前六次只清文件没改代码，
+所以每次都复发。
+
+**已落地**（2026-10-12）：上述 10 处全部改为经 `utils/dataHome` 解析；`check-repo-layout.js`
+新增仓库根影子目录检查（`root-shadow-dir`），出现即亮红。
+
+**执行面（硬闸，不是约定）**：`node scripts/ci/check-repo-layout.js` 报
+`root-shadow-dir` 即未完成。
+
+> 与 B7 同一思路：B7 说「对外可见的判断归人」，这条说「路径解析归解析器，不归 cwd」。
+> cwd 是调用方的偶然状态，拿它当数据家的锚点，等于让同一份代码在不同目录下写成不同结果。
+
 ---
 
 ## 三、验收门禁

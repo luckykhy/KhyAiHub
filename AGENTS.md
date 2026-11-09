@@ -92,10 +92,12 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 - 交付前对本次 diff 做一轮减法：删掉上述 AI 痕迹，**行为保持不变**。
   （Qoder 侧有 `/deslop` skill 承担同一件事；没有它时人工过一遍即可。）
 
-> 放置位置有硬性原因：运行时读取指令文件时有 **8000 字符/文件静默截断**
-> （`runtime/node/backend/src/services/instructionFileService.js` 的 `MAX_FILE_CHARS`，
-> 守卫 `scripts/ci/check-agent-docs.js` 规则 `DOCS-003`）。本文件截断点在本节之后，
-> 而「代码风格」节（全文后半）已在截断之外——**任何要求 AI 真的读到的约定都必须放在截断点之前**。
+> 放置位置有硬性原因：本文件（AGENTS.md）属 **compat 层**，由
+> `runtime/node/backend/src/constants/prompts.js` 的 `_findCompatInstructionFiles()`
+> **全文读取、不设预算、不截断**（`[DESIGN-DOC-002]` §1.2 实测裁决）——不存在截断点，
+> 内容放置不受字符上限约束。8000 字符/文件的 `MAX_FILE_CHARS` 只约束 **own 层**
+> `khy.md`/`KHY.md`（`runtime/node/backend/src/services/instructionFileService.js`，
+> 超限截断但注入文本里留 `[TRUNCATED]` 标记）：约定若挪进 `khy.md`，才必须放在前 8000 字符内。
 
 ---
 
@@ -265,6 +267,12 @@ P2 规则走基线棘轮（`scripts/ci/ruleguard-baseline.json`，只降不升�
 > （T0–T4 五档 × 八领域寻址，规则 `LAYOUT-007`，守卫 `npm run check:data-layout`，S1 观察者档），
 > 设计见 `[DESIGN-LAY-007] 三态目录立体分层方案`。本节下面两张表是**速查**，不是寻址真源，
 > 亦不描述层级深度。新增数据落点前先查登记表，别在根上继续平铺（现状 211 项即为反例）。
+
+> **同一份数据只允许写一遍**（规则 `LAYOUT-008`，守卫 `npm run check:ssot-data`，S1 观察者档）：
+> 数据事实的**真源在哪**登记在 `docs/10_规范/registry/DATA-SSOT.json`（只登记真源位置与授权镜像，
+> **不登记值**）；真源之外再写一遍即判影子副本、值不同即判矛盾、已登记的授权镜像与真源不一致即判失步。
+> 跨包镜像（独立 npm 包 / Python 进程）**允许存在但必须登记**，理由只能写「物理上无法 import」。
+> 判据与能力边界见 `[DESIGN-LAY-009] 数据单一真源与影子副本归并规范`。
 
 ### 运行时数据目录（`works/data/khy/`）
 
@@ -479,7 +487,7 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
    （2026-10-10 由已删除的 `luckykhy/khy_os_private` 合并而来；那个仓只剩
    main + 3 个 dependabot 分支，内容全部本地已有，删除无损失。）
 
-### 分支备份现状（2026-10-11 实测）
+### 分支备份现状（2026-10-11 实测，2026-11-04 修订）
 
 本地 25 个分支（`refs/heads`）已按下述口径备份到 `KhyAiHub`：
 
@@ -498,8 +506,13 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
 `backup/main-pre-r11-devcommits-20260928`、`chore/tui-ux-nightly`、`gitee-sanitized`、
 `rebuild/staged-rebuild`、`workbuddy/chore-tui-ux-nightly-0cb4b970`。
 
-根因：`git fsck` 报 **12 个对象缺失**（4 commit + 8 tree），`git push` 生成 pack 时要
-遍历全量对象，缺一个就整包失败。受影响提交集中在 **2026-09-20 14:07–14:18** 一段
+其中 **6 个历史残缺**（`backup-pre-rebuild-20260924`、`backup-workspace-20260918`、
+`backup/main-old-20260924`、`chore/tui-ux-nightly`、`rebuild/staged-rebuild`、
+`workbuddy/chore-tui-ux-nightly-0cb4b970`）；
+`backup/main-pre-r11-devcommits-20260928` 与 `gitee-sanitized` **对象齐全、可推送**。
+
+根因：`git fsck` 报 **22 个对象缺失（9 tree + 3 commit + 10 blob）**，`git push` 生成 pack 时
+要遍历全量对象，缺一个就整包失败。受影响提交集中在 **2026-09-20 14:07–14:18** 一段
 （自动化时代的写入窗口）。已逐一排查的恢复源**全部无果**：
 
 | 源 | 结果 |
@@ -508,10 +521,22 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
 | Gitee `KHY-OS` | 只有 `main` + `feat/bootstrap-packaging/android-apk` |
 | `ghfast.top` 代理（原 `khy_os`/`khy_os_private`） | 两仓已删，代理不再服务 |
 | `khy-os-nightly` | 同一对象库的 worktree，同样缺 |
+| `KhyAiHub` | 16 个分支推送成功即证其可达对象齐全，缺的对象不在其上 |
 | Portable 下其它副本 | 均无 `.git` |
 
-**重要：这 8 个分支本地仍完全可用**——`git log` / `git diff` / `git ls-tree` 全部正常，
-只是推不出去。缺的是深层层面的旧快照，近期历史完好。**它们没有丢，只是没有异地备份。**
+**2026-11-04 修复**：删除 10 个错位 loose 对象文件（2026-09-23 一次失败修复的遗留——
+内容与文件名哈希不符，`fsck` 报 hash-path mismatch）。缺失的 22 个对象无法恢复，且它们
+本身就是「生成 pack 整包失败」的原因：实测 `git gc` 在 repack 遍历 commit `e13045cc`
+的父提交时 `fatal` 退出。本库压缩请走不遍历 refs 的 `git prune-packed` + `git repack -d`，
+**`git gc` 不可用**（每小时的 Git Maintenance 任务也会因此继续失败，无害）。
+备份在 `%TEMP%\zcode-bash-InxfvX\gitobj-backup-20261104\`（含 manifest，可原路拷回）。
+
+**现状**：6 个受损分支的 `git log` 可走——2026-09-23 预设的 4 个 replace 引用
+（`refs/replace/135460c8`→`2313e753` 等）把 3 个缺失 commit 指向替代对象，
+故 `cat-file` 读得到而 `fsck` 报 missing，不是矛盾；
+但触及缺失 tree/blob 的 `git diff` / `git show` 仍会报错。
+`main` 与其余 19 个本地分支连通性完好，日常 commit/push 不受影响。
+**它们没有丢，只是没有异地备份。**
 
 > 恢复路径（若日后再遇）：从任一仍持有这批对象的克隆重新 fetch。当前无此来源。
 > 亦可考虑 `git repair` / 从打包备份中捞对象，但本机无可用的打包备份。
