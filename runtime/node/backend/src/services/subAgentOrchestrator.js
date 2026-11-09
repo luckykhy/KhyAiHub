@@ -15,11 +15,14 @@
  * - Scope-based privileges: child can't exceed parent permissions
  * - Workspace materialization: each agent gets isolated workspace
  * - Result aggregation: collect and merge child results
+ * - Fault tolerance: a failed task is handed to an alternate agent (see ./subAgentTaskReassign)
  * - Lifecycle management: spawn, monitor, kill, cleanup
  */
 
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
+
+const { reassignFailedTask } = require('./subAgentTaskReassign');
 
 // ── Agent states ──
 
@@ -241,11 +244,25 @@ class SubAgentOrchestrator extends EventEmitter {
       }
 
       this._clearTimer(agentId);
-      agent.state = AGENT_STATE.COMPLETED;
+      // 执行器自陈失败（软失败：resolve 一个 success:false，如子代理撞轮次上限带
+      // truncated 标志收尾）不是抛错，但也不是 completed。照记 COMPLETED 会让
+      // summarize()/orchestration 回执把未完成的子任务计成成功。execute() 的返回值
+      // 仍按旧契约给 { success: true, result }——任务层软失败口径见
+      // subAgentTaskReassign.isFailedOutcome 的 result.success 分支，那里本就双形态都认。
+      const softFailed = !!result && result.success === false;
+      agent.state = softFailed ? AGENT_STATE.FAILED : AGENT_STATE.COMPLETED;
       agent.result = result;
       agent.completedAt = Date.now();
 
-      this.emit('agent:completed', { agentId, name: agent.name, result });
+      if (softFailed) {
+        this.emit('agent:failed', {
+          agentId,
+          name: agent.name,
+          error: result.error || result.message || '子任务未完成：执行器自陈失败（未抛错）',
+        });
+      } else {
+        this.emit('agent:completed', { agentId, name: agent.name, result });
+      }
       return { success: true, result };
     } catch (err) {
       this._clearTimer(agentId);
@@ -403,8 +420,8 @@ class SubAgentOrchestrator extends EventEmitter {
         }
 
         try {
-          const result = await this.execute(task.agentId);
-          return { taskId, status: 'completed', result };
+          const outcome = await this.execute(task.agentId);
+          return await reassignFailedTask(this, task, outcome, tasks);
         } catch (err) {
           return { taskId, status: 'failed', result: { error: err.message } };
         }

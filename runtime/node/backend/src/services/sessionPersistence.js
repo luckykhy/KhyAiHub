@@ -1000,6 +1000,10 @@ const _SYNTHETIC_USER_PREFIXES = [
   '[Tool Result]',
   '[Tool execution results]',
   '[SYSTEM:',
+  // ⚠ [DESIGN-ARCH-198] §2.1（W2）：重复请求轮次旁注用的是**无冒号**形态
+  // 「[SYSTEM] 重复请求识别:…」（注入点见 toolUseLoopCore）。此前只收 '[SYSTEM:'
+  // → 这条**不是人敲的**旁注被当成真人输入，参与会话标题选取与「合成消息」判定。
+  '[SYSTEM]',
   '[结构化提示词]',
   '@',
   '#',
@@ -1066,6 +1070,9 @@ function _pickTitleCandidate(messages) {
 function _buildSessionMeta(file, data, root) {
   const projectDir = path.dirname(file);
   const firstUserMessage = _pickTitleCandidate(data.messages);
+  // 来源标记（[DESIGN-ARCH-183] §4）：会话落库那一刻写进 metadata.source。
+  // 分组读时直接用它归组，不靠标题猜 —— 老会话没有这个字段，按「无来源」处理。
+  const source = (data.metadata && data.metadata.source) || null;
   return {
     sessionId: data.sessionId,
     title: data.title || '(untitled)',
@@ -1076,6 +1083,8 @@ function _buildSessionMeta(file, data, root) {
     projectDir: projectDir === root ? '' : projectDir,
     cwd: (data.metadata && data.metadata.cwd) || '',
     firstUserMessage,
+    sourceType: source && typeof source.type === 'string' ? source.type : '',
+    sourceId: source && source.id !== undefined && source.id !== null ? String(source.id) : '',
   };
 }
 
@@ -1118,7 +1127,7 @@ function _readSessionMetaCached(file, root, seen) {
  * List all persisted sessions with metadata.
  * @param {object} [opts]
  * @param {number} [opts.limit=50]
- * @returns {Array<{ sessionId: string, title: string, model: string, messageCount: number, updatedAt: number, projectDir: string, cwd: string }>}
+ * @returns {Array<{ sessionId: string, title: string, model: string, messageCount: number, updatedAt: number, projectDir: string, cwd: string, sourceType: string, sourceId: string }>}
  */
 function listPersistedSessions(opts = {}) {
   const root = _sessionsDir();

@@ -4,9 +4,14 @@
  * RAG Retrieval Service — lightweight hybrid retrieval for chat augmentation.
  *
  * Goals:
- * - Keep retrieval local and fast (no extra network calls)
+ * - Keep retrieval local and fast
  * - Blend structured knowledge base + session history search
  * - Return compact, source-tagged context snippets for prompt augmentation
+ *
+ * 2026-11-05 (P0-1): the lexical path stays the recall floor; an optional embedding
+ * rerank (KHY_RAG_EMBEDDING, default off) reorders the lexical candidates without
+ * narrowing them, and any embedding failure degrades byte-for-byte back to the
+ * lexical order — the recipe is the one already used by learningRetrieval.buildContext.
  */
 
 const MAX_CACHE_ENTRIES = 120;
@@ -15,8 +20,13 @@ const DEFAULT_KNOWLEDGE_TOPK = 4;
 const DEFAULT_SESSION_TOPK = 3;
 const DEFAULT_TOTAL_TOPK = 6;
 const DEFAULT_MAX_CONTEXT_CHARS = 2_400;
+// Snippet length fed to the embedding model — same order as memory-side vectorRecall:
+// model context is limited and the long tail adds little semantics.
+const DEFAULT_EMBED_SNIPPET_CHARS = 500;
 
 const _cache = new Map();
+
+const embeddingClient = require('./embeddingClient');
 
 function _envBool(value, fallback = false) {
   if (value === undefined || value === null || String(value).trim() === '') {
@@ -48,6 +58,20 @@ function _envInt(value, fallback, min, max) {
 
 function isEnabled() {
   return _envBool(process.env.KHY_RAG_ENABLED, true);
+}
+
+/**
+ * Embedding rerank gate, off by default. This is a new mechanism, so it starts at the
+ * S1 observer posture (PROCESS-008): turning it on costs one batched embedding call per
+ * turn, and the recall gain has to be measured against the paraphrased-query baseline in
+ * [RESEARCH-028] §4.3 before it should apply to every user.
+ */
+function _embeddingEnabled() {
+  return _envBool(process.env.KHY_RAG_EMBEDDING, false);
+}
+
+function _embedSnippetChars() {
+  return _envInt(process.env.KHY_RAG_EMBED_SNIPPET_CHARS, DEFAULT_EMBED_SNIPPET_CHARS, 80, 8000);
 }
 
 function _isGreetingLike(text = '') {
@@ -367,6 +391,50 @@ function _sessionCandidates(query = '', limit = DEFAULT_SESSION_TOPK) {
   }
 }
 
+// ── Embedding hybrid rerank (P0-1) ──
+// Recipe kept identical to learningRetrieval.buildContext Stage 2: lexical score is
+// only a floor, the vector only reorders. Any failure returns null and the caller
+// keeps the lexical order byte-for-byte.
+function _candidateText(item) {
+  const head =
+    item.kind === 'knowledge'
+      ? `${item.title} ${item.content} ${(item.keywords || []).join(' ')}`
+      : `${item.title} ${item.content}`;
+  return _normalizeSpace(head).slice(0, _embedSnippetChars());
+}
+
+/**
+ * @param {string} query
+ * @param {Array<object>} candidates already deduped and sorted by lexical score, never empty
+ * @returns {Promise<Array<object>|null>} the same candidate objects, reordered; null on failure
+ */
+async function _rerankWithEmbeddings(query, candidates) {
+  const texts = [query, ...candidates.map((c) => _candidateText(c))];
+  let vecs = null;
+  try {
+    vecs = await embeddingClient.embedTexts(texts);
+  } catch {
+    return null;
+  }
+  const cap = embeddingClient.maxTexts();
+  if (!vecs || vecs.length !== Math.min(texts.length, cap) || vecs.length < 2) {
+    return null;
+  }
+  const queryVec = vecs[0];
+  const maxLex = Math.max(...candidates.map((c) => c.score)) || 1;
+  const blended = candidates.slice(0, vecs.length - 1).map((c, i) => ({
+    item: c,
+    score: 0.4 * (c.score / maxLex) + 0.6 * embeddingClient.cosine(queryVec, vecs[i + 1]),
+  }));
+  // Candidates beyond the embedding cap keep their lexical score, scaled below the
+  // blended band — the candidate count is never narrowed, nothing silently disappears.
+  for (const c of candidates.slice(vecs.length - 1)) {
+    blended.push({ item: c, score: (c.score / maxLex) * 0.4 });
+  }
+  blended.sort((a, b) => b.score - a.score);
+  return blended.map((x) => x.item);
+}
+
 function _dedupeCandidates(candidates = []) {
   const seen = new Set();
   const out = [];
@@ -437,9 +505,9 @@ function _cacheSet(key, value) {
  * @param {string} query
  * @param {object} [options]
  * @param {boolean} [options.isFollowUp=false]
- * @returns {{ used:boolean, context:string, meta:object }}
+ * @returns {Promise<{ used:boolean, context:string, meta:object }>}
  */
-function buildRetrievalContext(query = '', options = {}) {
+async function buildRetrievalContext(query = '', options = {}) {
   const cleanQuery = String(query || '').trim();
   if (!_shouldRetrieve(cleanQuery, options)) {
     return {
@@ -465,7 +533,7 @@ function buildRetrievalContext(query = '', options = {}) {
     12_000
   );
   const ttlMs = _envInt(process.env.KHY_RAG_CACHE_TTL_MS, DEFAULT_CACHE_TTL_MS, 2_000, 10 * 60_000);
-  const cacheKey = `${cleanQuery}::${knowledgeTopK}:${sessionTopK}:${totalTopK}:${maxChars}`;
+  const cacheKey = `${cleanQuery}::${knowledgeTopK}:${sessionTopK}:${totalTopK}:${maxChars}:${_embeddingEnabled() ? 'embed' : 'lex'}`;
 
   const cached = _cacheGet(cacheKey, ttlMs);
   if (cached) {
@@ -477,9 +545,21 @@ function buildRetrievalContext(query = '', options = {}) {
 
   const knowledge = _knowledgeCandidates(cleanQuery, knowledgeTopK);
   const sessions = _sessionCandidates(cleanQuery, sessionTopK);
-  const merged = _dedupeCandidates([...knowledge, ...sessions])
-    .sort((a, b) => b.score - a.score)
-    .slice(0, totalTopK);
+  const lexicalOrder = _dedupeCandidates([...knowledge, ...sessions]).sort((a, b) => b.score - a.score);
+
+  // Gate off or endpoint unavailable ⇒ ordered IS lexicalOrder, so the output stays
+  // byte-identical to before this change.
+  let ordered = lexicalOrder;
+  let vectorRerank = false;
+  if (_embeddingEnabled() && lexicalOrder.length >= 2) {
+    const reranked = await _rerankWithEmbeddings(cleanQuery, lexicalOrder);
+    if (reranked && reranked.length === lexicalOrder.length) {
+      ordered = reranked;
+      vectorRerank = true;
+    }
+  }
+
+  const merged = ordered.slice(0, totalTopK);
 
   if (merged.length === 0) {
     const miss = {
@@ -510,6 +590,11 @@ function buildRetrievalContext(query = '', options = {}) {
       contextChars: context.length,
     },
   };
+  // Only recorded when the rerank actually ran — otherwise meta stays byte-identical
+  // to before this change (F4 degrade contract).
+  if (vectorRerank) {
+    result.meta.vectorRerank = true;
+  }
   _cacheSet(cacheKey, result);
   return result;
 }

@@ -22,8 +22,12 @@ let _available = false;
 
 function _dbPath() {
   try {
-    const { getProjectDataDir } = require('../utils/dataHome');
-    return getProjectDataDir('sessions.db');
+    // getProjectDataPath（不是 getProjectDataDir）：后者会把末级当**目录**建出来 ——
+    // 全新数据家（首次安装 / 隔离测试目录）里 sessions.db 会先被建成一个目录，
+    // SQLite 随后报「unable to open database file」，init() 静默把搜索索引整个
+    // 关掉（表现为「搜索/分组莫名其妙不好使」且没有任何报错可循）。
+    const { getProjectDataPath } = require('../utils/dataHome');
+    return getProjectDataPath('sessions.db');
   } catch {
     const os = require('os');
     const dir = path.join(os.homedir(), '.khyquant');
@@ -102,14 +106,63 @@ function init() {
       CREATE TRIGGER IF NOT EXISTS messages_ad AFTER DELETE ON messages BEGIN
         INSERT INTO messages_fts(messages_fts, rowid, content) VALUES('delete', old.id, old.content);
       END;
+
+      -- ── 会话分组（[DESIGN-ARCH-183]）────────────────────────────────
+      -- 分组的唯一所有者是这张表：UI / TUI / 网页端都经 sessionGroupService 读写，
+      -- 不存在「内存缓存另有一份真源再回写」的路径。
+      CREATE TABLE IF NOT EXISTS session_groups (
+        group_id   TEXT PRIMARY KEY,
+        title      TEXT NOT NULL,
+        color      TEXT NOT NULL DEFAULT 'gray',
+        kind       TEXT NOT NULL DEFAULT 'user',   -- 'system' | 'user'
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- 一个会话最多属于一个**用户**分组（session_id 为主键）。
+      -- 设计稿写的是 (project_key, session_id) 复合主键，那是任务模型的形状
+      -- （一个任务可跨多个项目）；会话只有单一项目桶，复合主键反而允许同一
+      -- 会话在不同 project_key 下重复入组 —— 这里收敛为 session_id 单主键。
+      CREATE TABLE IF NOT EXISTS session_group_members (
+        session_id  TEXT PRIMARY KEY,
+        group_id    TEXT NOT NULL,
+        project_key TEXT NOT NULL DEFAULT '',
+        created_at  INTEGER NOT NULL,
+        updated_at  INTEGER NOT NULL,
+        FOREIGN KEY (group_id) REFERENCES session_groups(group_id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_session_group_members_group
+        ON session_group_members(group_id);
+
+      CREATE TABLE IF NOT EXISTS session_group_meta (
+        key        TEXT PRIMARY KEY,
+        value      TEXT,
+        updated_at INTEGER NOT NULL
+      );
     `);
+
+    // conversations 加来源列（ALTER 前用 PRAGMA table_info 守卫，列存在则跳过）
+    const convCols = _db.prepare('PRAGMA table_info(conversations)').all() || [];
+    const hasConvCol = (name) => convCols.some((c) => c && c.name === name);
+    if (!hasConvCol('source_type')) {
+      _db.exec('ALTER TABLE conversations ADD COLUMN source_type TEXT');
+    }
+    if (!hasConvCol('source_id')) {
+      _db.exec('ALTER TABLE conversations ADD COLUMN source_id TEXT');
+    }
+    _db.exec(
+      'CREATE INDEX IF NOT EXISTS idx_conversations_source ON conversations(source_type, source_id) WHERE source_type IS NOT NULL'
+    );
 
     // Prepare statements
     _stmts.upsertConv = _db.prepare(`
-      INSERT INTO conversations (session_id, title, model, message_count, created_at, updated_at)
-      VALUES (@sessionId, @title, @model, @messageCount, @createdAt, @updatedAt)
+      INSERT INTO conversations (session_id, title, model, message_count, created_at, updated_at, source_type, source_id)
+      VALUES (@sessionId, @title, @model, @messageCount, @createdAt, @updatedAt, @sourceType, @sourceId)
       ON CONFLICT(session_id) DO UPDATE SET
-        title = @title, model = @model, message_count = @messageCount, updated_at = @updatedAt
+        title = @title, model = @model, message_count = @messageCount, updated_at = @updatedAt,
+        source_type = COALESCE(@sourceType, source_type),
+        source_id = COALESCE(@sourceId, source_id)
     `);
 
     _stmts.insertMsg = _db.prepare(`
@@ -170,6 +223,11 @@ function init() {
   } catch (err) {
     _db = null;
     _available = false;
+    // 索引静默关闭时至少留一句可查的原因（否则表现为「搜索/分组莫名其妙不好使」，
+    // 而没有任何报错可循）。KHY_DEBUG_SQLITE=1 时总是打印。
+    if (process.env.KHY_DEBUG_SQLITE === '1' || process.env.KHY_DEBUG_SQLITE === 'true') {
+      console.error('[sessionSearchIndex] 初始化失败，搜索索引与分组功能已停用:', err && err.message ? err.message : String(err));
+    }
   }
 }
 
@@ -185,6 +243,10 @@ function indexSession(sessionId, sessionData) {
   }
 
   const messages = sessionData.messages || [];
+  // 来源标记（[DESIGN-ARCH-183] §4）：会话落库那一刻写入，之后不再靠标题猜测。
+  const source = (sessionData.metadata && sessionData.metadata.source) || null;
+  const sourceType = source && typeof source.type === 'string' ? source.type : null;
+  const sourceId = source && source.id !== undefined && source.id !== null ? String(source.id) : null;
 
   try {
     const txn = _db.transaction(() => {
@@ -196,6 +258,8 @@ function indexSession(sessionId, sessionData) {
         messageCount: messages.length,
         createdAt: sessionData.createdAt || Date.now(),
         updatedAt: sessionData.updatedAt || Date.now(),
+        sourceType,
+        sourceId,
       });
 
       // Check how many messages already indexed for this session
@@ -463,6 +527,21 @@ function shutdown() {
   _available = false;
 }
 
+/**
+ * Shared database handle (same connection as the search index).
+ *
+ * sessionGroupService reuses this connection instead of opening a second one
+ * to the same file: SQLite allows it, but two owners for one file is exactly
+ * the "who writes last wins" shape [DESIGN-ARCH-183] §9 warns about.
+ *
+ * @returns {object|null} the live better-sqlite3-shaped handle, or null when
+ *   no SQLite driver is available on this machine.
+ */
+function getDb() {
+  init();
+  return _available ? _db : null;
+}
+
 /** @internal Close DB and reset for testing */
 function _resetForTest() {
   if (_db) {
@@ -479,6 +558,7 @@ function _resetForTest() {
 
 module.exports = {
   init,
+  getDb,
   indexSession,
   searchMessages,
   removeSessionIndex,

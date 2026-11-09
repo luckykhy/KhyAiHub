@@ -94,19 +94,66 @@ function isSamePrompt(a, b, env = process.env) {
   return similarity(a, b) >= _simThreshold(env);
 }
 
-/** 从消息数组里抽取历史 user 轮次的文本(role==='user')。 */
-function priorUserTextsFrom(messages) {
+/**
+ * 「剥离系统注入旁注」门（[DESIGN-ARCH-198] W2 / KHY_PROMPT_ROUND_UNPOLLUTED）。
+ * 默认开；关 → **逐字节**回退今日行为（不剥离，轮次照旧饱和在 2）。
+ * flagRegistry 优先（集中真源），失败/不可用 → 本地 CANON 回退。
+ */
+function _unpollutedEnabled(env = process.env) {
+  const e = env || {};
+  try {
+    const reg = require('./flagRegistry');
+    if (
+      reg &&
+      typeof reg.isRegistryEnabled === 'function' &&
+      reg.isRegistryEnabled(e) &&
+      typeof reg.isFlagEnabled === 'function'
+    ) {
+      return reg.isFlagEnabled('KHY_PROMPT_ROUND_UNPOLLUTED', e);
+    }
+  } catch {
+    /* 注册表不可用 → 本地 CANON */
+  }
+  const raw = e.KHY_PROMPT_ROUND_UNPOLLUTED;
+  const v = String(raw === undefined || raw === null ? 'true' : raw)
+    .trim()
+    .toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+/**
+ * 从消息数组里抽取历史 user 轮次的文本(role==='user')。
+ *
+ * ⚠ [DESIGN-ARCH-198] §2.1（W2）：**必须剥掉系统注入旁注**再返回。
+ * 工具循环会把旁注（如「[SYSTEM] 重复请求识别:…」）混装进 user 消息并回灌进
+ * `initialMessages`（那既是模型上下文、也是下一轮计数的输入源）。
+ * 若拿混装文本去跟**干净**的新提示词比，字符二元组 Jaccard = 0.0476 ≪ 阈值 0.9
+ * → 判「不同请求」→ 重复计数不增 → 轮次**饱和在 2**（实测连发 4 次同款恒为 1/2/2/2，
+ * 真值 1/2/3/4）。界面上永远只显示「第 2 次」，模型自己却数出「第 3 轮」——互相矛盾。
+ *
+ * 剥的是**旁注**（给模型看的），留的是**用户原话**（判定要看真话）。
+ * 门 `KHY_PROMPT_ROUND_UNPOLLUTED` 关 → 不剥离 → 逐字节回退今日行为。
+ */
+function priorUserTextsFrom(messages, env = process.env) {
   if (!Array.isArray(messages)) {
     return [];
+  }
+  let strip = null;
+  if (_unpollutedEnabled(env)) {
+    try {
+      strip = require('./promptScaffolding').stripLeadingInjectedScaffold;
+    } catch {
+      strip = null;
+    }
   }
   const out = [];
   for (const m of messages) {
     if (m && m.role === 'user') {
-      out.push(
+      const raw =
         typeof m.content === 'string'
           ? m.content
-          : JSON.stringify(m.content == null ? '' : m.content)
-      );
+          : JSON.stringify(m.content == null ? '' : m.content);
+      out.push(strip ? strip(raw) : raw);
     }
   }
   return out;
@@ -122,13 +169,36 @@ function countRound(currentText, priorUserTexts, env = process.env) {
   if (!isEnabled(env)) {
     return 1;
   }
-  if (!normalize(currentText)) {
+  // ⚠ [DESIGN-ARCH-198] §2.1（W2）：当前提示词**也可能**带着上一轮的注入旁注
+  // （工具循环把它前置进 currentMessage 后又回灌）。两侧都剥，判定才对称。
+  // 门 KHY_PROMPT_ROUND_UNPOLLUTED 关 → 不剥 → 逐字节回退今日行为。
+  let _cur = currentText;
+  if (_unpollutedEnabled(env)) {
+    try {
+      _cur = require('./promptScaffolding').stripLeadingInjectedScaffold(currentText);
+    } catch {
+      /* 叶子不可用 → 用原值（行为等价于今日） */
+    }
+  }
+  if (!normalize(_cur)) {
     return 1;
   }
   const arr = Array.isArray(priorUserTexts) ? priorUserTexts : [];
   let repeats = 0;
   for (const p of arr) {
-    if (isSamePrompt(currentText, p, env)) {
+    // ⚠ [DESIGN-ARCH-198] §2.1（W2）：**历史侧也必须剥**。
+    // priorUserTextsFrom 已剥过一次，但 countRound 是公开叶子、可能被**直接**喂入
+    // 未剥的历史（如调用方自持 initialMessages）→ 两侧都剥，判定才对称、
+    // 才不会出现「只剥一半」的隐性不一致。
+    let _prior = p;
+    if (_unpollutedEnabled(env)) {
+      try {
+        _prior = require('./promptScaffolding').stripLeadingInjectedScaffold(p);
+      } catch {
+        /* 叶子不可用 → 用原值 */
+      }
+    }
+    if (isSamePrompt(_cur, _prior, env)) {
       repeats++;
     }
   }
