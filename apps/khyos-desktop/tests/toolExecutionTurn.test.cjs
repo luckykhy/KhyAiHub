@@ -63,6 +63,7 @@ const {
   cancelToolExecution,
   recordAffectedFiles,
   clearExecutions,
+  hydrateToolExecutions,
 } = slice;
 
 const initial = () => reducer(undefined, { type: '@@INIT' });
@@ -136,7 +137,65 @@ test('切换会话 / 新建任务（clearExecutions）连归属一起清掉', ()
   assert.strictEqual(s.turnMessageId, null, '归属不得残留：残留会把迟到事件盖到已消失的会话上');
 });
 
-// ── B. 接线：面板在消息内部、按归属过滤、会话切换清零 ────────────
+// ── B. 重开旧会话：存档里的过程按归属灌回 ─────────────────────
+
+const persistedCall = (id, messageId, extra = {}) => ({
+  id,
+  name: 'webSearch',
+  input: { query: 'x' },
+  status: 'success',
+  result: 'ok',
+  startedAt: 1700000000000,
+  requiresConfirmation: false,
+  messageId,
+  ...extra,
+});
+
+test('hydrate 用存档里的过程替换执行列表，归属与状态原样保留', () => {
+  let s = reducer(initial(), beginToolTurn({ messageId: 'a_1' }));
+  s = reducer(s, startToolExecution(call('c_live')));
+  s = reducer(s, recordAffectedFiles(['a.ts']));
+
+  s = reducer(s, hydrateToolExecutions([
+    persistedCall('h_s1_1_tool_0', 'h_s1_1'),
+    persistedCall('h_s1_3_tool_0', 'h_s1_3', { name: 'bash', status: 'cancelled', result: undefined }),
+  ]));
+
+  assert.deepStrictEqual(
+    s.executions.map((e) => e.id),
+    ['h_s1_1_tool_0', 'h_s1_3_tool_0'],
+    '加载会话后只剩存档里的过程，不留内存里的旧执行'
+  );
+  assert.deepStrictEqual(s.executions.map((e) => e.messageId), ['h_s1_1', 'h_s1_3']);
+  assert.strictEqual(s.executions[1].status, 'cancelled');
+  assert.deepStrictEqual(s.activeIds, [], '历史调用没有「进行中」');
+  assert.strictEqual(s.turnMessageId, null);
+  assert.deepStrictEqual(s.affectedFiles, [], '文件改动是「本轮」的东西，不随历史灌回');
+});
+
+test('hydrate 之后继续提问：新执行追加在历史之后，旧过程不被覆盖', () => {
+  let s = reducer(initial(), hydrateToolExecutions([persistedCall('h_s1_1_tool_0', 'h_s1_1')]));
+  s = reducer(s, beginToolTurn({ messageId: 'a_9' }));
+  s = reducer(s, startToolExecution(call('c_new')));
+
+  assert.deepStrictEqual(
+    s.executions.map((e) => e.id),
+    ['h_s1_1_tool_0', 'c_new'],
+    '历史过程要留在它自己的提问下面，新一轮只能追加'
+  );
+  assert.strictEqual(s.executions[1].messageId, 'a_9');
+});
+
+test('hydrate 也守 MAX_EXECUTIONS：老会话的调用再多，状态也只留最近 300 条', () => {
+  const many = Array.from({ length: 305 }, (_, i) => persistedCall(`h_tool_${i}`, `h_m_${i}`));
+  const s = reducer(initial(), hydrateToolExecutions(many));
+
+  assert.strictEqual(s.executions.length, 300, '在线累积有上限，历史灌回不能绕过它');
+  assert.strictEqual(s.executions[0].id, 'h_tool_5', '超限时丢最早的，保留最近的过程');
+  assert.strictEqual(s.executions.at(-1).id, 'h_tool_304');
+});
+
+// ── C. 接线：面板在消息内部、按归属过滤、会话切换清零 ────────────
 
 const panelCode = stripComments(read(panelPath));
 const bubbleCode = stripComments(read(bubblePath));
@@ -164,4 +223,13 @@ test('发送时登记本轮归属；会话加载与新建任务清空执行', ()
 
   const clears = appCode.match(/store\.dispatch\(clearExecutions\(\)\)/g) || [];
   assert.ok(clears.length >= 2, `会话加载与新建任务都必须清空执行（实测 ${clears.length} 处）`);
+});
+
+test('会话加载完成后把存档里的过程灌回面板，归属指向恢复出的助手消息', () => {
+  assert.match(appCode, /store\.dispatch\(hydrateToolExecutions\(restoredTools\)\)/, '加载成功后必须灌回执行');
+  assert.ok(
+    appCode.includes('messageId: `h_${sessionId}_${i}`'),
+    '归属必须指向恢复消息的 id，否则面板认领不到'
+  );
+  assert.match(appCode, /m\.tools \|\| \[\]/, '存档消息的工具过程来自 host 的 tools 字段');
 });

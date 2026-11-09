@@ -49,7 +49,7 @@ for (const key of [
   global[key] = dom.window[key]
 }
 
-const { mount, unmount, store, setMessages, clearMessages, beginToolTurn, startToolExecution, clearExecutions } =
+const { mount, unmount, store, setMessages, clearMessages, beginToolTurn, startToolExecution, clearExecutions, hydrateToolExecutions } =
   require(bundlePath)
 
 const flush = async (times = 8) => {
@@ -107,7 +107,8 @@ test('过程渲染在对应回复内部：用户提问在上、工具执行在�
   assert.equal(panels.length, 1, '只应有一块过程面板')
   const bubble = bubbleOf(panels[0])
   assert.ok(bubble, '过程块必须位于某条消息气泡内部')
-  assert.match(bubble.textContent, /助手/, '过程块所属的是助手那一轮')
+  // 助手轮的名字来自 settings（桌宠名），不再固定是「助手」；● 是助手轮提示符
+  assert.match(bubble.textContent, /●/, '过程块所属的是助手那一轮')
   assert.match(bubble.textContent, /今天的主要新闻如下/, '过程块与它产出的答复在同一条消息里')
   assert.doesNotMatch(bubble.textContent, /今天有些什么新闻/, '过程块不得渲染进用户提问的气泡')
 
@@ -188,4 +189,59 @@ test('没有工具执行的轮次不渲染空壳', async () => {
 
   assert.doesNotMatch(text(), /工具执行/)
   assert.doesNotMatch(text(), /正在执行/)
+})
+
+test('重开旧会话：存档里的过程挂在发起它的那条助手消息下', async () => {
+  // 恢复出来的 id 形如 h_<session>_<index>；工具调用由 host 配对后随消息返回，
+  // 加载时灌回执行面板 —— 面板必须挂在发起 tool_use 的那条，而不是最终答复那条。
+  store.dispatch(setMessages({
+    sessionId: 's1',
+    messages: [
+      userTurn('h_s1_0', '今天有些什么新闻', 1),
+      aiTurn('h_s1_1', '[模型请求执行工具: webSearch]', 2),
+      aiTurn('h_s1_3', '今天的主要新闻如下', 4),
+    ],
+  }))
+  store.dispatch(hydrateToolExecutions([
+    {
+      id: 'h_s1_1_tool_0',
+      name: 'webSearch',
+      input: { query: '新闻', freshness: 'day' },
+      status: 'success',
+      result: '{"success":true}',
+      startedAt: 2,
+      requiresConfirmation: false,
+      messageId: 'h_s1_1',
+    },
+    {
+      id: 'h_s1_3_tool_0',
+      name: 'read_file',
+      input: { path: 'a.md' },
+      status: 'error',
+      error: 'ENOENT',
+      startedAt: 4,
+      requiresConfirmation: false,
+      messageId: 'h_s1_3',
+    },
+  ]))
+  mount()
+  await flush()
+  await waitFor(() => panelButtons().length === 2, '存档里的过程面板未渲染')
+
+  const panels = panelButtons()
+  const firstBubble = bubbleOf(panels[0])
+  const secondBubble = bubbleOf(panels[1])
+  assert.notEqual(firstBubble, secondBubble)
+
+  assert.match(firstBubble.textContent, /\[模型请求执行工具: webSearch\]/, '过程挂在发起调用的那条消息下')
+  assert.match(firstBubble.textContent, /webSearch/)
+  assert.match(firstBubble.textContent, /完成/)
+  assert.doesNotMatch(firstBubble.textContent, /read_file/, '另一条消息的调用不得串过来')
+
+  assert.match(secondBubble.textContent, /今天的主要新闻如下/)
+  assert.match(secondBubble.textContent, /read_file/)
+  assert.match(secondBubble.textContent, /失败/)
+
+  // 历史调用没有起止时刻：不得因此显示一个假的 0.0s
+  assert.doesNotMatch(text(), /0\.0s/)
 })

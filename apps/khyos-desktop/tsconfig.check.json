@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "可运行但不阻断的类型检查（npm run typecheck）。",
+    "为什么单独一份：tsconfig.json 的 references 指向 composite 的 tsconfig.node.json，",
+    "`tsc --noEmit -p tsconfig.json` 会吃 TS6305；而 tsconfig.node.json 的 include 只有",
+    "electron.vite.config.ts / src/main / src/preload / src/shared —— src/host 与 src/renderer",
+    "两个目录都不在任何类型门下。本配置把这两个目录纳进来。",
+    "只报不改：既有错误记在 tsconfig.check-baseline.json，新增错误才判红。"
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/*"]
+    }
+  },
+  "include": ["src/host/**/*", "src/renderer/**/*"]
+}
