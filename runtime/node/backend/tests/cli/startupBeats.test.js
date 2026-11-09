@@ -188,18 +188,28 @@ test('isTerminal 辅助：只有 done/failed 是终态', () => {
 // App 首帧）要 **20s+**。于是进度条一出场就是 4/6 = 67% 并冻住 ——
 // 用户报的正是「启动页一开始就卡在 67%」。本组锁住「实时曲线」的四条性质。
 
-test('实时百分比：起步有斜坡，不从 0 瞬跳到已完成拍的下界', () => {
+test('实时百分比：有真实推进时首帧即真实下界（progressedCount>0 → 首帧即 floor）', () => {
   let t = 0;
   const tr = createBeatTracker({ now: () => t });
-  // 真实场景：四拍在 0.4s 内做完。此刻若直接显示 4/6 = 67%，就是用户报的那个缺陷。
+  // 真实场景：四拍在 0.4s 内做完（热态实测开窗 449ms）。此刻真实进度就是 4/6 = 67% ——
+  // 旧实现按 4000ms 时间斜坡画 6%→18%→35%，把已完成的真实进度画成假低值（RUNTIME-002）。
+  // 斜坡已废：base 直接取 floor，显示值必须落在真实进度上。
   tr.preload(['env', 'auth', 'workspace', 'session']);
-  assert.equal(tr.progress().percent, 0, '同一时刻不得直接显示 4/6 = 67%');
+  const p0 = tr.progress().percent;
+  assert.equal(p0, (4 / 6) * 100, `progressedCount>0 → 首帧即 floor，实测 ${p0}`);
   t = 1000;
   const p1 = tr.progress().percent;
-  assert.ok(p1 > 0 && p1 < (4 / 6) * 100, `起步斜坡应落在 0 ~ 66.7 之间，实测 ${p1}`);
+  assert.ok(p1 > p0, '时间流逝必须单调上升');
+  assert.ok(p1 < (5 / 6) * 100, '未推进的下一拍绝不被越过');
+});
+
+test('实时百分比：0 拍阶段从 0 平滑爬升，不瞬跳', () => {
+  let t = 0;
+  const tr = createBeatTracker({ now: () => t });
+  assert.equal(tr.progress().percent, 0, '0 拍阶段从 0 起步');
   t = 3000;
-  const p2 = tr.progress().percent;
-  assert.ok(p2 > p1, '时间流逝必须单调上升');
+  const p = tr.progress().percent;
+  assert.ok(p > 0 && p < (1 / 6) * 100, `0 拍阶段只向第一拍下界爬升，实测 ${p}`);
 });
 
 test('实时百分比：未推进的拍绝不被越过（永不虚报）', () => {

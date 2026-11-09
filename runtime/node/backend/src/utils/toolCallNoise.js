@@ -225,15 +225,12 @@ function _isGeneratedImageReadJson(line) {
 }
 
 // Head of a bare tool-call JSON at line start, tolerating a swallowed leading
-// `{` and a glued (possibly truncated) `<tool_call>` wrapper. Requires the
+// `{` and a glued (possibly truncated) `<​tool_call>` wrapper. Requires the
 // params object opener so balanced-brace scanning can find where the JSON ends.
+// Line-start only: mid-prose erasure of this shape costs answer text (see
+// _removeInlineToolJson).
 const LINE_START_JSON_HEAD_RE =
   /^\s*(?:<?\/?tool_call\s*>?\s*)?\{?\s*"name"\s*:\s*"[^"\n]+"\s*,\s*"(?:params|arguments|input)"\s*:\s*\{/i;
-// Embedded occurrence (prose BEFORE the JSON on the same line): the leading
-// `{` is required here — an anchored truncated head is only trusted at line
-// start (see above), never mid-prose.
-const EMBEDDED_JSON_HEAD_RE =
-  /\{\s*"name"\s*:\s*"[^"\n]+"\s*,\s*"(?:params|arguments|input)"\s*:\s*\{/g;
 
 // Scan from `start` (an opening `{`) to its matching close brace, string-aware.
 // Returns the index AFTER the closing brace, or -1 when unbalanced.
@@ -274,11 +271,27 @@ function _scanBalancedJson(s, start) {
   return -1;
 }
 
-// Remove every inline bare tool-call JSON object embedded in a line, keeping
-// the surrounding prose (mixed-line leak: JSON glued to narration in either
-// order). Surgical by construction: the two-key head + balanced-brace scan;
-// a head whose body never closes on this line is left untouched (the streaming
-// pending-tail hold and the whole-line checks own those shapes).
+// Remove a bare tool-call JSON object that STARTS the line, keeping whatever
+// prose trails it on the same line. Surgical by construction: the two-key head
+// + balanced-brace scan; a head whose body never closes on this line is left
+// untouched (the streaming pending-tail hold and the whole-line checks own those
+// shapes).
+//
+// WHY line-start only (2026-10-12, 丢字修正): the shape `{"name":…,"params":{…}}`
+// is indistinguishable between a leaked tool call and an answer that legitimately
+// SHOWS that JSON. Measured counter-example: `配置片段：{"name":"web_search",
+// "params":{"q":"khy"}}` lost its whole JSON body and kept only `配置片段：`,
+// while the control line `{"q":"khy","n":1}` was untouched — the only difference
+// was the key shape. So the old mid-prose (EMBEDDED_JSON_HEAD_RE) sweep is gone:
+// erasing a wrong guess is unrecoverable, showing a leaked call is only ugly.
+//
+// What this leaves behind, stated as the known limit rather than a claim: a
+// glued-to-prose leak (`好的，我来调用 {"name":…}`) is no longer cleaned here.
+// We have NOT measured how often that shape occurs — only the counter-example
+// above is measured. Line-start is kept because it is the only position where
+// erasure is provably free (nothing precedes it to lose), not because we have
+// data saying leaks always land there. `<tool_call>{…}</tool_call>` is still
+// caught, but by the whole-line tag rules above, not by this function.
 function _removeInlineToolJson(line) {
   let out = line;
   const headM = LINE_START_JSON_HEAD_RE.exec(out);
@@ -297,20 +310,6 @@ function _removeInlineToolJson(line) {
         out = '';
       }
     }
-  }
-  let m;
-  EMBEDDED_JSON_HEAD_RE.lastIndex = 0;
-  while ((m = EMBEDDED_JSON_HEAD_RE.exec(out)) !== null) {
-    const end = _scanBalancedJson(out, m.index);
-    if (end === -1) {
-      break;
-    }
-    out = out.slice(0, m.index) + out.slice(end);
-    out = out.replace(/^\s*\}?\s*>?\s*(?:<\/?tool_call\s*>)?\s*/i, '');
-    if (/^\s*[=<>]/.test(out)) {
-      out = out.trim() === '' ? '' : out;
-    }
-    EMBEDDED_JSON_HEAD_RE.lastIndex = 0;
   }
   if (out !== line) {
     out = out.replace(/<\/?tool_call\s*>/gi, '');
@@ -500,6 +499,23 @@ function stripInlineToolCallNoise(text, env) {
 // beyond this the tail is released so content can never be retained forever.
 const PENDING_TAG_MAX = 2048;
 
+// Budget for the WHOLE-LINE holds (bare-JSON head, bracket-marker head), which
+// are the ones that actually cost the user visible time: a line is re-held from
+// its start on every chunk, so the wait grows linearly with the line's length
+// (measured 40/160/640 ms at 40 ms/chunk for 1/4/16 chunks, released only at
+// the 2048 valve → 800 ms). Releasing early costs NO characters — the render
+// funnel still strips a complete whole-line JSON on screen — it only trades a
+// possible ugly leak for a bounded wait.
+//
+// The value is a judgement call, not a measured threshold: the repo's recorded
+// leak samples are all well under it, but no real gateway distribution was
+// sampled for this number. What IS structural is that the wait is now bounded
+// by a constant instead of growing with the line (bench-tooltag-holdback.js:
+// held16chunks and held64chunks both land on the same delay).
+// PENDING_TAG_MAX stays the outer cap for the `<…` tail hold, whose length is
+// driven by the tag's own argument body.
+const PENDING_TAG_SETTLE_MAX = 512;
+
 // Tag keywords of the text tool-call protocol family.
 const PENDING_TAG_KEYWORDS = ['function', 'arguments', 'args', 'parameter', 'tool_call', 'Read'];
 
@@ -616,18 +632,22 @@ function _bareJsonComplete(line) {
  * half then leaks into the transcript as prose. The caller keeps `pending`
  * across chunks (prepending it to the next chunk) and renders only `emit`.
  *
- * Two suspect shapes are held back:
- *   1. an unfinished `<…` tag tail of the tool-protocol keyword family;
+ * Three suspect shapes are held back:
+ *   1. an unfinished `<…` tag tail of the tool-protocol keyword family (bounded
+ *      by PENDING_TAG_MAX);
  *   2. a line-start bare tool-call JSON head (`{"name`… / brace-swallowed
- *      `"name":"`…, incl. one glued after a `<tool_call>` open tag) whose
+ *      `"name":"`…, incl. one glued after a `<​tool_call>` open tag) whose
  *      object has not closed yet — once it completes it is released and the
  *      fence-aware render funnel strips it; if it diverges into plain prose
- *      the hold ends on the next chunk.
+ *   3. a line-start `[Tool Call: name(…` marker head missing its `)]`.
+ * Shapes 2 and 3 re-hold the WHOLE line on every chunk, so their budget is the
+ * tighter PENDING_TAG_SETTLE_MAX — the line is released verbatim past it rather
+ * than making the user watch a frozen screen.
  *
  * @param {string} text pending buffer + newly arrived chunk text
  * @returns {{emit:string, pending:string}} pending is '' when nothing suspect
  *          trails the text, when the trailing tag is already complete ('>'
- *          seen), or when the tail exceeds PENDING_TAG_MAX (release valve).
+ *          seen), or when the tail exceeds its release valve.
  */
 function splitPendingToolTag(text) {
   if (typeof text !== 'string' || text === '') {
@@ -641,14 +661,15 @@ function splitPendingToolTag(text) {
     }
   }
   // Bare tool-call JSON head cut at a chunk boundary: hold the suspect last
-  // line until its object completes or it diverges into plain prose.
+  // line until its object completes or it diverges into plain prose, but never
+  // past PENDING_TAG_SETTLE_MAX — beyond that the line is released verbatim.
   const lineStart = text.lastIndexOf('\n') + 1;
   const lastLine = text.slice(lineStart);
-  // A `<tool_call>` open tag glued in front is part of the same suspect shape.
+  // A `<​tool_call>` open tag glued in front is part of the same suspect shape.
   const wrapM = /^\s*<tool_call\s*>\s*/i.exec(lastLine);
   const jsonPart = wrapM ? lastLine.slice(wrapM[0].length) : lastLine;
   if (
-    lastLine.length <= PENDING_TAG_MAX &&
+    lastLine.length <= PENDING_TAG_SETTLE_MAX &&
     _isSuspectJsonHead(jsonPart) &&
     !_bareJsonComplete(jsonPart)
   ) {
@@ -656,10 +677,10 @@ function splitPendingToolTag(text) {
   }
   // Bracketed wire-marker call head cut at a chunk boundary: hold the partial
   // marker line until its `)]` terminator arrives (or it diverges into prose,
-  // releasing the hold on the next chunk). Same suspect-tail discipline as the
-  // bare-JSON hold above; PENDING_TAG_MAX release valve shared.
+  // releasing the hold on the next chunk). Same suspect-tail discipline and the
+  // same PENDING_TAG_SETTLE_MAX budget as the bare-JSON hold above.
   if (
-    lastLine.length <= PENDING_TAG_MAX &&
+    lastLine.length <= PENDING_TAG_SETTLE_MAX &&
     _isSuspectBracketCallHead(lastLine) &&
     !_bracketCallComplete(lastLine)
   ) {
@@ -668,8 +689,72 @@ function splitPendingToolTag(text) {
   return { emit: text, pending: '' };
 }
 
+/**
+ * Settle a held-back tail at a stream boundary (tool_use arrival / turn end).
+ *
+ * WHY this exists separately from `stripInlineToolCallNoise`: the full stripper
+ * is a SCREEN funnel — it is allowed to drop a whole line because the line is
+ * re-derived from the complete answer text at render time. The held tail is the
+ * opposite case: it is the only copy of that text, and at a boundary it is
+ * usually TRUNCATED. Measured loss: `[Tool Call: read(fi` and `{"name":"open_app",
+ * "params":{…}` both came back as `''`, i.e. the line vanished for good.
+ *
+ * Contract: 两类分开判。
+ *   - **归属确定**的协议行(整行开标签 / 成对块 / 可证完整 marker)照旧整行丢。它们
+ *     是同一次调用在正文里的回声,权威记录是那条 tool_use 本身,留着只会在历史里
+ *     长期占位并被后续每轮当正文读回去(useQueryBridge.js:3265「what streamed is
+ *     what is stored」——上屏的东西会被**持久化**,不只是这一帧难看)。
+ *   - **归属判不了**的截断(`<fun`、`[Tool Call: read(fi`、`{"name":…,"params":{`)
+ *     逐字节原样返回。这类行有可能真是答案的一半,猜错的擦除不可恢复。
+ *
+ * Gate OFF → returned unchanged (byte-identical passthrough, same contract as
+ * the rest of the leaf).
+ */
+function settlePendingToolTag(text, env) {
+  if (!isEnabled(env) || typeof text !== 'string' || text === '') {
+    return text;
+  }
+  // Only a single line can be judged as a whole-line marker; a multi-line tail
+  // is mid-stream state, never a settled line.
+  if (text.indexOf('\n') !== -1) {
+    return text;
+  }
+  const line = text.trim();
+  if (line === '' || FENCE_RE.test(line)) {
+    return text;
+  }
+  // FUNC_FRAG_LINE_RE makes BOTH brackets optional, because stream truncation
+  // really does produce `function=webSearch>` with the `<` swallowed. But a
+  // fragment that still carries its `<` and has no `>` is an unclosed head, not
+  // a fragment — at a settle boundary that is a line the user must still see.
+  const fragComplete =
+    FUNC_FRAG_LINE_RE.test(line) &&
+    !(line.replace(/^\s+/, '').startsWith('<') && line.indexOf('>') === -1);
+  // Self-contained whole-line shapes of the noise family. BARE_JSON_RE alone is
+  // NOT enough — its tail is only `…}\s*>?$`, so a truncated object whose last
+  // `}` is the params close matches it; require the brace depth to close too.
+  // FUNC_INLINE_PAIR_RE is here for the same reason the screen funnel has it:
+  // a single line carrying a complete `<function=…>…</function>` pair is a
+  // **provably finished** marker.
+  const complete =
+    (BARE_JSON_RE.test(line) && _bareJsonComplete(line)) ||
+    _isGeneratedImageReadJson(line) ||
+    BRACKET_CALL_MARKER_RE.test(line) ||
+    FUNC_CLOSE_LINE_RE.test(line) ||
+    fragComplete ||
+    ORPHAN_FRAG_LINE_RE.test(line) ||
+    TOOLCALL_OPEN_LINE_RE.test(line) ||
+    FUNC_OPEN_LINE_RE.test(line) ||
+    TOOLCALL_SINGLE_LINE_RE.test(line) ||
+    TOOLCALL_CLOSE_LINE_RE.test(line) ||
+    ARGS_OPEN_LINE_RE.test(line) ||
+    line.replace(FUNC_INLINE_PAIR_RE, '').trim() === '';
+  return complete ? '' : text;
+}
+
 module.exports = {
   isEnabled,
   stripInlineToolCallNoise,
   splitPendingToolTag,
+  settlePendingToolTag,
 };

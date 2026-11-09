@@ -137,18 +137,50 @@ describe('_createThinkTagInterceptor — passthrough', () => {
   });
 });
 
+describe('_createThinkTagInterceptor — live reasoning', () => {
+  test('deltas are emitted per chunk, not held until the closing tag', () => {
+    const sink = makeSink();
+    const onChunk = _createThinkTagInterceptor(sink);
+
+    onChunk({ type: 'text', text: '<think>first,' });
+    expect(sink.textOf('thinking')).toBe('first,');
+
+    onChunk({ type: 'text', text: ' second' });
+    expect(sink.textOf('thinking')).toBe('first, second');
+
+    onChunk({ type: 'text', text: '</think>answer' });
+    expect(sink.textOf('thinking')).toBe('first, second');
+    expect(sink.textOf('text')).toBe('answer');
+  });
+});
+
 describe('_createThinkTagInterceptor — finalize() fails open', () => {
-  test('unclosed <think> with no answer releases the buffer as text', () => {
+  test('unclosed <think> stays out of the text channel when reasoning is visible', () => {
     const sink = makeSink();
     const onChunk = _createThinkTagInterceptor(sink);
 
     // Truncated mid-reasoning: closing tag never arrives.
     onChunk({ type: 'text', text: '<think>I was thinking about' });
-    expect(sink.textOf('text')).toBe(''); // nothing yet — still buffered
+    // The delta already reached the thinking channel, so no text may leak.
+    expect(sink.textOf('thinking')).toBe('I was thinking about');
+    expect(sink.textOf('text')).toBe('');
 
     onChunk.finalize();
 
-    // A blank turn is worse than raw reasoning, so the buffer is released.
+    // Re-releasing it as text would render the same reasoning twice.
+    expect(sink.textOf('text')).toBe('');
+  });
+
+  test('unclosed <think> with hidden thinking releases the buffer as text', () => {
+    const sink = makeSink();
+    // The caller swallows thinking chunks when display is off, so the buffer is
+    // the only copy the user would get.
+    const onChunk = _createThinkTagInterceptor(sink, { isThinkingVisible: () => false });
+
+    onChunk({ type: 'text', text: '<think>I was thinking about' });
+    onChunk.finalize();
+
+    // A blank turn is worse than raw reasoning.
     expect(sink.textOf('text')).toBe('I was thinking about');
   });
 

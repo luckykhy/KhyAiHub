@@ -53,9 +53,9 @@ describe('daemon handler', () => {
 
     expect(console.log).toHaveBeenNthCalledWith(
       1,
-      '  Daemon started (PID 4321, port 9093; requested 9090 was occupied)'
+      '  守护进程已启动（PID 4321，端口 9093；请求的 9090 已被占用，自动改用空闲端口）'
     );
-    expect(console.log).toHaveBeenNthCalledWith(2, '  Logs: /tmp/khy-daemon.log');
+    expect(console.log).toHaveBeenNthCalledWith(2, '  日志: /tmp/khy-daemon.log');
   });
 
   test('restart prints the actual runtime port when the requested port is occupied', async () => {
@@ -71,7 +71,7 @@ describe('daemon handler', () => {
     await handleDaemon('restart', { chalk, options: { port: '9090' } });
 
     expect(console.log).toHaveBeenCalledWith(
-      '  Daemon restarted (PID 5321, port 9094; requested 9090 was occupied)'
+      '  守护进程已重启（PID 5321，端口 9094；请求的 9090 已被占用，自动改用空闲端口）'
     );
   });
 });

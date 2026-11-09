@@ -6,24 +6,24 @@
   "_mayDependOn_note": "D3 名义边界就是 [D3]（共享底座只准互相依赖）。实测本单元唯一的仓内 require 是 keyFindings.js → ../normalizeToolName（同为 D3 的 utils/ 叶子）与单元内互引（width.js → ./displayWidthMemo、imageIntent.js → ./inlineFileRefs）；其余 require 为 npm 包 strip-ansi / string-width，不构成域边。没有任何一条伸向 D1/D2/D4/D5。",
   "fanIn": 18,
   "fanInEvidence": [
-    "services/backend/src/cli/displayWidthMemo.js",
-    "services/backend/src/cli/repl/inlineFileRefs.js",
-    "services/backend/src/cli/permissionReply.js",
-    "services/backend/src/cli/resultGuard.js",
-    "services/backend/src/cli/repl/imageIntent.js",
-    "services/backend/src/cli/keyFindings.js",
-    "services/backend/src/cli/formatters.js",
-    "services/backend/src/cli/replSession.js",
-    "services/backend/src/cli/tui/hooks/useQueryBridge.js",
-    "services/backend/src/services/imageContextCardService.js",
-    "services/backend/src/services/aiManagementChatHttp.js",
-    "services/backend/src/services/aiMonitor.js",
-    "services/backend/src/services/gateway/inlineImageOcrGuardPolicy.js",
-    "services/backend/src/services/tool/toolCallingPermissions.js",
-    "services/backend/src/services/tool/toolUseLoopCore.js",
-    "services/backend/src/services/tool/toolUseLoopHelpers.js",
-    "services/backend/src/utils/format/consoleError.js",
-    "services/backend/src/utils/format/consoleNotice.js"
+    "runtime/node/backend/src/cli/displayWidthMemo.js",
+    "runtime/node/backend/src/cli/repl/inlineFileRefs.js",
+    "runtime/node/backend/src/cli/permissionReply.js",
+    "runtime/node/backend/src/cli/resultGuard.js",
+    "runtime/node/backend/src/cli/repl/imageIntent.js",
+    "runtime/node/backend/src/cli/keyFindings.js",
+    "runtime/node/backend/src/cli/formatters.js",
+    "runtime/node/backend/src/cli/replSession.js",
+    "runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js",
+    "runtime/node/backend/src/services/imageContextCardService.js",
+    "runtime/node/backend/src/services/aiManagementChatHttp.js",
+    "runtime/node/backend/src/services/aiMonitor.js",
+    "runtime/node/backend/src/services/gateway/inlineImageOcrGuardPolicy.js",
+    "runtime/node/backend/src/services/tool/toolCallingPermissions.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopCore.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopHelpers.js",
+    "runtime/node/backend/src/utils/format/consoleError.js",
+    "runtime/node/backend/src/utils/format/consoleNotice.js"
   ],
   "_fanIn_note": "18 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b21-fanin.js：require 本单元 7 个模块的源文件去重计数，不含 *.test.js，不含单元内互引）。六路 cli/* 条目是归位后留下的再导出壳——壳按 [DESIGN-LAY-008] 第 0 步的约定仍算真实入口，故如实计入而不是只数真身直连者。",
   "lifecycle": {
@@ -64,10 +64,10 @@
     "imageIntent.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/cli/displayWidthMemo.test.js",
-    "services/backend/tests/cli/keyFindings.test.js",
-    "services/backend/tests/cli/permissionReply.test.js",
-    "services/backend/tests/cli/resultGuard.test.js"
+    "runtime/node/backend/tests/cli/displayWidthMemo.test.js",
+    "runtime/node/backend/tests/cli/keyFindings.test.js",
+    "runtime/node/backend/tests/cli/permissionReply.test.js",
+    "runtime/node/backend/tests/cli/resultGuard.test.js"
   ],
   "_merge_note": "共置的 7 份是**单元契约**测试（导出面 / 纯度 / 门控语义 / 永不抛），tests/cli 下的 4 份是归位前的行为回归测试，两者判据不同、不可互相替代；把它们合并进本目录需要一次 git mv（本篇第 0 步未闭合，禁令见 scripts/quarantine/README.md），故此处只如实登记位置。"
 }

@@ -151,6 +151,92 @@ describe('status — 只读', () => {
   });
 });
 
+describe('agents — 外部 ACP 智能体四态探测(只读)', () => {
+  const INVOCATION_PATH = require.resolve('../../../src/services/gateway/adapters/acpAgentInvocation');
+  const PROBE_PATH = require.resolve('../../../src/services/gateway/adapters/acpAgentProbe');
+  let registry;
+  let probeCalls;
+
+  function stubAgents() {
+    registry = {};
+    probeCalls = [];
+    cacheStub(INVOCATION_PATH, { loadAgentRegistry: () => registry });
+    cacheStub(PROBE_PATH, {
+      defaultOpenSession: (k) => ({ sessionId: k }),
+      probeAgent: async (key, opts) => {
+        probeCalls.push({ key, opts });
+        return registry[key];
+      },
+    });
+  }
+
+  beforeEach(stubAgents);
+
+  afterEach(() => {
+    delete require.cache[INVOCATION_PATH];
+    delete require.cache[PROBE_PATH];
+  });
+
+  test('未登记 → 只给登记指引,不探测(绝不伪造"已探测")', async () => {
+    registry = {};
+    const { handleOnboarding } = freshHandler();
+    const r = await handleOnboarding(null, ['agents'], {});
+    assert.equal(r, true);
+    assert.equal(probeCalls.length, 0);
+    assert.ok(calls.info.some((m) => /未登记任何外部 ACP 智能体/.test(m)));
+    assert.ok(calls.info.some((m) => /KHY_ACPCLIENT_AGENTS/.test(m)));
+    // 不出现「探测」字样——没有探测就别声称探测过
+    assert.ok(!calls.info.some((m) => /开始四态探测/.test(m)));
+  });
+
+  test('四态各打一个不同标记:ready ✓ / auth_required ! / not_installed ✗ / unavailable ?', async () => {
+    registry = {
+      'a-ready': { state: 'ready', command: 'npx foo', hint: '' },
+      'b-auth': { state: 'auth_required', command: 'npx bar', hint: '去登录' },
+      'c-missing': { state: 'not_installed', command: 'ghost', hint: 'PATH 上找不到可执行文件' },
+      'd-broken': { state: 'unavailable', command: 'boom', hint: 'exit 1' },
+    };
+    const { handleOnboarding } = freshHandler();
+    const r = await handleOnboarding(null, ['agents'], {});
+    assert.equal(r, true);
+    assert.equal(probeCalls.length, 4);
+    // openSession 真源来自 probe 叶子(传的是函数本身,handler 不自己造 session 形状)
+    assert.equal(typeof probeCalls[0].opts.openSession, 'function');
+    assert.equal(probeCalls[0].opts.openSession('a-ready').sessionId, 'a-ready');
+    assert.ok(calls.info.some((m) => /✓ a-ready: ready/.test(m)));
+    assert.ok(calls.info.some((m) => /! b-auth: auth_required — 去登录/.test(m)));
+    assert.ok(calls.info.some((m) => /✗ c-missing: not_installed/.test(m)));
+    assert.ok(calls.info.some((m) => /\? d-broken: unavailable/.test(m)));
+    // ready 才带命令回显
+    assert.ok(calls.info.some((m) => /命令: npx foo/.test(m)));
+    assert.ok(!calls.info.some((m) => /命令: ghost/.test(m)));
+    // 四态含义总要有解释,否则标记只是噪音
+    assert.ok(calls.info.some((m) => /四态含义/.test(m)));
+  });
+
+  test('探测整体失败 → 给一句实话,绝不静默成功', async () => {
+    cacheStub(INVOCATION_PATH, {
+      loadAgentRegistry: () => { throw new Error('registry blew up'); },
+    });
+    const { handleOnboarding } = freshHandler();
+    const r = await handleOnboarding(null, ['agents'], {});
+    assert.equal(r, true);
+    assert.ok(calls.info.some((m) => /探测失败.*registry blew up/.test(m)));
+    assert.ok(!calls.info.some((m) => /开始四态探测/.test(m)));
+  });
+
+  test('agents 不碰 runOnboarding / router / gateway(纯只读)', async () => {
+    let touched = 0;
+    onboardingStub.runOnboarding = async () => { touched++; return {}; };
+    registry = { solo: { state: 'ready', command: 'npx solo', hint: '' } };
+    const { handleOnboarding } = freshHandler();
+    await handleOnboarding(null, ['agents'], {});
+    assert.equal(touched, 0);
+    assert.equal(routeCalls.length, 0);
+    assert.equal(gatewayCalls.length, 0);
+  });
+});
+
 describe('非法语法 / help', () => {
   test('未知子命令 → 提示但接管(true)', async () => {
     const { handleOnboarding } = freshHandler();
