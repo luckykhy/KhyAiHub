@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-162-PJ5MG9D6
 /**
  * agentFeedbackService — 三模态反馈契约的**提示通道**（PROCESS-006 的 S2 落点）。
  *

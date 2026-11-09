@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-177-6DXGHDJ9
 'use strict';
 
 const crypto = require('crypto');
