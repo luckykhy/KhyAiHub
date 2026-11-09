@@ -1,4 +1,6 @@
+// khy-canary: Khy-20261102-287-33K8PPXC
 import { useEffect, useState } from 'react'
+import { Icon } from '../ui/Icon'
 
 // 进程监视器（窗口菜单 → 进程监视器；ZCode M1 processMonitor 的 khy-os 等效实现）。
 // 显示四进程架构的真实存活状态：main / host / scheduler + 渲染窗口数。
@@ -69,16 +71,16 @@ export function ProcessMonitorDialog({ onClose }: { onClose: () => void }) {
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0">
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${alive ? 'bg-brand' : 'bg-destructive'}`} />
       <span className="text-sm text-foreground flex-1">{name}</span>
-      <span className="text-xs text-foreground/50 tabular-nums">{pid ? `pid ${pid}` : '未启动'}</span>
-      {extra && <span className="text-xs text-foreground/40 tabular-nums">{extra}</span>}
+      <span className="text-xs text-foreground-muted tabular-nums">{pid ? `pid ${pid}` : '未启动'}</span>
+      {extra && <span className="text-xs text-foreground-muted tabular-nums">{extra}</span>}
     </div>
   )
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[420px] rounded-xl border border-border bg-popover shadow-2xl"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[420px] rounded-lg border border-border bg-popover shadow-2xl animate-scale-in"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         role="dialog"
         aria-label="进程监视器"
@@ -87,17 +89,15 @@ export function ProcessMonitorDialog({ onClose }: { onClose: () => void }) {
           <h2 className="text-sm font-semibold text-foreground">进程监视器</h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-surface-hover transition-colors"
+            className="w-7 h-7 rounded-md flex items-center justify-center text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors"
             aria-label="关闭进程监视器"
           >
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-              <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+            <Icon name="close" size={12} />
           </button>
         </div>
 
         {!info ? (
-          <div className="px-4 py-6 text-sm text-foreground/50">正在读取进程状态…</div>
+          <div className="px-4 py-6 text-sm text-foreground-muted">正在读取进程状态…</div>
         ) : !info.ok ? (
           <div className="px-4 py-6 text-sm text-destructive">{info.error || '进程状态不可用'}</div>
         ) : (
@@ -105,14 +105,14 @@ export function ProcessMonitorDialog({ onClose }: { onClose: () => void }) {
             {row('主进程 main', info.main?.pid, Boolean(info.main?.pid), info.main ? formatBytes(info.main.rssBytes) : '')}
             {row('Agent 运行时 host', info.host?.pid, Boolean(info.host?.alive))}
             {row('定时任务 scheduler', info.scheduler?.pid, Boolean(info.scheduler?.alive))}
-            <div className="px-3 py-2 text-xs text-foreground/50 flex flex-wrap gap-x-4 gap-y-1">
+            <div className="px-3 py-2 text-xs text-foreground-muted flex flex-wrap gap-x-4 gap-y-1">
               <span>渲染窗口 {info.rendererCount ?? 0} 个</span>
               {info.main && <span>主进程已运行 {formatUptime(info.main.uptimeMs)}</span>}
               {info.versions && <span>Electron {info.versions.electron} · Chromium {info.versions.chrome} · Node {info.versions.node}</span>}
               {info.platform && <span>{info.platform}</span>}
             </div>
             {!info.host?.alive && (
-              <div className="px-3 pb-3 text-xs text-foreground/50">
+              <div className="px-3 pb-3 text-xs text-foreground-muted">
                 host 未存活：Agent 能力（会话列表/模型/网关）不可用，请重启 KhyOS Desktop。
               </div>
             )}
