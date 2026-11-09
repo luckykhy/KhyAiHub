@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-312-MFQP71BJ
 import { useCallback, useEffect, useState } from 'react'
 
 // ── OnboardingDialog (ZC-ALIGN-003 §1 D5, a11y s-8) ──
@@ -5,8 +6,9 @@ import { useCallback, useEffect, useState } from 'react'
 // 打开引导 (and 常规 page's identical row). Three-part contract:
 //   1. 欢迎使用 KhyOS headline
 //   2. 数据迁移向导 — REAL counts scanned from Claude Code / Cursor / Codex
-//      config dirs via migration:scan; 导入 buttons copy definitions into
-//      agent_items.json via migration:import (both hop preload → main → store)
+//      config dirs via migration:scan; 导入 buttons copy definitions into the
+//      terminal's own command/skill stores via migration:import (both hop
+//      preload → main → store)
 //   3. 开始使用 KhyOS button — closes the dialog
 // Opens on the `khy:open-onboarding` window event (same pattern as
 // khy:open-command-center), so any settings page can trigger it without prop
@@ -113,7 +115,7 @@ export function OnboardingDialog() {
         {/* 头部：欢迎使用 KhyOS */}
         <div className="px-8 pt-8 pb-5">
           <h2 className="text-2xl font-bold text-popover-foreground">欢迎使用 KhyOS</h2>
-          <p className="text-sm text-foreground/50 mt-2 leading-relaxed">
+          <p className="text-sm text-foreground-muted mt-2 leading-relaxed">
             你的 AI 编码搭档。可以先从其他 Agent 迁移数据，也可以直接开始使用。
           </p>
         </div>
@@ -126,7 +128,7 @@ export function OnboardingDialog() {
               {scanError}
             </div>
           ) : sources === null ? (
-            <div className="px-4 py-3 text-sm text-foreground/50 bg-surface border border-card-border rounded-xl">
+            <div className="px-4 py-3 text-sm text-foreground-muted bg-surface border border-card-border rounded-xl">
               正在检测本机 Claude Code / Cursor / Codex 配置…
             </div>
           ) : (
@@ -145,7 +147,7 @@ export function OnboardingDialog() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-foreground">{src.label}</div>
-                      <div className="text-xs text-foreground/50 mt-0.5">
+                      <div className="text-xs text-foreground-muted mt-0.5">
                         {done ? done : summary}
                       </div>
                     </div>
@@ -164,7 +166,7 @@ export function OnboardingDialog() {
             </div>
           )}
           {dataHome && (
-            <p className="text-xs text-foreground/40 mt-3 leading-relaxed">
+            <p className="text-xs text-foreground-muted mt-3 leading-relaxed">
               迁移后的数据存储于 {dataHome}
             </p>
           )}
@@ -174,7 +176,7 @@ export function OnboardingDialog() {
         <div className="px-8 py-5 border-t border-popover-border flex items-center justify-end">
           <button
             onClick={close}
-            className="px-6 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             开始使用 KhyOS
           </button>

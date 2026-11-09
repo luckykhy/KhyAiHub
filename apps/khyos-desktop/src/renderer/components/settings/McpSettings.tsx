@@ -1,11 +1,13 @@
+// khy-canary: Khy-20261102-311-XZZZ9X5D
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 // ── MCP 服务器 settings page (ZC-ALIGN-003 §2, a11y s-32) ──
-// Two-tier structure: user-installed (top, from mcpStore via mcp:list —
-// 新建/删除/启停/导入 all real) + plugin-hosted (bottom, derived live from
-// plugin:list entries with components.mcp > 0; read-only status cards).
-// ZC-ALIGN-001 P13: the static PLUGIN_SERVERS array is gone — every row and
-// every button now goes through the real preload → main → store chain.
+// Two-tier structure: servers from the terminal's own mcp.json files (user +
+// project scope, plus read-only ecosystem bridges merged by the backend) and
+// plugin-hosted providers derived from plugin:list components.mcp > 0.
+// 新建/删除/启停/导入 write into the same files `khy` loads, so both surfaces
+// always agree. External/bridged rows render read-only instead of pretending
+// to be editable.
 
 interface UserMcpServer {
   id: string
@@ -13,6 +15,12 @@ interface UserMcpServer {
   command: string
   enabled: boolean
   createdAt: number
+  readOnly?: boolean
+  toggleable?: boolean
+  deletable?: boolean
+  source?: string
+  sourceLabel?: string
+  detail?: string
 }
 
 interface PluginComponents {
@@ -195,7 +203,7 @@ export function McpSettings() {
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-foreground">MCP</span>
           <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand/15 text-brand">
-            {totalCount}
+            {scopeAll ? totalCount : servers ? servers.length : '…'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -206,7 +214,7 @@ export function McpSettings() {
             }`}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 4h8M2 8h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M2 4h8M2 8h8" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
               <circle cx="9" cy="4" r="1.2" fill="currentColor" />
               <circle cx="3" cy="8" r="1.2" fill="currentColor" />
             </svg>
@@ -217,7 +225,7 @@ export function McpSettings() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索 MCP 服务器…"
-            className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused w-56"
+            className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused w-56"
           />
         </div>
       </div>
@@ -237,11 +245,11 @@ export function McpSettings() {
         </div>
       )}
 
-      {/* ── User-installed section (mcpStore real data) ── */}
+      {/* ── Configured servers (terminal mcp.json: user + project + bridges) ── */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-foreground/70">
-            已安装 <span className="text-foreground/40">{servers ? servers.length : '…'}</span>
+            已安装 <span className="text-foreground-muted">{servers ? servers.length : '…'}</span>
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -265,15 +273,15 @@ export function McpSettings() {
           </div>
         </div>
         {servers === null && !loadError ? (
-          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground/50">
+          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground-muted">
             读取 MCP 服务器列表中…
           </div>
         ) : userRows.length === 0 ? (
           <div className="bg-card border border-card-border rounded-xl p-8 text-center">
-            <p className="text-sm text-foreground/50 mb-2">
+            <p className="text-sm text-foreground-muted mb-2">
               {search ? '没有匹配搜索的服务器' : '尚未安装 MCP 服务器'}
             </p>
-            <p className="text-xs text-foreground/40">手动新建服务器，或导入已有配置。</p>
+            <p className="text-xs text-foreground-muted">与终端共用同一个 mcp.json，新建后终端立即可用。</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -290,21 +298,21 @@ export function McpSettings() {
       </div>
 
       {/* ── Plugin-hosted section (plugin:list derivation, read-only cards) ── */}
-      {(scopeAll || !search) && (
+      {(scopeAll || hostedRows.length > 0) && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm font-medium text-foreground/70">插件宿主</span>
-            <span className="text-xs text-foreground/40">由插件提供（components.mcp &gt; 0），随插件启停</span>
+            <span className="text-xs text-foreground-muted">由插件提供（components.mcp &gt; 0），随插件启停</span>
           </div>
           {plugins === null && !loadError ? (
-            <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground/50">
+            <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground-muted">
               读取插件宿主列表中…
             </div>
-          ) : hostedRows.length === 0 && scopeAll ? (
-            <div className="bg-card border border-card-border rounded-xl p-6 text-center text-sm text-foreground/50">
-              暂无插件提供 MCP 服务器（安装含 MCP 组件的插件后自动出现在此）。
+          ) : hostedRows.length === 0 ? (
+            <div className="bg-card border border-card-border rounded-xl p-6 text-center text-sm text-foreground-muted">
+              {search ? '没有匹配搜索的插件宿主' : '暂无插件提供 MCP 服务器（安装含 MCP 组件的插件后自动出现在此）。'}
             </div>
-          ) : hostedRows.length > 0 ? (
+          ) : (
             <div className="space-y-3">
               {hostedRows.map((plugin) => (
                 <PluginServerCard
@@ -315,7 +323,7 @@ export function McpSettings() {
                 />
               ))}
             </div>
-          ) : null}
+          )}
         </div>
       )}
 
@@ -334,7 +342,7 @@ export function McpSettings() {
           导入
         </button>
         {pendingAction && (
-          <span className="text-xs text-foreground/50">{pendingAction}</span>
+          <span className="text-xs text-foreground-muted">{pendingAction}</span>
         )}
       </div>
 
@@ -364,19 +372,30 @@ function UserServerCard({ server, onToggle, onDelete }: {
   onDelete: (id: string, name: string) => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const showToggle = server.toggleable !== false && !server.readOnly
+  const showDelete = server.deletable !== false && !server.readOnly
+  const stateLabel = server.sourceLabel || (server.source === 'project' ? '项目配置' : '用户配置')
   return (
     <div className="bg-card border border-card-border rounded-xl p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${server.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
+            {showToggle && (
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${server.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
+            )}
             <span className="text-sm font-mono font-medium text-foreground">{server.name}</span>
-            <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground/50">用户</span>
+            <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">{stateLabel}</span>
+            {server.readOnly && (
+              <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">只读</span>
+            )}
           </div>
-          <p className="text-xs text-foreground/50 font-mono truncate" title={server.command}>{server.command}</p>
+          <p className="text-xs text-foreground-muted font-mono truncate" title={server.command}>{server.command}</p>
+          {server.detail && (
+            <p className="text-xs text-foreground-muted mt-1 truncate" title={server.detail}>{server.detail}</p>
+          )}
           {confirmDelete && (
             <div className="mt-2 flex items-center gap-2 text-xs">
-              <span className="text-foreground/60">删除后不可恢复，确认删除？</span>
+              <span className="text-foreground-muted">删除后不可恢复，确认删除？</span>
               <button
                 onClick={() => onDelete(server.id, server.name)}
                 className="px-2 py-1 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
@@ -385,7 +404,7 @@ function UserServerCard({ server, onToggle, onDelete }: {
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="px-2 py-1 rounded text-foreground/60 hover:text-foreground transition-colors"
+                className="px-2 py-1 rounded text-foreground-muted hover:text-foreground transition-colors"
               >
                 取消
               </button>
@@ -393,27 +412,31 @@ function UserServerCard({ server, onToggle, onDelete }: {
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => onToggle(server.id, !server.enabled)}
-            className={`relative w-9 h-5 rounded-full transition-colors ${
-              server.enabled ? 'bg-brand' : 'bg-foreground/20'
-            }`}
-            role="switch"
-            aria-checked={server.enabled}
-            aria-label={`${server.enabled ? '停用' : '启用'} ${server.name}`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                server.enabled ? 'translate-x-4' : 'translate-x-0'
+          {showToggle && (
+            <button
+              onClick={() => onToggle(server.id, !server.enabled)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${
+                server.enabled ? 'bg-brand' : 'bg-foreground/20'
               }`}
-            />
-          </button>
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="px-2 py-1 text-xs text-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
-          >
-            删除
-          </button>
+              role="switch"
+              aria-checked={server.enabled}
+              aria-label={`${server.enabled ? '停用' : '启用'} ${server.name}`}
+            >
+              <span
+                className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                  server.enabled ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          )}
+          {showDelete && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="px-2 py-1 text-xs text-foreground-muted hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+            >
+              删除
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -434,17 +457,17 @@ function PluginServerCard({ plugin, expanded, onDetail }: {
           <div className="flex items-center gap-2 mb-2">
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${plugin.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
             <span className="text-sm font-mono font-medium text-foreground">{plugin.name}</span>
-            <span className="text-xs text-foreground/50">{capabilityLine(plugin.components)}</span>
-            <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground/50">{plugin.components.mcp}</span>
+            <span className="text-xs text-foreground-muted">{capabilityLine(plugin.components)}</span>
+            <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">{plugin.components.mcp}</span>
           </div>
           {/* Status text (real plugin state, not fabricated plan flags) */}
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-xs text-foreground-muted leading-relaxed">
             {plugin.enabled
               ? `该 MCP 服务器由已启用的插件提供（v${plugin.version}），运行时身份由宿主管理。`
               : `提供方插件已停用（v${plugin.version}）：在「插件」页启用后此服务器恢复可用。`}
           </p>
           {expanded && (
-            <div className="mt-2 text-xs text-foreground/60 leading-relaxed border-t border-card-border pt-2">
+            <div className="mt-2 text-xs text-foreground-muted leading-relaxed border-t border-card-border pt-2">
               {plugin.description}
             </div>
           )}
@@ -453,7 +476,7 @@ function PluginServerCard({ plugin, expanded, onDetail }: {
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onDetail}
-            className="px-2 py-1 text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover rounded transition-colors"
+            className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
           >
             {expanded ? '收起' : '详情'}
           </button>
@@ -478,7 +501,7 @@ function CreateServerDialog({ onClose, onSubmit }: {
       <div className="relative w-full max-w-md bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
         <div className="px-6 py-4 border-b border-popover-border">
           <h3 className="text-base font-semibold text-popover-foreground">新建 MCP 服务器</h3>
-          <p className="text-xs text-foreground/50 mt-1">stdio 启动命令或 http(s) URL，保存后在本页管理</p>
+          <p className="text-xs text-foreground-muted mt-1">stdio 启动命令或 http(s) URL，保存后在本页管理</p>
         </div>
         <div className="px-6 py-4 space-y-4">
           <div>
@@ -487,7 +510,7 @@ function CreateServerDialog({ onClose, onSubmit }: {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例如 filesystem"
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
           <div>
@@ -496,21 +519,21 @@ function CreateServerDialog({ onClose, onSubmit }: {
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="例如 npx -y @modelcontextprotocol/server-filesystem"
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
         </div>
         <div className="px-6 py-4 border-t border-popover-border flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-foreground/60 hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
+            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
           >
             取消
           </button>
           <button
             onClick={() => onSubmit(name, command)}
             disabled={!valid}
-            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             保存
           </button>
@@ -532,7 +555,7 @@ function ImportDialog({ onClose, onSubmit }: {
       <div className="relative w-full max-w-md bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
         <div className="px-6 py-4 border-b border-popover-border">
           <h3 className="text-base font-semibold text-popover-foreground">导入 MCP 服务器</h3>
-          <p className="text-xs text-foreground/50 mt-1">粘贴 JSON 数组，形如 [{`{ "name": "…", "command": "…" }`}]</p>
+          <p className="text-xs text-foreground-muted mt-1">粘贴 JSON 数组，形如 [{`{ "name": "…", "command": "…" }`}]</p>
         </div>
         <div className="px-6 py-4">
           <textarea
@@ -540,20 +563,20 @@ function ImportDialog({ onClose, onSubmit }: {
             onChange={(e) => setText(e.target.value)}
             rows={6}
             placeholder='[{"name":"filesystem","command":"npx -y @modelcontextprotocol/server-filesystem"}]'
-            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused resize-none"
+            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused resize-none"
           />
         </div>
         <div className="px-6 py-4 border-t border-popover-border flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-foreground/60 hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
+            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
           >
             取消
           </button>
           <button
             onClick={() => onSubmit(text)}
             disabled={!text.trim()}
-            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             导入
           </button>

@@ -1,25 +1,30 @@
+// khy-canary: Khy-20261102-321-54JC3FPS
 import type { ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
 
 interface EmptyStateProps {
-  icon?: string
+  icon?: IconName
   title: string
   description?: string
   action?: { label: string; onClick: () => void }
 }
 
-export function EmptyState({ icon = '□', title, description, action }: EmptyStateProps) {
+// 空态图标取自 Icon 注册表（统一 1.6 描边）：此前这里是系统字体里的告警/对勾/
+// 叉号/圆点这类字形，与相邻的线形图标在字重和基线上都对不齐。
+export function EmptyState({ icon = 'idle', title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8 animate-fade-in">
-      <span className="text-4xl mb-4">{icon}</span>
+      <span className="mb-4 text-foreground-subtle">
+        <Icon name={icon} size={32} />
+      </span>
       <h3 className="text-base font-medium text-foreground mb-2">{title}</h3>
       {description && (
-        <p className="text-sm text-foreground/50 max-w-xs mb-4">{description}</p>
+        <p className="text-sm text-foreground-muted max-w-xs mb-4">{description}</p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary-hover active:bg-primary-active transition-colors"
         >
           {action.label}
         </button>
@@ -93,7 +98,7 @@ export function ChatEmptyState({
       <div className="flex flex-col items-center justify-center h-full min-h-full px-8 py-10 animate-fade-in">
         <h2 className="text-2xl font-medium text-foreground mb-2">{textGreeting}</h2>
         {textSubtitle && (
-          <p className="text-sm text-foreground/50 max-w-sm mb-5 text-center">{textSubtitle}</p>
+          <p className="text-sm text-foreground-muted max-w-sm mb-5 text-center">{textSubtitle}</p>
         )}
 
         {/* 输入卡片 — 居中，宽度对齐 ZCode 实测 (~560px)，卡片内含 composer */}
@@ -107,9 +112,9 @@ export function ChatEmptyState({
             <button
               key={item.id}
               onClick={() => handleCard(item)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card/60 text-xs text-foreground/80 hover:bg-surface-hover hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card/60 text-xs text-foreground/80 hover:bg-surface-hover hover:border-border-strong hover:text-foreground transition-colors"
             >
-              <span className="text-foreground/60"><Icon name={item.icon} size={14} /></span>
+              <span className="text-foreground-muted"><Icon name={item.icon} size={14} /></span>
               <span className="font-medium">{item.label}</span>
             </button>
           ))}

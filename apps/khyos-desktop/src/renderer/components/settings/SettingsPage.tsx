@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-315-SY2FKXXC
 import { useState, useEffect, useCallback } from 'react'
 import { GeneralSettings } from './GeneralSettings'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -11,6 +12,10 @@ import { IndexSettingsPage } from './IndexSettingsPage'
 import { PluginSettings } from './PluginSettings'
 import { KeyManagerPage } from '../keyManager/KeyManagerPage'
 import { WebRemoteControlPanel } from '../remote/WebRemoteControlPanel'
+import { Icon } from '../ui/Icon'
+import { SettingsNavIcon, type SettingsNavIconId } from './SettingsNavIcon'
+import { invalidateCodeDisplaySettings } from '../message/useCodeDisplaySettings'
+import { useChatIdentity } from '../../shared/chatIdentity'
 import { useAccountAvatar } from '../../shared/accountAvatar'
 
 // ── Nav structure (mirrors ZCode v3.11.2 a11y s-30/s-42, ZC-ALIGN-003 §1-4) ──
@@ -18,7 +23,7 @@ import { useAccountAvatar } from '../../shared/accountAvatar'
 // Three groups + standalone 引导 + 返回工作区 at top + account row at bottom.
 
 interface NavItem {
-  id: string
+  id: SettingsNavIconId
   label: string
 }
 interface NavGroup {
@@ -71,12 +76,12 @@ const PAGE_META: Record<string, { title: string; subtitle?: string }> = {
   browser: { title: '浏览器控制', subtitle: '配置内置浏览器的行为与安全策略。' },
   cua: { title: '电脑控制', subtitle: '配置 Agent 操作电脑的权限与安全边界。' },
   remote: { title: '移动端远程控制', subtitle: '扫码或在手机上打开链接，远程控制当前工作区。' },
-  memory: { title: '记忆', subtitle: '管理 Agent 记忆库，存储跨会话的上下文信息。' },
+  memory: { title: '记忆', subtitle: '与终端共用同一份记忆库，存储跨会话的上下文信息。' },
   subagents: { title: '子智能体', subtitle: '管理可委派的子智能体。' },
   plugins: { title: '插件', subtitle: '启用或停用已安装的插件。插件可打包技能、命令、Hooks 和 MCP 服务器。' },
   mcp: { title: 'MCP 服务器', subtitle: '管理 MCP 服务器，配置后可在对话中使用其工具。' },
   skills: { title: '技能', subtitle: '管理 Agent 技能，扩展其能力范围。' },
-  commands: { title: '命令', subtitle: '管理自定义命令，配置后可用 / 触发。' },
+  commands: { title: '命令', subtitle: '与终端同一批命令：Khy 内置命令只读展示，自定义命令配置后可用 / 触发。' },
   hooks: { title: '钩子', subtitle: '配置 Agent 生命周期事件的处理逻辑。' },
   index: { title: '索引库', subtitle: '管理代码索引库，用于增强 Agent 的代码理解能力。' },
   usage: { title: '使用统计', subtitle: '查看模型用量与 Token 消耗趋势。' },
@@ -89,10 +94,9 @@ export function SettingsPage() {
     const suffix = window.location.hash.replace(/^#\/settings\/?/, '')
     return PAGE_META[suffix] ? suffix : 'general'
   })
-  // Local-mode account name — same neutral value as the sidebar footer. The old
-  // value was the ZCode account observed in the audit screenshots (another
-  // product's user data, not ours).
-  const [accountName] = useState('本地用户')
+  // 账号名真源是 settings.desktopAccountName（见 shared/chatIdentity）。
+  // 旧实现把中性名「本地用户」写死两次（这里与侧栏），改名后两处都跟不上。
+  const { userName: accountName } = useChatIdentity()
   const accountAvatar = useAccountAvatar()
   const [settings, setSettings] = useState<Record<string, unknown>>({})
 
@@ -110,7 +114,11 @@ export function SettingsPage() {
     const api = (window as unknown as {
       __KHYOS__?: { setSetting?: (k: string, v: unknown) => Promise<void> }
     }).__KHYOS__
-    api?.setSetting?.(key, value).catch(() => {})
+    api?.setSetting?.(key, value).then(() => {
+      // 落盘完成后再通知消费方重读：「语法高亮 / 行号显示」两个开关的渲染层
+      // 消费方在 message 区域（模块级缓存），写完立即 invalidate 才不用重开应用。
+      invalidateCodeDisplaySettings()
+    }).catch(() => {})
   }, [])
 
   const handleBack = () => {
@@ -141,30 +149,39 @@ export function SettingsPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Left navigation ── */}
-        <nav className="w-[240px] flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
+        {/* 窄窗（<1000px）整栏收成 64px，只留自绘标记：条目文字与分组标题隐藏，
+            组间改由细分隔线断开；64px 下按钮宽 48px，刚好容 16px 标记居中。 */}
+        <nav className="w-[240px] flex-shrink-0 border-r border-border flex flex-col overflow-hidden max-[1000px]:w-[64px]">
           {/* Top: 返回工作区 */}
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border max-[1000px]:p-2!">
             <button
               onClick={handleBack}
-              className="w-full px-3 py-2 text-sm text-left text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors flex items-center gap-2"
+              title="返回工作区"
+              aria-label="返回工作区"
+              className="w-full px-3 py-2 text-sm text-left text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors duration-150 flex items-center gap-2 max-[1000px]:justify-center max-[1000px]:px-0!"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M8.5 3L4.5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              返回工作区
+              <Icon name="chevron-left" size={14} />
+              <span className="max-[1000px]:hidden">返回工作区</span>
             </button>
           </div>
 
           {/* Nav groups (scrollable) */}
-          <div className="flex-1 overflow-y-auto py-2">
-            {NAV_GROUPS.map((group) => (
+          <div className="flex-1 overflow-y-auto px-2 py-2">
+            {NAV_GROUPS.map((group, groupIndex) => (
               <div key={group.id} className="mb-3">
-                <div className="px-4 py-1.5 text-xs font-semibold text-foreground/40 uppercase tracking-wider">
+                <div className="px-3 py-1.5 text-xs font-medium text-foreground max-[1000px]:hidden">
                   {group.label}
                 </div>
+                {groupIndex > 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="mx-1 my-2 hidden border-t border-border/60 max-[1000px]:block"
+                  />
+                )}
                 {group.items.map((item) => (
                   <NavButton
                     key={item.id}
+                    icon={item.id}
                     label={item.label}
                     active={activePage === item.id}
                     onClick={() => setActivePage(item.id)}
@@ -175,6 +192,7 @@ export function SettingsPage() {
 
             {/* Standalone: 引导 (no group header — ZCode a11y s-25 has none) */}
             <NavButton
+              icon="onboarding"
               label="引导"
               active={activePage === 'onboarding'}
               onClick={() => setActivePage('onboarding')}
@@ -182,25 +200,29 @@ export function SettingsPage() {
           </div>
 
           {/* Bottom: account chip + 返回工作区 */}
-          <div className="border-t border-border p-3 flex items-center gap-2">
-            {/* 默认头像就是桌宠立绘（与侧栏同一套取景：默认立绘放大 1.4 倍，
-                自选头像不缩放）；底色留着当加载垫。 */}
-            <div className="w-7 h-7 rounded-full bg-brand/20 flex items-center justify-center text-xs font-semibold text-brand flex-shrink-0 overflow-hidden">
+          <div className="border-t border-border p-3 flex items-center gap-2 max-[1000px]:justify-center max-[1000px]:p-2!">
+            {/* bg-brand/20 在浅色主题下 brand 为纯黑，圈与字都读成黑；改用
+                brand-subtle（低透明品牌面）+ text-brand，浅色下是蓝圈蓝字。
+                默认头像就是桌宠立绘（暗底图），底色留着当加载垫。 */}
+            <div
+              className="w-7 h-7 rounded-full bg-brand-subtle flex items-center justify-center text-xs font-semibold text-brand flex-shrink-0 overflow-hidden"
+              title={accountName}
+            >
               {accountAvatar.dataUrl ? (
                 <img src={accountAvatar.dataUrl} alt="" className="w-full h-full object-cover" />
               ) : (
+                // 与侧栏同一套取景：默认立绘放大 1.4 倍，自选头像不缩放。
                 <img src={accountAvatar.defaultUrl} alt="" className="w-full h-full object-cover scale-[1.4]" />
               )}
             </div>
-            <span className="text-sm font-medium text-foreground truncate flex-1">{accountName}</span>
+            <span className="text-sm font-medium text-foreground truncate flex-1 max-[1000px]:hidden">{accountName}</span>
             <button
               onClick={handleBack}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors duration-150 flex-shrink-0 max-[1000px]:hidden!"
               title="返回工作区"
+              aria-label="返回工作区"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M8.5 3L4.5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <Icon name="chevron-left" size={14} />
             </button>
           </div>
         </nav>
@@ -211,7 +233,7 @@ export function SettingsPage() {
           <div className={`px-8 pt-8 pb-2 mx-auto w-full ${activePage === 'models' ? 'max-w-5xl' : 'max-w-3xl'}`}>
             <h1 className="text-xl font-semibold text-foreground">{meta.title}</h1>
             {meta.subtitle && (
-              <p className="text-sm text-foreground/50 mt-1">{meta.subtitle}</p>
+              <p className="text-sm text-foreground-muted mt-1">{meta.subtitle}</p>
             )}
           </div>
 
@@ -245,7 +267,7 @@ export function SettingsPage() {
               <ListSettingsPage
                 kind="command"
                 noun="命令"
-                description="新建命令，或从外部 Agent 导入已有命令。"
+                description="与终端同一批命令：下方同时列出 Khy 终端内置命令（只读，含在输入框敲 / 的执行方式）与本机自定义命令（.claude/commands）；自定义命令新建后终端以 / 前缀调用。"
                 contentLabel="命令内容"
                 contentPlaceholder="/ 前缀触发的提示词，支持 $ARGUMENTS 占位符"
               />
@@ -254,7 +276,7 @@ export function SettingsPage() {
               <ListSettingsPage
                 kind="hook"
                 noun="钩子"
-                description="新建钩子，配置 Agent 生命周期事件的处理逻辑。"
+                description="与终端共用 hooks.json：这里启停的钩子在终端立即生效。"
                 contentLabel="钩子脚本"
                 contentPlaceholder="事件名 + 处理命令，例如 PreToolUse: node check.js"
               />
@@ -263,16 +285,16 @@ export function SettingsPage() {
               <ListSettingsPage
                 kind="skill"
                 noun="技能"
-                description="从技能市场浏览并安装技能。"
+                description="与终端共用技能目录（内置 / 项目 / 用户）。"
                 contentLabel="技能说明"
-                contentPlaceholder="技能的指令内容（SKILL.md 正文）"
+                contentPlaceholder="技能的指令内容，保存为技能目录下的 prompt.md"
               />
             )}
             {activePage === 'subagents' && (
               <ListSettingsPage
                 kind="subagent"
                 noun="子智能体"
-                description="新建子智能体，或从外部 Agent 导入已有配置。"
+                description="与终端共用子智能体目录，内置项只读。"
                 contentLabel="配置"
                 contentPlaceholder="子智能体的职责描述与提示词"
               />
@@ -282,9 +304,11 @@ export function SettingsPage() {
               <ListSettingsPage
                 kind="memory"
                 noun="记忆"
-                description="管理 Agent 记忆库，存储跨会话的上下文信息。"
+                description="与终端共用记忆库：这里新增或删除的记忆，终端开新会话时立即可见。"
                 contentLabel="记忆内容"
                 contentPlaceholder="希望 Agent 跨会话记住的信息"
+                installedLabel="记忆库"
+                emptyLabel="记忆库为空"
               />
             )}
             {activePage === 'index' && <IndexSettingsPage />}
@@ -296,18 +320,47 @@ export function SettingsPage() {
 }
 
 // ── Nav button (matches ZCode left nav item style) ──
-function NavButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+// 宽度交给父容器的 px-2 + 本项的 w-full：此前写法是 w-full + mx-1 再用内联
+// style width:calc(100% - 8px) 覆盖，w-full 被内联样式吃掉成为死类，且组标题
+// (px-4) 与条目文字 (mx-1 + px-4) 差 4px，同组标题和条目左缘不齐。
+// 激活态：灰底(bg-selected)之上叠一根品牌色指示条——仅靠灰块时当前页定位感
+// 偏弱，指示条随 --color-brand 变蓝后在暗/浅两套主题都能定位（§5.4）。
+function NavButton({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: SettingsNavIconId
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
   return (
     <button
       onClick={onClick}
-      className={`w-full px-4 py-2 text-sm text-left transition-colors rounded-lg mx-1 ${
+      title={label}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={`relative w-full px-3 py-2 text-sm text-left transition-colors duration-150 rounded-lg flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar max-[1000px]:justify-center max-[1000px]:px-0! ${
         active
           ? 'bg-selected text-foreground font-medium'
           : 'text-foreground/70 hover:text-foreground hover:bg-surface-hover'
       }`}
-      style={{ width: 'calc(100% - 8px)' }}
     >
-      {label}
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-brand max-[1000px]:hidden"
+        />
+      )}
+      {/* 收窄后没有文字兜底，激活态改由品牌色标记本身提示。 */}
+      <SettingsNavIcon
+        name={icon}
+        size={16}
+        className={`flex-shrink-0 ${active ? 'max-[1000px]:text-brand' : ''}`}
+      />
+      <span className="truncate max-[1000px]:hidden">{label}</span>
     </button>
   )
 }

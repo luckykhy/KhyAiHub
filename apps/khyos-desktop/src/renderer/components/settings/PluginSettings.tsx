@@ -1,9 +1,13 @@
+// khy-canary: Khy-20261102-314-5D4X59VA
 // PluginSettings — 设置页「插件」(ZC-ALIGN-003 §2). Two tabs 已安装/发现,
 // row toggles, 检查更新/刷新 header actions, detail pane, uninstall confirm.
-// UI copy mirrors ZCode's settings.plugins.* i18n bundle verbatim.
-// All state comes from pluginStore via preload __KHYOS__ → main IPC — no mocks.
+// Data comes from the terminal's extension roots (extensionRoots.discover)
+// via preload __KHYOS__ → main IPC — the same set `khy` loads, not a private
+// registry. Installation stays in the terminal (`khy ext install`).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Icon } from '../ui/Icon'
+import { PluginMarketplace } from './PluginMarketplace'
 
 interface PluginComponents {
   skills: number
@@ -161,18 +165,18 @@ export function PluginSettings() {
           className={`px-1 pb-2.5 text-sm transition-colors border-b-2 -mb-px ${
             tab === 'installed'
               ? 'text-foreground font-medium border-brand'
-              : 'text-foreground/60 hover:text-foreground border-transparent'
+              : 'text-foreground-muted hover:text-foreground border-transparent'
           }`}
         >
           已安装
-          <span className="ml-1.5 text-xs text-foreground/40">{plugins.length}</span>
+          <span className="ml-1.5 text-xs text-foreground-muted">{plugins.length}</span>
         </button>
         <button
           onClick={() => setTab('marketplace')}
           className={`px-1 pb-2.5 text-sm transition-colors border-b-2 -mb-px ${
             tab === 'marketplace'
               ? 'text-foreground font-medium border-brand'
-              : 'text-foreground/60 hover:text-foreground border-transparent'
+              : 'text-foreground-muted hover:text-foreground border-transparent'
           }`}
         >
           发现
@@ -185,29 +189,31 @@ export function PluginSettings() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜索插件..."
-          className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused w-64"
+          placeholder={tab === 'marketplace' ? '搜索编目条目…' : '搜索插件…'}
+          className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused w-64"
         />
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => {
-              void checkUpdates()
-            }}
-            disabled={checking}
-            className="px-3 py-1.5 text-sm text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {checking ? '检查更新中…' : '检查更新'}
-          </button>
-          <button
-            onClick={() => {
-              void refresh()
-            }}
-            disabled={refreshing}
-            className="px-3 py-1.5 text-sm text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {refreshing ? '刷新中...' : '刷新'}
-          </button>
-        </div>
+        {tab === 'installed' && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                void checkUpdates()
+              }}
+              disabled={checking}
+              className="px-3 py-1.5 text-sm text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {checking ? '检查更新中…' : '检查更新'}
+            </button>
+            <button
+              onClick={() => {
+                void refresh()
+              }}
+              disabled={refreshing}
+              className="px-3 py-1.5 text-sm text-foreground/70 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {refreshing ? '刷新插件列表…' : '刷新'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Action feedback */}
@@ -226,7 +232,7 @@ export function PluginSettings() {
           {/* ── 已安装 list ── */}
           {filtered.length === 0 ? (
             <div className="bg-card border border-card-border rounded-xl p-12 text-center">
-              <p className="text-sm text-foreground/50">没有找到插件</p>
+              <p className="text-sm text-foreground-muted">没有找到插件</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -242,26 +248,26 @@ export function PluginSettings() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-foreground">{p.name}</span>
-                        <span className="text-xs text-foreground/40">v{p.version}</span>
+                        <span className="text-xs text-foreground-muted">v{p.version}</span>
                         {p.updateAvailable && (
                           <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-amber-500/15 text-amber-500">
                             可更新
                           </span>
                         )}
                         {p.source === 'builtin' ? (
-                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-foreground/5 text-foreground/50">
+                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-foreground/5 text-foreground-muted">
                             内置
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-foreground/5 text-foreground/50">
-                            从 {p.source} 安装
+                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-foreground/5 text-foreground-muted">
+                            用户安装
                           </span>
                         )}
                       </div>
                       {p.description && (
-                        <p className="text-xs text-foreground/50 mt-1 line-clamp-1">{p.description}</p>
+                        <p className="text-xs text-foreground-muted mt-1 line-clamp-1">{p.description}</p>
                       )}
-                      <p className="text-xs text-foreground/40 mt-1">
+                      <p className="text-xs text-foreground-muted mt-1">
                         {capabilityLine(p.components) || NO_COMPONENTS}
                       </p>
                     </div>
@@ -292,7 +298,7 @@ export function PluginSettings() {
           )}
 
           {/* ── Footer summary ── */}
-          <p className="text-xs text-foreground/40 mt-4">
+          <p className="text-xs text-foreground-muted mt-4">
             共 {plugins.length} 个插件 · {enabledCount} 个已启用
           </p>
 
@@ -303,26 +309,26 @@ export function PluginSettings() {
                 <h3 className="text-sm font-medium text-foreground">{selected.name}</h3>
                 <button
                   onClick={() => setSelectedId(null)}
-                  className="text-foreground/50 hover:text-foreground transition-colors text-sm"
+                  className="w-6 h-6 -m-1 flex items-center justify-center rounded-md text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors duration-150"
                   aria-label="关闭详情"
                 >
-                  ✕
+                  <Icon name="close" size={12} />
                 </button>
               </div>
               <div className="grid grid-cols-[88px_1fr] gap-y-2 gap-x-3 text-sm">
-                <span className="text-foreground/50">状态</span>
-                <span className={selected.enabled ? 'text-green-500' : 'text-foreground/60'}>
+                <span className="text-foreground">状态</span>
+                <span className={selected.enabled ? 'text-green-500' : 'text-foreground-muted'}>
                   {selected.enabled ? '已启用' : '已停用'}
                 </span>
-                <span className="text-foreground/50">来源</span>
+                <span className="text-foreground">来源</span>
                 <span className="text-foreground/70">
-                  {selected.source === 'builtin' ? '内置' : `来自 ${selected.source}`}
+                  {selected.source === 'builtin' ? '内置（随平台分发）' : '用户目录安装'}
                 </span>
-                <span className="text-foreground/50">安装路径</span>
+                <span className="text-foreground">安装路径</span>
                 <span className="text-foreground/70 break-all font-mono text-xs leading-5">
                   {selected.installPath}
                 </span>
-                <span className="text-foreground/50">组件</span>
+                <span className="text-foreground">组件</span>
                 <span className="text-foreground/70">
                   {COMPONENT_LABEL.filter((c) => selected.components[c.key] > 0).length === 0
                     ? '无组件'
@@ -334,7 +340,7 @@ export function PluginSettings() {
               {confirmUninstall === selected.id ? (
                 <div className="mt-4 pt-4 border-t border-card-border">
                   <p className="text-sm font-medium text-foreground mb-1">卸载 {selected.name}？</p>
-                  <p className="text-xs text-foreground/50 mb-3">
+                  <p className="text-xs text-foreground-muted mb-3">
                     将删除该插件的缓存文件、数据目录以及已保存的配置。此操作无法撤销。
                   </p>
                   <div className="flex items-center gap-2">
@@ -354,6 +360,10 @@ export function PluginSettings() {
                     </button>
                   </div>
                 </div>
+              ) : selected.source === 'builtin' ? (
+                <p className="mt-4 text-xs text-foreground-muted">
+                  内置插件随平台分发，不能卸载；如需停用请关闭上方开关。
+                </p>
               ) : (
                 <button
                   onClick={() => setConfirmUninstall(selected.id)}
@@ -366,28 +376,14 @@ export function PluginSettings() {
           )}
         </>
       ) : (
-        <>
-          {/* ── 发现 tab: marketplace source info + catalog placeholder ── */}
-          <div className="bg-card border border-card-border rounded-xl p-4 mb-4">
-            <p className="text-sm font-medium text-foreground mb-1">发现页内容来自 GitHub 插件市场</p>
-            <p className="text-xs text-foreground/50">
-              请确保当前工作区网络可以访问 GitHub。GitHub 不可达时，插件目录、详情和安装可能加载失败。
-            </p>
-          </div>
-          <div className="bg-card border border-card-border rounded-xl p-12 text-center">
-            <p className="text-sm text-foreground/50 mb-1">暂无市场插件</p>
-            <p className="text-xs text-foreground/40">
-              已安装页可管理本机插件；市场目录拉取需要网络访问 GitHub 插件市场。
-            </p>
-          </div>
-        </>
+        <PluginMarketplace search={search} />
       )}
 
       {/* Uninstall confirm for rows without the detail pane open */}
       {uninstallTarget && confirmUninstall === uninstallTarget.id && !selected && (
         <div className="bg-card border border-card-border rounded-xl p-5 mt-4">
           <p className="text-sm font-medium text-foreground mb-1">卸载 {uninstallTarget.name}？</p>
-          <p className="text-xs text-foreground/50 mb-3">
+          <p className="text-xs text-foreground-muted mb-3">
             将删除该插件的缓存文件、数据目录以及已保存的配置。此操作无法撤销。
           </p>
           <div className="flex items-center gap-2">
