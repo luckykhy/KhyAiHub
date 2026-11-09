@@ -95,7 +95,10 @@
 <ol><li><strong>零盘符硬编码</strong>：一切路径从脚本自身位置推算（<code>hq_common.py</code> 已封装）</li><li><strong>向后兼容</strong>：所有增强都在环境变量门控下，默认 off</li><li><strong>JS 风格</strong>：2 空格缩进、单引号、分号、CommonJS</li><li><strong>不改 <code>platform/khy_platform/__init__.py</code></strong></li><li><strong>改完必跑</strong> <code>python scripts/hq_check.py</code></li><li><strong>软换行只用于全宽文本块</strong>：表格、边框等需要精确布局的组件仍使用硬换行</li></ol>
 <hr>
 <h2 id="验证命令">验证命令<a class="anchor" href="#验证命令" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 全量检查</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：14 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 全量检查</span>
 python scripts/hq_check.py
 
 <span class="hljs-comment"># 单组件测试</span>

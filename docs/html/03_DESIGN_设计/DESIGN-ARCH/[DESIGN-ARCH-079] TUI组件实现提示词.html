@@ -26,7 +26,9 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-079] TUI 组件实现提示词</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-079-tui-组件实现提示词">[DESIGN-ARCH-079] TUI 组件实现提示词</a></li><li class="lvl-2"><a href="#说明">说明</a></li><li class="lvl-2"><a href="#任务清单">任务清单</a></li><li class="lvl-2"><a href="#提示词模板">提示词模板</a></li><li class="lvl-3"><a href="#t-079-01-promptframe-输入框增强">T-079-01: PromptFrame 输入框增强</a></li><li class="lvl-3"><a href="#t-079-04-streamingblock-流式输出增强">T-079-04: StreamingBlock 流式输出增强</a></li><li class="lvl-3"><a href="#t-079-06-输出表格无框模式">T-079-06: 输出表格无框模式</a></li><li class="lvl-2"><a href="#通用工程铁律-所有任务适用">通用工程铁律（所有任务适用）</a></li><li class="lvl-2"><a href="#验证命令">验证命令</a></li></ul></nav>
       <article class="doc-body">
-<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
+<p>&lt;!-- IMPL-STATUS: superseded --&gt;</p>
+<p>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 --&gt;</p>
+<blockquote><p><strong>标记校正（superseded）</strong>：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。</p></blockquote>
 <h1 id="design-arch-079-tui-组件实现提示词">[DESIGN-ARCH-079] TUI 组件实现提示词<a class="anchor" href="#design-arch-079-tui-组件实现提示词" aria-label="锚点">#</a></h1>
 <h2 id="说明">说明<a class="anchor" href="#说明" aria-label="锚点">#</a></h2>
 <p>本提示词基于 <code>[DESIGN-ARCH-079] TUI界面设计规范.md</code> 第 12 节「组件详细规范」生成，覆盖 8 个核心组件的实现任务。</p>
@@ -61,7 +63,7 @@
 <ul><li>反阶梯架构：高度预算管理 <code>liveBudget = max(6, rows - reserve)</code></li><li>流式组件：Thinking section（可折叠）、Body timeline、Status broadcast</li><li>归一化管道：分层门控（强模型 sanitize / 其他 normalize）</li><li>前缀稳定：live 预览中不关闭 fence/不去重/不修剪</li><li>内容键控缓存：<code>streamNormCache</code> 优化 O(n²)/轮 → O(n)/轮</li><li>Markdown 流式渲染：<code>renderMarkdownStreaming()</code> 关闭悬挂 fence</li></ul>
 <p><strong>工作目录</strong>：<code>D:\Portable\khy-os</code></p>
 <p><strong>执行流程</strong>：</p>
-<ol><li><strong>审计现有代码</strong>：<ul><li>读取 <code>services/backend/src/cli/tui/ink-components/StreamingBlock.js</code>（441 行）</li><li>读取 <code>services/backend/src/cli/tui/markdownRenderer.js</code>（流式渲染）</li><li>读取 <code>services/backend/src/cli/tui/ink-components/TextBlock.js</code>（文本块）</li><li>读取 <code>services/backend/src/cli/tui/ink-components/ToolCard.js</code>（工具卡片）</li><li>对比 OpenCode 的 streaming 实现</li></ul></li></ol>
+<ol><li><strong>审计现有代码</strong>：<ul><li>读取 <code>services/backend/src/cli/tui/ink-components/StreamingBlock.js</code>（441 行）</li><li>读取 <code>runtime/node/backend/src/cli/markdownRenderer.js</code>（流式渲染）</li><li>读取 <code>services/backend/src/cli/tui/ink-components/TextBlock.js</code>（文本块）</li><li>读取 <code>services/backend/src/cli/tui/ink-components/ToolCard.js</code>（工具卡片）</li><li>对比 OpenCode 的 streaming 实现</li></ul></li></ol>
 <ol><li><strong>逐项检查规范与实现的差距</strong>：<ul><li>[ ] liveBudget 是否使用 <code>max(6, rows - reserve)</code> 计算</li><li>[ ] Thinking section 是否可折叠且有 thinkBudget 限制</li><li>[ ] Body timeline 是否有序且无重复</li><li>[ ] 归一化是否使用分层门控</li><li>[ ] 前缀稳定是否在 live 预览中生效</li><li>[ ] streamNormCache 是否正确实现内容键控</li><li>[ ] renderMarkdownStreaming 是否关闭悬挂 fence</li></ul></li></ol>
 <ol><li><strong>实现差距修复</strong>：<ul><li>每个修复使用环境变量门控</li><li>保持向后兼容</li><li>JS 风格：2 空格缩进、单引号、分号、CommonJS</li></ul></li></ol>
 <ol><li><strong>自测</strong>：<ul><li>运行 <code>node services/backend/src/cli/tui/ink-components/StreamingBlock.js</code> 无报错</li><li>手动测试：流式输出 → 验证无阶梯伪影</li><li>手动测试：长输出 → 验证高度预算管理</li><li>手动测试：复制输出 → 验证无硬换行符</li></ul></li></ol>
