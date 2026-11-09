@@ -175,7 +175,8 @@ describe('TaskListPanel (批3 常驻清单面板)', () => {
     const running = rows.find((r) => r.text === '→ 改 resolver');
     expect(running.props.color).toBe('cyan');
     expect(running.props.bold).toBe(true);
-    const errored = rows.find((r) => r.text === '✗ 构建 wheel');
+    const errored = rows.find((r) => r.text.startsWith('✗ 构建 wheel'));
+    expect(errored).toBeTruthy();
     expect(errored.props.color).toBe('red');
   });
 
@@ -185,9 +186,11 @@ describe('TaskListPanel (批3 常驻清单面板)', () => {
 
     const rows = collectTextRows(TaskListPanel()).filter((r) => !r.text.startsWith('任务清单'));
     // 分段标签 + 段内行:本会话清单(计划步骤)在前,项目任务(#id 持久化)在后。
-    expect(rows[0].text).toBe('— 本会话清单 —');
+    // 标签形态按 2026-10-02 DESIGN-ARCH-176 §3.1:从 `— 标签 —`(两侧横线)改成
+    // **中性底色块**,标签文字本身不带横线。
+    expect(rows[0].text).toBe('本会话清单');
     expect(rows[1].text).toBe('→ 计划步骤 A');
-    expect(rows[2].text).toBe('— 项目任务 · 跨会话 —');
+    expect(rows[2].text).toBe('项目任务 · 跨会话');
     expect(rows[3].text).toBe('○ #1 模型 TodoWrite 项');
   });
 
@@ -265,10 +268,10 @@ describe('TaskListPanel — coordinated (props-driven) path (A+B 防跳顶)', ()
     // 协作路径下 App 已合并/截断,面板对 props.lines 施加同一 splitTaskLinesBySource。
     const el = TaskListPanel({ lines: ['→ 计划 A', '✓ #7 项目任务', '○ 会话待办'], hidden: 0 });
     const rows = collectTextRows(el).filter((r) => !r.text.startsWith('任务清单'));
-    expect(rows[0].text).toBe('— 本会话清单 —');
+    expect(rows[0].text).toBe('本会话清单');
     expect(rows[1].text).toBe('→ 计划 A');
     expect(rows[2].text).toBe('○ 会话待办');
-    expect(rows[3].text).toBe('— 项目任务 · 跨会话 —');
+    expect(rows[3].text).toBe('项目任务 · 跨会话');
     expect(rows[4].text).toBe('✓ #7 项目任务');
     // 分段不改样式:→ 行仍 cyan 高亮。
     expect(rows[1].props.color).toBe('cyan');

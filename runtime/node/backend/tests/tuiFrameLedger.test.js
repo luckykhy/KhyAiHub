@@ -4,8 +4,15 @@
 // every fixed row group), framePlan (the P2 geometry decision) and
 // frameDivergence (the S0 measurement of how far the existing height
 // controllers already are from one another). Pure leaves: no ink, no PTY.
+//
+// node:test, not jest globals: `test:node` globs tests/**/*.test.js, and a file
+// that leans on jest's injected `describe`/`test` dies at load time there — the
+// whole ledger silently stopped running. This require is also the marker
+// jest.config.js reads to hand the file to the right runner (not both).
+// Run: `node --test tests/tuiFrameLedger.test.js`
 
 const assert = require('node:assert');
+const { describe, test } = require('node:test');
 
 const chromeRegistry = require('../src/cli/tui/chromeRegistry');
 const frameDivergence = require('../src/cli/tui/frameDivergence');
@@ -88,7 +95,10 @@ describe('chromeRegistry', () => {
     });
     const by = Object.fromEntries(c.entries.map((e) => [e.id, e.rows]));
     assert.strictEqual(by.spinnerBusy, 1, 'the bordered spinner box was removed 2026-09-24');
-    assert.strictEqual(by.taskPanel, 3 + 12, 'round borders 2 + header 1 + 12 lines');
+    // round border 的 2 行已随 2026-10-02 的 DESIGN-ARCH-176 §3.1 摘掉（TaskListPanel
+    // 只剩 paddingX:1），与 App.js:6817 的 taskH 同为 1 + N。此处若再写 3 + N，
+    // 账本会比渲染多记 2 行 ⇒ reserve 虚高 ⇒ 主区每帧矮两行。
+    assert.strictEqual(by.taskPanel, 1 + 12, 'header 1 + 12 lines, border removed 2026-10-02');
     assert.strictEqual(by.footer, 1);
   });
 });
@@ -228,9 +238,10 @@ describe('frameDivergence', () => {
       12,
       'cap + hidden must account for the raw list'
     );
-    // The panel now charges borders + kept lines + the tail-cut notice.
+    // The panel charges header + kept lines + the tail-cut notice; the round
+    // border that used to add 2 rows was removed 2026-10-02 (DESIGN-ARCH-176 §3.1).
     const panel = out.entries.find((e) => e.id === 'taskPanel').rows;
-    assert.strictEqual(panel, 3 + out.taskLineCount + 1);
+    assert.strictEqual(panel, 1 + out.taskLineCount + (out.taskHiddenNotice > 0 ? 1 : 0));
     assert.strictEqual(
       out.fallback,
       frameDivergence.fallbackHeight(

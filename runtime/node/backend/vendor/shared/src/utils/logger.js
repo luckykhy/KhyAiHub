@@ -40,7 +40,13 @@ const logger = winston.createLogger({
 
 // Console output in development
 if (process.env.NODE_ENV !== 'production') {
+  // CLI 启动静音：bin/khy.js 在路由前设这个进程级全局（不是 env——env 会被
+  // spawn 的后端服务器子进程继承，把服务端控制台日志一并静音掉）。在这里于
+  // **构造时**读取，CLI 就不必为了设一个级别把整套 winston 图拉进启动路径
+  // （[DESIGN-PERF-007] W2-2：`khy status` 实测 ~200ms）。不设 → 行为逐字节不变。
+  const _cliConsoleLevel = global.__khyCliConsoleLevel;
   logger.add(new winston.transports.Console({
+    level: typeof _cliConsoleLevel === 'string' && _cliConsoleLevel ? _cliConsoleLevel : undefined,
     format: winston.format.combine(
       winston.format.colorize(),
       // defaultMeta 的 service 只对文件里的 JSON 日志有意义。控制台这一行是给人看的,

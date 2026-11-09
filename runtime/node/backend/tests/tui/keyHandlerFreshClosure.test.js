@@ -143,7 +143,9 @@ describeOrSkip('BUG-62/63/64 键处理器与高亮重置的时序（/ + ↑ 回�
 
       const footer = lastLineWith(stdout.getBuffer(), 'Esc 取消');
       expect(footer).not.toBeNull(); // 菜单被顶掉 = BUG-62 的失败形态
-      const m = /(\d+)\/(\d+)\s*·\s*Esc/.exec(footer);
+      // 页脚口径 2026-10-10 起是「第 N/M 页 · … · Esc 取消」（左右键/点击入口的
+      // 广告位同页脚），页码与退出键的相对位置不变，故只放宽中间的「页」字。
+      const m = /(\d+)\/(\d+)\s*页?\s*·\s*Esc/.exec(footer);
       expect(m).not.toBeNull();
       expect(Number(m[2])).toBeGreaterThan(1); // 单页就没有回绕可测
       expect(m[1]).toBe(m[2]); // 停在 1/N = BUG-63
