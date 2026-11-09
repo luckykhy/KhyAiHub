@@ -139,6 +139,9 @@
 <table><thead><tr><th>写法</th><th>后果</th></tr></thead><tbody><tr><td>✗ <code>gate: &quot;advisory&quot;</code></td><td><strong>规则永不执行</strong>（<code>GATE_ORDER.advisory = 4 &gt; max = 2</code>），且 <code>check:wiring</code>/<code>check:gov-rules</code> <strong>全绿</strong> —— 空接线最难发现</td></tr><tr><td>✓ <code>gate: &quot;commit&quot;</code> + <code>severity: &quot;advisory&quot;</code></td><td>执行器<strong>真被调用</strong>（须支持 <code>--changed</code>），finding <strong>只记录不阻断</strong></td></tr></tbody></table>
 <p>必做实证（否则就是空接线）：</p>
 <pre><code class="language-bash">npm run rules:gate:commit 2&gt;&amp;1 | grep <span class="hljs-string">&quot;check-bg-lane&quot;</span>
+&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 <span class="hljs-comment"># 必须看到 action=start ... mode=commit rules=&lt;你的 finding ids&gt;</span></code></pre>
 <hr>
 <h2 id="8-验证与反例清单">8. 验证与反例清单<a class="anchor" href="#8-验证与反例清单" aria-label="锚点">#</a></h2>
@@ -193,7 +196,7 @@ grep -rn <span class="hljs-string">&quot;getBackgroundAgent&quot;</span> service
 <h2 id="11-变更记录">11. 变更记录<a class="anchor" href="#11-变更记录" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>版本</th><th>日期</th><th>内容</th></tr></thead><tbody><tr><td>0.1.0</td><td>2026-09-22</td><td>初稿。基于实测真源（§1 全部行号）+ 探针 <code>bg-lane-probe.js</code> 反例矩阵；发现两处真实缺口（§1.3 空头支票、§1.5 守卫盲区），均<strong>独立复核</strong>过，非探针自证</td></tr><tr><td>0.2.0</td><td>2026-09-22</td><td>§10 未决问题<strong>全部裁决</strong>：Q-1 采用方案甲（依据：<code>getBackgroundAgent</code> 已导出 ⇒ 零改真源）；Q-2 不追求跨会话持久（真成本在进程模型非存储，另立提案）；Q-3–Q-5 见 §10。新增 §10.1 方案甲接口契约（逐字段核对真源，标出<strong>唯一不可照搬处</strong>：阻塞等待须活动式而非 <code>deadline</code> 轮询）</td></tr><tr><td>0.3.0</td><td>2026-09-22</td><td><strong>方案甲落地实现</strong>：新增 <code>tools/BackgroundAgentOutputTool/index.js</code> + <code>tests/tools/BackgroundAgentOutputTool.test.js</code>（9/9 绿）；<code>AgentTool</code> 加一个测试缝（<code>module.exports._backgroundAgents</code>，与既有 <code>_maxSubagentFanout</code> 同范式）。新增 §10.2 落地实证表。<strong>F3 缺口已闭</strong>：探针 <code>bg-lane-probe.js</code> 从 2 error → <strong>0 error</strong>。两处对预估的修正：① 工具注册是<strong>目录自动扫描</strong>，不存在需手改的注册表文件（推翻 §10 Q-1 预估）；② 阻塞等待<strong>未照抄</strong> <code>BashOutputTool</code> 的 <code>deadline</code> 循环，改用活动式等待（测试断言「不烧满 timeout」实测 202ms 通过）</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-129] TUI 滚动-选择-历史-固定底部共存设计.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-129] TUI 滚动 / 文本选择 / 输入历史 / 固定底部 —— 共存机制设计</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-131] 报错一键交修闭环方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-131] 报错一键交修闭环方案</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-129] TUI 滚动-选择-历史-固定底部共存设计.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-129] TUI 滚动 / 文本选择 / 输入历史 / 固定底部 —— 共存机制设计</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-130] 任务叙事-热奈特话语层.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-130] 任务叙事-热奈特话语层</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

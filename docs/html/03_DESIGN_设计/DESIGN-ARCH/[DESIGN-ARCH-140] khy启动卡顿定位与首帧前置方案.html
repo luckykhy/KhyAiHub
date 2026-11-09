@@ -69,7 +69,10 @@ node bin/khy.js main()                 khy.js:1353
 <p><strong>不建议做</strong>：把预热挪进后台线程/worker —— 它们大多直接摸文件系统与 DB，搬进 worker 只是把阻塞换个地方；真正该做的是<strong>让用户看得见</strong>（P0），而不是让它们更快。</p>
 <hr>
 <h2 id="4-用户侧立即处置-不改代码-今天就生效">4. 用户侧立即处置（不改代码，今天就生效）<a class="anchor" href="#4-用户侧立即处置-不改代码-今天就生效" aria-label="锚点">#</a></h2>
-<pre><code class="language-powershell"><span class="hljs-comment"># 1) 关掉注定失败的内核自动构建（本机无工具链，日志已证）</span>
+<pre><code class="language-powershell">&lt;!<span class="hljs-literal">--</span> IMPL<span class="hljs-literal">-STATUS</span>: todo <span class="hljs-literal">--</span>&gt;
+&lt;!<span class="hljs-literal">--</span> IMPL<span class="hljs-literal">-DRIFT-AUDIT</span>: <span class="hljs-number">2026</span><span class="hljs-literal">-10-18</span> · DOCS<span class="hljs-literal">-005</span> 范围补标，依据见下 <span class="hljs-literal">--</span>&gt;
+&gt; **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
+<span class="hljs-comment"># 1) 关掉注定失败的内核自动构建（本机无工具链，日志已证）</span>
 setx KHY_KERNEL_AUTOBUILD <span class="hljs-number">0</span>
 <span class="hljs-comment"># 2) 清掉 09:15 留下的残留（锁 + 状态标记）</span>
 <span class="hljs-built_in">Remove-Item</span> <span class="hljs-literal">-LiteralPath</span> <span class="hljs-string">&quot;D:\WorkBuddyData\.khyos\cache\.kernel-prebuild.lock&quot;</span> <span class="hljs-literal">-Force</span>

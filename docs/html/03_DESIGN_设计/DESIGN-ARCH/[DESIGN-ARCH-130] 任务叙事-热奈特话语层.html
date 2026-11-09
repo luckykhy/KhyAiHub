@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-130] 任务叙事-热奈特话语层.md -->
+<title>[DESIGN-ARCH-130] 任务叙事-热奈特话语层 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-130] 任务叙事-热奈特话语层</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-130] 任务叙事-热奈特话语层</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-130-任务叙事-热奈特话语层">[DESIGN-ARCH-130] 任务叙事-热奈特话语层</a></li><li class="lvl-2"><a href="#1-需求五问-runtime-008">1. 需求五问（RUNTIME-008）</a></li><li class="lvl-2"><a href="#2-理论映射-故事与话语">2. 理论映射：故事与话语</a></li><li class="lvl-2"><a href="#3-五范畴算子-话语层的全部判定规则">3. 五范畴算子（话语层的全部判定规则）</a></li><li class="lvl-3"><a href="#3-1-时序-order">3.1 时序 Order</a></li><li class="lvl-3"><a href="#3-2-时距-duration">3.2 时距 Duration</a></li><li class="lvl-3"><a href="#3-3-频率-frequency">3.3 频率 Frequency</a></li><li class="lvl-3"><a href="#3-4-语式-mood">3.4 语式 Mood</a></li><li class="lvl-3"><a href="#3-5-语态-voice">3.5 语态 Voice</a></li><li class="lvl-2"><a href="#4-证据锚点-不虚构的机制保证">4. 证据锚点：不虚构的机制保证</a></li><li class="lvl-2"><a href="#5-数据契约">5. 数据契约</a></li><li class="lvl-2"><a href="#6-入口与棘轮合规">6. 入口与棘轮合规</a></li><li class="lvl-2"><a href="#7-边界-不支持清单">7. 边界（不支持清单）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。</p></blockquote>
+<h1 id="design-arch-130-任务叙事-热奈特话语层">[DESIGN-ARCH-130] 任务叙事-热奈特话语层<a class="anchor" href="#design-arch-130-任务叙事-热奈特话语层" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：已实现（2026-10-15）<br>实现：<code>runtime/node/backend/src/services/domain/trajectory/trajectoryNarrative/</code><br>入口：<code>khy recap narrative [sessionId] [--mode process|result|both] [--focus task|reasoning] [--polish] [--out file]</code><br>测试：<code>node --test runtime/node/backend/src/services/domain/trajectory/trajectoryNarrative/trajectoryNarrative.test.js</code>（12 例）</p></blockquote>
+<h2 id="1-需求五问-runtime-008">1. 需求五问（RUNTIME-008）<a class="anchor" href="#1-需求五问-runtime-008" aria-label="锚点">#</a></h2>
+<ol><li><strong>谁用？</strong> 复盘一次任务执行的人——维护者看 AI 干活的过程，或用户想知道</li></ol>
+<p>「这几分钟里它到底做了什么」。（source: 用户 2026-10-15 原话「实现 khyos 任务叙事过程描述」）</p>
+<ol><li><strong>什么时候用？</strong> 会话结束后（事后叙述），经 CLI <code>khy recap narrative</code> 触发；</li></ol>
+<p>与 <code>/recap</code> 同入口——recap 回答「发生了什么」，narrative 回答「怎么发生的」。</p>
+<ol><li><strong>现在的替代做法是什么？</strong> <code>khy trace show</code> 逐条看溯源轨迹（结构清单，无叙事）；</li></ol>
+<p><code>/recap</code> 出主题/决策清单（有结果无过程）；<code>khy replay run</code> 重放（面向验证不面向阅读）。<br>   三者都是「证据陈列」，没有一处把过程<strong>讲出来</strong>。</p>
+<ol><li><strong>成功长什么样？</strong> <code>khy recap narrative &lt;sessionId&gt;</code> 输出一篇 Markdown：</li></ol>
+<p>结果叙事在前（预叙）、过程叙事在后，过程段每句带 <code>[#n]</code> 证据锚点，<br>   文末锚点表可逐条回到 transcript 验真；无模型时完全可用。</p>
+<ol><li><strong>不做会怎样？</strong> 用户只能对着 JSONL 逐行脑补过程；轨迹栈的全部录制投入</li></ol>
+<p>（账本/时间线/溯源）到不了「人读」这一层。</p>
+<h2 id="2-理论映射-故事与话语">2. 理论映射：故事与话语<a class="anchor" href="#2-理论映射-故事与话语" aria-label="锚点">#</a></h2>
+<p>热奈特《叙事话语》的根本区分是<strong>故事</strong>（实际发生了什么，真实时序）与<br><strong>话语</strong>（怎么讲）。它与本仓轨迹栈的既有架构同构：</p>
+<table><thead><tr><th>叙事学概念</th><th>本仓对应</th></tr></thead><tbody><tr><td>故事 fabula</td><td><code>sessionPersistence</code> 的 JSONL transcript（<code>_timeline</code>/<code>_toolCalls</code>/<code>_turnStats</code> 增量字段 + 老式 <code>tool_use</code> 内容块）——<strong>录制侧，不新增采集</strong></td></tr><tr><td>话语 discourse</td><td><code>trajectoryNarrative</code> 四件套：collectStory（摊平）→ buildNarrative（五范畴算子）→ renderNarrative（成稿）→ maybePolish（可选修辞层）</td></tr></tbody></table>
+<p>录制侧刻意保留结构化证据、人读层只做投影，是本仓既有哲学<br>（<code>traceProjection</code>/<code>mapAuthor</code> 皆然）；本设计把「投影」升级为「叙事」，<br>但红线不变：<strong>投影可以重排、压缩、省略，唯独不许虚构</strong>。</p>
+<h2 id="3-五范畴算子-话语层的全部判定规则">3. 五范畴算子（话语层的全部判定规则）<a class="anchor" href="#3-五范畴算子-话语层的全部判定规则" aria-label="锚点">#</a></h2>
+<h3 id="3-1-时序-order">3.1 时序 Order<a class="anchor" href="#3-1-时序-order" aria-label="锚点">#</a></h3>
+<ul><li><strong>顺叙</strong>为默认：故事层事件按真实时间序进入，段落顺序不打乱。</li><li><strong>倒叙 analepsis</strong>：同一目标被写入类工具（edit/write/createfile/notebook）</li></ul>
+<p>再次修改、且两次写入之间隔着其它单元（连续重复已被频率算子合并，不算折返），<br>  后来的段落前置「回到第 k 步：」并挂 <code>analepsis.backTo</code> = 首次写入的 seq。</p>
+<ul><li><strong>预叙 prolepsis</strong>：文档层装置——<code>--mode both</code> 时「结果叙事」置于</li></ul>
+<p>「过程叙事」之前，先讲结局再回溯经过。结果叙事复用<br>  <code>sessionRecapService.generateRecap</code> 的确定性抽取（主题/决策/改动文件/未决问题），<br>  不另写一套。</p>
+<h3 id="3-2-时距-duration">3.2 时距 Duration<a class="anchor" href="#3-2-时距-duration" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>档位</th><th>判据</th><th>叙述方式</th></tr></thead><tbody><tr><td>场景 scene</td><td>用户请求；工具组含失败；写入类工具；耗时 ≥10s（<code>sceneMs</code>）</td><td>逐拍展示：直接引用命令、错误一行、耗时</td></tr><tr><td>概要 summary</td><td>常规只读工具、assistant 文本、上下文压缩事件</td><td>连续概要压成一段，分句以「；」连接</td></tr><tr><td>省略 ellipsis</td><td><code>turn.end</code> 统计事件、空段、外聚焦下的 thinking</td><td>丢弃（折入头部统计行）</td></tr><tr><td>停顿 pause</td><td>thinking 段（仅 <code>--focus reasoning</code>）</td><td>「KHY 分析：…」叙述性反思段</td></tr></tbody></table>
+<h3 id="3-3-频率-frequency">3.3 频率 Frequency<a class="anchor" href="#3-3-频率-frequency" aria-label="锚点">#</a></h3>
+<p>连续同名同目标的工具调用合并为一组（复数叙述）：有成功记录讲<br>「先后 N 次 X（第 k 次成功）」，全败讲「均未成功」，<strong>结局无记录时只讲<br>「其中 k 次失败，其余结果无记录」或不标次数</strong>——老式 transcript 只有<br><code>tool_use</code> 块没有结果块，「无记录」绝不允许讲成「成功」。</p>
+<h3 id="3-4-语式-mood">3.4 语式 Mood<a class="anchor" href="#3-4-语式-mood" aria-label="锚点">#</a></h3>
+<ul><li><strong>聚焦</strong>：<code>--focus task</code> 外聚焦（只讲行动与结果，thinking 省略）；</li></ul>
+<p><code>--focus reasoning</code> 内聚焦（thinking 以停顿段进入叙事）。</p>
+<ul><li><strong>距离</strong>：场景=展示（直接引用命令与错误文本），概要=叙述（转述不引用）。</li></ul>
+<h3 id="3-5-语态-voice">3.5 语态 Voice<a class="anchor" href="#3-5-语态-voice" aria-label="锚点">#</a></h3>
+<p>固定：<strong>外叙述者 · 事后叙述 · 第三人称「KHY」</strong>——与 <code>traceProjection</code><br>的 <code>✓ KHY executed</code> 字形同一主体。叙述者不进故事、不评价、不预测。</p>
+<h2 id="4-证据锚点-不虚构的机制保证">4. 证据锚点：不虚构的机制保证<a class="anchor" href="#4-证据锚点-不虚构的机制保证" aria-label="锚点">#</a></h2>
+<ol><li>故事层每条事件领一个全局 <code>seq</code>；话语层的每个段落携带其来源事件的</li></ol>
+<p><code>anchors: number[]</code>。</p>
+<ol><li>成稿时段落文本末尾附 <code>[#n]</code>，文末「证据锚点」表逐条列出</li></ol>
+<p><code>seq → 时刻 / 事件种类 / 摘要</code>。</p>
+<ol><li>过程段出现的每个 <code>[#n]</code> 必须在锚点表中存在（单测断言双向完备）。</li><li>润色层（<code>--polish</code>，门 <code>KHY_NARRATIVE_POLISH</code> 默认关）经</li></ol>
+<p><code>llmGenerateSink</code> 单轮调用，prompt 硬约束「保留全部锚点、不得新增事实」；<br>  成稿过 <code>_validatePolish</code>：<strong>丢锚点 / 造锚点 / 超长 3 倍，一律丢弃回退骨架</strong>。<br>   模型只改文风，不改事实——与 <code>mapAuthor</code> 的强度门同一哲学：<br>   模型是可拔插的修辞层，骨架才是可信叙事。</p>
+<h2 id="5-数据契约">5. 数据契约<a class="anchor" href="#5-数据契约" aria-label="锚点">#</a></h2>
+<p><strong>输入</strong>（只读，绝不写 transcript）：</p>
+<ul><li>首选 <code>_toolCalls[i] = { seq, name, paramsSummary?, durationMs?, status, error? }</code></li></ul>
+<p>与 <code>_timeline[i]</code>（TUI 回合产物，含结果与耗时）；</p>
+<ul><li>回退 <code>content</code> 数组里的 <code>tool_use</code> 块（老式 transcript）：只取</li></ul>
+<p><code>name</code> + <code>input</code> 的目标键（file_path/path/command/query/pattern/url），<br>  <code>outcome</code> 留空（结果块不落盘）。</p>
+<ul><li>relay 产出的裸 <code>&lt;/think&gt;</code> 残签是标记不是叙述，故事层直接丢弃。</li></ul>
+<p><strong>输出</strong>：<code>{ markdown, anchorCount }</code>；<code>--out</code> 落盘在 handler 层。</p>
+<h2 id="6-入口与棘轮合规">6. 入口与棘轮合规<a class="anchor" href="#6-入口与棘轮合规" aria-label="锚点">#</a></h2>
+<p>挂在既有 <code>khy recap</code> 的子命令（<code>ROUTER_SUB_COMMANDS.recap = ['narrative']</code>）：<br>PROCESS-014 任务面棘轮的命令/别名/handler 三计数不变。门控 <code>KHY_NARRATIVE</code><br>默认开；<code>KHY_NARRATIVE_POLISH</code> 默认关（触模型须显式 opt-in）。</p>
+<h2 id="7-边界-不支持清单">7. 边界（不支持清单）<a class="anchor" href="#7-边界-不支持清单" aria-label="锚点">#</a></h2>
+<ul><li>不做跨会话叙事（一次一篇，sessionId 为界）；</li><li>不接入 replay-ledger 的内容寻址字节（那是验证通道，叙事只要语义层）；</li><li>润色不做多轮迭代、不做风格选项（一轮、单 prompt、失守即回退）；</li><li>不生成英文叙事（面向用户的字符串一律中文，仓规）。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-130] 前台与后台任务编排方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-130] 前台与后台任务编排方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-131] 报错一键交修闭环方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-131] 报错一键交修闭环方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-130] 任务叙事-热奈特话语层.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

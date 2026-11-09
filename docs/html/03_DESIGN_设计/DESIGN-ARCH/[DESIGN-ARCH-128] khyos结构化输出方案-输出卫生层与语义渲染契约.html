@@ -126,7 +126,10 @@
 <h3 id="6-3-守卫">6.3 守卫<a class="anchor" href="#6-3-守卫" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>守卫</th><th>结果</th></tr></thead><tbody><tr><td><code>check:leaf-contract</code>（对新增文件单查）</td><td>✓ 无违规</td></tr><tr><td><code>check:flag-registry</code></td><td>✓ 结构完好</td></tr><tr><td><code>check-agent-feedback --evidence=.khy/feedback/structured-output-20260922</code></td><td>✓ 0 error / 0 warning</td></tr><tr><td><code>node --check</code>（三改文件语法）</td><td>✓</td></tr></tbody></table>
 <h3 id="6-4-验收标准-可复现命令">6.4 验收标准（可复现命令）<a class="anchor" href="#6-4-验收标准-可复现命令" aria-label="锚点">#</a></h3>
-<pre><code class="language-bash"><span class="hljs-comment"># 1) 单一真源覆盖度</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：5 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 1) 单一真源覆盖度</span>
 node .khy/feedback/structured-output-20260922/probe.js
 <span class="hljs-comment"># 期望：ANSI 段「漏剥: 0/6」</span>
 
