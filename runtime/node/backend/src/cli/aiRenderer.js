@@ -59,7 +59,9 @@ const { displayWidth, padToWidth, truncateToWidth } = require('./formatters');
 // missing leaf degrades to the legacy raw-columns reading.
 function _effectiveWrapCols() {
   try {
-    return require('./tui/effectiveCols').effectiveCols(80);
+    // 洋葱下沉：终端尺寸真源已归位到 utils/terminal/（通用能力，非视觉皮专属）。
+    // 直连逻辑侧，切断「逻辑层 → 视觉皮」的倒挂边。
+    return require('../utils/terminal/effectiveCols').effectiveCols(80);
   } catch {
     return process.stdout.columns || 80;
   }

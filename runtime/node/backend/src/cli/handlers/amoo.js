@@ -151,6 +151,13 @@ function _workspaceClient() {
   return createAmooWorkspaceClient({
     config: _config(),
     env: process.env,
+    // 把 amooBridgeClient.ensureDevice() 的发现+写回接进 workspace 车道，不新造第二种
+    // 探测。取不到（未连/未起）时 resolveSerial 回空串，由 amooWorkspaceClient 的空闸
+    // 给出可执行错误，而不是打出畸形 argv。
+    resolveSerial: async () => {
+      const d = await stack.client.ensureDevice();
+      return d.ok && d.connected ? (stack.config.adb.serial || '') : '';
+    },
     runAdb: (argv) => stack.client.runAdb(argv, { timeoutMs: 120000 }),
   });
 }

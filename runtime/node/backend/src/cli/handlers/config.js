@@ -26,6 +26,12 @@ const SUPPORTED_CONFIG_KEYS = Object.freeze([
   'model.name',
   'model.default',
   'model.endpoint_compatibility',
+  // 识图专用端点。与上面五个 model.* 键刻意分开：视觉模型「只当眼睛」，带图请求
+  // 由它描述图片、由 model.* 指向的推理模型作答。写成 .env 之外的独立平面，见
+  // services/visionEndpointStore.js 的三个持久平面分工。
+  'model.vision.base_url',
+  'model.vision.api_key',
+  'model.vision.model',
   'language.preference',
 ]);
 
@@ -48,12 +54,45 @@ const KEY_ALIASES = Object.freeze({
   model_model_id: 'model.name',
   'model.endpoint_compatibility': 'model.endpoint_compatibility',
   model_endpoint_compatibility: 'model.endpoint_compatibility',
+  'model.vision.base_url': 'model.vision.base_url',
+  model_vision_base_url: 'model.vision.base_url',
+  vision_base_url: 'model.vision.base_url',
+  'model.vision.api_key': 'model.vision.api_key',
+  model_vision_api_key: 'model.vision.api_key',
+  vision_api_key: 'model.vision.api_key',
+  'model.vision.model': 'model.vision.model',
+  model_vision_model: 'model.vision.model',
+  vision_model: 'model.vision.model',
   language: 'language.preference',
   lang: 'language.preference',
   'language.preference': 'language.preference',
   language_preference: 'language.preference',
   languagepreference: 'language.preference',
 });
+
+/**
+ * 识图端点三键 → vision-config 资源 set 的字段名。
+ *
+ * 与 model.* 五个键分开的原因是**它们根本不是同一个平面**：model.* 写 .env，
+ * 这三个写 <dataHome>/vision_endpoint.json + api_keys.json 的 khy-vision 池。
+ * 混在 _applyConfigSet 里会让「顺手也写一遍 .env」变成默认动作，而那正是要避免的
+ * （.env 一写，另一个 CLI 进程或常驻网关就看不到这次改动，除非重启）。
+ */
+const VISION_CONFIG_KEYS = new Set([
+  'model.vision.base_url',
+  'model.vision.api_key',
+  'model.vision.model',
+]);
+
+const VISION_CONFIG_KEY_TO_FIELD = Object.freeze({
+  'model.vision.base_url': 'baseUrl',
+  'model.vision.api_key': 'apiKey',
+  'model.vision.model': 'model',
+});
+
+function _isVisionConfigKey(rawKey) {
+  return VISION_CONFIG_KEYS.has(_normalizeKey(rawKey));
+}
 
 const PROVIDER_TO_ADAPTER = Object.freeze({
   custom: 'relay_api',
@@ -387,6 +426,8 @@ function _readCurrentModelConfig() {
     relayCompatibility ||
     (String(preferredAdapter).toLowerCase() === 'relay_api' ? 'openai' : '(not set)');
 
+  const vision = _readVisionEndpointForDisplay();
+
   return {
     envPath: canonicalPath,
     values: {
@@ -396,6 +437,9 @@ function _readCurrentModelConfig() {
       'model.name': relayModel || '(not set)',
       'model.default': modelDefault || '(not set)',
       'model.endpoint_compatibility': compatibility || '(not set)',
+      'model.vision.base_url': (vision && vision.baseUrl) || '(not set)',
+      'model.vision.api_key': (vision && vision.apiKeyMasked) || '(not set)',
+      'model.vision.model': (vision && vision.model) || '(not set)',
       'language.preference': languagePreference || 'auto',
     },
     raw: {
@@ -406,7 +450,51 @@ function _readCurrentModelConfig() {
       relayModel,
       relayCompatibility,
       languagePreference,
+      vision,
     },
+  };
+}
+
+/**
+ * 「没配」的两种写法都算没配。
+ *
+ * _readCurrentModelConfig 用 '(not set)' 填 values（vision 三键也走这条路），
+ * 而 _handleConfigGet 原来只把 undefined 换成「（未设置）」。于是同一个「未配置」
+ * 在 model.provider 上显示中文、在 model.vision.model 上显示英文——不是显示风格
+ * 问题，是用户会以为后者是个真实取值。
+ */
+function _isUnset(value) {
+  return value === undefined || value === null || value === '(not set)';
+}
+
+/**
+ * 识图端点的展示态。刻意与 _readCurrentModelConfig 分开：
+ * 视觉端点的真源是 <dataHome>/vision_endpoint.json + api_keys.json 里的 khy-vision
+ * 池，**不是 .env**，所以它不能走上面那套 envMap 读取。
+ *
+ * 懒 require 两个理由：① 大多数 config 子命令根本不碰识图，没必要拖一个模块进来；
+ * ② services/visionEndpointStore 经 utils/dataHome 解析位置，而那个解析器有模块级
+ * 缓存——在测试里钉 KHY_DATA_HOME 之后再 require 才不会读到真实数据家。
+ *
+ * fail-soft：读不出来就当「没配」，绝不因为坏配置让 `khy config show` 整体失败。
+ */
+function _readVisionEndpointForDisplay() {
+  let described = null;
+  try {
+    const store = require('../../services/visionEndpointStore');
+    const pool = require('../../services/apiKeyPool');
+    described = store.describeVisionEndpoint(pool);
+  } catch {
+    return null;
+  }
+  if (!described) {
+    return null;
+  }
+  return {
+    baseUrl: described.baseUrl || '',
+    model: described.model || '',
+    apiKeyMasked: described.hasApiKey ? described.apiKeyMasked || '(hidden)' : '',
+    keyCount: Number(described.keyCount) || 0,
   };
 }
 
@@ -421,6 +509,9 @@ function _printUsage() {
   printInfo('  khy config set model.api_key sk-xxxxx');
   printInfo('  khy config set model.name your-model-id');
   printInfo('  khy config set model.default custom/your-model-id');
+  printInfo('  khy config set model.vision.base_url https://your-vision-api.example.com/v1');
+  printInfo('  khy config set model.vision.model your-vision-model-id');
+  printInfo('  khy config set model.vision.api_key sk-xxxxx   （识图专用端点，只当眼睛）');
   printInfo('  khy config set language zh|en|auto');
   printInfo(
     '  khy config openclaw --custom-base-url https://your-provider.com/v1 --custom-model-id <your-model-id> --custom-api-key sk-xxxxx'
@@ -516,6 +607,91 @@ function _maybeMirrorGlmVisionPool(envMap, env = process.env) {
   } catch {
     /* fail-soft: 不镜像 */
   }
+}
+
+/**
+ * `khy config set model.vision.*` —— 走管理资源漏斗，**一个字节都不碰 .env**。
+ *
+ * 为什么是独立的 async 函数而不是 _applyConfigSet 里的一个分支：
+ * _applyConfigSet 是同步的，而 managementRegistry.invoke 是 async（资源 op 的
+ * 标准签名就是 async，见 resourceContract.js:68）。塞进去只会得到一个 Promise，
+ * 写动作的结果拿不到、错误也吞不掉。抽出来之后 await 边界是显式的。
+ *
+ * 与 _applyConfigSet 刻意不同的三点：
+ *   ① 早返回，不经 _maybeMirrorGlmVisionPool —— 镜像的对象是 relay 池的 key，
+ *      与识图端点无关；空 envMap 也会把两个 .env 文件读一遍再重写一遍。
+ *   ② 不经 _tryEnvPatchOrReport —— 没有 env 要写。真源是 vision_endpoint.json。
+ *   ③ 回执里绝不出现裸 key（R2）：掩码由 store 从池里实时派生。
+ */
+async function _applyVisionConfigSet(key, value, options = {}) {
+  const asJson = !!options.json;
+  const canonicalKey = _normalizeKey(key);
+  const fail = (error, message) => {
+    if (asJson) {
+      _emitConfigJson({ ok: false, action: 'set', key: canonicalKey || String(key || ''), error, message });
+    } else {
+      printError(message);
+    }
+    return false;
+  };
+
+  if (!canonicalKey) {
+    return fail('unsupported_key', `Unsupported key: ${key}`);
+  }
+
+  const rawValue = String(value == null ? '' : value).trim();
+  const field = VISION_CONFIG_KEY_TO_FIELD[canonicalKey];
+  // 空值是「删这把钥匙」的唯一入口：`khy config set model.vision.api_key` 不带值。
+  // 其余两键的空值仍然算缺值——把 base_url 清成空的唯一办法是
+  // `khy manage vision-config clear`（整个端点一起清），因为半配置会把路由钉到
+  // 一个不存在的模型上。
+  const clearApiKey = canonicalKey === 'model.vision.api_key' && !rawValue;
+  if (!rawValue && !clearApiKey) {
+    return fail('missing_value', `Missing value for ${canonicalKey}`);
+  }
+
+  let result;
+  try {
+    const mgmt = require('../../services/management');
+    result = await mgmt.invoke(
+      'vision-config',
+      'set',
+      clearApiKey ? { clearApiKey: true } : { [field]: rawValue },
+      { source: 'cli' }
+    );
+  } catch (err) {
+    return fail('vision_config_write_failed', `识图端点写入失败：${err && err.message ? err.message : String(err)}`);
+  }
+
+  const snapshot = _readVisionEndpointForDisplay() || {};
+  const displayField = field === 'baseUrl' ? 'baseUrl' : field === 'model' ? 'model' : 'apiKeyMasked';
+  const publicValue = snapshot[displayField] || '(not set)';
+
+  if (asJson) {
+    _emitConfigJson({
+      ok: true,
+      action: 'set',
+      key: canonicalKey,
+      value: publicValue,
+      // 明确告诉调用方「没有写 .env」——这是本分支存在的全部理由。
+      envPath: null,
+      vision: {
+        baseUrl: snapshot.baseUrl || '(not set)',
+        model: snapshot.model || '(not set)',
+        apiKey: snapshot.apiKeyMasked || '(not set)',
+        keyCount: snapshot.keyCount || 0,
+      },
+    });
+  } else {
+    if (clearApiKey) {
+      printSuccess(`已清除 model.vision.api_key（端点其余配置保持不变）`);
+    } else {
+      printSuccess(`已设置 ${canonicalKey}`);
+    }
+    printInfo(`识图端点：${snapshot.baseUrl || '(未设置)'} 模型 ${snapshot.model || '(未设置)'}`);
+    printInfo('已保存到数据目录的 vision_endpoint.json / api_keys.json（未改动 .env）');
+  }
+  return true;
 }
 
 function _applyConfigSet(key, value, options = {}) {
@@ -1117,9 +1293,9 @@ function _handleConfigGet(args = [], options = {}) {
   const key = _normalizeKey(args[0] || '');
   if (!key) {
     printError('用法: khy config get <键>');
-    printInfo(
-      '支持的配置键：model.provider, model.base_url, model.api_key, model.name, model.default, model.endpoint_compatibility, language.preference'
-    );
+    // Derived from the whitelist rather than restated: a hand-written copy here
+    // silently went stale the moment model.vision.* were added.
+    printInfo(`支持的配置键：${SUPPORTED_CONFIG_KEYS.join(', ')}`);
     return false;
   }
   const snapshot = _readCurrentModelConfig();
@@ -1133,7 +1309,7 @@ function _handleConfigGet(args = [], options = {}) {
     });
     return true;
   }
-  printTable([['键', '值']], [[key, value === undefined ? '（未设置）' : value]]);
+  printTable([['键', '值']], [[key, _isUnset(value) ? '（未设置）' : value]]);
   return true;
 }
 
@@ -1224,6 +1400,11 @@ async function handleConfig(subCommand, args = [], options = {}) {
     }
     const key = rest[0];
     const value = rest.slice(1).join(' ').trim();
+    // 识图三键走各自的 async 漏斗（不碰 .env），其余键维持既有同步路径。
+    if (_isVisionConfigKey(key)) {
+      if ((await _applyVisionConfigSet(key, value, options)) === false) _markFailure();
+      return;
+    }
     // _applyConfigSet 各错误路径已 return false,但此前调用点丢掉了返回值 → rc=0 撒谎
     if (_applyConfigSet(key, value, options) === false) _markFailure();
     return;

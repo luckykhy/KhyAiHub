@@ -805,6 +805,50 @@ async function _runNaturalToolCallWithIdleTimeout(call, options = {}) {
   }
 }
 
+/**
+ * 脱敏一条失败墙条目（CLI 侧「真实失败原因」墙的每一项）。
+ *
+ * ⚠ [DESIGN-ARCH-198] §7.9：上游错误串**可能含真 key/token**。本函数此前**零脱敏**
+ * （只折叠空白 + 截 180 字）→ 明文 key 被直接带给用户。
+ * 复用既有脱敏单一真源 `honestFailureReason.sanitizeCause`（SECRET_PATTERNS + 现代密钥族），
+ * 与老墙路径**同款**口径（老路径靠下游 resolveFriendlyFailureMessage 兜住，本条兜底是
+ * 在源头，故两条路径结果一致、不会出裂缝）。
+ *
+ * 墙的每一项本就是**单行**条目，故显式压成单行（sanitizeCause 的「保留换行」门开着时
+ * 会留换行 —— 那是给多行墙用的，这里不需要）。
+ *
+ * 绝不抛；异常 → 回落一个**绝不泄密**的占位串（不是原文）。
+ */
+function _redactWallEntry(raw) {
+  const fallback = 'unknown error';
+  try {
+    const text = raw == null ? '' : String(raw);
+    if (!text.trim()) {
+      return fallback;
+    }
+    let out = text;
+    try {
+      const honest = require('../services/honestFailureReason');
+      if (honest && typeof honest.sanitizeCause === 'function') {
+        out = honest.sanitizeCause(text, 180, process.env);
+      }
+    } catch {
+      /* 脱敏叶子不可用 → 走下面的本地兜底（宁可少脱一点，也**不泄密**） */
+    }
+    if (out === text) {
+      // 兜底：叶子不可用时，至少抹掉常见密钥形态（不依赖叶子）。
+      out = out
+        .replace(/\b(sk|pk|ghp|gho|xox[baprs])[-_][A-Za-z0-9]{8,}/g, '***')
+        .replace(/\bbearer\s+[A-Za-z0-9._\-]+/gi, '***')
+        .replace(/\b(api[_-]?key|token|secret|password|authorization)\s*[:=]\s*\S+/gi, '***');
+    }
+    const flat = out.replace(/\s+/g, ' ').trim().slice(0, 180);
+    return flat || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function _formatGatewayFailureDetails(result) {
   if (!result || !Array.isArray(result.attempts) || result.attempts.length === 0) {
     return '';
@@ -851,6 +895,16 @@ function _formatGatewayFailureDetails(result) {
     _truthOn = false;
   }
 
+  // [DESIGN-ARCH-198] W8：shown 的人话化门。与 T 门正交——T 管「kind 槽显不显中文真因
+  // 标签」+「sig 是否含 adapterSig」，H 管「shown 是不是固定中文模板」。H 关 → 人话叶子
+  // 根本不被调用，下面逐字节保留今日行。
+  let _humanOn = false;
+  try {
+    _humanOn = require('../services/cliErrorDescriptor').humanTextEnabled(process.env);
+  } catch {
+    _humanOn = false;
+  }
+
   // 同一上游故障经常经两条适配器通道各记一条(实测:Zen 免费池经 'OpenAI' 与 'api'
   // 各记一条逐字相同的 429 体)。按「状态+类别+错误串」合并成一行并注明适配器名——
   // 只在错误串完全相同时合并,不掩盖真实的多通道情况;不同上游撞出同一句话可忽略。
@@ -863,10 +917,15 @@ function _formatGatewayFailureDetails(result) {
     const kindCode = String(attempt.errorType || '')
       .trim()
       .toLowerCase();
-    const err = String(attempt.error || 'unknown error')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 180);
+    // ⚠ [DESIGN-ARCH-198] §7.9（安全）：上游错误串**可能含真 key/token**（实测 401 体里
+    // 带 `sk-proj-…` 明文）。此处此前**只做空白折叠 + 截断、零脱敏** → 这张墙把明文 key
+    // 原样带给用户。旧路径靠下游 resolveFriendlyFailureMessage→sanitizeCause 兜住；
+    // W1 把信封首屏接到失败路径后，墙作为**展开层**被原样透出 ⇒ 兜底不再覆盖 ⇒ 必须在此处
+    // 源头脱敏（一次修，两条路径都安全）。
+    // 复用 honestFailureReason.sanitizeCause（既有脱敏单一真源，含 SECRET_PATTERNS +
+    // 现代密钥族），与老墙路径同款口径；它开了「保留换行」门时会留换行，故这里显式压成单行
+    // （这张墙的每一项本就是单行条目）。
+    const err = _redactWallEntry(attempt.error || 'unknown error');
     if (!err) {
       continue;
     }
@@ -877,6 +936,9 @@ function _formatGatewayFailureDetails(result) {
     let group = groups.get(sig);
     if (!group) {
       let kind = kindCode ? ` [${kindCode}]` : '';
+      // kind 槽当前显示的 token：truth.label 命中则中文标签，否则裸 errorType（T 管，未改）。
+      let kindToken = kindCode;
+      let bracketIsTruthLabel = false;
       let shown = err;
       // 上游真因上桌：类别把上游自己写清的原因掩盖成 [network]/[auth] 时，行内改显真因标签
       // （upstreamTruthLabel 纯叶子，只改展示；门关 / 认不出 → 逐字节保持今日行）。
@@ -889,12 +951,40 @@ function _formatGatewayFailureDetails(result) {
           : null;
         if (truth) {
           kind = ` [${truth.label}${truth.transient ? '·瞬态' : ''}]`;
+          kindToken = truth.label;
+          bracketIsTruthLabel = true;
           if (truth.message) {
             shown = truth.message.replace(/\s+/g, ' ').trim().slice(0, 180);
           }
         }
       } catch {
         /* 叶子不可用 → 保持今日行 */
+      }
+      // [DESIGN-ARCH-198] W8：shown 换固定中文模板（问题 + 原因 + 下一步）。
+      // 分组 sig 仍由脱敏原文算（分组 = 机器同一性），故合并行为一字不变。
+      // 门 H 关 / 本笔不可转述 / 叶子不可用 → 逐字节保留上面的今日行。
+      if (_humanOn) {
+        try {
+          const desc = require('../services/cliErrorDescriptor');
+          const narrative = desc.humanizeFailure({
+            raw: attempt.error || attempt.message || '',
+            errorType: kindCode,
+            statusCode: attempt.statusCode,
+            errno: attempt.errno,
+            env: process.env,
+          });
+          if (narrative) {
+            const human = desc.composeHuman(narrative, {
+              bracketToken: kindToken,
+              bracketIsTruthLabel,
+            });
+            if (human) {
+              shown = human;
+            }
+          }
+        } catch {
+          /* 叶子不可用 → 保持今日行 */
+        }
       }
       group = { adapters: new Set(), status, kind, shown };
       groups.set(sig, group);

@@ -18,7 +18,7 @@ const path = require('path');
 const chalkModule = require('chalk');
 
 const chalk = chalkModule.default || chalkModule;
-const { getAiBackendUrl, WEB_FRONTEND_PORT } = require('../../constants/serviceDefaults');
+const { getAiBackendUrl, WEB_FRONTEND_PORT, AI_BACKEND_DEFAULT_PORT } = require('../../constants/serviceDefaults');
 const {
   buildGatewayManageFeatureLabel,
   getFeatureFamilyPrefix,
@@ -1478,7 +1478,7 @@ async function handleGatewayManage(args = [], options = {}) {
   if (!validActions.has(action)) {
     printError(`未知 manage 操作: ${action}`);
     printInfo(
-      `用法: gateway manage [open|start|status|stop] [--daemon] [--frontend-host 127.0.0.1] [--frontend-port ${WEB_FRONTEND_PORT}] [--api-port 9090] [--idle-ms 600000] [--wait-ms 18000] [--frontend-dir <path>] [--frontend-dist-dir <path>]`
+      `用法: gateway manage [open|start|status|stop] [--daemon] [--frontend-host 127.0.0.1] [--frontend-port ${WEB_FRONTEND_PORT}] [--api-port ${AI_BACKEND_DEFAULT_PORT}] [--idle-ms 600000] [--wait-ms 18000] [--frontend-dir <path>] [--frontend-dist-dir <path>]`
     );
     require('../../utils/markProcessFailure')();
     return;
@@ -1539,7 +1539,7 @@ async function handleGatewayManage(args = [], options = {}) {
       } else {
         _printAiManageStartupFailure(
           joined,
-          _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, 9090),
+          _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, AI_BACKEND_DEFAULT_PORT),
           _defaultFrontendPort(options)
         );
         return;
@@ -1614,7 +1614,7 @@ async function handleGatewayManage(args = [], options = {}) {
 
   if (!runtime) {
     const frontendPort = _defaultFrontendPort(options);
-    const apiPort = _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, 9090);
+    const apiPort = _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, AI_BACKEND_DEFAULT_PORT);
     const idleMs = _parseIntWithMin(
       options['idle-ms'] ?? process.env.AI_MANAGE_IDLE_MS,
       10 * 60 * 1000,
