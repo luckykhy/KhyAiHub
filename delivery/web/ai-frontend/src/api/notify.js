@@ -11,11 +11,60 @@
 //     旧调用方传 string 仍兼容（自动规整为 KhyError）。
 //   - 保留去重逻辑：同 code 在 3s 窗口内只弹一次。
 //   - 保留 fail-soft：ElMessage 不可用降级 console。
+//   - ElMessage 不再从 'element-plus' 根 barrel 静态导入，改为首次弹窗时按 message
+//     深路径懒加载：barrel 会把整库（本机实测 es 下 887 个模块）钉进入口静态图，
+//     而入口只需要弹窗这一件。notifyError/_showToast 仍是同步返回（fire-and-forget）。
 //
 // 其它改动见：services/backend/src/cli/reportKhyError.js（CLI 同源）
 //            platform/packages/shared/src/errorEnvelope.js（HTTP 序列化）
-import { ElMessage } from 'element-plus';
 import { classifyKhyError } from '../utils/classifyKhyError.mjs';
+
+// message 部件的懒加载单例。深路径的 style/css 内部引 theme-chalk/el-message.css，
+// 与 main.js 入口保留的那条同源（同一文件路径 → 同一模块，不会重复进包）。
+let _elMessageImport = null;
+
+function _ensureElMessage() {
+  if (!_elMessageImport) {
+    _elMessageImport = Promise.all([
+      import('element-plus/es/components/message/index.mjs'),
+      import('element-plus/es/components/message/style/css'),
+    ])
+      .then(([mod]) => (mod && mod.ElMessage) || null)
+      .catch((err) => {
+        _elMessageImport = null; // 失败不缓存：下次调用还有机会重试。
+        throw err;
+      });
+  }
+  return _elMessageImport;
+}
+
+/**
+ * Fire-and-forget 弹窗：同步返回，import 与 ElMessage 调用都在加载落地后才发生。
+ * 慢网下这意味着首条提示会比「已加载」的后续条目晚一点点出现 —— 去重窗口在调用时
+ * 就写入（见 shouldSuppress），窗口内的同类错误仍被抑制，语义与改动前一致。
+ */
+function _toast(options, fallbackText) {
+  _ensureElMessage().then(
+    (ElMessage) => {
+      try {
+        if (!ElMessage) throw new Error('element-plus message 未导出 ElMessage');
+        ElMessage(options);
+      } catch (err) {
+        _logFailSoft(fallbackText, err);
+      }
+    },
+    (err) => _logFailSoft(fallbackText, err)
+  );
+}
+
+function _logFailSoft(text, err) {
+  try {
+    // eslint-disable-next-line no-console
+    console.error('[notify]', text, (err && err.message) || '');
+  } catch {
+    /* noop */
+  }
+}
 
 // 同一 code 的最近弹出时间戳。窗口内重复 code 被抑制。
 const recent = new Map();
@@ -63,17 +112,7 @@ export function notifyError(input, opts = {}) {
   // fatal 走 modal 持久化（duration:0 + showClose），其它走普通 toast。
   // 文案格式：[分类] 错误码 · 摘要（提示：下一步）
   const text = _formatToast(env);
-  try {
-    ElMessage({ message: text, type: toastType, duration, showClose: true, grouping: true });
-  } catch {
-    // Element Plus 不可用时不至于让调用链崩溃。
-    try {
-      // eslint-disable-next-line no-console
-      console.error('[notify]', text);
-    } catch {
-      /* noop */
-    }
-  }
+  _toast({ message: text, type: toastType, duration, showClose: true, grouping: true }, text);
 }
 
 /**
@@ -141,14 +180,5 @@ export function showInfo(message, options = {}) {
 }
 
 function _showToast(type, message, options = {}) {
-  try {
-    ElMessage({ message, type, showClose: true, ...options });
-  } catch {
-    try {
-      // eslint-disable-next-line no-console
-      console.error('[notify]', message);
-    } catch {
-      /* noop */
-    }
-  }
+  _toast({ message, type, showClose: true, ...options }, message);
 }

@@ -1,0 +1,305 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · OpenCode 生态",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "eco": "opencode",
+  "surveyedAt": "2026-10-29",
+  "_note": "OpenCode 生态编目：19 条 = 映射 entries 17 条 + blocked 数组 2 条（oh-my-opencode/oh-my-openagent：许可无法核验且全栈绑 OpenCode 私有插件 API；opencode-dynamic-context-pruning：AGPL-3.0 命中 C 档硬门槛）。17 条中仅 Context7（mcp）与 cc-skills-golang（skill）判 direct，其余 15 条 adapter-needed——OpenCode 插件 API（plugin 函数 + ctx + hooks + tool() 注册）是私有运行时面，khyos 三市场无对应物。按 OpenCode v2 配置形态（plugins 数组 + mcp.servers）记录。~/.agents/skills 不在 khyos 任何技能发现根内。",
+  "marketplaces": [
+    {
+      "name": "官方 ecosystem 文档页",
+      "kind": "文档页目录（43 条）",
+      "note": "无可抓索引"
+    },
+    {
+      "name": "awesome-opencode",
+      "kind": "社区 awesome 仓（data/*.yaml + data/schema.json，ajv 校验）",
+      "note": "223 条，CC0-1.0；最适合机器抓取"
+    },
+    {
+      "name": "opencode.cafe",
+      "kind": "网站目录",
+      "note": "各分类计数全 0、疑 JS 渲染，实数未取得"
+    },
+    {
+      "name": "magpie-community/plugins",
+      "kind": "monorepo（49 包）",
+      "note": "未逐包核对许可证与归属"
+    },
+    {
+      "name": "kdcokenny/ocx",
+      "kind": "registry protocol 3（带 files.target 落点与 .ocx/receipt.jsonc SHA-256 基线）",
+      "note": "注册协议，非条目清单"
+    }
+  ],
+  "entries": [
+    {
+      "name": "wshobson/agents",
+      "upstreamUrl": "https://github.com/wshobson/agents",
+      "type": "agent",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<skill-id>/（项目作用域；用户作用域 getDataHome()/skills/<skill-id>/）——仅取其中 SKILL.md 技能子集；agents/commands 两类 markdown 在 khyos 三市场无归属",
+      "compat": "adapter-needed",
+      "compatNote": "整包是插件市场而非单一 skill，必须拆包分类落地：① SKILL.md 技能与 khyos 解析器同源（skillLoader.js:60-64 的标量/行内数组/块列表 YAML 子集，标准头 skillLoader.js:4-15），原样可用，运行时经 discoverSkillsDeep 递归发现（skills/index.js:151-160），缺 version/layer/tags/platforms 只 warning 不阻断（skillLoader.js:401-425，本次实测 validateSkill 对同构 frontmatter 只报 3 条 warning）；② OpenCode agent markdown（~/.config/opencode/agents/*.md 或 opencode.json agent 块的 description/model/prompt/tools）与 command markdown 无对应市场，agent 需改写为 SKILL.md（frontmatter 至少补 name/description，prompt 正文入 body），model/tools 声明无对应字段、由 khyos 运行时决定；③ 需逐条核验各技能对 6 家 agent 的兼容声明，只取覆盖 OpenCode/Claude Code 的条目。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["claude-code", "opencode", "aggregators"],
+      "what": "跨 6 家 agent 的 agents/commands/skills 市场仓：SKILL.md 子集同源可用，agents/commands 需改写。"
+    },
+    {
+      "name": "Context7",
+      "upstreamUrl": "https://github.com/upstash/context7",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.context7（project 作用域，mcpConfigStore.js:29-33；user 作用域 getDataHome()/mcp.json）；导入命令 khy mcp add context7 -t http -u https://mcp.context7.com/mcp",
+      "compat": "direct",
+      "compatNote": "标准远程 MCP server，khyos mcp.json 认得 {type:'sse'|'http', url, headers?}（types.js validateServerConfig 支持 stdio/sse/http/ws），与 OpenCode v2 文档示例 opencode mcp add context7 --url https://mcp.context7.com/mcp 一一对应；远程 OAuth（PKCE/令牌刷新）凭据在 khyos 侧由 oauthTokenStore 管，无需适配。两点保留：khyos 预设表无 context7 短名（实测 mcpServerPresets.js 无该词），必须写全 -t/-u；本次未实际启动 MCP 连接验证远端连通，只做配置形状核验。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["opencode", "aggregators"],
+      "what": "标准远程 MCP server：khyos mcp.json http 形直接承载，预设表无短名须写全 -t/-u，远端连通未实测。"
+    },
+    {
+      "name": "@plannotator/opencode",
+      "upstreamUrl": "https://github.com/backnotprop/plannotator",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/plannotator-opencode/khy.extension.json（适配后；kind 按落地形态取 runtime 或 asset，分类目录须属白名单 tools/protocols/mcp/scripts/software/bridges）",
+      "compat": "adapter-needed",
+      "compatNote": "交互式计划/代码差异审阅与标注依赖 OpenCode 的 TUI/Desktop 客户端 API 与事件面（ctx.client、会话/权限事件），khyos 拓展运行时（khy.extension.json kind runtime 的 main + activate(ctx)，extensionManifest.js:19-32,45-49）没有这套事件面，npm 包 @plannotator/opencode 不能原样 require；适配需把审阅面板改写到 khyos 桌面端（apps/khyos-desktop）或 Web UI，分享/回传反馈的出口接到 khyos 侧通道。npm 元数据为 MIT OR Apache-2.0 双许可，落地时任选其一即可过 SOURCING-002 A 档。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "交互式计划/代码差异审阅标注：依赖 OpenCode TUI/Desktop 客户端 API，需改写到 khyos 桌面端或 Web UI。"
+    },
+    {
+      "name": "opencode-agents",
+      "upstreamUrl": "https://github.com/darrenhinde/opencode-agents",
+      "type": "agent",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<agent-id>/SKILL.md（每个 agent 改写为一个技能目录；用户作用域 getDataHome()/skills/<agent-id>/）",
+      "compat": "adapter-needed",
+      "compatNote": "OpenCode agent 的载体是 ~/.config/opencode/agents/*.md 或 opencode.json 的 agent 块（description/model/prompt/tools），khyos 三市场没有 agent 类；需改写为 SKILL.md 才能进 skill 市场——frontmatter 至少补 name/description（缺 version/layer/tags/platforms 只 warning，skillLoader.js:401-425），原 prompt 正文搬入 SKILL.md body，model/tools/subagent_depth 等声明无对应字段、由 khyos 运行时决定，适配时删除而非直译。其 plan-first 审批式工作流骨架可借鉴，但执行面要落在 khyos 编排机制上。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "OpenCode agent 集合（agents/*.md 或 opencode.json agent 块）：需改写为 SKILL.md 进 skill 市场。"
+    },
+    {
+      "name": "opencode-antigravity-auth",
+      "upstreamUrl": "https://github.com/NoeFabris/opencode-antigravity-auth",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-antigravity-auth/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "功能是 OAuth 接 Antigravity 免费模型 + 账号轮换 + 实时模型目录。khyos 侧对应物是 AI 网关适配器（runtime/node/backend/src/services/gateway/adapters/，AGENTS.md「如何新增一个 AI 适配器」：实现 generate(prompt, options) 返回 {text, tokenUsage, model}），网关适配器不在三市场内；若强行走拓展市场，需把 OAuth 流程、账号轮换与凭据存储整体改写为 khy.extension.json runtime 拓展，凭据不得由插件自持（khyos 凭据位在 ~/.khyquant/config.json 与 credentials/）。dsh 导入路径对本条封闭：scanSource 拒绝 process.env.*TOKEN 读取与 LLM SDK import（importPlugin.js:47-49）。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "OAuth 接 Antigravity 免费模型 + 账号轮换：khyos 对位物是网关适配器，凭据不得由插件自持。"
+    },
+    {
+      "name": "cc-skills-golang",
+      "upstreamUrl": "https://github.com/samber/cc-skills-golang",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/cc-skills-golang/skills/<skill-name>/（项目作用域整包落地；用户作用域 getDataHome()/skills/cc-skills-golang/）；单个技能亦可平铺为 works/data/khy/skills/<skill-name>/",
+      "compat": "direct",
+      "compatNote": "格式同源，已实测：上游 skills/golang-code-style/SKILL.md 的 frontmatter 为平铺 name/description/license/compatibility/user-invocable/allowed-tools/paths + 嵌套 metadata（author/version/openclaw.requires.bins）。用与该 frontmatter 同构的字段跑 khyos 解析器（skillLoader.parseSkillContent）：name/description/license/user-invocable 等平铺字段无损，嵌套 metadata 块降级为 metadata='' 且子键拍平到顶层（skillLoader.js:102-127），version 反而落到顶层（正是 validateSkill 所需字段），OpenClaw 专有元数据丢失但于 khyos 无意义——不阻断导入；validateSkill 只报 missing layer/tags/platforms 三条 warning。运行时经 discoverSkillsDeep 递归发现（skills/index.js:151-160），整包放 skills/ 下每个 golang-* 目录各自成技能；其 user-invocable: true 与 khyos 技能目录的 user-invocable 判定同词同义（skills/index.js 该字段注释）。两个落地注意：① README 推荐的 ~/.agents/skills 不在 khyos 发现链内（CC 桥只读 ~/.claude/skills、<proj>/.claude/skills、~/.claude/plugins/cache、~/.claude/local-plugins，ccSkillBridge.js:58-86；OpenClaw 桥只读自家 state 目录，ocSkillBridge.js），须放 khyos 原生 skills 目录，或利用其 OpenClaw 兼容路径放 ~/.openclaw/skills/ 经 OpenClaw 桥发现；放 ~/.claude/skills 也能被发现但会同时进 Claude Code 的 slash 菜单（skillLoader.js:24-28 明确不推荐）；② 技能内 references/ 懒加载子文档随目录一起拷贝即可。批量导入前仍需逐包核验 frontmatter 未把 layer/tags 等语义字段藏进 metadata（拍平会静默丢失）。",
+      "license": "MIT",
+      "relationship": "vendored",
+      "agentScope": ["opencode"],
+      "what": "Golang 编码风格技能集：frontmatter 与 khyos 解析器同构已实测，README 推荐落点 ~/.agents/skills 不在发现链内。"
+    },
+    {
+      "name": "opencode-openai-codex-auth",
+      "upstreamUrl": "https://github.com/numman-ali/opencode-openai-codex-auth",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-openai-codex-auth/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "ChatGPT Plus/Pro 订阅 OAuth 替代 API 计费。khyos 侧模型通道与凭据由 AI 网关 + keyManager 管（apps/khyos-desktop/src/main/keyManager/keyStore.ts、KeyManagerPage），适配需把 OAuth 登录/刷新/令牌存储改走网关适配器面；插件自持 token 的形态不被 dsh 导入器接受（scanSource 拒 process.env.*TOKEN，importPlugin.js:47-49）。许可证按 npm 元数据记 MIT，但 GitHub 检出 NOASSERTION，导入前需人工确认真源（编目 uncertainties 已记此项）。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "ChatGPT 订阅 OAuth 替代 API 计费：需改走网关适配器面，GitHub 许可检出 NOASSERTION 需人工确认。"
+    },
+    {
+      "name": "opencode-mem",
+      "upstreamUrl": "https://github.com/tickernelz/opencode-mem",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-mem/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "跨会话持久记忆、本地存储。khyos 已有记忆系统（works/data/khy/memory/，AGENTS.md 数据存储位置节），适配需把插件的私有存储改写到 khyos 记忆目录或经记忆服务接口，避免第二套存储真相；其工具注册（OpenCode tool()）与 hook 需映射到 khyos 工具面，OpenCode 事件/会话 API 在 khyos 不存在，属逐项重写。导入前先评估与既有记忆系统的职责重叠。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "跨会话持久记忆（本地存储）：与 khyos 既有记忆系统职责重叠，需先评估再适配。"
+    },
+    {
+      "name": "opencode-gemini-auth",
+      "upstreamUrl": "https://github.com/jenslys/opencode-gemini-auth",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-gemini-auth/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "同 auth 族：OAuth 接既有 Gemini 订阅计划、免 API 计费。khyos 侧走 AI 网关适配器 + 凭据管理；dsh 导入路径因读取 OAuth token 被 scanSource 拒（importPlugin.js:47-49）。更轻的替代是在 khyos 网关直接配 Gemini key，单独适配本插件的价值需先论证。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "OAuth 接 Gemini 订阅计划免 API 计费：更轻的替代是网关直接配 Gemini key，价值需先论证。"
+    },
+    {
+      "name": "opencode-supermemory",
+      "upstreamUrl": "https://github.com/supermemoryai/opencode-supermemory",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-supermemory/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "依赖 Supermemory 云服务的跨会话记忆。两个硬卡点：① 直接网络访问被 dsh 导入器拒（importPlugin.js:51-53），且云端点不得硬编码进源码（RUNTIME-001：生产端点须走 constants/serviceDefaults.js 或 env 覆盖）；② 与 khyos 既有记忆系统（works/data/khy/memory/）职责重叠。许可证按 npm 元数据记 MIT，GitHub 检出为 none，导入前需人工确认真源。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "依赖 Supermemory 云服务的跨会话记忆：撞联网禁令与凭据硬编码红线，且与既有记忆系统重叠。"
+    },
+    {
+      "name": "opencode-notifier",
+      "upstreamUrl": "https://github.com/mohak34/opencode-notifier",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-notifier/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "在权限请求/任务完成/出错等事件上发桌面通知与声音。事件源是 OpenCode 事件总线（command/file/LSP/message/permission/server/session/todo/shell/tool/TUI 订阅），khyos 无同一事件面，适配需改订阅 khyos 侧事件、把通知出口接到桌面端（apps/khyos-desktop）或系统通知通道；通知文案须守规则 2（动作+目标+进度，禁含糊状态词）。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "在权限请求/任务完成/出错等事件上发桌面通知：事件源是 OpenCode 事件总线，需改订阅 khyos 侧事件。"
+    },
+    {
+      "name": "opencode-pty",
+      "upstreamUrl": "https://github.com/shekohex/opencode-pty",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-pty/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "交互式 PTY 管理（后台进程、发送输入、正则过滤读取输出）。PTY 能力本身在 Node 后端可实现，但插件的工具注册与 OpenCode 会话 API 绑定；本次勘察未在 khyos 确认到等价的「运行时可注册工具」机制（pluginContribResolver 的工具导入只认 dsh 白名单形态，importPlugin.js:12,54-61），故记 adapter-needed——缺的是 khyos 侧工具注册面的对接点。另本机平台为 win32，PTY 语义与 Unix 有差异，需实测。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "交互式 PTY 管理（后台进程/发送输入/正则过滤输出）：khyos 侧缺运行时可注册工具机制的对接点。"
+    },
+    {
+      "name": "opencode-swarm",
+      "upstreamUrl": "https://github.com/ZaxbyHub/opencode-swarm",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-swarm/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "把单会话变成 architect 主导的多 agent 团队（写码/审阅/测试/安全分工）+ 合入门禁。多 agent 编排在 khyos 侧有对应机制（子智能体/工作流分派），但插件的 agent 编队、角色提示与门禁判定全部挂在 OpenCode 会话/权限事件上，需整体重写为 khyos 编排面，属最重的一类适配；其「所有门禁通过才允许合入」的收口策略可先作设计参考。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "architect 主导的多 agent 团队 + 合入门禁：编排机制 khyos 自有，插件的编队与门禁全挂 OpenCode 事件，需整体重写。"
+    },
+    {
+      "name": "opencode-scheduler",
+      "upstreamUrl": "https://github.com/different-ai/opencode-scheduler",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-scheduler/khy.extension.json（适配后 kind runtime 或 toolchain）",
+      "compat": "adapter-needed",
+      "compatNote": "用 cron 语法经 launchd（macOS）/systemd（Linux）调度 OpenCode 周期任务。本机平台为 win32（环境事实），launchd/systemd 均不可用；适配需改用跨平台调度（Node 侧 cron 或 khyos 既有 automations 机制，apps/khyos-desktop/src/renderer/components/automations/AutomationsPage.tsx 在仓），调度触发路径须守 RUNTIME-003 活动式超时（禁固定时长硬 kill）与规则 2 状态透明。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "用 cron 语法经 launchd/systemd 调度周期任务：本机 win32 两者皆不可用，需改用跨平台调度。"
+    },
+    {
+      "name": "micode",
+      "upstreamUrl": "https://github.com/vtemian/micode",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/micode/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "Brainstorm→Plan→Implement 结构化工作流 + 会话连续性 + subagent 编排 + git worktree 隔离 + AST 感知工具。五类能力全部依赖 OpenCode 插件 API（hooks/tool()/ctx），需逐项映射到 khyos：subagent 编排对 khyos 编排面、worktree 隔离对 khyos git 工具面、AST 工具对 khyos 工具注册面；属本批最重的适配，建议先拆出工作流骨架作参考，再评估整包适配。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "Brainstorm→Plan→Implement 工作流 + subagent 编排 + worktree 隔离：全依赖 OpenCode 插件 API。"
+    },
+    {
+      "name": "opencode-skillful",
+      "upstreamUrl": "https://github.com/zenobi-us/opencode-skillful",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/opencode-skillful/khy.extension.json（适配后 kind runtime；导入价值低，建议仅作参考）",
+      "compat": "adapter-needed",
+      "compatNote": "它是 Anthropic Agent Skills 规范的 OpenCode 实现，提供 skill_find/skill_use/skill_resource 三个工具做懒加载技能发现与注入——这三项能力 khyos 是原生的（skillLoader 发现链 + SKILL.md 解析 + khy skill CLI，skills/index.js:151-160），导入仅为实现参考；若仍要导入，需把三个工具注册映射到 khyos 工具面（缺对接点，同 opencode-pty 一条），且 npm 上无此包（源码分发），须 git 拉取后自行写 khy.extension.json 打包。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "Agent Skills 规范的 OpenCode 实现：skill_find/skill_use/skill_resource khyos 原生已有，仅参考。"
+    },
+    {
+      "name": "@firecrawl/opencode",
+      "upstreamUrl": "https://github.com/firecrawl/opencode-firecrawl",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/firecrawl-opencode/khy.extension.json（适配后 kind runtime）",
+      "compat": "adapter-needed",
+      "compatNote": "经 Firecrawl CLI 做网页抓取/爬取/搜索。卡点：① 依赖 Firecrawl 云服务与 API key——直接网络访问被 dsh 导入器拒（importPlugin.js:51-53），端点与密钥须走 khyos 服务发现/凭据位，不得硬编码（RUNTIME-001）；② khyos 已有浏览器侧能力（apps/khyos-desktop/src/renderer/components/browser/BrowserPane.tsx 在仓），先评估必要性；③ README 同时给 OpenCode 2（plugins 数组 + opencode plugin add）与 OpenCode 1.18.29+ 两套装法，适配以 v2 为准（编目 formatNotes 第 1 条：v1/v2 字段差异是硬门槛）。",
+      "license": "ISC",
+      "relationship": "adapter",
+      "agentScope": ["opencode"],
+      "what": "经 Firecrawl CLI 做网页抓取/爬取/搜索：撞联网禁令与端点硬编码红线，README 给 v1/v2 两套装法。"
+    },
+    {
+      "name": "oh-my-opencode（仓库已更名为 oh-my-openagent）",
+      "upstreamUrl": "https://github.com/code-yeongyu/oh-my-openagent",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）OpenCode 私有插件 API 运行时面，khyos 三市场均无对应物；dsh 导入器亦会以依赖未支持的 Cordis 服务拒绝",
+      "compat": "blocked",
+      "compatNote": "两条硬卡点叠加。① 许可证无法核验：npm 元数据为 SUL-1.0（非 SPDX 自定义许可证）、GitHub 检出 NOASSERTION，编目记 unknown；本次实测 node scripts/ci/check-license-tiers.js 对缺/未知 license 的 package.json 判 license-unverifiable 并按最严档处理，而 SOURCING-001 要求 vendored/fork 必填 license 与 approvedBy（check-provenance.js:112-117），SOURCING-002 A 档宽松清单（MIT/Apache-2.0/BSD/ISC/Unlicense/0BSD）放行不了。② 形态不兼容：全家桶能力（多模型路由、后台 agent、预置 LSP/AST/MCP 工具、agent 编队）全部挂在 OpenCode 私有插件 API 上（plugin 函数 + ctx.project/directory/worktree/client/$、tool.execute.before/after、shell.env、experimental.session.compacting hooks、事件订阅、tool() 注册），khyos 三市场均无对应运行时；dsh 导入器亦会以「依赖未支持的 Cordis 服务」拒绝（importPlugin.js:54-61，白名单只有 tools/core/tools/logger/core/logger）。导入等于重写而非适配，故 blocked。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["opencode"],
+      "what": "OpenCode 全家桶插件（已更名 oh-my-openagent）：许可无法核验且全栈绑 OpenCode 私有插件 API，导入等于重写。"
+    },
+    {
+      "name": "opencode-dynamic-context-pruning",
+      "upstreamUrl": "https://github.com/Tarquinen/opencode-dynamic-context-pruning",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）AGPL-3.0 禁入任何入仓目录；其 tool.execute hook 裁剪面在 khyos 也无对应",
+      "compat": "blocked",
+      "compatNote": "AGPL-3.0 强 copyleft：本次实测 node scripts/ci/check-license-tiers.js 对 GPL/AGPL 许可证全文判 license-copyleft error（当前存量 2 处即此类，位于 khy-Trajectory/T4-transient/tmp/electron-builder-cache/7zip@1.0.0/…/COPYING 与 works/data/khy/ 下同一处），SOURCING-002 C 档禁止进源码目录，delivery/extension 与仓库任何目录均不可落地；其裁剪机制（经 tool.execute hook 丢弃过期工具输出以降 token）在 khyos 也无对应 hook 面。双重不可行，故 blocked。",
+      "license": "AGPL-3.0",
+      "relationship": "reference",
+      "agentScope": ["opencode"],
+      "what": "经 tool.execute hook 丢弃过期工具输出以降 token 的 OpenCode 插件：AGPL-3.0 命中 C 档硬门槛。"
+    }
+  ],
+  "blocked": [
+    {
+      "name": "oh-my-opencode（仓库已更名为 oh-my-openagent）",
+      "upstreamUrl": "https://github.com/code-yeongyu/oh-my-openagent",
+      "reason": "两条硬卡点叠加。① 许可证无法核验：npm 元数据为 SUL-1.0（非 SPDX 自定义许可证）、GitHub 检出 NOASSERTION，编目记 unknown；本次实测 node scripts/ci/check-license-tiers.js 对缺/未知 license 的 package.json 判 license-unverifiable 并按最严档处理，而 SOURCING-001 要求 vendored/fork 必填 license 与 approvedBy（check-provenance.js:112-117），SOURCING-002 A 档宽松清单（MIT/Apache-2.0/BSD/ISC/Unlicense/0BSD）放行不了。② 形态不兼容：全家桶能力（多模型路由、后台 agent、预置 LSP/AST/MCP 工具、agent 编队）全部挂在 OpenCode 私有插件 API 上（plugin 函数 + ctx.project/directory/worktree/client/$、tool.execute.before/after、shell.env、experimental.session.compacting hooks、事件订阅、tool() 注册），khyos 三市场均无对应运行时；dsh 导入器亦会以「依赖未支持的 Cordis 服务」拒绝（importPlugin.js:54-61，白名单只有 tools/core/tools/logger/core/logger）。导入等于重写而非适配，故 blocked。"
+    },
+    {
+      "name": "opencode-dynamic-context-pruning",
+      "upstreamUrl": "https://github.com/Tarquinen/opencode-dynamic-context-pruning",
+      "reason": "AGPL-3.0 强 copyleft：本次实测 node scripts/ci/check-license-tiers.js 对 GPL/AGPL 许可证全文判 license-copyleft error（当前存量 2 处即此类，位于 khy-Trajectory/T4-transient/tmp/electron-builder-cache/7zip@1.0.0/…/COPYING 与 works/data/khy/ 下同一处），SOURCING-002 C 档禁止进源码目录，delivery/extension 与仓库任何目录均不可落地；其裁剪机制（经 tool.execute hook 丢弃过期工具输出以降 token）在 khyos 也无对应 hook 面。双重不可行，故 blocked。"
+    }
+  ],
+  "uncertainties": [
+    "OpenCode v2 文档经 curl 取得，未经 WebFetch 二次确认。",
+    "opencode.cafe 条目数与审核机制未取得（各分类计数全 0、疑 JS 渲染）。",
+    "各插件 v1/v2 最低版本要求未验证。",
+    "opencode-openai-codex-auth 与 opencode-supermemory 的 GitHub 许可证检出为 NOASSERTION/none，按 npm 元数据记 MIT，导入前需人工确认真源。",
+    "magpie-community/plugins 49 包未逐包核对许可证与归属。",
+    "Context7 未实际启动 MCP 连接验证远端连通，只做配置形状核验。"
+  ]
+}

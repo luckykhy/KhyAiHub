@@ -1,0 +1,293 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · 总索引",
+  "generatedAt": "2026-10-29",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "_note": "本编目收录六个外部生态（zcode / claude-code / opencode / mcode / deepseek-harness / aggregators），合计 108 条 entries、34 条 compat=blocked；条目字段与收敛规则见各生态文件，跨生态重复关系见 crossEco。落点裁决：① delivery/extension/market/ 排除——本会话跑 .khyos/tmp/market-root-probe.js 实测：扁平 JSON 无 manifest 时 check-repo-layout.js:800-804 判「既不是拓展也不是分类目录」，extension-contract 0→1 超出基线 0 升 error；补 kind=asset 的 khy.extension.json（id 必须等于目录名 market）后 extension-contract 回 0，但 extension-id-hardcode 从 1 炸到 72——该守卫按子串匹配（check-repo-layout.js:1087 code.includes(id)），核代码里 72 处含 market 子串；且 repo-layout-baseline.json:2 明令「绝不上调来让 CI 变绿」，给 EXTENSION_CATEGORIES 加 market 也无效（inner 为空先在 :800-804 结案，白名单检查在 :806 永远轮不到）。② docs/10_规范/registry/ 排除——D5 档案区，DOMAIN-DEPS 的 no-reach-into-archive 明令运行时代码不得 require 进 docs/，而编目的终点是运行时可消费的导入面；且该目录每个 JSON 按既有约定要在 00_INDEX_registry-总目录.md 挂行，改 .md 会触及孪生再生。③ works/record/ 排除——本职是 AI 协作记忆与软著底档，职责错配。④ 选定 delivery/market/：delivery 已登记为 D4 层（check-repo-layout.js:119），layer-registry 只扫仓库根直接子目录（:690-698），实测同结构下全守卫读数与当前树逐项一致（extension-contract=0、extension-id-hardcode=1 维持存量、零新回归）。如实记录代价：不在 pip 包内（MANIFEST.in 只 recursive-include delivery/extension、delivery/web/ai-frontend、delivery/channel/khyquant，且其头部声明由 scripts/release/pip_packaging_rules.py 生成、禁手改）；入仓即满足跨机器共享，随包分发留待导入工具落地时改生成器规则。",
+  "ecosystems": [
+    {
+      "eco": "zcode",
+      "file": "catalogs/zcode.json",
+      "title": "ZCode 生态",
+      "entryCount": 18,
+      "blockedCount": 8
+    },
+    {
+      "eco": "claude-code",
+      "file": "catalogs/claude-code.json",
+      "title": "Claude Code 生态",
+      "entryCount": 18,
+      "blockedCount": 0
+    },
+    {
+      "eco": "opencode",
+      "file": "catalogs/opencode.json",
+      "title": "OpenCode 生态",
+      "entryCount": 19,
+      "blockedCount": 2
+    },
+    {
+      "eco": "mcode",
+      "file": "catalogs/mcode.json",
+      "title": "mcode（MiniMax Code）生态",
+      "entryCount": 18,
+      "blockedCount": 5
+    },
+    {
+      "eco": "deepseek-harness",
+      "file": "catalogs/deepseek-harness.json",
+      "title": "DeepSeek Harness（DSH）生态",
+      "entryCount": 18,
+      "blockedCount": 15
+    },
+    {
+      "eco": "aggregators",
+      "file": "catalogs/aggregators.json",
+      "title": "跨智能体插件市场 + MCP 服务器目录/聚合市场",
+      "entryCount": 17,
+      "blockedCount": 4
+    }
+  ],
+  "crossEco": [
+    {
+      "upstreamUrl": "https://github.com/wshobson/agents",
+      "names": {
+        "claude-code": "wshobson/agents",
+        "opencode": "wshobson/agents",
+        "aggregators": "wshobson/agents"
+      },
+      "agentScope": ["claude-code", "opencode", "aggregators"],
+      "note": "同一仓库在三个生态各收录一次，各生态保留独立判定（claude-code 记 extension/adapter-needed、opencode 记 skill/adapter-needed、aggregators 记 extension/adapter-needed），仅 agentScope 取并集"
+    },
+    {
+      "upstreamUrl": "https://github.com/modelcontextprotocol/servers",
+      "names": {
+        "claude-code": "modelcontextprotocol/servers",
+        "aggregators": "modelcontextprotocol/servers"
+      },
+      "agentScope": ["claude-code", "aggregators"],
+      "note": "MCP 官方参考服务器集合；两侧均判 mcp/direct，khyos 预设表已收大部分"
+    },
+    {
+      "upstreamUrl": "https://github.com/anthropics/skills",
+      "names": {
+        "claude-code": "anthropics/skills",
+        "aggregators": "anthropics/skills"
+      },
+      "agentScope": ["claude-code", "aggregators"],
+      "note": "SKILL.md 合集仓；两侧均判 skill/direct，license unknown，多 skill 须逐个 --skill"
+    },
+    {
+      "upstreamUrl": "https://github.com/upstash/context7",
+      "names": {
+        "opencode": "Context7",
+        "aggregators": "upstash/context7"
+      },
+      "agentScope": ["opencode", "aggregators"],
+      "note": "两侧名称写法不同（opencode 记 Context7、aggregators 记 upstash/context7），按 upstreamUrl 判重；均判 mcp/direct"
+    }
+  ],
+  "markets": {
+    "note": "闸门顺序（自上而下，首个命中即定）；type 不参与路由判定，只作拆包指引",
+    "rules": [
+      "1. compat=blocked → 不路由。条目仅供检索与阻塞原因追溯；导入前必须先解除阻塞（补证 license / 等 khyos 侧契约 / 人就「是否放开网络」等裁决），解除后按实际形态重判 compat。",
+      "2. compat=direct 且 khyosMarket=mcp（或 type=mcp）→ MCP 市场：khy mcp add <名> [-t stdio|sse|http] [-u URL] [-H K:V] [--env K=V] -- <命令> [参数…]；预设表内短名可直接 khy mcp add <短名>。落点 project → <cwd>/works/data/khy/mcp.json（mcpConfigStore.js:31-33），user → <dataHome>/mcp.json（:41-43）。",
+      "3. compat=direct 且 khyosMarket=skill → Skill 市场：khy skill add <owner/repo> [--skill <仓内子路径>]（skill.js:27→:695）或 khy skill import <目录|.zip|.md>（skill.js:84→:721）。落点 project → works/data/khy/skills/<name>/（发现链首位），user → <dataHome>/skills/<name>/。多技能仓库必须带 --skill 指定子目录。",
+      "4. compat=direct 且 khyosMarket=extension → 拓展市场：产物已带三种 manifest 之一（khy.extension.json / openclaw.plugin.json / package.json#khy，extensionManifest.js:19-22）→ 落 delivery/extension/<分类>/<id>/（分类名限 tools/protocols/mcp/scripts/software/bridges，check-repo-layout.js:759；id 必须等于叶子目录名，:891）。核内定位只走 manifest 的 provides + extensionRoots.findProvider（extensionRoots.js:304-330），禁硬编码拓展 id（check-repo-layout.js:1033-1093，子串匹配，当前已有 1 处 promoted error）。",
+      "5. compat=adapter-needed → 先按 khyosMarket 准备适配产物，再走 2/3/4 的同一入口：skill=把上游抽取/改写为 SKILL.md（标准头 name/version/description/layer/lifecycle/tags/platforms/dependencies，缺字段仅 warning 不阻断发现）后 khy skill import；mcp=安装时把模板端点（如 ${ZCODE_BASE_URL}）展开为字面量、auth.type 转 headers.Authorization，部署型（网关/代理）先自托管再写 http/stdio 条目；extension=新写 khy.extension.json（kind 限 runtime/ide-bridge/asset/toolchain；runtime 必须 main 在盘上）+ 实现，hook 类另在 .khy/hooks.json 注册（扁平 command 型，事件名对齐）；none=不落地。",
+      "6. khyosMarket=none → 不路由（仅编目）。",
+      "7. type 不参与路由判定，只作拆包指引：plugin=混合包，拆 skills/（→skill）、mcpServers（→mcp）、其余（→extension）；agent 与 command 在 khyos 三市场无对应位，分别转 skill / 降级为 skill 或丢弃；hook 转 extension + hooks.json 注册。",
+      "8. 多落点条目（targetPath 含多个路径）按 targetPath 逐项执行、每项独立判定 direct/adapter；编目保持一条记录不拆条。",
+      "9. license 闸（导入时生效，不影响编目收录）：A 档（MIT/Apache-2.0/BSD/ISC/Unlicense/0BSD）可 vendored 进仓；B 档（BUSL/Elastic/SSPL/LicenseRef-*）warning 需提案复核；C 档（GPL/LGPL/AGPL/EUPL/OSL/MPL）error 禁止进任何入仓目录；unknown/NOASSERTION/Proprietary 只能本机态安装或作 reference。"
+    ],
+    "licenseGate": "导入时生效、不影响编目收录：A 档（MIT/Apache-2.0/BSD/ISC/Unlicense/0BSD）可 vendored 进仓；B 档（BUSL/Elastic/SSPL/LicenseRef-*）warning 需提案复核；C 档（GPL/LGPL/AGPL/EUPL/OSL/MPL）error 禁止进任何入仓目录；unknown/NOASSERTION/Proprietary 只能本机态安装或作 reference。"
+  },
+  "importFlow": {
+    "skill": "khy skill add <owner/repo> [--skill <仓内子路径>]（runtime/node/backend/src/cli/handlers/skill.js:27 → :695 调 skillInstallService.addFromSource）；khy skill import <目录|.zip|.md>（skill.js:84 → :721 调 skillPackageService.importSkill）。落点：project → <cwd>/works/data/khy/skills/<name>/（发现链首位），user → <dataHome>/skills/<name>/。多技能仓库不带 --skill 会报「仓库含多个 skill」并列候选，必须逐技能指定。",
+    "mcp": "khy mcp add <名> [-t stdio|sse|http] [-u URL] [-H K:V] [--env K=V] -- <命令> [参数…]（cli/handlers/mcp.js:154-190：mcpAddSpec.buildServerConfig → mcpConfigStore.addServer）；预设表内短名免写命令（khy mcp add github / notion）。落点：project → <cwd>/works/data/khy/mcp.json（mcpConfigStore.js:31-33），user → <dataHome>/mcp.json（:41-43）。win32 注意：npx 型 stdio 需手写 {command:'cmd',args:['/c','npx',…]}（勘察材料载 _connectStdio 无 shell 包装），优先选 uvx/python 型预设。",
+    "extension": "builtin 形态直接落 delivery/extension/<分类>/<id>/（分类名限 tools/protocols/mcp/scripts/software/bridges，check-repo-layout.js:759；id=叶子目录名，:891）；用户态落 <dataHome>/extensions/<id>/（extensionRoots.js:101-103）。本地/git 源可 khy ext install <http…|/…|.…>（extension.js:140-141 走 marketplace.install）；registry 名安装（:144 installFromRegistry）当前不可用——registry.khy.dev 无服务（勘察实测 ext search/install 走空数组），故本编目是静态指针、不接活注册表、不新增网络依赖。khy ext new 的 scaffold 生成 openclaw.plugin.json（extensionMarketplace.js:224-226）。核内定位拓展只走 provides + findProvider，禁硬编码 id。",
+    "dshCompat": "node lib/importPlugin.js <包名>（delivery/extension/tools/khy-dsh-compat/lib/importPlugin.js:157-161）。但准入红线使本批 DSH 插件事实上全部不可导入：scanSource 拒自读模型密钥/LLM SDK（:47-49）、拒直接网络访问（:51-53）、拒白名单外 Cordis 服务（:54-61，白名单仅 tools/core/tools/logger/core/logger），且不注册任何工具时直接失败（:124）。该生态两条 direct 是 skill，走 khy skill add/import；Aegis 走 adapter（人工抽取改写为 SKILL.md）。要放开网络需人就「是否放开网络」单独裁决，AI 不代改。",
+    "adapterNeeded": "先在 khyos 侧产出适配物（SKILL.md / 展开后的 mcp 配置 / khy.extension.json + main / hooks.json 条目），再按 skill/mcp/extension 的同一入口安装。适配产物若含上游代码并落仓，立即触发 provenancePlan 的台账义务。",
+    "crossMachine": "works/data/khy/{mcp.json,plugins.json,extensions_state.json,skills,hooks.json} 全部被 .gitignore:342 works/data/ 覆盖（本会话 git check-ignore 实测五条全中）——本机态安装换机器即丢。要共享必须入仓：builtin 拓展落 delivery/extension/、内置 skill 落 runtime/node/backend/src/skills/、常用 MCP 补进 mcpServerPresets.js 预设表，并走 provenancePlan。",
+    "selfCheck": "编目写完后自检（本会话实测可跑）：npm run check:layout（extension-contract 须维持 0、不新增回归）、npm run check:provenance（补台账行后须 0 error）、npm run check:no-emoji（S1 恒 exit 0，仅确认无新增）、npm run docs:verify（失败数须维持 18 不变——本会话实测 1528 源 md/1511 html/17016 链接、18 处缺孪生，先于本次改动已红）。npm run check:data-layout 当前跑不通（勘察材料所载「无法读取 DATA-LOCATIONS.json —— Maximum call stack size exceeded」，本会话未复跑），不作为验证手段。"
+  },
+  "sources": [
+    {
+      "eco": "zcode",
+      "name": "zai-org/zcode-plugins 官方市场",
+      "url": "https://github.com/zai-org/zcode-plugins",
+      "kind": "marketplace.json 清单（url/zip+sha256 source，CDN 分发）",
+      "note": "官方市场 67 条中本次只映射编目点名的 18 条"
+    },
+    {
+      "eco": "claude-code",
+      "name": "anthropics/claude-plugins-official",
+      "url": "https://github.com/anthropics/claude-plugins-official",
+      "kind": "marketplace.json 清单（7 种 source 形态 + renames）",
+      "note": "清单 JSON 两次抓取均被截断，条目总数未查实"
+    },
+    {
+      "eco": "claude-code",
+      "name": "anthropics/claude-plugins-community",
+      "url": "https://github.com/anthropics/claude-plugins-community",
+      "kind": "marketplace.json 清单（只读镜像）",
+      "note": "清单抓取在字母 a 段被截断，条目总数未查实"
+    },
+    {
+      "eco": "claude-code",
+      "name": "obra/superpowers-marketplace",
+      "url": "https://github.com/obra/superpowers-marketplace",
+      "kind": "市场清单（10 条目全带 version 与 strict）",
+      "note": "各插件许可证自理"
+    },
+    {
+      "eco": "claude-code",
+      "name": "davepoon/buildwithclaude",
+      "url": "https://github.com/davepoon/buildwithclaude",
+      "kind": "聚合 hub 市场清单（source 三形态）",
+      "note": "README 计数与清单条目数口径不一，以清单为准；清单抓取在 auten 处截断"
+    },
+    {
+      "eco": "claude-code",
+      "name": "ananddtyagi/cc-marketplace",
+      "url": "https://github.com/ananddtyagi/cc-marketplace",
+      "kind": "市场清单 + PLUGIN_SCHEMA.md + 两个 Python 校验器",
+      "note": "README 计数与市场总条目数口径不一（unknown）"
+    },
+    {
+      "eco": "claude-code",
+      "name": "wshobson/agents",
+      "url": "https://github.com/wshobson/agents",
+      "kind": "多 harness 市场清单（94 插件 / 202 agents / 185 skills / 105 commands）",
+      "note": "同时被 opencode 与 aggregators 收录，见 crossEco"
+    },
+    {
+      "eco": "claude-code",
+      "name": "davila7/claude-code-templates",
+      "url": "https://github.com/davila7/claude-code-templates",
+      "kind": "npx 配置类 CLI（站 aitmpl.com）",
+      "note": "模板索引自称覆盖 100+ agents/commands/settings/hooks/MCPs，未逐条核"
+    },
+    {
+      "eco": "opencode",
+      "name": "官方 ecosystem 文档页",
+      "kind": "文档页目录（43 条）",
+      "note": "无可抓索引"
+    },
+    {
+      "eco": "opencode",
+      "name": "awesome-opencode",
+      "kind": "社区 awesome 仓（data/*.yaml + data/schema.json，ajv 校验）",
+      "note": "223 条，CC0-1.0；最适合机器抓取"
+    },
+    {
+      "eco": "opencode",
+      "name": "opencode.cafe",
+      "kind": "网站目录",
+      "note": "各分类计数全 0、疑 JS 渲染，实数未取得"
+    },
+    {
+      "eco": "opencode",
+      "name": "magpie-community/plugins",
+      "kind": "monorepo（49 包）",
+      "note": "未逐包核对许可证与归属"
+    },
+    {
+      "eco": "opencode",
+      "name": "kdcokenny/ocx",
+      "kind": "registry protocol 3（带 files.target 落点与 .ocx/receipt.jsonc SHA-256 基线）",
+      "note": "注册协议，非条目清单"
+    },
+    {
+      "eco": "mcode",
+      "name": "MiniMax-AI/mcode-stack",
+      "url": "https://github.com/MiniMax-AI/mcode-stack",
+      "kind": "官方市场（.minimax-plugin/plugin.json + marketplace.json）",
+      "note": "ronny/jiachen 两栈的 skill 已逐条覆盖为条目"
+    },
+    {
+      "eco": "mcode",
+      "name": "MiniMax-AI/MiniMax-Code-Plugins",
+      "url": "https://github.com/MiniMax-AI/MiniMax-Code-Plugins",
+      "kind": "社区注册中心（agent-plugins.org 1.0.0）",
+      "note": "29 个插件本次只抽查 2 个，其余 owner 条目待二次编目"
+    },
+    {
+      "eco": "mcode",
+      "name": "MiniApps 市场",
+      "kind": "MiniApp 整目录拷贝市场",
+      "note": "在 khyos 无对应清单层，不作条目"
+    },
+    {
+      "eco": "deepseek-harness",
+      "name": "官方「无市场」事实",
+      "kind": "无运营市场",
+      "note": "DSH 官方不运营插件市场；5 个索引源是索引层而非可导入条目"
+    },
+    {
+      "eco": "deepseek-harness",
+      "name": "awesome-dsh-plugin",
+      "kind": "社区 awesome 索引（对每条做能力审计并标 capabilityRedLines）",
+      "note": "README 正文抓取失败"
+    },
+    {
+      "eco": "deepseek-harness",
+      "name": "dsh-market/dsh-market",
+      "url": "https://github.com/dsh-market/dsh-market",
+      "kind": "format-1 索引（dsh-plugin-catalog/index.json）",
+      "note": "host Discover/Add index source 的消费对象，经 jsdelivr CDN 分发"
+    },
+    {
+      "eco": "deepseek-harness",
+      "name": "imsai-sh/dsh-1024store",
+      "url": "https://github.com/imsai-sh/dsh-1024store",
+      "kind": "catalog/plugins/<owner>--<repo>.json + plugin.schema.json 静态校验",
+      "note": "一条目一文件在 khyos 侧必须收进单文件编目的数组"
+    },
+    {
+      "eco": "deepseek-harness",
+      "name": "dsh.so",
+      "kind": "站点索引",
+      "note": "index.json 抓取失败"
+    },
+    {
+      "eco": "aggregators",
+      "name": "modelcontextprotocol/registry",
+      "url": "https://github.com/modelcontextprotocol/registry",
+      "kind": "官方注册表服务本体",
+      "note": "blocked：非可挂载制品，只作编目数据源；服务器总数未知"
+    },
+    {
+      "eco": "aggregators",
+      "name": "punkpeye/awesome-mcp-servers",
+      "url": "https://github.com/punkpeye/awesome-mcp-servers",
+      "kind": "markdown awesome-list 目录仓",
+      "note": "blocked：无可安装形态；Aggregators 分类两次提取均失败"
+    },
+    {
+      "eco": "aggregators",
+      "name": "PulseMCP",
+      "kind": "托管目录站",
+      "note": "两次抓取 403，格式/条目量/安装机制未核实，未编目任何条目"
+    },
+    {
+      "eco": "aggregators",
+      "name": "Smithery",
+      "kind": "托管目录站（27,365+）",
+      "note": "无可直接落地 khyos 的开放清单格式"
+    },
+    {
+      "eco": "aggregators",
+      "name": "mcp.so",
+      "kind": "托管目录站（≥18,000，分页推算）",
+      "note": "无可直接落地 khyos 的开放清单格式"
+    },
+    {
+      "eco": "aggregators",
+      "name": "Glama",
+      "kind": "托管目录站（111,977，有公开 API GET /v1/servers）",
+      "note": "三家中唯一有可编程目录源的"
+    }
+  ]
+}
