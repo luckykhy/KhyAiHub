@@ -34,6 +34,7 @@ const { STATUSLINE_SETUP_AGENT } = require('./built-in/statuslineSetup');
 const { ULTRA_PLAN_AGENT } = require('./built-in/ultraPlanAgent');
 const { ULTRA_REVIEW_AGENT } = require('./built-in/ultraReviewAgent');
 const { VERIFICATION_AGENT } = require('./built-in/verificationAgent');
+const { loadBuiltInMarkdownAgents } = require('./loadBuiltInMarkdownAgents');
 
 /**
  * Returns the list of built-in agents.
@@ -195,6 +196,19 @@ function getBuiltInAgents(opts = {}) {
 
   if (enableUltraReview) {
     agents.push(ULTRA_REVIEW_AGENT);
+  }
+
+  // built-in/*.md files declaring `builtin: true` are built-in agents too — the
+  // loader documents "add a .md, no JS changes", but until this seam existed the
+  // files were dead weight on disk (nothing required the loader). This is the
+  // single point both consumers read: getAgentDefinitions (/agents) and the
+  // AgentTool spawn lookup. .js entries keep priority on name collision, per the
+  // loader's contract.
+  const jsTypes = new Set(agents.map((a) => a.agentType));
+  for (const mdAgent of loadBuiltInMarkdownAgents()) {
+    if (!jsTypes.has(mdAgent.agentType)) {
+      agents.push(mdAgent);
+    }
   }
 
   return agents;
