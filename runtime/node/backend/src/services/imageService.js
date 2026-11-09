@@ -36,6 +36,11 @@ const MIME_MAP = {
 // Max image size (5MB — larger images should be resized)
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
+// Clipboard bitmaps bypass readImageFromFile's byte ceiling (they are captured
+// straight from xclip/wl-paste), so allow a generous capture buffer and let the
+// long-edge normalizer shrink them instead of failing the exec.
+const CLIPBOARD_MAX_BUFFER = 64 * 1024 * 1024;
+
 const envFlagEnabled = require('../utils/envFlagEnabled');
 
 // [DESIGN-ARCH-163] D2 门控：超限时自动降尺度，默认开；显式 falsy → 旧抛错行为。
@@ -82,6 +87,52 @@ function _downscaleToLimit(buf, dims) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Long-edge normalization for vision payloads (DESIGN: 1568 px cap). Reuses the
+ * platform resize dispatch from the GLM downscaler; fail-soft → null means the
+ * caller keeps the original bytes.
+ * @param {Buffer} buf
+ * @returns {object|null}
+ */
+function _normalizeForVision(buf) {
+  try {
+    const { normalizeImageBuffer } = require('./imageNormalize');
+    return normalizeImageBuffer(buf);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the public image result from raw bytes, applying the long-edge cap when
+ * the image is larger than the vision convention.
+ * @param {Buffer} buf
+ * @param {'png'|'jpeg'|'gif'|'webp'} fallbackFormat
+ */
+function _imageResultFromBuffer(buf, fallbackFormat) {
+  const format = detectFormat(buf) || fallbackFormat;
+  const norm = _normalizeForVision(buf);
+  if (norm) {
+    return {
+      base64: norm.buf.toString('base64'),
+      mimeType: norm.mimeType,
+      sizeBytes: norm.buf.length,
+      format: norm.format,
+      normalizedFrom: {
+        width: norm.originalWidth,
+        height: norm.originalHeight,
+        sizeBytes: buf.length,
+      },
+    };
+  }
+  return {
+    base64: buf.toString('base64'),
+    mimeType: MIME_MAP[format] || 'image/png',
+    sizeBytes: buf.length,
+    format,
+  };
 }
 
 /**
@@ -177,11 +228,15 @@ function readImageFromFile(filePath) {
         )}MB > ${MAX_IMAGE_BYTES / 1024 / 1024}MB）且自动压缩未成功：本机缺少图像缩放工具（System.Drawing/ffmpeg/sips）或格式不可解析。请手工缩小后重试，或直接以文本粘贴图中内容`
       );
     }
+    // The byte-driven pass above can still leave a very wide screenshot; apply
+    // the same long-edge convention used for normal-size images.
+    const norm = _normalizeForVision(shrunk.buf);
+    const finalBuf = norm ? norm.buf : shrunk.buf;
     return {
-      base64: shrunk.buf.toString('base64'),
-      mimeType: 'image/png',
-      sizeBytes: shrunk.buf.length,
-      format: 'png',
+      base64: finalBuf.toString('base64'),
+      mimeType: norm ? norm.mimeType : 'image/png',
+      sizeBytes: finalBuf.length,
+      format: norm ? norm.format : 'png',
       downscaledFrom: { sizeBytes: stat.size, width: bigDims.width, height: bigDims.height },
     };
   }
@@ -192,12 +247,7 @@ function readImageFromFile(filePath) {
     throw new Error(`Not a recognized image format. Supported: PNG, JPEG, GIF, WebP`);
   }
 
-  return {
-    base64: buf.toString('base64'),
-    mimeType: MIME_MAP[format],
-    sizeBytes: stat.size,
-    format,
-  };
+  return _imageResultFromBuffer(buf, format);
 }
 
 /**
@@ -224,18 +274,12 @@ function _readClipboardLinux() {
   // Try xclip first, then xsel
   try {
     const buf = execSync('xclip -selection clipboard -t image/png -o', {
-      maxBuffer: MAX_IMAGE_BYTES,
+      maxBuffer: CLIPBOARD_MAX_BUFFER,
       timeout: 5000,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     if (buf.length > 0) {
-      const format = detectFormat(buf) || 'png';
-      return {
-        base64: buf.toString('base64'),
-        mimeType: MIME_MAP[format] || 'image/png',
-        sizeBytes: buf.length,
-        format,
-      };
+      return _imageResultFromBuffer(buf, 'png');
     }
   } catch {
     /* xclip failed */
@@ -244,17 +288,12 @@ function _readClipboardLinux() {
   // Fallback: try wl-paste (Wayland)
   try {
     const buf = execSync('wl-paste --type image/png', {
-      maxBuffer: MAX_IMAGE_BYTES,
+      maxBuffer: CLIPBOARD_MAX_BUFFER,
       timeout: 5000,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     if (buf.length > 0) {
-      return {
-        base64: buf.toString('base64'),
-        mimeType: 'image/png',
-        sizeBytes: buf.length,
-        format: 'png',
-      };
+      return _imageResultFromBuffer(buf, 'png');
     }
   } catch {
     /* wl-paste failed */

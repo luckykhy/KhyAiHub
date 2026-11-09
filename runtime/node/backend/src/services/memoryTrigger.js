@@ -16,6 +16,10 @@
  *               一次性的任务陈述。
  *   - none      无需捕获。
  *
+ * 第四个入口 classifyReflection() 与上面三类**正交**:它不分类用户消息,分类 harness
+ * 的结构化复盘(crossModelVerify 的 issues/suggestedFixes)——复盘此前只活在回合内,
+ * 修完即丢。默认关(KHY_MEMORY_REFLECTION),详见该函数上方注释。
+ *
  * 保留层推断(单源自 memoryTier.TIERS):
  *   - 含「永久/永远/别忘/forever/permanently」或稳定身份事实 ⇒ permanent
  *   - 含「临时/暂时/这次/本次会话/just for now/temporarily」 ⇒ short_term(只活本会话)
@@ -243,11 +247,155 @@ function classify(message) {
   return NONE;
 }
 
+// ── 复盘/教训捕获(reflection 分类)────────────────────────────────────
+// crossModelVerify 的 issues/suggestedFixes 此前只活在回合内:组装进 remediationPrompt
+// 喂回主模型,修完即丢,下次同类任务从零开始踩同一个坑。本分类把复盘摘要成一条
+// ExpeL 式教训(情境 → 问题 → 修复方向),经 memoryEngine.addStructuredMemory 落
+// cross_session 层,之后由既有召回链跨会话消费——写入/原子写/内容查重/tier 全部
+// 走 memoryEngine 现有公共 API,本模块仍是纯叶子(零 IO)。
+//
+// 默认关(KHY_MEMORY_REFLECTION ∈ {1,true,on,yes} 才开):AI 生成内容直接进长期记忆库
+// 正是「低质复盘污染召回」的风险面,按 PROCESS-008 取「默认关」这一档(比 S1 观察者
+// 更保守)。开着也有 score 门槛把守:只有「有问题 + 有修复方向 + 内容具体」的复盘
+// 才配落库,阈值思路复用 dreamPromote 的 score≥0.9。
+//
+// 为什么不并进 classify():classify 的入参是**用户消息**,复盘是 harness 的结构化产出;
+// 若让 classify 靠文本模式识别复盘,正好落进 SYSTEM_INJECT_RE 护栏防的那个坑(系统
+// 文本冒充用户输入被当成偏好写库)。分类决策仍收在本模块(单一真源),入口分开。
+const REFLECTION_ON = new Set(['1', 'true', 'on', 'yes']);
+const REFLECTION_DEFAULT_MIN_SCORE = 0.9; // 同 dreamPromote DEFAULT_MIN_SCORE
+const REFLECTION_MAX_ITEMS = 5; // 单条教训最多带几个问题/修复方向,防上下文膨胀
+const REFLECTION_TASK_PREVIEW = 80; // 情境预览截断
+const REFLECTION_ISSUE_SPECIFIC_CHARS = 15; // 问题描述「具体」的长度基准(一句中文审查意见的量级)
+
+/** KHY_MEMORY_REFLECTION — 默认关,显式 opt-in 才捕获复盘。 */
+function isReflectionEnabled(env = process.env) {
+  return REFLECTION_ON.has(
+    String((env && env.KHY_MEMORY_REFLECTION) || '')
+      .trim()
+      .toLowerCase()
+  );
+}
+
+/** 质量门槛。KHY_MEMORY_REFLECTION_MIN_SCORE 可覆盖,取值 [0,1],默认 0.9。 */
+function reflectionMinScore(env = process.env) {
+  const v = parseFloat((env && env.KHY_MEMORY_REFLECTION_MIN_SCORE) || '');
+  return Number.isFinite(v) && v >= 0 && v <= 1 ? v : REFLECTION_DEFAULT_MIN_SCORE;
+}
+
+function _cleanList(v) {
+  return (Array.isArray(v) ? v : [])
+    .map((s) => String(s == null ? '' : s).trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * 复盘质量分(确定性、纯函数,不读时钟/IO;不用模型自评信心分——那不可复现、不可单测):
+ *   结构完整度 = 0.5 有问题(verdict≠pass 且 issues 非空;没问题的复盘没有可学的东西)
+ *              + 0.3 有修复方向(光有问题没有下一步,教训不可执行)
+ *              + 0.2 修复方向对问题的覆盖度 min(fixes/issues, 1)
+ *   内容具体度 = min(问题平均长度 / REFLECTION_ISSUE_SPECIFIC_CHARS, 1)(太短的多是噪声)
+ *   score = 结构完整度 × 内容具体度。
+ * 乘性的理由:加法形状下「有问题 + 有修复 + 全覆盖」already=0.9,'bug'/'fix' 这种三字符
+ * 噪声也能过线;乘性让空泛内容真正折分。默认门槛 0.9 ⇒ 大致要「问题 + 修复 + 内容具体」
+ * 齐了才落库;没有修复方向的复盘在任何具体度下都过不了 0.9。
+ * @param {{verdict?:string, issues?:string[], suggestedFixes?:string[]}} reflection
+ * @returns {number} [0,1]
+ */
+function scoreReflection(reflection) {
+  const verdict = String((reflection && reflection.verdict) || '')
+    .trim()
+    .toLowerCase();
+  const issues = _cleanList(reflection && reflection.issues);
+  const fixes = _cleanList(reflection && reflection.suggestedFixes);
+  if (verdict === 'pass' || issues.length === 0) {
+    return 0;
+  }
+  const avgIssueLen = issues.reduce((s, i) => s + i.length, 0) / issues.length;
+  const completeness =
+    0.5 +
+    (fixes.length > 0 ? 0.3 : 0) +
+    0.2 * Math.min(fixes.length / issues.length, 1);
+  const specificity = Math.min(avgIssueLen / REFLECTION_ISSUE_SPECIFIC_CHARS, 1);
+  return Math.round(completeness * specificity * 1000) / 1000;
+}
+
+/**
+ * lesson schema(与 ExpeL insight 库合并设计):正文按「情境 → 问题 → 修复方向 → 教训」
+ * 组织,对齐 ExpeL「情境 + 规则」的 insight 形态;字段形状对齐 dreamPromote 回流 schema
+ * (name/description/content,类型 lesson→feedback)。name 取情境(任务)而非问题——
+ * 情境才是这条教训的 topic key:同一任务再次复盘走 decideUpdate skip/supersede 而不
+ * 堆叠,不同任务的同类问题各自成条(ExpeL 按任务类型迁移,不合并不同情境)。
+ * @returns {{name:string, description:string, content:string}}
+ */
+function buildLesson(reflection) {
+  const issues = _cleanList(reflection && reflection.issues).slice(0, REFLECTION_MAX_ITEMS);
+  const fixes = _cleanList(reflection && reflection.suggestedFixes).slice(0, REFLECTION_MAX_ITEMS);
+  const task = String((reflection && reflection.task) || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, REFLECTION_TASK_PREVIEW);
+  const reviewModel = String((reflection && reflection.reviewModel) || '').trim();
+
+  const topic = task || issues[0] || '';
+  const sentence = topic.split(/(?<=[。.!?！？])/)[0] || topic;
+  const name = `跨模型复盘: ${sentence.slice(0, 60).trim()}`;
+  const description = `跨模型审查发现 ${issues.length} 个问题、${fixes.length} 个修复方向`;
+
+  const lines = [
+    task ? `适用情境: ${task}` : '适用情境: (未提供任务原文)',
+    `跨模型审查(${reviewModel || 'unknown'})未通过,发现 ${issues.length} 个问题:`,
+    ...issues.map((i) => `- ${i}`),
+  ];
+  if (fixes.length > 0) {
+    lines.push('建议修复方向:', ...fixes.map((f) => `- ${f}`));
+  }
+  lines.push(`教训: ${fixes[0] || issues[0]}`);
+  return { name, description, content: lines.join('\n') };
+}
+
+/**
+ * 把一次跨模型复盘分类成捕获决策(classify 的平行入口:入参是结构化复盘,不是用户消息)。
+ * 门控关 / 分数不达门槛 / 产出为空 ⇒ { kind:'none' },调用方不写。
+ *
+ * @param {{task?:string, verdict?:string, issues?:string[], suggestedFixes?:string[], reviewModel?:string}} reflection
+ * @param {object} [env]
+ * @returns {{kind:'reflection', name:string, note:string, description:string, tier:string, type:string, score:number}|{kind:'none'}}
+ *   note 即 lesson 正文,调用方应原样喂给 memoryEngine.addStructuredMemory 的 content。
+ */
+function classifyReflection(reflection, env = process.env) {
+  if (!isReflectionEnabled(env)) {
+    return NONE;
+  }
+  const score = scoreReflection(reflection);
+  if (!(score >= reflectionMinScore(env))) {
+    return NONE;
+  }
+  const lesson = buildLesson(reflection);
+  if (!lesson.name || !lesson.content) {
+    return NONE;
+  }
+  return {
+    kind: 'reflection',
+    name: lesson.name,
+    note: lesson.content,
+    description: lesson.description,
+    tier: memoryTier.TIERS.CROSS_SESSION,
+    type: 'feedback', // dreamPromote TYPE_MAP: lesson → feedback → cross_session
+    score,
+  };
+}
+
 module.exports = {
   isEnabled,
   isProactiveEnabled,
   isInstructionCandidateEnabled,
+  isReflectionEnabled,
   classify,
+  classifyReflection,
+  scoreReflection,
+  buildLesson,
+  reflectionMinScore,
   _stripTrigger,
   // 暴露正则供测试与单源复用(ai.js 旧 _MEMORY_TRIGGER_RE 可逐步收敛到此)。
   EXPLICIT_RE,

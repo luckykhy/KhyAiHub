@@ -112,6 +112,62 @@ function _noteZenRetirement(err, model) {
   }
 }
 
+/**
+ * 400 报文是否点名了某个请求字段（用于「该剥哪个参数」的判定）。
+ *
+ * 与 adaptiveParamStrip.detectUnsupportedParams 同口径：只有错误文本里出现参数名，
+ * 才认为这个 400 是它引起的。
+ *
+ * @param {object|null} err  上游错误（err.response.data 为错误体）
+ * @param {string} key       请求体字段名（如 'stream_options'）
+ * @returns {boolean}        错误文本是否含该字段名
+ */
+function _errImplicatesParam(err, key) {
+  try {
+    const data = err && err.response ? err.response.data : undefined;
+    let text = '';
+    if (typeof data === 'string') {
+      text = data;
+    } else if (data && typeof data === 'object') {
+      try {
+        text = JSON.stringify(data);
+      } catch {
+        text = '';
+      }
+    }
+    const msg = err && err.message ? String(err.message) : '';
+    const lower = `${text} ${msg}`.toLowerCase();
+    return lower.includes(String(key).toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 上游 400 是否**没给出可读的错误体**（拿不到任何「为什么被拒」的信息）。
+ *
+ * err.message 恒为 "Request failed with status code 400"（nativeJsonRequest 构造），
+ * 不含归因信息，所以判据只看 err.response.data：空串 / 非对象非串 / 缺失 → true。
+ * 调用方据此走保守策略（剥参数保请求能过去），而不是赌一个说不清的 400。
+ */
+function _hasNoUpstreamErrorBody(err) {
+  try {
+    const data = err && err.response ? err.response.data : undefined;
+    if (data == null) {
+      return true;
+    }
+    if (typeof data === 'string') {
+      return data.trim().length === 0;
+    }
+    if (typeof data === 'object') {
+      return Object.keys(data).length === 0;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 
 // ── 同上游预跳过 + 免费模型稳定度记账 ────────────────────────────────
 // 只对走 callOpenAI 的三个 key 认「上游端点」:它们共享同一条 resolved baseUrl
@@ -384,6 +440,24 @@ function isDeadConnectionError(err) {
   );
 }
 
+// 「正在重试」这一类一行话的出口。ink 拥有终端期间（TUI）必须走 noticeInbox：
+// ink 的 patch-console 把 console.warn 路由到 stderr 通道（build/ink.js 的
+// writeToStderr = log.clear() + 写行 + restoreLastOutput()），那一行会落在**活帧
+// 上面**；而默认 KHY_INLINE_TRANSCRIPT 下转录本身就是活帧的一部分，于是「正在
+// 重试」跑到用户刚提交的那句话头顶上（复现：
+// works/data/khy/feedback/econnreset-notice-order-20261104）。收件箱无人认领
+// （经典 REPL / 单命令进程 / 测试）时回落 console.warn，逐字节回到旧行为。
+function _announceRetry(line) {
+  try {
+    if (require('../utils/terminal/noticeInbox').push(line) === true) {
+      return;
+    }
+  } catch {
+    /* 收件箱不可用 ⇒ 回落 */
+  }
+  console.warn(line);
+}
+
 // POST 封装:注入共享 keep-alive agent;遇死连接(未收到任何响应数据)时
 // 用全新连接重试一次(不带 agent → 绕开池内可能残留的其他死 socket)。
 // config._providerProxyUrl(内部字段,发请求前剥离)存在时走 per-provider 代理分支:
@@ -404,7 +478,7 @@ async function postWithDeadConnRetry(url, data, config, label) {
         const endpoint = _proxyEndpointLabel(providerProxyUrl);
         if (!_warnedDeadProxies.has(providerProxyUrl)) {
           _warnedDeadProxies.add(providerProxyUrl);
-          console.warn(
+          _announceRetry(
             `[proxy] ${label || 'provider'} 的 per-provider 代理 ${endpoint} 未监听(${err.code || 'ECONNREFUSED'})，回退直连重试 (第1/1次)...`
           );
         }
@@ -427,7 +501,7 @@ async function postWithDeadConnRetry(url, data, config, label) {
       if (!isDeadConnectionError(err)) {
         throw err;
       }
-      console.warn(
+      _announceRetry(
         `连接被服务端关闭(${err.code || err.message})，正在经代理用新连接重试 ${label} (第1/1次)...`
       );
       let retryAgent;
@@ -435,7 +509,7 @@ async function postWithDeadConnRetry(url, data, config, label) {
         retryAgent = createProxyAgent(providerProxyUrl);
       } catch (e) {
         // 代理地址此刻变得非法/不可构造 → 死连接重试改用直连，绝不因构造抛错中断。
-        console.warn(
+        _announceRetry(
           `[proxy] ${label || 'provider'} 代理地址无效（${(e && e.code) || 'invalid'}），死连接重试改用直连`
         );
         return axios.post(url, data, {
@@ -453,7 +527,7 @@ async function postWithDeadConnRetry(url, data, config, label) {
     // 代理不可用(连接拒绝/超时) → 回退直连
     if (_proxyAgent && !_proxyFailedOnce && isProxyConnectError(err)) {
       _proxyFailedOnce = true;
-      console.warn(`[proxy] 代理 ${_configuredProxyUrl} 不可达，回退直连`);
+      _announceRetry(`[proxy] 代理 ${_configuredProxyUrl} 不可达，回退直连`);
       return axios.post(url, data, {
         ...restConfig,
         httpsAgent: _directHttpsAgent,
@@ -463,7 +537,7 @@ async function postWithDeadConnRetry(url, data, config, label) {
     if (!isDeadConnectionError(err)) {
       throw err;
     }
-    console.warn(
+    _announceRetry(
       `连接被服务端关闭(${err.code || err.message})，正在用新连接重试 ${label} (第1/1次)...`
     );
     return axios.post(url, data, { ...restConfig });
@@ -1451,9 +1525,16 @@ class MultiFreeService {
           });
         }
       }
-      // stream_options is a standard OpenAI field but some non-compliant gateways reject unknown
-      // keys; drop it on retry so the request still goes through.
-      if (retryBody.stream_options) {
+      // stream_options 是标准 OpenAI 字段，但少数不守规矩的网关会拒收未知键。
+      // **只在 400 报文真的点名它时才剥**——沿用 adaptiveParamStrip.detectUnsupportedParams
+      // 的同一条判据（错误文本含参数名才认为是被它拒的）。历史上这里无条件剥，等于每次
+      // 400 都自愿放弃 usage 回流：重试成功了，但这一回合底栏 ctx 必停在 0，正是
+      // KHY_STREAM_USAGE 要修的病。报文读不到（空体）时保守回退无条件剥 —— 没有信息
+      // 就不赌，保持「请求能过去」优先于「usage 能回来」。
+      if (
+        retryBody.stream_options &&
+        (_errImplicatesParam(err, 'stream_options') || _hasNoUpstreamErrorBody(err))
+      ) {
         delete retryBody.stream_options;
       }
       return retryBody;
@@ -1855,7 +1936,16 @@ class MultiFreeService {
     if (isRelay) {
       delete body.thinking;
       delete body.extended_thinking;
-      delete body.tools; // Relays may not support tools
+      // 剥离 tools 必须**告知**：静默剥离时模型手里没有任何工具，而系统提示词仍按
+      // 全注册表广告 Agent/Skill/TodoWrite —— 模型于是用散文「描述」自己干了活，
+      // 用户看到的就是「它说做完了但其实什么都没做」。notice 与 callOpenAI 同款。
+      if (body.tools) {
+        delete body.tools; // Relays may not support tools
+        const _stripNotice = require('./gateway/modelToolingCapability').stripToolsNotice(model);
+        if (opts.onChunk) {
+          opts.onChunk({ type: 'notice', text: _stripNotice });
+        }
+      }
     }
 
     // ── Streaming path for Anthropic ────────────────────────────────
@@ -2445,7 +2535,7 @@ class MultiFreeService {
           // 避免 Baidu OAuth GET 在代理挂掉时硬失败。
           if (_proxyAgent && !_proxyFailedOnce && isProxyConnectError(err)) {
             _proxyFailedOnce = true;
-            console.warn(
+            _announceRetry(
               `[proxy] 代理 ${_configuredProxyUrl} 不可达，回退直连重试 Baidu OAuth 令牌获取 (第1/1次)...`
             );
             tokenResponse = await axios.get(tokenUrl, {

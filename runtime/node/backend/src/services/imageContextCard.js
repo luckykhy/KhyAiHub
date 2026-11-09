@@ -176,6 +176,31 @@ function _formatLabel(image = {}) {
   return fmt || '未知格式';
 }
 
+// 压缩旅程常跨 MB→KB 两档（字节闸放进来的图，归一化后往往只剩几十 KB）；固定用 MB
+// 会把 50KB 显示成 0.0MB，那是失真不是简洁。
+function _fmtBytes(bytes) {
+  const b = Number(bytes);
+  if (!Number.isFinite(b) || b <= 0) {
+    return '大小未知';
+  }
+  return b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)}MB` : `${(b / 1024).toFixed(0)}KB`;
+}
+
+// 视觉 token 面积启发，与 glmVisionImageDownscale.estimateVisionTokens 同一线性模型
+// （≈每 100 像素 1 token，系数由仓内唯一实测样本 18287 inputs tokens 倒推）。在此内联
+// 一份是为守本文件「零 IO 纯叶」契约——glmVisionImageDownscale 是 IO 叶子，不能被纯叶
+// 依赖；两处漂移由 imageContextCard.test.js 与 estimateVisionTokens 对账盯防。
+const PIXELS_PER_TOKEN = 100;
+
+function _estimateImageTokens(width, height) {
+  const w = Number(width);
+  const h = Number(height);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    return 0;
+  }
+  return Math.ceil((w * h) / PIXELS_PER_TOKEN);
+}
+
 /**
  * 装配单图说明书段。字段缺省如实写「未知」，不猜测。
  * @param {object} image {index,total,source,sizeBytes,width,height,format,mimeType,
@@ -196,12 +221,25 @@ function buildImageCard(image = {}) {
   lines.push(`- 格式: ${_formatLabel(image)} · ${dims} · ${size}`);
   if (image.downscaledFrom && image.downscaledFrom.sizeBytes) {
     const from = image.downscaledFrom;
-    const fromDims = from.width && from.height ? `${from.width}x${from.height}→` : '';
-    lines.push(
-      `- 预处理: 已由 ${(from.sizeBytes / 1024 / 1024).toFixed(1)}MB 自动压缩至 ${(
-        image.sizeBytes / 1024 / 1024
-      ).toFixed(1)}MB（${fromDims}${image.width}x${image.height}）`
-    );
+    // 原尺寸在本函数作用域内拿得到（downscaledFrom 由 imageService 字节闸透出）→ 报
+    // 「原尺寸→末态」；任一端缺宽高 → 只报末态或「尺寸未知」，不猜。
+    const finalDims = image.width && image.height ? `${image.width}x${image.height}` : '';
+    const dimsPath =
+      from.width && from.height && finalDims
+        ? `${from.width}x${from.height}→${finalDims}`
+        : finalDims || '尺寸未知';
+    const tokens = _estimateImageTokens(image.width, image.height);
+    const facts = [
+      `已由 ${_fmtBytes(from.sizeBytes)} 自动压缩至 ${_fmtBytes(image.sizeBytes)}`,
+      dimsPath,
+      `输出 ${_formatLabel(image)}`,
+    ];
+    if (tokens > 0) {
+      facts.push(
+        `估算 ~${tokens} tokens（面积启发估算，非计费口径，与上游真实 inputs tokens 不同口径）`
+      );
+    }
+    lines.push(`- 预处理: ${facts.join('，')}`);
   }
   const scene = SCENE_LABELS[image.scene] ? image.scene : 'unknown';
   lines.push(`- 场景判定: ${SCENE_LABELS[scene]}`);

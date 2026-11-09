@@ -347,6 +347,21 @@ function summarizeText(text, maxLen = SUMMARY_MAX_LEN) {
 // inputPreprocessor._inferIntent、routes/ai.js 硬编码检查。
 const _isGreeting = (input) => require('./textHeuristics').isGreeting(input);
 
+/**
+ * 领域标签识别（顺序即优先级，先命中先返回）。
+ *
+ * 这份表是「## INTENT ASSURANCE」的 `Request class` 真源 —— 判错会被写进**系统提示词**
+ * 的高优先级读题框，模型据此理解用户诉求，所以判错 = 用户看到「它根本没听懂我」。
+ *
+ * 历史缺陷（2026-10-31 修复，用户报障「意图难以准确识别」）：
+ *  1. 图片识别用的是 `图.*识别`，把「意图识别」「识别一下这个错误」全判成 OCR；
+ *  2. 信息搜索用裸「查」，把「排查 / 检查 / 调查 / 审查」全吞成搜索；
+ *  3. 读取文件用裸「文件」，把「把这个文件重命名」判成只读；
+ *  4. 代码修改词表里没有「修复 / 排查 / 重命名 / 实现」，工程指令落到「通用咨询」；
+ *  5. 上述宽词全部排在「代码修改」之前，顺序上就把工程任务抢走了。
+ *
+ * 现策略：窄词锚定语境（图片必须带「图片/照片/截图」语境）+ 代码修改前置。
+ */
 function detectIntent(text) {
   const s = String(text || '');
   if (_isGreeting(s)) {
@@ -361,29 +376,42 @@ function detectIntent(text) {
   if (/(k线|K线|kline|日线|周线|月线|分钟线)/i.test(s)) {
     return 'K线查询';
   }
-  if (/(搜索|查|新闻|资讯|最新|动态|search|web)/i.test(s)) {
-    return '信息搜索';
-  }
-  if (/(计算|复利|收益率|\d+\s*[+\-*/^%])/i.test(s)) {
-    return '计算';
-  }
   if (/(模型|model|gguf|safetensors|导入模型|ollama|下载模型|导出模型)/i.test(s)) {
     return '模型管理';
   }
   if (/(pdf.*word|pdf.*docx|转.*word|转.*docx|pdf转换)/i.test(s)) {
     return 'PDF转Word';
   }
-  if (/(ocr|识别.*文字|图片.*文字|图.*识别|文字提取|图片.*识别)/i.test(s)) {
+  // 图片识别：必须同时出现「图片类语境」与「识别动作」，否则「意图识别」会被误判成 OCR。
+  // OCR 一词自身即充分（它不可能出现在非图片语境里）。
+  if (
+    /ocr/i.test(s) ||
+    (/(图片|照片|截图|图像|图里|图中|扫描件)/i.test(s) &&
+      /识别|提取|转文字|转成文字/i.test(s))
+  ) {
     return '图片识别';
   }
-  if (/(读取|查看|文件|read|cat|打开.*文件|\.json|\.js|\.md|\.py)/i.test(s)) {
-    return '读取文件';
-  }
-  if (/(写入|修改|重构|更新|新增|删除|edit|patch|refactor|write)/i.test(s)) {
+  // 代码修改：先于「信息搜索 / 读取文件 / 命令执行」——「修复/排查/重命名」里含「查/文件」，
+  // 旧顺序会把工程任务判成搜索或只读。裸「改」不收（会误伤 改天/改口），只收「改一下/改成」。
+  if (
+    /(修复|修好|修改|改进|改动|改(?:一下|下|掉|成|为)|重构|排查|调试|重命名|迁移|补齐|更新|新增|删除|实现|编写|edit|patch|refactor|write|fix|debug|rename|migrate|implement)/i.test(
+      s
+    )
+  ) {
     return '代码修改';
   }
   if (/(命令|执行|运行|shell|bash|terminal|cmd)/i.test(s)) {
     return '命令执行';
+  }
+  // 信息搜索：收窄到显式检索动作，不再用裸「查」（会吞掉 排查/检查/调查/审查）。
+  if (/(搜索|查询|查一下|查查|查下|搜一下|新闻|资讯|最新动态|search|web\s*search)/i.test(s)) {
+    return '信息搜索';
+  }
+  if (/(计算|复利|收益率|\d+\s*[+\-*/^%])/i.test(s)) {
+    return '计算';
+  }
+  if (/(读取|查看|打开.*文件|\.json|\.js|\.md|\.py|\bread\b|\bcat\b)/i.test(s)) {
+    return '读取文件';
   }
   if (/(解释|什么是|定义|原理|怎么理解)/i.test(s)) {
     return '概念解释';
@@ -598,12 +626,53 @@ function _extractKeywordIntentAnchors(text = '') {
   );
 }
 
+// 约束标记词表（长词在前，避免 `必须先` 被 `必须` 抢先；两种写法的捕获文本逐字节相同，
+// 因为标记之后的尾巴本来就一路吃到子句边界）。
+const _CONSTRAINT_CLAUSE_RE =
+  /(必须先|不要忘|必须保留|不要|别|禁止|不能|务必|必须|需要|记得|保留|优先|仅|只|避免)[^，。；;\n]{0,80}|(must|do not|don't|never|without|only|prefer|avoid|keep|preserve|required)[^,.;\n]{0,80}/gi;
+
+/**
+ * 中文没有词边界：`别` / `只` / `仅` / `需要` / `记得` / `不要` 这些短标记会落在**别的词内部**，
+ * 于是抽出来的「约束」与用户原意**相反**。实测（2026-10-31 用户报障「意图难以准确识别」）：
+ *
+ *   `帮我识别一下这个错误的原因`  → 约束「别一下这个错误的原因」（识别 → 别）
+ *   `我要实现意图识别模块…`        → 约束「别模块」「别不出来就报错」
+ *   `不需要改测试`                 → 约束「需要改测试」（语义反转）
+ *
+ * 这张表给出「紧邻左侧出现即说明该标记是词内字」的字符集；命中即丢弃该条，不产出约束。
+ * 表里没有的标记（禁止/不能/务必/必须/保留/优先/避免…）本身不会落在常用词内部，不设防。
+ */
+const _CONSTRAINT_MARKER_LEFT_BLOCK = Object.freeze({
+  // 识别 区别 告别 分别 特别 类别 级别 性别 辨别 鉴别 差别 离别 各别 派别 送别 惜别 道别 作别 个别 阔别 甄别 辩别
+  别: '识区别告分特类级性辨鉴差离各派送惜道作个阔甄辩',
+  // 不需要 / 不记得 / 不只 / 不仅 —— 左侧一个「不」就把肯定变否定
+  需要: '不',
+  记得: '不',
+  只: '不',
+  仅: '不',
+  // 要不要 / 想不要 —— 疑问句里的「不要」不是约束
+  不要: '要想会',
+});
+
+/** 该命中是否只是词内字（左侧紧邻构成常用词）→ 是则不是真约束。 */
+function _isConstraintMarkerInsideWord(raw, index, marker) {
+  const blocked = _CONSTRAINT_MARKER_LEFT_BLOCK[marker];
+  if (!blocked || index <= 0) {
+    return false;
+  }
+  return blocked.includes(raw[index - 1]);
+}
+
 function _extractConstraintIntentClauses(text = '') {
   const raw = String(text || '');
-  const matches =
-    raw.match(
-      /(?:不要|别|禁止|不能|务必|必须|需要|记得|保留|优先|仅|只|避免|必须先|不要忘|必须保留)[^，。；;\n]{0,80}|(?:must|do not|don't|never|without|only|prefer|avoid|keep|preserve|required)[^,.;\n]{0,80}/gi
-    ) || [];
+  const matches = [];
+  for (const m of raw.matchAll(_CONSTRAINT_CLAUSE_RE)) {
+    const marker = String(m[1] || '').toLowerCase();
+    if (marker && _isConstraintMarkerInsideWord(raw, m.index, marker)) {
+      continue;
+    }
+    matches.push(m[0]);
+  }
   return _dedupeIntentItems(matches, 5);
 }
 
@@ -2005,6 +2074,11 @@ async function makeSystemPrompt(
     Number.isFinite(suppliedContextWindow) && suppliedContextWindow > 0
       ? suppliedContextWindow
       : require('../constants/contextWindowDefaults').LARGE_FAMILY_CONTEXT_WINDOW;
+  // Read-only sub-agents (agentDef.omitClaudeMd, agents/types.js:46) carry no
+  // project instructions: the field had declarations but no execution surface
+  // (RUNTIME-010 A2-4), so every Explore instance hauled the whole
+  // `# claudeMd` block. Routed from AgentTool through chatOpts.
+  const _omitProjectInstructions = promptRuntimeOpts.omitProjectInstructions === true;
 
   // Model-capability tier → harness profile. Same spine the tool-use loop uses
   // (modelTier.js). `lean` verbosity (T0 frontier only) drops the weak-model
@@ -2048,8 +2122,12 @@ async function makeSystemPrompt(
 
   let enabledTools = [];
   try {
-    const toolModule = require('../tools');
-    enabledTools = [...toolModule.getEnabled().values()].map((t) => t.name);
+    // 提示词按「本次请求真实上线的工具」生成：调用方用与 wire 同一个治理函数
+    // (services/tool/effectiveToolSurface.js) 算出 effectiveToolNames 传进来；未提供才回退全注册表。
+    // 注意用 Array.isArray 而不是 length 判断：**空数组是「本轮确实无工具」**（问候轮 /
+    // 收尾轮 / 治理裁空），此时提示词必须也一个都不广告，否则又变成「提示词撒谎」。
+    const _eff = promptRuntimeOpts.effectiveToolNames;
+    enabledTools = Array.isArray(_eff) ? _eff : [...require('../tools').getEnabled().values()].map((t) => t.name);
   } catch {
     /* tools not loaded yet */
   }
@@ -2182,6 +2260,7 @@ async function makeSystemPrompt(
         baseSecurity,
         bootstrapFiles,
         deferredToolsHint,
+        omitProjectInstructions: _omitProjectInstructions,
       });
       return assembleSystemPrompt(_sections);
     }
@@ -2237,6 +2316,10 @@ async function makeSystemPrompt(
           taskScale: String(promptRuntimeOpts.taskScale || ''),
           verbosity: _harnessProfile.promptVerbosity,
           shortContext: _short,
+          // Sub-agents that omit project instructions get a different prompt —
+          // without this key a sub-agent could be served the main-agent cache
+          // entry (or poison it) on the legacy inline modular path.
+          omitProjectInstructions: _omitProjectInstructions,
           // Persona is loaded from persona.md below; fold its fingerprint into the
           // cache key so edits to persona.md invalidate the cached prompt (C1).
           personaStamp: (() => {
@@ -2410,10 +2493,13 @@ async function makeSystemPrompt(
       /* best effort */
     }
 
-    // Project instructions (CLAUDE.md, KHY.md)
-    const projInstructions = getProjectInstructionsSection(cwd);
-    if (projInstructions) {
-      sections.push(projInstructions);
+    // Project instructions (CLAUDE.md, KHY.md) — skipped for read-only
+    // sub-agents that declared omitClaudeMd.
+    if (!_omitProjectInstructions) {
+      const projInstructions = getProjectInstructionsSection(cwd);
+      if (projInstructions) {
+        sections.push(projInstructions);
+      }
     }
 
     // Persona (C1) — executable behavior spec; project instructions above win
