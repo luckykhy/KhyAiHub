@@ -133,14 +133,57 @@ describe('chatChords ↔ 键位目录 双向一致([DESIGN-ARCH-147] G-02)', () 
       (b) => b.keys === 'Esc / q / Ctrl + C / Ctrl + O'
     );
     assert.ok(closer, '目录缺「关闭视图返回输入框」那行——本条判据没有对照物');
-    // 形状要贴着画面写：键名与「关闭视图」之间只允许空白，否则注释里的 q 会把断言喂绿。
+    // 只在提示条那一段里找，且允许中间再列别的退路键（⑥ 管「不少于真源」，
+    // 「不许更长」是 ⑦ 的宽度账——两条各管一头，别在这里互相打架）。
+    const at = src.indexOf("{ key: 'hint'");
+    assert.ok(at > 0, '找不到视图的提示条 —— 本条判据失去对照物');
+    const hintBlock = src.slice(at, src.indexOf('\n    )', at));
     assert.match(
-      src,
-      /Esc\s*\/\s*q\s*关闭视图/,
-      '视图提示条没把 Esc 与 q 并列教出来，而目录第 158 行登记了它们：现场教学必须不少于真源'
+      hintBlock,
+      /Esc[^']*q[^']*关闭视图/,
+      '视图提示条没把 Esc 与 q 两条退路教出来，而目录第 158 行登记了它们：现场教学必须不少于真源'
     );
     for (const k of ['q', 'Ctrl + C', 'Ctrl + O']) {
       assert.ok(closer.keys.includes(k), `目录那行应仍列出 ${k}（本条对照物变了，先核对源码）`);
     }
+  });
+
+  test('⑦ 会话记录视图的提示条宽度不得越过 100 列终端的内宽(2026-11-12 实测)', () => {
+    // 本节把目录那行四条退路全按到底验了一遍（Ctrl+O / Ctrl+C 由 pty 臂 tview2，
+    // 强制全屏重绘定性：两条都能关视图，且 Ctrl+C 在视图内**不会**装填双击退出）。
+    // 验完没有把 Ctrl+O 加进提示条，原因不是没想到，而是宽度账：提示条是视图自己
+    // 画的一行图例，100 列终端里它的内宽只有 96 格（100 − 左右边框 2 − paddingX 2）。
+    // 实测校验过的换算：现状 86 格 → 100 列 1 行、50 列 2 行（§5 的 hintRowCount 就是 1/2）；
+    // 再加 'Ctrl+O' 变 93 格仍能 1 行，但 50 列要 3 行；再加 Ctrl+C 变 100 格 → 100 列也开始折行。
+    // 折一行意味着这一视图的实际高度比 bodyHeight 的 CHROME_ROWS=12 多占一行——
+    // 那条账本车道让给在飞的布局车道，但**图例不再往上堆键**这条底线先钉住。
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const { displayWidth } = require('../../../src/utils/text/width');
+    const src = fs.readFileSync(
+      path.join(__dirname, '..', '..', '..', 'src', 'cli', 'tui', 'ink-components', 'TranscriptView.js'),
+      'utf8'
+    );
+    const at = src.indexOf("{ key: 'hint'");
+    assert.ok(at > 0, '找不到视图的提示条 —— 本条判据失去对照物，先核对源码再改阈值');
+    const block = src.slice(at, src.indexOf('\n    )', at));
+    // 按内容锚定，不按位置：这一段里除了图例字面量还有 props 的 'hint'/'dimColor'，
+    // 而注释里也带引号 —— 上一次用位置下标取，第一条断言就在算「hint+dimColor+尾串」的宽度。
+    const grab = (re, what) => {
+      const m = re.exec(block);
+      assert.ok(m, `提示条里找不到${what} —— 图例形状变了，本条判据要按新形状重述，不许空转`);
+      return m[1];
+    };
+    const base = grab(/'(([^']*滚动一行[^']*))'/, '滚动那段前缀');
+    const branches = [...block.matchAll(/'(Ctrl\+E [^']*工具输出)'/g)].map((m) => m[1]);
+    assert.equal(branches.length, 2, `Ctrl+E 那一项应有折叠/展开两个分支，实得 ${branches.length} 个`);
+    const tail = grab(/'(([^']*关闭视图)*)'/, '退出键那段后缀');
+    const wFold = displayWidth(base + branches[0] + tail);
+    const wExpand = displayWidth(base + branches[1] + tail);
+    assert.equal(wFold, wExpand, '两个分支宽度不等，窄屏会按分支抖动行数');
+    assert.ok(
+      wExpand <= 96,
+      `提示条实测 ${wExpand} 格，超过 100 列终端的 96 格内宽 —— 图例再长就该拆行或换布局，不是继续堆键`
+    );
   });
 });
