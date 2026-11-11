@@ -186,6 +186,62 @@ describe('目录条目不得宣称终端送不出的键位(BUG-35 真源守卫)'
   });
 });
 
+describe('目录条目不得宣称应用层收不到的功能键(2026-11-09 实测否证 F2)', () => {
+  // 上一段守的是「终端送不送得出这个字节」。这一段守它**后面那一环**:字节到了 ink
+  // 手里还剩什么。ink 6.x 的 useInput 不把手上的键名交给处理器——它把 parseKeypress 的
+  // 结果重装成一个固定形状的对象(字段名表里没有 name),再用 nonAlphanumericKeys 把
+  // 功能键的 sequence 清成空串。于是 App.js 里那条 `key.name === 'f2'` 分支永不可达。
+  // 真机:三种 F2 编码 `\eOQ` / `\e[12~` / `\e[[B` 逐条按过(parity 见
+  // works/data/khy/feedback/f2-delivery-20261109/repro-before.txt),屏幕零反应。
+  // 10-03 §4 只核到「parse-keypress 把 ESC O Q 解析成 name='f2'」就登记了这条,少核了
+  // 这一环 ⇒ 面板教的是一个应用收不到的键。这一段的判据读的是 ink 的 shipped 源码,
+  // 不是我的转述:哪天 ink 真的把 name 透出来,第一段会红,提示重测而不是提示相信注释。
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const USE_INPUT = path.resolve(
+    __dirname,
+    '../../../node_modules/ink/build/hooks/use-input.js'
+  );
+  const keyShape = () => {
+    const src = fs.readFileSync(USE_INPUT, 'utf8');
+    const at = src.indexOf('const key = {');
+    assert.ok(at >= 0, `在 ${USE_INPUT} 里找不到 useInput 组装 key 的那一段 —— ink 换了形状,本段判据需重估`);
+    const open = src.indexOf('{', at);
+    let depth = 0;
+    for (let i = open; i < src.length; i++) {
+      if (src[i] === '{') depth += 1;
+      else if (src[i] === '}') {
+        depth -= 1;
+        if (depth === 0) return src.slice(open, i + 1);
+      }
+    }
+    throw new Error('use-input.js 的 key 字面量花括号不配对');
+  };
+
+  test('ink 交给处理器的 key 对象里没有 name 字段(可达性的外部前提)', () => {
+    assert.doesNotMatch(
+      keyShape(),
+      /(^|[\s{,])name\s*:/,
+      'ink 的 useInput 开始透出 key.name 了 —— 重测 F2 后再决定要不要恢复功能键条目'
+    );
+  });
+
+  test('目录里没有任何功能键条目', () => {
+    const rows = KEYBINDING_CATALOG.flatMap((g) => g.bindings).filter((b) => /F\d/.test(b.keys));
+    assert.deepEqual(
+      rows.map((b) => b.keys),
+      [],
+      `功能键在本机不可达(见本段说明),却又被许诺了出去:${rows.map((b) => b.keys).join('、')}`
+    );
+  });
+
+  test('正对照:目录仍在,不是靠空表通过上一条', () => {
+    const all = KEYBINDING_CATALOG.flatMap((g) => g.bindings);
+    assert.ok(all.length >= 60, `目录只剩 ${all.length} 条,上一条断言就成了空转`);
+    assert.ok(all.some((b) => b.keys === 'Shift + Tab'), '全局组应仍有可按键位');
+  });
+});
+
 describe('selectCatalog 过滤', () => {
   test('无参 → 全部分组', () => {
     const g = selectCatalog();
