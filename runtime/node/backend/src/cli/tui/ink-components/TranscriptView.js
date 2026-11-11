@@ -95,7 +95,11 @@ function TranscriptView({ lines, scroll = 0, showAll = false, rows }) {
       { key: 'hint', dimColor: true },
       '↑↓/j k 滚动一行 · Ctrl+U/D 翻半页 · g/G 跳顶/底 · ' +
         (showAll ? 'Ctrl+E 折叠工具输出' : 'Ctrl+E 展开工具输出') +
-        ' · Esc 关闭视图'
+        // 'q' joins Esc here: the view swallows every keystroke (App.js's transcript
+        // branch owns input), so a user who doesn't know the second closer is stuck
+        // until they guess. Measured 2026-11-12 (pty arm tview): pressing q in the open
+        // view closes it — a forced full repaint no longer paints the box title.
+        ' · Esc/q 关闭视图'
     )
   );
 

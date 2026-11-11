@@ -116,4 +116,31 @@ describe('chatChords ↔ 键位目录 双向一致([DESIGN-ARCH-147] G-02)', () 
       `「${row.desc}」又写回了没有实测支撑的宽度条件`
     );
   });
+
+  test('⑥ 会话记录视图的现场提示条不得比目录少教退出键(2026-11-12 pty 实测)', () => {
+    // 视图把每一个键都吃掉(App.js 的 transcript 分支拥有全部输入)，而它的提示条此前只写
+    // 「Esc 关闭视图」——目录第 158 行登记着四条退路(Esc / q / Ctrl+C / Ctrl+O)。
+    // 本节实测 q 确实能关(强制全屏重绘后 ⊟ 会话记录 那个框不再被画出)，所以至少这两条
+    // 必须出现在用户眼前。钉住「现场提示 ⊆ 目录」这个方向，防的是 11-03 §1 那一类漂移：
+    // 浮层只教它恰好画出来的那一两个键，把另外几条藏在源码里。
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const src = fs.readFileSync(
+      path.join(__dirname, '..', '..', '..', 'src', 'cli', 'tui', 'ink-components', 'TranscriptView.js'),
+      'utf8'
+    );
+    const closer = KEYBINDING_CATALOG.flatMap((g) => g.bindings).find(
+      (b) => b.keys === 'Esc / q / Ctrl + C / Ctrl + O'
+    );
+    assert.ok(closer, '目录缺「关闭视图返回输入框」那行——本条判据没有对照物');
+    // 形状要贴着画面写：键名与「关闭视图」之间只允许空白，否则注释里的 q 会把断言喂绿。
+    assert.match(
+      src,
+      /Esc\s*\/\s*q\s*关闭视图/,
+      '视图提示条没把 Esc 与 q 并列教出来，而目录第 158 行登记了它们：现场教学必须不少于真源'
+    );
+    for (const k of ['q', 'Ctrl + C', 'Ctrl + O']) {
+      assert.ok(closer.keys.includes(k), `目录那行应仍列出 ${k}（本条对照物变了，先核对源码）`);
+    }
+  });
 });
