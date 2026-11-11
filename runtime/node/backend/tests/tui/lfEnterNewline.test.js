@@ -35,25 +35,37 @@ const HOOK_SRC = fs.readFileSync(
   'utf8'
 );
 
-/** ink ships a CJS build; requiring it directly keeps this a plain node:test. */
+/**
+ * Same loader as bug120MergedEnter.test.js, same reason: the path used to be
+ * ../../../../node_modules, which from tests/tui lands in runtime/ where no
+ * node_modules exists — so this "upstream fact" test has been returning early
+ * (green, zero assertions) since 2026-09-19. Verified 2026-11-12: the correct
+ * ../../node_modules path exists and node v22.18 requires ink's ESM build fine.
+ * Missing input now counts RED, not skipped — see the sibling file's comment.
+ */
+let _parserLoadError = null;
 function loadKeypressParser() {
-  const p = path.resolve(__dirname, '../../../../node_modules/ink/build/parse-keypress.js');
-  if (!fs.existsSync(p)) return null;
+  const p = path.resolve(__dirname, '../../node_modules/ink/build/parse-keypress.js');
+  if (!fs.existsSync(p)) {
+    _parserLoadError = 'no such file: ' + p;
+    return null;
+  }
   try {
     const mod = require(p);
     return typeof mod === 'function' ? mod : mod.default;
-  } catch {
+  } catch (e) {
+    _parserLoadError = String(e.code || e.message).split('\n')[0];
     return null;
   }
 }
 
 test('ink 把 Ctrl+J 送来的裸 LF 解析成 name=enter(而非 return)', () => {
   const parse = loadKeypressParser();
-  if (!parse) {
-    // node_modules layout differs (hoisted vs nested); the handler invariant
-    // below still guards the fix, so skip the upstream fact rather than fail.
-    return;
-  }
+  assert.ok(
+    typeof parse === 'function',
+    'ink 的 parse-keypress 取不到（' + (_parserLoadError || 'unknown') + '）—— '
+      + '本锁的上游断言将空过，判红不判 skip'
+  );
   const cr = parse(Buffer.from('\r'));
   const lf = parse(Buffer.from('\n'));
 

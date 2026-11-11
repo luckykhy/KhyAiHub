@@ -43,21 +43,44 @@ const HOOK_SRC = fs.readFileSync(
   'utf8'
 );
 
-/** ink ships a CJS build; requiring the parser directly keeps this node:test. */
+/**
+ * ink ships an ESM build that node 22 requires directly (verified 2026-11-12:
+ * require() of parse-keypress.js returns the default export under v22.18).
+ * The path below is ../../node_modules on purpose — this file lives at
+ * tests/tui, so ../../.. lands in runtime/ where there is no node_modules at all.
+ * It sat at ../../../../node_modules from 2026-09-28 to 2026-11-12, which made
+ * loadKeypressParser() always return null, and both parser tests below always
+ * `return` early: green, zero assertions. So the loader now reports WHY it could
+ * not load, and the callers assert instead of skipping — same rule this repo
+ * already applies to HEAD-content locks (取不到输入判红不判 skip).
+ */
+let _parserLoadError = null;
 function loadKeypressParser() {
-  const p = path.resolve(__dirname, '../../../../node_modules/ink/build/parse-keypress.js');
-  if (!fs.existsSync(p)) return null;
+  const p = path.resolve(__dirname, '../../node_modules/ink/build/parse-keypress.js');
+  if (!fs.existsSync(p)) {
+    _parserLoadError = 'no such file: ' + p;
+    return null;
+  }
   try {
     const mod = require(p);
     return typeof mod === 'function' ? mod : mod.default;
-  } catch {
+  } catch (e) {
+    _parserLoadError = String(e.code || e.message).split('\n')[0];
     return null;
   }
 }
+function requireParser() {
+  const parse = loadKeypressParser();
+  assert.ok(
+    typeof parse === 'function',
+    'ink 的 parse-keypress 取不到（' + (_parserLoadError || 'unknown') + '）—— '
+      + '本锁的两条上游断言将空过，判红不判 skip'
+  );
+  return parse;
+}
 
 test('ink 把冻结期合并的 "/cost"+CR 解析成单个非 return 事件（BUG-120 吞键根因）', () => {
-  const parse = loadKeypressParser();
-  if (!parse) return; // node_modules layout differs; the source guards below still pin the defect.
+  const parse = requireParser();
   const ev = parse(Buffer.from('/cost\r'));
   // One event for the whole buffer — the trailing Enter is NOT split out.
   assert.strictEqual(ev.sequence, '/cost\r');
@@ -67,8 +90,7 @@ test('ink 把冻结期合并的 "/cost"+CR 解析成单个非 return 事件（BU
 });
 
 test('拆分到达时（3s 间隔族）裸 CR 单独成 return 事件 → 正常提交（对照组）', () => {
-  const parse = loadKeypressParser();
-  if (!parse) return;
+  const parse = requireParser();
   const text = parse(Buffer.from('/cost'));
   assert.strictEqual(text.sequence, '/cost');
   assert.notStrictEqual(text.name, 'return');
