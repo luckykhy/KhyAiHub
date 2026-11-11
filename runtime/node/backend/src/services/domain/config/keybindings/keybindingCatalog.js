@@ -54,7 +54,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Ctrl + C', desc: '忙时取消当前回合;空闲时连按两次退出' },
       { keys: 'Ctrl + D', desc: '有文本时向后删除;空行时连按两次退出' },
       { keys: 'Ctrl + G', desc: '折叠/展开网关提示(反向历史搜索浮层打开时改为取消搜索)' },
-      { keys: 'Ctrl + L', desc: '清屏(清除已提交的对话记录)' },
+      { keys: 'Ctrl + L', desc: '清空本会话显示记录(不清终端回滚;AI 仍带前文，要连上下文一起清用 /clear)' },
       { keys: 'Ctrl + O', desc: '打开/关闭会话记录视图(可滚动回看整段会话并展开任意段落)' },
       { keys: 'Ctrl + T', desc: '显示/隐藏任务清单面板(任意终端宽度可切)' },
       { keys: 'Ctrl + Y', desc: '复制上一条 AI 回复到剪贴板(仅 CC 模式;默认 TUI 里 Ctrl+Y 是「粘回删除内容」,见编辑组)' },
@@ -198,7 +198,10 @@ const ESSENTIAL_SHORTCUTS = Object.freeze([
   Object.freeze(['Meta + T', '切换扩展思考']),
   Object.freeze(['Ctrl + C', '取消当前回合 / 退出']),
   Object.freeze(['Ctrl + O', '打开会话记录视图(滚动回看 / 展开)']),
-  Object.freeze(['Ctrl + L', '清屏']),
+  // 清屏 is not what this key does: measured 2026-11-12 (pty arms ctrll2/ctrll3), no key
+  // in this TUI ever emits a terminal clear (the session writes ESC[2J exactly once, at
+  // startup, long before any press), and the transcript region is rebuilt empty instead.
+  Object.freeze(['Ctrl + L', '清空本会话记录']),
   Object.freeze(['Ctrl + A / E', '行首 / 行尾']),
   Object.freeze(['Ctrl + W', '删除前一个词']),
   Object.freeze(['Ctrl + K / U', '删除到行尾 / 行首']),
