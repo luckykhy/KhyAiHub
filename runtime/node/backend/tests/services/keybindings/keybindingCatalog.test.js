@@ -102,7 +102,8 @@ describe('?  浮层精简视图(防 HelpMenu 收敛后回归)', () => {
     ['Meta + T', '切换扩展思考'],
     ['Ctrl + C', '取消当前回合 / 退出'],
     ['Ctrl + O', '打开会话记录视图(滚动回看 / 展开)'],
-    ['Ctrl + L', '清屏'],
+    // 第五处有意改动(2026-11-12 夜检 §4):「清屏」→「清空本会话记录」。
+    ['Ctrl + L', '清空本会话记录'],
     ['Ctrl + A / E', '行首 / 行尾'],
     ['Ctrl + W', '删除前一个词'],
     ['Ctrl + K / U', '删除到行尾 / 行首'],
@@ -239,6 +240,29 @@ describe('目录条目不得宣称应用层收不到的功能键(2026-11-09 实�
     const all = KEYBINDING_CATALOG.flatMap((g) => g.bindings);
     assert.ok(all.length >= 60, `目录只剩 ${all.length} 条,上一条断言就成了空转`);
     assert.ok(all.some((b) => b.keys === 'Shift + Tab'), '全局组应仍有可按键位');
+  });
+});
+
+describe('Ctrl+L 不得再自称清屏(2026-11-12 强制重绘判据实测)', () => {
+  // 判据链(别再回到「字节流里有这行 = 屏幕上有这行」，那个假设错过两次)：
+  //   · 状态侧：pty 臂 ctrll3 按完 Ctrl+L 后强制全屏重绘(resize)，「已取消模型选择」那行
+  //     **不回来** ⇒ 记录确实被清了(默认内联模式与 KHY_INLINE_TRANSCRIPT=0 两种都如此)。
+  //   · 屏幕侧：六份会话日志里 ESC[2J 只出现 1 次、且落在第 22 字节(启动，早于任何按键)，
+  //     ESC[3J 零次 ⇒ **没有任何键做过终端清屏**，/clear 也没有(它的 app.clear() 只是
+  //     log-update 抹掉 live 区再重排)。所以「清屏」这两个字对本仓是一条做不到的承诺。
+  const row = KEYBINDING_CATALOG.flatMap((g) => g.bindings).find((b) => b.keys === 'Ctrl + L');
+  const essential = getEssentialShortcuts().find((p) => p[0] === 'Ctrl + L');
+
+  test('完整目录的 Ctrl+L 行不得称清屏，且要给出真正清上下文的那条路', () => {
+    assert.ok(row, '缺 Ctrl+L 条目');
+    assert.doesNotMatch(row.desc, /清屏/, `「${row.desc}」又把本仓做不到的动作许诺了出去`);
+    assert.match(row.desc, /回滚|终端/, `「${row.desc}」没说清它不动终端回滚，用户会以为内容没了`);
+    assert.match(row.desc, /\/clear/, `「${row.desc}」没指出真正清 AI 上下文的入口(Ctrl+L 不调 ai.clearHistory)`);
+  });
+
+  test('? 浮层的 Ctrl+L 短标签不得称清屏', () => {
+    assert.ok(essential, '精简视图缺 Ctrl+L 行');
+    assert.doesNotMatch(essential[1], /清屏/, `浮层「${essential[1]}」与完整目录口径相反`);
   });
 });
 
