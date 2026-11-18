@@ -1,0 +1,31 @@
+{
+  "name": "@khy/core",
+  "version": "0.1.0",
+  "private": false,
+  "description": "KhyOS 双模核心：契约、attached 客户端与 Node 宿主定位器（一核多终端）",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "main": "./src/contracts/index.js",
+  "exports": {
+    ".":                    { "types": "./src/contracts/index.d.ts",   "default": "./src/contracts/index.js" },
+    "./contracts":          { "types": "./src/contracts/index.d.ts",   "default": "./src/contracts/index.js" },
+    "./contracts/core-env": { "types": "./src/contracts/core-env.d.ts", "default": "./src/contracts/core-env.js" },
+    "./client":             { "types": "./src/client/index.d.ts",      "default": "./src/client/index.js" },
+    "./locator-host":       { "types": "./src/locator-host.d.ts",      "default": "./src/locator-host.js" },
+    "./server":             { "types": "./src/server/index.d.ts",      "default": "./src/server/index.js" },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "test",
+    "conformance",
+    "README.md",
+    "khy.module.json"
+  ],
+  "dependencies": {
+    "zod": "3.24.1"
+  },
+  "scripts": {
+    "test": "node --test \"src/**/*.test.js\" \"test/**/*.test.js\""
+  }
+}

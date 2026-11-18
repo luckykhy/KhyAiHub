@@ -1,0 +1,43 @@
+{
+  "name": "core",
+  "domain": "D1",
+  "mayDependOn": [],
+  "_mayDependOn_note": "core 不依赖任何域：运行时依赖只有 zod（D9 精确锁版）；禁止依赖 @khy/shared（未发布，[DESIGN-ARCH-220] §14.2）与 works/scripts/docs/apps/delivery（判据 #1 机判）。",
+  "fanIn": 0,
+  "_fanIn_note": "A3 落地时仓内尚无消费者——backend 的 workspace:* 依赖、desktop 的 file: 声明随本批登记件接线后才有 import 边；fanIn 与 fanInEvidence 在 B 阶段逐块迁移后复测更新，不预填。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-11-17",
+    "provenance": "designed-first",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "按 [DESIGN-ARCH-219] §4.1 登记为 staged：晋级 stable 需要「单元级 README + 整数 fanIn + 全部源文件同名同目录测试」三判据，README 与测试本批交齐，fanIn 待真实消费者出现后复测。",
+  "contract": {
+    "purpose": "双模核心的契约面与接入面：CoreHandle 六成员方法面（网关/事件/存储/会话/能力/插件）、错误码、KHY_CORE_* 环境真源、健康指纹，以及 obtainCore（只 attach）/ obtainCoreNode（auto/embedded 唯一入口）两个判定算法。零业务：不承载任何终端 UI 或终端专属工作流。",
+    "ioOwner": "本包只在两处触碰 IO：src/locator-host.js（唯一允许 node: 的源文件，fs 读 locator/锁）与 ./server 骨架（S4 起承接 HTTP/WS）。contracts 与 client 零 node:、零副作用，可进浏览器。",
+    "gates": "scripts/ci/check-core-boundary.js（S1，finding 全 warning、恒 exit 0）：判据 #1 禁止回引 backend/apps/delivery；判据 #4 禁止终端皮肤进 core；子档 A contracts+client 零 node:；子档 B KHY_CORE_* 单一真源。",
+    "coverage_note": "覆盖 [DESIGN-ARCH-220] §2/§3/§4 的契约与算法面；六成员 HTTP 通道本体随 S4/S5 落地，本刀只交发现、握手与骨架。"
+  },
+  "tests": [
+    "src/contracts/index.test.js",
+    "src/contracts/errors.test.js",
+    "src/contracts/core-env.test.js",
+    "src/contracts/health.test.js",
+    "src/contracts/schemas/core-handle.schema.test.js",
+    "src/contracts/schemas/event.schema.test.js",
+    "src/contracts/schemas/data-ref.schema.test.js",
+    "src/contracts/schemas/session.schema.test.js",
+    "src/contracts/schemas/capability.schema.test.js",
+    "src/contracts/schemas/plugin.schema.test.js",
+    "src/contracts/schemas/error.schema.test.js",
+    "src/client/index.test.js",
+    "src/client/obtain-core.test.js",
+    "src/locator-host.test.js",
+    "src/server/index.test.js",
+    "conformance/index.test.js",
+    "test/exports.test.js",
+    "test/browser-safety.test.js",
+    "test/locator-order.test.js",
+    "test/zod-resolve.test.js"
+  ]
+}
