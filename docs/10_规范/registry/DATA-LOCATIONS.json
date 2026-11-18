@@ -228,7 +228,9 @@
       "backup": "none",
       "delete": "recursive",
       "note": "[DESIGN-ARCH-204] 开发环境盘点快照（khy devenv scan / POST /api/dev-env/scan 原子写，GET /api/dev-env/inventory 读；经 dataHome.js DATA_PATHS.devEnv=getProjectDataPath 解析落点）。快照不是数据真源（真源是机器系统状态本身），不登记 DATA-SSOT.json；重跑 khy devenv scan 即可再生，删除仅丢上次盘点缓存，无业务损失。"
-    }
+    },
+    "core-lock-and-locator seedEntry：登记 [DESIGN-ARCH-220] §4.2 的 core 单实例锁 <dataHome>/core/core.lock 与发现面 <dataHome>/core/locator.json（user-home 段，gitignore 区不入仓）；锁为独占创建 + pid/心跳/epoch，stale 接管时旧锁改名 core.lock.stale.<pid>.<ts> 隔离留档不删除（LAYOUT-004 只隔离不删除）；tokenHash 只存在于锁文件，不进 /core/health 只读探针面。",
+    "core-lock-and-locator seedEntry：locator.json 写入必须持锁且 epoch 只进不退（防后写者覆盖），由 runtime/substrate/platform/packages/core/src/locator-host.js 的 writeLocatorFile 单点执行；check-core-boundary 的 metering 子档以已知写者清单（backend/ai-backend/khyquant 三份 tokenUsageService + adminService + credentials）为基线，收敛完成前一律报 metering-dual-writer（D4）。"
   ],
   "knownGaps": [
     {
@@ -252,6 +254,16 @@
         "runtime/node/backend/src/services/domain/network/phone/phoneBridgeConfig.js:340",
         "delivery/extension/bridges/khy-amoon-bridge/lib/wireless.js:91"
       ]
+    },
+    {
+      "id": "core-runtime-user-home",
+      "segment": "user-home",
+      "paths": [
+        "~/.khyquant/core/core.lock",
+        "~/.khyquant/core/locator.json"
+      ],
+      "status": "registered-not-enforced",
+      "note": "roots 不覆盖 user-home 段；core 锁/locator 的权威在 runtime/substrate/platform/packages/core/src/locator-host.js（单写者），登记表只作索引。check-data-layout 的 L-3 allowed 如需显式放行 locator-host.js 的写入站点，落地后按脚本实际报红再补，不预加。"
     }
   ],
   "budgets": [

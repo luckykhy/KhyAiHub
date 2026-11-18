@@ -31,7 +31,20 @@
       { "code": "CONTENT_BLOCKED", "trigger": "安全拦截" },
       { "code": "INTERNAL", "trigger": "未分类服务端错误" },
       { "code": "ARREARS", "trigger": "退款后余额为负（欠费）", "addedAt": "2026-10-15", "addedBy": "P1-1" },
-      { "code": "SERVICE_UNAVAILABLE", "trigger": "配额存储不可读 / 内部校验失败", "addedAt": "2026-10-15", "addedBy": "P1-1" }
+      { "code": "SERVICE_UNAVAILABLE", "trigger": "配额存储不可读 / 内部校验失败", "addedAt": "2026-10-15", "addedBy": "P1-1" },
+      { "code": "CORE_UNAVAILABLE", "trigger": "端点探活失败/在途调用中断（retryable）", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_LOCKED", "trigger": "同一数据家已有新鲜持锁核心，第二实例拒绝启动", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_TAKEN_OVER", "trigger": "心跳发现锁被新 epoch 接管，本实例降级 attach", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_PROTOCOL_MISMATCH", "trigger": "/core/health 指纹不符或 protocolVersion 不相等", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_VERSION_MISMATCH", "trigger": "clientVersion 不在 enginesKhy 区间", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_AUTH_FAILED", "trigger": "token/配对码无效或过期，不降级放行", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_INVALID_ARGUMENT", "trigger": "调用参数不满足契约 schema", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_INTERNAL", "trigger": "核心内部未分类错误", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_LOCATOR_FAILED", "trigger": "三段定位均未命中（显式注入/bundled 入口/node_modules）", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CAPABILITY_UNAVAILABLE", "trigger": "required 能力缺失，装配期报缺谁", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_STORAGE_CONFLICT", "trigger": "storage.write 的 ifVersion 不匹配", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_SESSION_NOT_FOUND", "trigger": "sessionId 不存在于本核心", "addedAt": "2026-11-17", "addedBy": "A3" },
+      { "code": "CORE_EVENT_GAP", "trigger": "订阅断线期间事件序号有洞（retryable）", "addedAt": "2026-11-17", "addedBy": "A3" }
     ],
     "mapping": [
       { "registered": "UNAUTHORIZED", "httpStatus": 401, "was": "UNAUTHORIZED", "details": { "reason": "UNAUTHORIZED" }, "emittedAt": "dataPlaneEnforcer.js" },

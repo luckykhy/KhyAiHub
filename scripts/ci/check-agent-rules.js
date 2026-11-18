@@ -44,6 +44,16 @@ const CODE_EXTS = new Set([
   // localhost / 127.0.0.1 / 0.0.0.0，不匹配 built_in_keys.dart 里那 8 个
   // 公网 baseUrl；Rule 4（滚动区）是 TUI 专属，Dart 无从触发。
   '.dart',
+  // 移动端原生侧：Kotlin / Java。2026-11-10 补：此前这份清单没有 .kt/.java，
+  // 于是 delivery/mobile/ 的原生层（MainActivity / VfsBridge / VfsCopier /
+  // ShellCommandPolicy / Tools…）**一条 AI 工程规则都没被扫过**。不是「扫过
+  // 没问题」，是「没扫」，而门读到的是绿灯。
+  //
+  // 实测补上后的命中：全仓 106 个 .kt/.java 文件里 10 条，**全在测试文件**
+  // （原生测试里写回环地址是为了断言「回环被拦」，正是该出现的地方），
+  // 已由 [isTestLikePath] 按 Kotlin/Java 的 `FooTest.kt` 命名豁免。
+  '.kt',
+  '.java',
 ]);
 
 const IGNORE_DIRS = new Set([
@@ -420,7 +430,13 @@ function isTestLikePath(normPath = '') {
     // 测试都这么命名）。不认它，每个提到端点的 Dart 测试都是假阳性——
     // 而测试里出现 http://localhost:11434 是**为了断言默认值正确**，
     // 正是该出现的地方。2026-10-26 补 .dart 进 CODE_EXTS 时实测踩到。
-    || /_test\.dart$/.test(normPath);
+    || /_test\.dart$/.test(normPath)
+    // Kotlin / Java 的约定是**驼峰 + Test 后缀**：FooTest.kt、FooTest.java。
+    // 移动端原生侧的测试目录是 `src/test/java`（**单数** test），上面那条
+    // `tests/` 规则认不出来；而原生测试里写 `127.0.0.1:8896` 正是**为了断言
+    // 回环地址被拦**——它是该出现的地方，不认它就全是假阳性。
+    // 2026-11-10 补 .kt/.java 进 CODE_EXTS 时实测踩到（10 条命中全在测试文件）。
+    || /Test(?:s)?\.(?:kt|java)$/.test(normPath);
 }
 
 /**
@@ -601,8 +617,11 @@ function checkFile(relPath, findings) {
   // 要么把值拆成 'http://' + host + ':' + port 这种障眼法，要么整个规则被
   // 加宽到失去意义。两条都不接受，所以照 serviceDefaults.js 的先例整体豁免。
   //
-  // 豁免只给这一个文件：别处再出现字面量照样红。
+  // 豁免只给这两个文件：别处再出现字面量照样红。
+  // 2026-11-17 补 @khy/core 的 core-env.js（KHY_CORE_* 端点/绑定默认值的唯一真源，
+  // [DESIGN-ARCH-220] §4.1：S1 必做，不是可选）。
   const isSourceOfTruth = normPath.endsWith('constants/serviceDefaults.js') ||
+    normPath.endsWith('packages/core/src/contracts/core-env.js') ||
     normPath.endsWith('lib/core/config/endpoint_defaults.dart');
 
   // Frontend templates are their own "is user-facing" question, answered once per

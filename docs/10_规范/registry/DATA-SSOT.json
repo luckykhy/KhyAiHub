@@ -161,6 +161,11 @@
       "path": "scripts/release/canary-manifest.json",
       "kind": "json",
       "title": "源码金丝雀 marker 台账真源（[DESIGN-ARCH-199]；file→marker→sha256 按批次追加，stamp/verify/report 与取证流程的唯一消费源；APK 层值与其接收人映射刻意不入此文件，落 works/data/khy/canary/ledger.jsonl——两层载体分离，公开面不携带身份语义）"
+    },
+    {
+      "path": "docs/10_规范/registry/KNOWN-EXCEPTIONS.json",
+      "kind": "json",
+      "title": "网络绑定与对外监听例外登记表（D6/T6；id/target/kind/value/owner/reason/expiry/reverify，消费者 scripts/ci/check-core-boundary.js --lan）"
     }
   ],
   "facts": [
@@ -493,6 +498,19 @@
       "exempt": true,
       "exemptReason": "**豁免影子副本判定**，理由：契约文件是五份工具清单的**投影**，不是它们任何一份的副本。投影源分别是 amooBridgePolicy.BRIDGE_TOOLS（PC 执行闸 22 项）、phoneBridgeCatalog 的目录（32 项）、协作桥 contracts.TOOL_SPECS（12 项 wire 工具）、手机端 Tools.NAMES（48 项）与 LoopModes.KNOWN_TOOLS（36 项）——五份清单分属四棵树（backend / delivery-extension / delivery-mobile / android），**物理上无法 import**（跨层 require 是 LAYOUT 红线，跨语言更无共享模块），故投影必须落成一份独立文件。豁免的边界：契约**不新增任何可调用能力**（不进 BRIDGE_TOOLS、不进手机端 Tools.NAMES、不进桥的 12 项 wire 面），各端清单仍是各自执行面的真源；锁步由 runtime/node/backend/src/services/domain/network/amoo/amooToolContract.test.js 的比对测试承担（口径 **D1-1 部分**：契约 + 比对测试已落地，**D1-2 三端从契约读、删各自 local 常量尚未做**，不得记为完成）。本条只登记「真源在哪」，不登记工具名与风险档的值本身。",
       "note": "登记为真源的是**这份契约文件本身**（它是什么、覆盖什么、谁读它）；契约内容与各端清单的关系见 exemptReason。detect.identifiers 留空：本仓事实的影子副本扫描靠标识符锚点，而工具名清单是**集合**（随端演进增删），用标识符锚会把正常的清单增删误判成影子副本；集合漂移改由契约比对测试判（那条测试会因任一端多出/少掉一个工具名而红）。"
+    },
+    {
+      "id": "network-exception-count",
+      "title": "网络绑定例外条目数（D6/T6）",
+      "ssot": {
+        "path": "docs/10_规范/registry/KNOWN-EXCEPTIONS.json",
+        "kind": "json-count",
+        "pointer": "/exceptions"
+      },
+      "detect": {
+        "identifiers": []
+      },
+      "note": "例外表的唯一真源是 KNOWN-EXCEPTIONS.json；条目数按 json-count 自洽判定（真源里数组长度即读数，不靠标识符扫描，故 identify 留空合法）。影子面：任何第二份例外清单（代码里另起的允许表、文档里另抄的清单）都会被 counts 不一致或镜像缺失判红；消费者 check-core-boundary.js --lan 读同一份表，过期条目报 known-exception-expired 并停止放行。core 锁/locator 的单写者事实是**代码所有权**不是数据值，不塞进本表——由 check-core-boundary 的 metering 子档与 locator-host 同目录测试承担（曾以 js-const + 标识符形态登记，被守卫正确拒绝：文件名会正当出现在守卫/测试/note 里，当锚点即误报）。"
     }
   ]
 }

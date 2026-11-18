@@ -567,7 +567,12 @@
       "exec": {
         "script": "scripts/ci/validate-protocol-contracts.js",
         "args": [],
-        "findings": []
+        "findings": [
+          "core-hello-frame",
+          "core-health-frame",
+          "core-event-frame",
+          "core-abort-frame"
+        ]
       }
     },
     {

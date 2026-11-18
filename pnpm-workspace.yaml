@@ -1,5 +1,6 @@
 packages:
   - runtime/substrate/platform/packages/shared
+  - runtime/substrate/platform/packages/core
   - runtime/substrate/platform/packages/ui-shared
   - runtime/substrate/platform/packages/plugin-sdk
   - runtime/node/backend
@@ -23,6 +24,7 @@ overrides:
   # 在 workspace checkout 里解析到 live 源码（与 @khy/shared 同机制），
   # 发布 tarball 里 prepack 会拷成 vendor 真实副本，两端都不悬空。
   khy-os-backend>@khy/plugin-sdk: workspace:*
+  khy-os-backend>@khy/core: workspace:*
 
 patchedDependencies:
   node-pty@1.0.0: works/patches/node-pty@1.0.0.patch

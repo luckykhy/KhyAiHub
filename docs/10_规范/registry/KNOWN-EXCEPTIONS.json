@@ -1,0 +1,17 @@
+{
+  "$schemaNote": "网络绑定与对外监听例外的机读载体（D6/T6）。消费者：scripts/ci/check-core-boundary.js --lan（known-exception-applied/expired/unverifiable 与 unknown-listener）。字段：id/target/kind/value/owner/reason/expiry/reverify。到期未复验的条目由消费者报 known-exception-expired 并停止放行。",
+  "version": 1,
+  "updated": "2026-11-17",
+  "exceptions": [
+    {
+      "id": "ai-backend-mgmt-host-0000",
+      "target": "runtime/node/ai-backend/server.js",
+      "kind": "bind-host",
+      "value": "0.0.0.0",
+      "owner": "孔浩原",
+      "reason": "ARCH-074 刻意裁决（serviceDefaults.js 的 AI_MGMT_HOST 默认 0.0.0.0）：ai-backend 面向局域网部署。组合态由 suite 装配时注入 127.0.0.1 覆盖（D6 仲裁顺序：用户显式 env > suite 注入 > serviceDefaults 默认），本例外只覆盖非组合态的既有默认值，不放宽组合态。",
+      "expiry": "2027-05-16",
+      "reverify": "node scripts/ci/check-core-boundary.js --lan --json"
+    }
+  ]
+}
