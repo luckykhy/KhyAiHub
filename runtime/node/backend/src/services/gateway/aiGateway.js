@@ -2202,7 +2202,7 @@ function createLinkedAbortController(parentSignal) {
 // ════════════════════════════════════════════════════════════════
 
 class AIGateway {
-  constructor() {
+  constructor(options = {}) {
     this._adapters = [
       // ── 云端结构化适配器（原生 tool_use，最可靠）──
       { key: 'kiro', adapter: kiroAdapter, priority: 0, enabled: true },
@@ -2644,14 +2644,15 @@ setAiGatewayGenerateMethodDeps({
   diagnostics: { _advDiag, _modelSwitch, _traceAudit },
 });
 const gateway = new AIGateway();
-gateway.classifyError = classifyError;
+// B1：挂原型而非单例——工厂实例与默认单例拿同一份（[DESIGN-ARCH-219] §10）。
+AIGateway.prototype.classifyError = classifyError;
 
 /**
  * Notify the live model switch about a manual model change from /model.
  * Without this, _modelSwitch.getActiveModel() returns the old value
  * and overrides process.env.GATEWAY_PREFERRED_MODEL on the next generate().
  */
-gateway.syncModelSwitch = function syncModelSwitch(model) {
+AIGateway.prototype.syncModelSwitch = function syncModelSwitch(model) {
   if (!_modelSwitch) {
     return;
   }
@@ -2684,6 +2685,9 @@ gateway.syncModelSwitch = function syncModelSwitch(model) {
 
 module.exports = gateway;
 module.exports.getCapabilityRegistry = () => gateway._capabilityRegistry;
+// B1 工厂化（[DESIGN-ARCH-219] §10）：熔断/冷却状态本就在实例上（this._adapterFailures /
+// this._cooldown*），工厂让「多实例各自持有 breaker 状态」可达；默认单例不变，src 56 个调用方零改。
+module.exports.createGateway = (options = {}) => new AIGateway(options);
 // 暴露「同 provider 兄弟模型」枚举,供 imageOcr 工具判定是否存在可用视觉模型(SSOT
 // 复用,避免在工具里另写一份 provider/pool 解析)。纯函数,无副作用。
 module.exports.collectProviderSiblingModels = collectProviderSiblingModels;
