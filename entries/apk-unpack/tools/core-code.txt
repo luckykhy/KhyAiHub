@@ -1,0 +1,6282 @@
+### Lcom/hiao/v2/brain/BrainRouter;  (BrainRouter.java)
+  - <init>
+  - compatReady
+  - deepseekReady
+  - effective
+      S compat
+      S deepseek
+  - init
+  - nonBlank
+### Lcom/hiao/v2/brain/DeepSeekClient;  (DeepSeekClient.java)
+  - <init>
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - complete
+  - complete
+      S /
+      S @type Lorg/json/JSONObject;
+      S model
+      S messages
+      S tools
+      S stream
+      S max_tokens
+      S @type Ljava/lang/StringBuilder;
+      S /chat/completions
+      S  
+      S HTTP 
+      S choices
+      S message
+      S role
+      S assistant
+      S content
+      S 
+      S tool_calls
+      S usage
+      S @type Ljava/lang/Exception;
+      S  响应缺少 message：
+      S  响应无 choices：
+      S 网络错误：
+      S 缺少 DeepSeek API Key
+      S apiBase 为空
+  - completeStream
+      S /
+      S @type Ljava/lang/StringBuilder;
+      S /chat/completions
+      S @type Ljava/lang/Exception;
+      S 缺少 DeepSeek API Key
+      S apiBase 为空
+### Lcom/hiao/v2/brain/ModelsList$1;  (ModelsList.java)
+  - <init>
+  - copyAssetZip
+      S 连接超时（20s）——检查端点地址、网络或密钥
+### Lcom/hiao/v2/brain/ModelsList$2;  (ModelsList.java)
+  - <init>
+  - install
+      S @type Ljava/lang/StringBuilder;
+      S fetch start base=
+      S hiao.set
+      S 
+      S 端点地址为空
+      S /
+      S @type Ljava/net/URL;
+      S /models
+      S @type Ljava/net/HttpURLConnection;
+      S Authorization
+      S Bearer 
+      S ms
+      S HTTP 
+      S  · 
+      S ms · 响应里没有模型列表（data[].id）
+      S fetch ok 
+      S  个模型 · 
+      S 连接失败（
+      S ms）：
+### Lcom/hiao/v2/brain/ModelsList$Cb;  (ModelsList.java)
+  - done   [abstract/native]
+### Lcom/hiao/v2/brain/ModelsList;  (ModelsList.java)
+  - <init>
+  - access$000
+  - access$100
+  - access$200
+  - clip
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - fetch
+      S @type Ljava/util/concurrent/atomic/AtomicBoolean;
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/brain/ModelsList$1;
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/brain/ModelsList$2;
+      S models-fetch
+  - oneLine
+      S 
+      S 
+
+      S  
+  - parse
+      S 
+      S @type Ljava/util/ArrayList;
+      S @type Lorg/json/JSONObject;
+      S data
+      S models
+      S id
+      S name
+      S @type Lorg/json/JSONArray;
+  - readAll
+      S 
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S UTF-8
+### Lcom/hiao/v2/brain/Net$Resp;  (Net.java)
+  - <init>
+  - clip
+      S @type Lorg/json/JSONObject;
+### Lcom/hiao/v2/brain/Net;  (Net.java)
+  - <init>
+  - exchange
+      S @type Ljava/net/URL;
+      S @type Ljava/net/HttpURLConnection;
+      S Authorization
+      S @type Ljava/lang/StringBuilder;
+      S Bearer 
+      S Content-Type
+      S application/json; charset=utf-8
+      S UTF-8
+      S @type Lcom/hiao/v2/brain/Net$Resp;
+      S 
+      S : 
+  - get
+      S GET
+  - localIps
+      S @type Ljava/util/ArrayList;
+      S @type Ljava/net/NetworkInterface;
+      S @type Ljava/net/InetAddress;
+      S @type Ljava/net/Inet4Address;
+  - post
+      S POST
+  - readAll
+      S 
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S UTF-8
+### Lcom/hiao/v2/brain/OpenAiCompatClient;  (OpenAiCompatClient.java)
+  - <init>
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - complete
+  - complete
+      S /
+      S @type Lorg/json/JSONObject;
+      S model
+      S messages
+      S tools
+      S stream
+      S max_tokens
+      S @type Ljava/lang/StringBuilder;
+      S /chat/completions
+      S  
+      S HTTP 
+      S choices
+      S message
+      S role
+      S assistant
+      S content
+      S 
+      S tool_calls
+      S usage
+      S @type Ljava/lang/Exception;
+      S  响应缺少 message：
+      S  响应无 choices：
+      S 网络错误：
+      S 缺少兼容端点 API Key
+      S baseUrl 为空
+  - completeStream
+      S /
+      S @type Ljava/lang/StringBuilder;
+      S /chat/completions
+      S @type Ljava/lang/Exception;
+      S 缺少兼容端点 API Key
+      S baseUrl 为空
+### Lcom/hiao/v2/brain/RawBody;  (RawBody.java)
+  - <init>
+      S 
+### Lcom/hiao/v2/brain/SseChat$1;  (SseChat.java)
+### Lcom/hiao/v2/brain/SseChat$StreamState;  (SseChat.java)
+  - <init>
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/util/TreeMap;
+  - <init>
+### Lcom/hiao/v2/brain/SseChat$ToolSlot;  (SseChat.java)
+  - <init>
+      S 
+      S @type Ljava/lang/StringBuilder;
+  - <init>
+### Lcom/hiao/v2/brain/SseChat;  (SseChat.java)
+  - <init>
+  - body
+      S @type Lorg/json/JSONObject;
+      S model
+      S messages
+      S tools
+      S stream
+      S include_usage
+      S stream_options
+      S max_tokens
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - consumeLine
+      S :
+      S data:
+      S  
+      S [DONE]
+      S @type Lorg/json/JSONObject;
+      S usage
+      S choices
+      S finish_reason
+      S @type Ljava/lang/String;
+      S delta
+      S content
+      S reasoning_content
+      S reasoning
+      S tool_calls
+  - consumeToolCall
+      S index
+      S @type Lcom/hiao/v2/brain/SseChat$ToolSlot;
+      S id
+      S type
+      S function
+      S name
+      S arguments
+  - exchange
+      S UTF-8
+      S @type Lcom/hiao/v2/brain/SseChat$StreamState;
+      S @type Ljava/net/URL;
+      S @type Ljava/net/HttpURLConnection;
+      S POST
+      S Content-Type
+      S application/json; charset=utf-8
+      S Authorization
+      S @type Ljava/lang/StringBuilder;
+      S Bearer 
+      S @type Ljava/lang/Exception;
+      S HTTP 
+      S  
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S stopped
+      S 流式失败：流已结束但未收到任何有效数据
+      S 流式失败：
+      S 
+      S : 
+      S 流式中断：已收 
+      S  片
+      S url 为空
+  - finish
+      S tool_calls
+      S content
+      S assistant
+      S role
+      S @type Lorg/json/JSONObject;
+      S reasoning
+      S reasoning_content
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/brain/SseChat$ToolSlot;
+      S name
+      S arguments
+      S id
+      S type
+      S function
+      S usage
+      S finish_reason
+      S index
+      S message
+      S choices
+  - readAll
+      S 
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S UTF-8
+  - strOrNull
+      S @type Ljava/lang/String;
+### Lcom/hiao/v2/brain/StreamCallback;  (StreamCallback.java)
+  - cancelled   [abstract/native]
+  - onDelta   [abstract/native]
+### Lcom/hiao/v2/bridge/BootReceiver;  (BootReceiver.java)
+  - <init>
+  - resolve
+      S android.intent.action.BOOT_COMPLETED
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/bridge/BridgeService;
+      S @type Ljava/lang/StringBuilder;
+      S 开机拉起桥服务失败: 
+      S BootReceiver
+### Lcom/hiao/v2/bridge/BridgeService$2;  (BridgeService.java)
+  - <init>
+  - append
+      S @type Lorg/json/JSONObject;
+      S items
+      S @type Ljava/lang/StringBuilder;
+      S 组装 approval 广播失败: 
+      S BridgeService
+      S approval
+### Lcom/hiao/v2/bridge/BridgeService$4;  (BridgeService.java)
+  - <init>
+  - readAllFile
+      S @type Ljava/lang/StringBuilder;
+      S 信箱轮询异常: 
+      S BridgeService
+### Lcom/hiao/v2/bridge/BridgeService$5;  (BridgeService.java)
+  - <init>
+  - tail
+      S @type Ljava/lang/StringBuilder;
+      S cron tick 异常: 
+      S BridgeService
+### Lcom/hiao/v2/bridge/BridgeService;  (BridgeService.java)
+  - <init>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/bridge/BridgeService$1;
+      S @type Lcom/hiao/v2/bridge/BridgeService$2;
+      S @type Lcom/hiao/v2/bridge/BridgeService$3;
+  - access$000
+  - access$100
+  - acquireCpuLock
+      S power
+      S @type Landroid/os/PowerManager;
+      S hiao:bridge
+      S @type Ljava/lang/StringBuilder;
+      S 获取唤醒锁失败: 
+      S BridgeService
+  - buildNotification
+      S @type Landroid/app/Notification$Builder;
+      S bridge
+      S hiao v2
+      S service
+      S @type Ljava/lang/StringBuilder;
+      S 构建通知点击意图失败: 
+      S BridgeService
+  - postWhitelistPrompt
+      S @type Landroid/app/Notification$Builder;
+      S bridge
+      S 桥可能被系统省电策略冻结
+      S 点击授权电池优化豁免（不受限制），降低熄屏冻结概率；已授权可忽略
+      S @type Landroid/app/NotificationManager;
+      S @type Ljava/lang/StringBuilder;
+      S 电池豁免引导通知失败: 
+      S BridgeService
+  - promptBatteryWhitelist
+      S power
+      S @type Landroid/os/PowerManager;
+      S @type Landroid/content/Intent;
+      S android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+      S @type Ljava/lang/StringBuilder;
+      S package:
+      S android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+      S 电池豁免引导失败: 
+      S BridgeService
+  - runCronDue
+      S error
+      S cron
+      S prompt
+      S 
+      S ok
+      S __cron
+      S @type Lorg/json/JSONObject;
+      S deny
+      S @type Ljava/lang/StringBuilder;
+      S 定时任务触发被丢弃：
+      S 引擎忙
+      S 写 cron 审计失败: 
+      S BridgeService
+  - revokeLease
+  - scopeMatched
+      S BridgeService
+      S hiao v2 桥运行中 · 127.0.0.1:8898
+      S @type Ljava/lang/StringBuilder;
+      S startForeground 失败: 
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/bridge/BridgeService$4;
+      S mailbox
+      S @type Lcom/hiao/v2/bridge/BridgeService$5;
+      S 桥服务已启动
+  - sweepLocked
+      S BridgeService
+      S 桥服务停止
+  - validateEntry
+  - <init>
+      S @type Ljava/lang/StringBuilder;
+      S 前台服务类型超时回调（type=
+      S ）：数秒内自停避免系统强杀
+      S BridgeService
+      S stopForeground 失败: 
+### Lcom/hiao/v2/bridge/HttpBridge$1;  (HttpBridge.java)
+  - <init>
+  - judgeFileReadSide
+### Lcom/hiao/v2/bridge/HttpBridge$2;  (HttpBridge.java)
+  - <init>
+  - resetSession
+### Lcom/hiao/v2/bridge/HttpBridge;  (HttpBridge.java)
+  - <clinit>
+      S 
+      S @type Ljava/util/concurrent/atomic/AtomicInteger;
+  - <init>
+  - acceptLoop
+      S HttpBridge
+      S @type Ljava/net/ServerSocket;
+      S 127.0.0.1
+      S 桥已监听 127.0.0.1:8898
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/bridge/HttpBridge$2;
+      S @type Ljava/lang/StringBuilder;
+      S bridge-req-
+      S accept 循环异常退出: 
+  - access$000
+  - access$100
+  - handle
+      S approve
+      S last
+      S taskId
+      S busy
+      S authorization
+      S content-length
+      S tasks
+      S id
+      S error
+      S ok
+      S @type Ljava/io/BufferedInputStream;
+      S  
+      S GET
+      S /
+      S 
+      S @type Ljava/util/HashMap;
+      S @type Ljava/lang/String;
+      S 0
+      S UTF-8
+      S @type Lorg/json/JSONObject;
+      S 请求体超过 4MB 上限
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S 请求体不是有效 UTF-8（检查调用端编码；JSON 中文应直接写 UTF-8）
+      S bridge
+      S @type Ljava/lang/StringBuilder;
+      S Bearer 
+      S /ping
+      S /events
+      S /mcp
+      S token
+      S unauthorized
+      S version
+      S 2.8.0-alpha
+      S pong
+      S /status
+      S tool
+      S activity
+      S step
+      S maxSteps
+      S phase
+      S idle
+      S up
+      S port
+      S tools
+      S pending
+      S agent
+      S running
+      S queued
+      S @type Lorg/json/JSONArray;
+      S audit_head
+      S provider
+      S deepseek_ready
+      S compat_ready
+      S engine
+      S /approvals
+      S items
+      S /approve
+      S 请求体不是合法 JSON
+      S POST
+      S approved
+      S answer
+      S allowSession
+      S http
+      S /audit
+      S n
+      S entries
+      S count
+      S HTTP/1.1 200 OK
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Access-Control-Allow-Origin: *
+Connection: close
+
+
+      S /call
+      S args
+      S not found
+      S HttpBridge
+      S 请求处理异常: 
+      S 桥处理异常：
+  - isRunning
+  - mcpRespond
+      S 
+      S [
+      S @type Lorg/json/JSONObject;
+  - orEmpty
+      S 
+  - parseBody
+      S @type Lorg/json/JSONObject;
+      S {}
+  - port
+  - prefs
+      S hiao_v2_bridge
+  - prefsPutToken
+      S bridge_token
+      S @type Ljava/lang/StringBuilder;
+      S 写 token 镜像失败: 
+      S HttpBridge
+  - prefsToken
+      S 
+      S bridge_token
+  - queryParam
+      S 
+      S &
+  - readLine
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type Ljava/lang/String;
+      S UTF-8
+  - readSmallFile
+      S @type [B
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/String;
+      S UTF-8
+      S 
+  - respond
+      S UTF-8
+      S Internal Error
+      S Not Found
+      S Unauthorized
+      S Bad Request
+      S OK
+      S @type Ljava/lang/StringBuilder;
+      S HTTP/1.1 
+      S  
+      S 
+Content-Type: application/json; charset=utf-8
+Content-Length: 
+      S 
+Access-Control-Allow-Origin: *
+Connection: close
+
+
+  - respondEmpty
+      S UTF-8
+      S HTTP/1.1 200 OK
+Content-Length: 0
+Access-Control-Allow-Origin: *
+Connection: close
+
+
+  - rotateToken
+      S @type Lcom/hiao/v2/bridge/HttpBridge;
+      S 
+      S HttpBridge
+      S @type Ljava/lang/StringBuilder;
+      S 删除 token.txt 失败: 
+      S bridge_token
+  - start
+      S @type Lcom/hiao/v2/bridge/HttpBridge;
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/bridge/HttpBridge$1;
+      S bridge-accept
+  - stop
+      S @type Lcom/hiao/v2/bridge/HttpBridge;
+  - token
+      S @type Lcom/hiao/v2/bridge/HttpBridge;
+      S 
+      S HttpBridge
+      S @type Ljava/lang/StringBuilder;
+      S 读取 token.txt 失败: 
+      S @type Ljava/security/SecureRandom;
+      S @type [B
+      S %02x
+      S @type [Ljava/lang/Object;
+      S 写 token.txt 失败: 
+  - tokenFile
+      S @type Ljava/io/File;
+      S hiao
+      S token.txt
+  - writeFile
+      S @type Ljava/io/FileOutputStream;
+      S UTF-8
+### Lcom/hiao/v2/bridge/Mailbox$1;  (Mailbox.java)
+  - <init>
+  - append
+  - attach
+      S @type Ljava/io/File;
+### Lcom/hiao/v2/bridge/Mailbox;  (Mailbox.java)
+  - <init>
+  - dir
+  - drain
+  - fallbackDir
+  - init
+      S @type Ljava/io/File;
+      S hiao
+      S dsh2
+      S mailbox
+  - readAll
+      S @type [B
+      S @type Ljava/io/FileInputStream;
+  - scanDir
+      S error
+      S ok
+      S tool
+      S 
+      S Mailbox
+      S @type Lcom/hiao/v2/bridge/Mailbox$1;
+      S cmd_
+      S .json
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S result_
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S UTF-8
+      S mailbox
+      S token
+      S unauthorized: token mismatch
+      S args
+      S 处理命令 
+      S  失败: 
+      S 信箱命令处理失败：
+      S ：
+      S 写错误结果失败: 
+      S 命令文件删除失败：
+  - writeFallbackReadme
+      S @type Ljava/io/File;
+      S README.txt
+      S hiao 信箱通道（run-as 兜底，无需外部存储权限）
+命令: cmd_<id>.json  内容 {"token":"<token>","tool":"ping","args":{}}
+写入: adb shell run-as com.hiao.v2 sh -c 'cat > files/dsh2/mailbox/cmd_1.json'
+结果: result_<id>.json（写回本目录，命令文件处理后自动删除）
+读取: adb shell run-as com.hiao.v2 cat files/dsh2/mailbox/result_1.json
+token 与主通道同源（/sdcard/hiao/token.txt）
+
+      S @type Ljava/lang/StringBuilder;
+      S 写兜底 README.txt 失败: 
+      S Mailbox
+  - writeFile
+      S @type Ljava/io/FileOutputStream;
+      S UTF-8
+  - writeReadme
+      S @type Ljava/io/File;
+      S README.txt
+      S hiao 信箱通道
+命令: cmd_<id>.json  内容 {"token":"<token>","tool":"ping","args":{}}
+结果: result_<id>.json（命令文件处理后自动删除）
+token 见 token.txt
+
+      S @type Ljava/lang/StringBuilder;
+      S 写 README.txt 失败: 
+      S Mailbox
+### Lcom/hiao/v2/bridge/McpRoute;  (McpRoute.java)
+  - <init>
+  - batchUnsupported
+      S 批量请求不支持
+  - error
+      S @type Lorg/json/JSONObject;
+      S jsonrpc
+      S 2.0
+      S id
+      S error
+      S code
+      S message
+  - findCapability
+      S @type Ljava/lang/StringBuilder;
+      S .
+      S id
+      S 
+  - govSuffix
+      S ｜免租约
+      S risk
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S ｜风险:
+      S high
+      S ｜需租约
+      S requiresConfirmation
+      S ｜需确认
+  - handle
+      S id
+      S Invalid Request
+      S method
+      S 
+      S params
+      S @type Lorg/json/JSONObject;
+      S initialize
+      S tools/list
+      S tools/call
+      S ping
+      S Method not found
+      S Internal error
+  - initialize
+      S @type Lorg/json/JSONObject;
+      S name
+      S hiao-v2
+      S version
+      S 2.8.0-alpha
+      S listChanged
+      S tools
+      S protocolVersion
+      S 2026-07-28
+      S serverInfo
+      S capabilities
+  - parseError
+      S Parse error
+  - result
+      S @type Lorg/json/JSONObject;
+      S jsonrpc
+      S 2.0
+      S id
+      S result
+  - toolsCall
+      S name
+      S @type Ljava/lang/String;
+      S Invalid params
+      S arguments
+      S @type Lorg/json/JSONObject;
+      S bridge
+      S type
+      S text
+      S @type Lorg/json/JSONArray;
+      S content
+      S ok
+      S isError
+  - toolsList
+      S @type Lorg/json/JSONArray;
+      S function
+      S name
+      S 
+      S parameters
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S description
+      S type
+      S object
+      S properties
+      S inputSchema
+      S tools
+### Lcom/hiao/v2/bridge/SseHub$1;  (SseHub.java)
+  - <init>
+  - mergeStyle
+### Lcom/hiao/v2/bridge/SseHub$Client;  (SseHub.java)
+  - <init>
+### Lcom/hiao/v2/bridge/SseHub;  (SseHub.java)
+  - <clinit>
+      S @type Ljava/util/concurrent/CopyOnWriteArrayList;
+      S @type Ljava/util/concurrent/LinkedBlockingQueue;
+      S @type Ljava/util/concurrent/atomic/AtomicBoolean;
+  - <init>
+  - access$000
+  - broadcast
+      S @type Lorg/json/JSONObject;
+      S kind
+      S ts
+      S data
+      S @type Ljava/lang/StringBuilder;
+      S data: 
+      S 
+
+
+  - clients
+  - closeAll
+      S @type Lcom/hiao/v2/bridge/SseHub$Client;
+  - closeQuietly
+  - register
+      S @type Lcom/hiao/v2/bridge/SseHub$Client;
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/bridge/SseHub$1;
+      S sse-writer
+  - writeLoop
+      S @type Ljava/lang/String;
+      S : ping
+
+
+      S UTF-8
+      S @type Lcom/hiao/v2/bridge/SseHub$Client;
+  - writeTo
+### Lcom/hiao/v2/core/CallContext;  (CallContext.java)
+  - <clinit>
+      S @type Ljava/lang/ThreadLocal;
+  - <init>
+  - get
+      S @type Ljava/lang/String;
+      S bridge
+  - set
+      S bridge
+### Lcom/hiao/v2/core/ChainLedger;  (ChainLedger.java)
+  - <init>
+      S seq
+      S 
+      S hash
+      S @type Ljava/lang/IllegalArgumentException;
+      S 账本文件不能为空
+  - backupAndRestart
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .corrupt-
+      S @type Ljava/lang/IllegalStateException;
+      S 账本末行损坏且备份失败：
+  - closeQuietly
+  - createEmpty
+      S 账本文件创建失败：
+      S @type Ljava/lang/IllegalStateException;
+      S @type Ljava/lang/StringBuilder;
+  - lastNonBlankLine
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S 账本读取失败：
+  - openReader
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+  - readAllLines
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S 账本读取失败：
+  - tryParse
+      S @type Lorg/json/JSONObject;
+  - verifyFile
+      S 
+      S hash
+      S prevHash
+      S seq
+      S @type Lorg/json/JSONObject;
+      S ok
+      S checked
+      S brokenAt
+      S @type Ljava/lang/RuntimeException;
+      S 校验结果构造失败
+  - writeLine
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S 账本写入失败：
+  - zeros64
+      S @type [C
+      S @type Ljava/lang/String;
+  - swipe
+      S @type Lorg/json/JSONObject;
+      S seq
+      S ts
+      S type
+      S data
+      S prevHash
+      S hash
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S 账本事件序列化失败：type=
+      S @type Ljava/lang/IllegalArgumentException;
+      S 事件 type 不能为空
+  - writePng
+  - agentTask
+  - <init>
+### Lcom/hiao/v2/core/ConnectorStore;  (ConnectorStore.java)
+  - <clinit>
+      S @type Ljava/security/SecureRandom;
+      S ^[A-Za-z0-9-]{1,64}$
+      S DELETE
+      S HEAD
+      S GET
+      S POST
+      S PUT
+      S PATCH
+      S @type [Ljava/lang/String;
+      S @type Lorg/json/JSONArray;
+  - <init>
+  - call
+      S @type Lorg/json/JSONObject;
+      S 
+      S 连接器存储未初始化
+      S GET
+      S @type Ljava/lang/StringBuilder;
+      S 方法不支持: 
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+      S 连接器不存在
+      S key_enc
+      S 密钥解密失败: 
+      S baseUrl
+      S 地址非法（检查 baseUrl 与 path）
+      S @type Ljava/net/URL;
+      S ://
+      S URL 超长（上限 2048 字符）
+      S headers
+      S 请求体超过 64KB 上限
+      S @type Ljava/net/HttpURLConnection;
+      S authorization
+      S @type Ljava/lang/String;
+      S {{secret}}
+      S 
+      S 
+
+      S HEAD
+      S Authorization
+      S Bearer 
+      S Content-Type
+      S application/json
+      S @type Ljava/io/OutputStreamWriter;
+      S ok
+      S status
+      S body
+      S contentType
+      S host
+      S truncated
+      S error
+      S HTTP 
+      S 调用失败: 
+      S : 
+      S 参数非法
+  - ctx
+  - drainOne
+  - fail
+      S ok
+      S status
+      S body
+      S 
+      S error
+  - findByIdLocked
+  - findByName
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+  - findByNameLocked
+      S name
+      S 
+  - get
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+  - indexOfIdLocked
+      S id
+      S 
+  - init
+      S @type Ljava/io/File;
+      S dsh2
+      S connectors.json
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+  - isAllowedMethod
+  - isForbiddenAddress
+      S @type Ljava/net/Inet4Address;
+  - isForbiddenIpv4
+  - joinUrl
+      S 
+      S /
+      S @type Ljava/lang/StringBuilder;
+  - list
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+  - loadLocked
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+      S @type Lorg/json/JSONObject;
+      S connectors
+      S @type Ljava/io/File;
+      S .corrupt-
+      S ConnectorStore
+      S connectors.json 损坏，已备份并重起空表: 
+  - mask
+      S 
+      S ***
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - newIdLocked
+      S @type Ljava/lang/StringBuilder;
+      S ctr_
+      S _
+      S @type [Ljava/lang/Object;
+      S %04x
+  - normalizeHeaders
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S 
+      S content-length
+      S 
+      S 
+
+      S @type Ljava/lang/IllegalArgumentException;
+      S 自定义请求头最多 16 个
+      S @type Ljava/lang/StringBuilder;
+      S 请求头值不能含换行且 ≤1024 字符: 
+      S Content-Length 由系统填写，不能自定义
+      S 请求头名只允许字母/数字/连字符: 
+      S headers 解析失败: 
+  - normalizeTrust
+      S 
+      S ask
+      S auto
+      S @type Ljava/lang/IllegalArgumentException;
+      S trust 只能是 ask（每次询问）或 auto（免审批）
+  - notInited
+  - persistLocked
+      S ConnectorStore
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .tmp
+      S @type Lorg/json/JSONObject;
+      S version
+      S connectors
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 旧 connectors.json 删除失败
+      S connectors.json rename 失败
+      S connectors.json 写回失败: 
+  - project
+      S headers
+      S createdAt
+      S trust
+      S baseUrl
+      S name
+      S id
+      S 
+      S @type Lorg/json/JSONObject;
+      S ask
+      S key_enc
+      S hasKey
+      S maskedKey
+      S 已保存（掩码）
+      S 未设置
+      S @type Ljava/lang/String;
+      S {{secret}}
+  - readCapped
+      S @type [B
+      S @type Ljava/io/ByteArrayOutputStream;
+  - remove
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+  - save
+      S 
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+      S @type Ljava/lang/IllegalArgumentException;
+      S @type Ljava/lang/StringBuilder;
+      S 密钥加密失败: 
+      S key_enc
+      S id
+      S createdAt
+      S @type Lorg/json/JSONObject;
+      S name
+      S baseUrl
+      S headers
+      S trust
+      S baseUrl 不能为空
+      S 连接器名必须是 1-32 个字
+      S 连接器存储未初始化
+  - trusted
+      S @type Lcom/hiao/v2/core/ConnectorStore;
+      S auto
+      S trust
+      S ask
+  - validatePublicHttpUrl
+      S @type Ljava/net/URL;
+      S http
+      S https
+      S @type Ljava/lang/IllegalArgumentException;
+      S 只允许 http/https 地址
+      S @type Ljava/lang/StringBuilder;
+      S 不允许访问本机或内网地址: 
+      S 主机名无法解析（按拒绝处理）: 
+      S URL 缺少主机名
+      S URL 无法解析: 
+### Lcom/hiao/v2/core/DshEngine$1;  (DshEngine.java)
+  - <init>
+  - negIf
+      S @type Lcom/hiao/v2/core/DshEngine$Listener;
+### Lcom/hiao/v2/core/DshEngine$ActivityStatus;  (DshEngine.java)
+  - <init>
+  - rat
+      S @type Lorg/json/JSONObject;
+      S step
+      S maxSteps
+      S phase
+      S tool
+### Lcom/hiao/v2/core/DshEngine$Listener;  (DshEngine.java)
+  - onEngineEvent   [abstract/native]
+### Lcom/hiao/v2/core/DshEngine;  (DshEngine.java)
+  - <clinit>
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S idle
+      S 
+      S @type Ljava/util/concurrent/CopyOnWriteArrayList;
+      S @type Landroid/os/Handler;
+  - <init>
+  - access$000
+  - activity
+  - addListener
+  - busy
+  - currentTaskId
+  - emitActivity
+      S activity
+  - fire
+      S @type Lcom/hiao/v2/core/DshEngine$1;
+  - fireNotice
+      S @type Lorg/json/JSONObject;
+      S text
+      S 
+      S code
+      S notice
+  - init
+  - removeListener
+  - requestStop
+  - status
+  - submit
+  - submitAndWait
+  - submitContinue
+### Lcom/hiao/v2/core/Hashes;  (Hashes.java)
+  - <init>
+  - digest16
+      S 
+  - sha256Hex
+      S SHA-256
+      S 
+      S @type [C
+      S @type Ljava/lang/String;
+      S sha-error
+### Lcom/hiao/v2/core/HookEngine$2;  (HookEngine.java)
+  - <init>
+  - chunk
+      S approval_requested
+### Lcom/hiao/v2/core/HookEngine$3;  (HookEngine.java)
+  - <init>
+  - flushLatin
+### Lcom/hiao/v2/core/HookEngine$4;  (HookEngine.java)
+  - <init>
+  - isLatin
+      S @type Ljava/lang/Thread;
+      S hook-worker
+### Lcom/hiao/v2/core/HookEngine;  (HookEngine.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/HashSet;
+      S @type Ljava/util/LinkedHashMap;
+      S @type Ljava/util/HashMap;
+  - <init>
+  - access$000
+  - attach
+      S @type Lcom/hiao/v2/core/HookEngine$1;
+  - cachePrompt
+      S 
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - cooldownOk
+      S cooldownMs
+      S id
+      S 
+      S @type Ljava/lang/Long;
+  - dispatch
+      S 
+      S HookEngine
+      S tool
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 钩子执行失败: 
+      S name
+      S : 
+      S 钩子派发失败: 
+  - doNotify
+      S text
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S hiao · 
+      S name
+      S 自动化
+      S 钩子通知发送失败: 
+      S HookEngine
+  - doPrompt
+      S text
+      S 
+      S HookEngine
+      S @type Ljava/lang/StringBuilder;
+      S prompt 钩子缺少文本: 
+      S name
+      S hook
+      S taskId
+      S ok
+      S prompt 钩子提交未受理: 
+      S 无结果
+      S error
+      S prompt 钩子执行失败: 
+  - doWebhook
+      S hook
+      S connector
+      S 
+      S name
+      S HookEngine
+      S @type Ljava/lang/StringBuilder;
+      S webhook 钩子未绑定连接器: 
+      S webhook 连接器不存在或未开免审批，已跳过: 
+      S @type Lorg/json/JSONObject;
+      S event
+      S data
+      S method
+      S POST
+      S body
+      S ok
+      S webhook 调用失败: 
+      S error
+      S webhook 执行失败: 
+  - enqueue
+      S @type Lcom/hiao/v2/core/HookEngine$3;
+  - fill
+      S 
+      S task_finished
+      S answer
+      S taskId
+      S @type Ljava/lang/String;
+      S title
+      S tool
+      S {{prompt}}
+      S {{answer}}
+      S {{title}}
+  - fireOne
+      S enabled
+      S event
+      S 
+      S taskId
+      S task_finished
+      S match
+      S action
+      S type
+      S approval_requested
+      S notify
+      S prompt
+      S webhook
+  - forgetSpawned
+  - init
+  - isSpawned
+  - markFired
+      S id
+      S 
+  - matchHit
+      S @type Ljava/lang/String;
+      S @type Ljava/lang/Boolean;
+      S 
+  - onApprovalRequested
+      S @type Lorg/json/JSONObject;
+      S kind
+      S 
+      S title
+      S @type Lcom/hiao/v2/core/HookEngine$2;
+  - onEngineEvent
+      S risk
+      S answer
+      S error
+      S ok
+      S tool
+      S prompt
+      S start
+      S id
+      S taskId
+      S 
+      S @type Lorg/json/JSONObject;
+      S task_started
+      S final
+      S task_finished
+      S deny
+      S verdict
+      S name
+      S capabilityId
+      S tool_executed
+      S @type Ljava/lang/StringBuilder;
+      S 引擎事件投影失败: 
+      S HookEngine
+  - rememberSpawned
+      S @type Ljava/lang/String;
+  - statusWord
+      S task_finished
+      S ok
+      S 后台任务完成了
+      S 后台任务没做成
+      S task_started
+      S 后台任务开始了
+      S tool_executed
+      S hiao 执行了一个操作
+      S approval_requested
+      S kind
+      S 
+      S ask
+      S hiao 有问题想你确认
+      S plan
+      S 有一份计划等你过目
+      S hiao 有操作需要你确认
+      S 有新动静
+  - worker
+      S @type Lcom/hiao/v2/core/HookEngine$4;
+### Lcom/hiao/v2/core/HookStore;  (HookStore.java)
+  - <clinit>
+      S @type Ljava/security/SecureRandom;
+      S tool_executed
+      S approval_requested
+      S task_finished
+      S @type [Ljava/lang/String;
+      S webhook
+      S prompt
+      S notify
+      S ok
+      S error
+      S taskId
+      S tool
+      S risk
+      S kind
+      S @type Lorg/json/JSONArray;
+  - <init>
+  - enabled
+      S @type Lcom/hiao/v2/core/HookStore;
+      S enabled
+      S event
+      S 
+      S match
+      S tool
+  - findByNameLocked
+      S name
+      S 
+  - inArray
+  - indexOfIdLocked
+      S id
+      S 
+  - init
+      S @type Ljava/io/File;
+      S hooks.json
+      S @type Lcom/hiao/v2/core/HookStore;
+  - join
+      S @type Ljava/lang/StringBuilder;
+      S /
+  - list
+      S @type Lcom/hiao/v2/core/HookStore;
+      S @type Ljava/util/ArrayList;
+      S @type Lorg/json/JSONObject;
+  - loadLocked
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+      S @type Lorg/json/JSONObject;
+      S hooks
+      S @type Ljava/io/File;
+      S .corrupt-
+      S HookStore
+      S hooks.json 损坏，已备份并重起空表: 
+  - newIdLocked
+      S @type Ljava/lang/StringBuilder;
+      S hk_
+      S _
+      S @type [Ljava/lang/Object;
+      S %04x
+  - persistLocked
+      S HookStore
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .tmp
+      S @type Lorg/json/JSONObject;
+      S version
+      S hooks
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 旧 hooks.json 删除失败
+      S hooks.json rename 失败
+      S hooks.json 写回失败: 
+  - remove
+      S @type Lcom/hiao/v2/core/HookStore;
+  - save
+      S 
+      S @type Lorg/json/JSONObject;
+      S @type Lcom/hiao/v2/core/HookStore;
+      S @type Ljava/lang/IllegalArgumentException;
+      S 钩子数量已达上限 64
+      S id
+      S createdAt
+      S name
+      S event
+      S match
+      S action
+      S cooldownMs
+      S enabled
+      S event 只能是 task_finished / tool_executed / approval_requested
+      S 钩子名必须是 1-32 个字
+      S 钩子存储未初始化
+  - setEnabled
+      S @type Lcom/hiao/v2/core/HookStore;
+      S enabled
+  - validateAction
+      S type
+      S 
+      S @type Ljava/lang/IllegalArgumentException;
+      S action.type 只能是 notify / webhook / prompt
+  - validateMatch
+      S task_finished
+      S tool_executed
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/IllegalArgumentException;
+      S @type Ljava/lang/StringBuilder;
+      S match 值只能是字符串/数字/布尔: 
+      S match 字段 
+      S  对事件 
+      S  不可用（可用: 
+      S ）
+### Lcom/hiao/v2/core/JobsStore;  (JobsStore.java)
+  - <clinit>
+      S @type Lorg/json/JSONArray;
+  - <init>
+  - add
+      S @type Lcom/hiao/v2/core/JobsStore;
+      S @type Ljava/lang/StringBuilder;
+      S j_
+      S @type Lorg/json/JSONObject;
+      S id
+      S schedule
+      S 
+      S prompt
+      S enabled
+      S createdAt
+      S lastRunAt
+      S nextRunAt
+  - cancel
+      S @type Lcom/hiao/v2/core/JobsStore;
+  - due
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/core/JobsStore;
+      S enabled
+      S nextRunAt
+      S lastRunAt
+      S schedule
+      S 
+  - indexOfLocked
+      S id
+      S 
+  - init
+      S @type Lcom/hiao/v2/core/JobsStore;
+      S @type Ljava/io/File;
+      S dsh2
+      S jobs.json
+  - list
+      S @type Lcom/hiao/v2/core/JobsStore;
+      S @type Lorg/json/JSONArray;
+  - loadLocked
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+      S @type Lorg/json/JSONObject;
+      S jobs
+      S @type Lorg/json/JSONException;
+      S jobs.json 第 
+      S  项不是对象
+      S jobs.json 缺少 jobs 数组
+      S @type Ljava/io/File;
+      S .corrupt-
+      S JobsStore
+      S jobs.json 损坏，已备份 
+      S  并重起空表: 
+  - nextAfter
+      S 
+      S interval:
+      S schedule 非法: 
+      S @type Ljava/lang/IllegalArgumentException;
+      S schedule 非法: interval 分钟数必须 ≥ 5
+      S @type Ljava/lang/StringBuilder;
+      S daily:
+      S :
+  - nextDaily
+  - persistLocked
+      S JobsStore
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .tmp
+      S @type Lorg/json/JSONObject;
+      S version
+      S jobs
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 旧 jobs.json 删除失败
+      S jobs.json rename 失败
+      S jobs.json 写回失败: 
+  - resetAfterErase
+      S @type Lcom/hiao/v2/core/JobsStore;
+      S @type Lorg/json/JSONArray;
+### Lcom/hiao/v2/core/MemoryStore$1;  (MemoryStore.java)
+  - <init>
+  - requireName
+  - stripJson
+      S @type Lcom/hiao/v2/core/MemoryStore$Scored;
+### Lcom/hiao/v2/core/MemoryStore$Scored;  (MemoryStore.java)
+  - <init>
+      S createdAt
+### Lcom/hiao/v2/core/MemoryStore;  (MemoryStore.java)
+  - <clinit>
+      S semantic
+      S preference
+      S short
+      S long
+      S episodic
+      S @type [Ljava/lang/String;
+      S @type Ljava/security/SecureRandom;
+      S @type Lorg/json/JSONArray;
+  - <init>
+  - bigrams
+      S @type Ljava/util/HashSet;
+  - clear
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S @type Lorg/json/JSONArray;
+  - evictLocked
+      S lastHitAt
+      S createdAt
+  - export
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S @type Lorg/json/JSONArray;
+  - findSimilarLocked
+      S type
+      S 
+      S text
+  - indexOfIdLocked
+      S id
+      S 
+  - init
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S @type Ljava/io/File;
+      S dsh2
+      S memory.json
+  - isLegalType
+  - jaccard
+      S @type Ljava/util/HashSet;
+  - loadLocked
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+      S @type Lorg/json/JSONObject;
+      S items
+      S @type Lorg/json/JSONException;
+      S memory.json 第 
+      S  项不是对象
+      S memory.json 缺少 items 数组
+      S @type Ljava/io/File;
+      S .corrupt-
+      S MemoryStore
+      S memory.json 损坏，已备份 
+      S  并重起空表: 
+  - persistLocked
+      S MemoryStore
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .tmp
+      S @type Lorg/json/JSONObject;
+      S version
+      S items
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 旧 memory.json 删除失败
+      S memory.json rename 失败
+      S memory.json 写回失败: 
+  - resetAfterErase
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S @type Lorg/json/JSONArray;
+  - search
+      S @type Lorg/json/JSONArray;
+      S 
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S text
+      S createdAt
+      S hits
+      S lastHitAt
+      S @type Lcom/hiao/v2/core/MemoryStore$Scored;
+      S @type Lcom/hiao/v2/core/MemoryStore$1;
+      S @type Lorg/json/JSONObject;
+      S tags
+      S id
+      S type
+      S score
+  - tagHitRateLocked
+      S tags
+      S 
+  - write
+      S 
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/core/MemoryStore;
+      S text
+      S tags
+      S updatedAt
+      S @type Ljava/lang/StringBuilder;
+      S m_
+      S _
+      S %04x
+      S @type [Ljava/lang/Object;
+      S @type Lorg/json/JSONObject;
+      S id
+      S type
+      S createdAt
+      S hits
+      S lastHitAt
+      S @type Ljava/lang/IllegalArgumentException;
+      S type 非法: 
+### Lcom/hiao/v2/core/Notifier;  (Notifier.java)
+  - <init>
+  - cancelApproval
+  - init
+      S @type Landroid/app/NotificationManager;
+      S @type Landroid/app/NotificationChannel;
+      S bridge
+      S 桥接服务常驻与工具调用动态通知
+      S hitl
+      S Agent 请求确认或提问时需要你的决定
+  - nm
+      S @type Landroid/app/NotificationManager;
+  - notificationId
+  - notifyApproval
+      S 
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/ApprovalsActivity;
+      S approval_id
+      S @type Landroid/app/Notification$Builder;
+      S hitl
+      S 待确认
+      S @type Landroid/app/Notification$BigTextStyle;
+      S reminder
+  - notifyInfo
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/MainActivity;
+      S hiao://chat
+      S @type Landroid/app/Notification$Builder;
+      S bridge
+      S hiao v2
+      S 
+### Lcom/hiao/v2/core/PlanManager$Plan;  (PlanManager.java)
+  - <init>
+### Lcom/hiao/v2/core/PlanManager;  (PlanManager.java)
+  - <clinit>
+      S @type Ljava/util/HashMap;
+      S @type Ljava/security/SecureRandom;
+  - <init>
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - current
+      S @type Lorg/json/JSONObject;
+      S @type Lcom/hiao/v2/core/PlanManager;
+      S @type Lcom/hiao/v2/core/PlanManager$Plan;
+      S planId
+      S steps
+      S approved
+  - envelope
+      S @type Lorg/json/JSONObject;
+      S ok
+      S planId
+      S approved
+      S resolvedBy
+      S 
+  - exit
+      S @type Lcom/hiao/v2/core/PlanManager;
+      S @type Lcom/hiao/v2/core/PlanManager$Plan;
+      S @type Lorg/json/JSONObject;
+      S reason
+      S 
+      S planId
+      S plan/exited
+      S 计划已退出
+      S plan_exited
+  - findByPlanIdLocked
+      S @type Lcom/hiao/v2/core/PlanManager$Plan;
+  - isBlocking
+      S @type Lcom/hiao/v2/core/PlanManager;
+  - markApproved
+      S @type Lcom/hiao/v2/core/PlanManager;
+      S plan/approved
+      S @type Lorg/json/JSONObject;
+      S planId
+      S resolvedBy
+      S 
+      S 计划已批准，开始执行
+      S plan_approved
+  - newPlanId
+      S @type Lcom/hiao/v2/core/PlanManager;
+      S @type Ljava/lang/StringBuilder;
+      S p_
+      S _
+      S %04x
+      S @type [Ljava/lang/Object;
+  - propose
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/core/PlanManager$Plan;
+      S @type Lcom/hiao/v2/core/PlanManager;
+      S @type Lorg/json/JSONObject;
+      S planId
+      S steps
+      S note
+      S plan/proposed
+      S plan
+      S 执行计划待批准
+      S @type Ljava/lang/StringBuilder;
+      S 计划共 
+      S  步，批准后按步执行
+      S 
+      S timeout
+      S ok
+      S error
+      S 无活跃会话，plan_propose 仅在引擎任务内可用
+### Lcom/hiao/v2/core/Prefs;  (Prefs.java)
+  - <init>
+  - apiBase
+      S api_base
+      S https://api.deepseek.com
+  - apiKey
+      S apiKey_enc
+      S 
+  - compatApiKey
+      S compat
+      S 
+  - compatBaseUrl
+      S compat_base_url
+      S 
+  - compatKeyReady
+  - compatModel
+      S compat_model
+      S 
+  - getDraft
+      S global
+      S @type Ljava/lang/StringBuilder;
+      S draft_
+      S 
+  - init
+      S hiao_v2
+  - maxSteps
+      S max_steps
+  - mcpEnabled
+      S mcp_enabled
+  - model
+      S model
+      S deepseek-chat
+  - onboarded
+      S onboarded
+  - provider
+      S provider
+      S auto
+      S deepseek
+      S compat
+  - setApiBase
+      S 
+      S https://api.deepseek.com
+      S api_base
+  - setApiKey
+      S apiKey_enc
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S API Key 加密失败：
+      S @type Ljava/lang/IllegalStateException;
+      S Prefs 未初始化
+  - setCompatApiKey
+      S compat
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/StringBuilder;
+      S 兼容端点 Key 加密失败：
+      S @type Ljava/lang/IllegalStateException;
+      S Prefs 未初始化
+  - setCompatBaseUrl
+      S 
+      S compat_base_url
+  - setCompatModel
+      S 
+      S compat_model
+  - setDraft
+      S global
+      S draft_
+      S @type Ljava/lang/StringBuilder;
+  - setMaxSteps
+      S max_steps
+  - setMcpEnabled
+      S mcp_enabled
+  - setModel
+      S 
+      S deepseek-chat
+      S model
+  - setOnboarded
+      S onboarded
+  - setProvider
+      S deepseek
+      S compat
+      S auto
+      S provider
+  - setWorkerConcurrency
+      S worker_concurrency
+  - sp
+      S @type Ljava/lang/IllegalStateException;
+      S Prefs 未初始化（App.onCreate 未执行）
+  - workerConcurrency
+      S worker_concurrency
+### Lcom/hiao/v2/core/SecureStore;  (SecureStore.java)
+  - <init>
+  - decrypt
+      S v1:
+      S :
+      S AES/GCM/NoPadding
+      S @type Ljavax/crypto/spec/GCMParameterSpec;
+      S @type Ljava/lang/String;
+  - encrypt
+      S 
+      S AES/GCM/NoPadding
+      S @type [B
+      S @type Ljava/security/SecureRandom;
+      S @type Ljavax/crypto/spec/GCMParameterSpec;
+      S @type Ljava/lang/StringBuilder;
+      S v1:
+      S :
+  - key
+      S AndroidKeyStore
+      S hiao_v2_tokens
+      S @type Ljavax/crypto/SecretKey;
+      S AES
+      S @type Landroid/security/keystore/KeyGenParameterSpec$Builder;
+      S GCM
+      S @type [Ljava/lang/String;
+      S NoPadding
+### Lcom/hiao/v2/core/SessionManager$2;  (SessionManager.java)
+  - <init>
+      S @type Ljava/util/concurrent/atomic/AtomicLong;
+  - onResume
+      S @type Ljava/lang/Thread;
+      S @type Ljava/lang/StringBuilder;
+      S dsh-worker-
+### Lcom/hiao/v2/core/SessionManager$StallView;  (SessionManager.java)
+  - <init>
+### Lcom/hiao/v2/core/SessionManager$StopHandle;  (SessionManager.java)
+  - <init>
+### Lcom/hiao/v2/core/SessionManager$WorkerSnapshot;  (SessionManager.java)
+  - <init>
+### Lcom/hiao/v2/core/SessionManager;  (SessionManager.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/ArrayList;
+      S @type Ljava/util/ArrayDeque;
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/util/concurrent/atomic/AtomicLong;
+      S @type Ljava/lang/ThreadLocal;
+      S @type Lcom/hiao/v2/core/SessionManager$1;
+  - <init>
+  - access$000
+  - activity
+  - activityLocked
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - busy
+  - busyCount
+  - busyEnvelope
+      S @type Lorg/json/JSONObject;
+      S ok
+      S accepted
+      S error
+      S busy
+      S taskId
+  - clampSteps
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - currentTaskId
+      S 
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - enqueue
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - ensurePoolLocked
+      S @type Lcom/hiao/v2/core/SessionManager$2;
+  - ensureStarted
+  - enterWorker
+  - err
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+  - errId
+      S id
+  - exitWorker
+  - findByIdLocked
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - finish
+      S 
+  - fireStallNotice
+      S @type Lorg/json/JSONObject;
+      S text
+      S 
+      S code
+      S taskId
+      S notice
+  - get
+  - hasActiveTaskForSessionLocked
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - isWorkerThread
+  - list
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - liveIdLocked
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - markStallNotified
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - newTaskIdLocked
+      S _
+      S task_
+      S @type Ljava/lang/StringBuilder;
+      S _x
+  - okEnvelope
+      S @type Lorg/json/JSONObject;
+      S ok
+      S accepted
+      S taskId
+      S hint
+      S agent_status 轮询
+  - oldestRunningSession
+      S 
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - pumpLocked
+      S @type Lcom/hiao/v2/core/WorkerSession;
+      S 任务异常：无法调度执行
+      S @type Ljava/lang/RuntimeException;
+      S @type Ljava/lang/IllegalStateException;
+  - queuedCount
+  - requestStop
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - requestStop
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - rowOf
+      S @type Lorg/json/JSONObject;
+      S running
+      S taskId
+      S session
+      S state
+      S source
+      S prompt
+      S step
+      S maxSteps
+      S phase
+      S idle
+      S queued
+      S tool
+      S 
+      S ms
+      S queuedMs
+      S waitingApproval
+  - runningCount
+  - snapshotOf
+      S 
+      S @type Lcom/hiao/v2/core/SessionManager$WorkerSnapshot;
+      S idle
+      S running
+      S queued
+      S session
+      S ms
+      S done
+  - stallViews
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/core/WorkerSession;
+      S @type Lcom/hiao/v2/core/SessionManager$StallView;
+      S idle
+  - status
+      S @type Lorg/json/JSONObject;
+      S ok
+      S busy
+      S taskId
+      S 
+      S @type Lcom/hiao/v2/core/WorkerSession;
+      S last
+      S activity
+      S running
+      S queued
+      S tasks
+  - stop
+  - stopHandleForThread
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - stopHandleOf
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - submit
+      S 
+      S empty prompt
+  - submitAndWait
+      S 
+      S 等待超时
+      S 任务异常：无收尾 summary
+      S 等待被中断
+      S empty prompt
+  - submitContinue
+      S 会话不存在
+      S events
+      S empty prompt
+  - tasksJson
+  - tasksJsonLocked
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/core/WorkerSession;
+      S running
+      S queued
+### Lcom/hiao/v2/core/SessionStore$1;  (SessionStore.java)
+  - <init>
+  - addRetryLine
+      S @type Lorg/json/JSONObject;
+  - buildActivityBar
+      S lastTs
+### Lcom/hiao/v2/core/SessionStore;  (SessionStore.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/HashMap;
+      S @type Ljava/util/HashSet;
+      S 
+      S @type Ljava/lang/ThreadLocal;
+  - <init>
+  - append
+  - bindWorkerSession
+      S 
+  - checkDir
+      S @type Ljava/lang/IllegalStateException;
+      S SessionStore 未初始化（App.onCreate 未执行）
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - create
+      S @type Ljava/lang/StringBuilder;
+      S s_
+      S @type Ljava/io/File;
+      S .jsonl
+  - currentId
+      S @type Ljava/lang/String;
+  - delete
+  - exists
+  - export
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+      S 会话不存在
+      S id
+      S events
+      S @type Ljava/lang/RuntimeException;
+      S 会话导出构造失败
+  - fileOf
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .jsonl
+  - init
+      S @type Ljava/io/File;
+      S dsh2
+      S sessions
+  - ledgerOf
+      S @type Lcom/hiao/v2/core/ChainLedger;
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .jsonl
+  - list
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/util/ArrayList;
+      S .jsonl
+      S 
+      S ts
+      S session/title
+      S type
+      S data
+      S title
+      S @type Lorg/json/JSONObject;
+      S id
+      S lastTs
+      S events
+      S @type Ljava/lang/RuntimeException;
+      S 会话列表行构造失败
+      S @type Lcom/hiao/v2/core/SessionStore$1;
+  - read
+      S @type Lorg/json/JSONArray;
+  - safeId
+      S @type Ljava/lang/IllegalArgumentException;
+      S 非法会话 id
+      S 会话 id 不能为空
+  - setCurrentId
+      S 
+  - setTitle
+      S 
+      S session/title
+      S type
+      S data
+      S title
+  - single
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/RuntimeException;
+      S 事件 data 构造失败
+  - unbindWorkerSession
+  - verify
+      S @type Lorg/json/JSONObject;
+      S ok
+      S checked
+      S brokenAt
+      S @type Ljava/lang/RuntimeException;
+      S 校验结果构造失败
+### Lcom/hiao/v2/core/WorkerSession;  (WorkerSession.java)
+  - <init>
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S @type Lcom/hiao/v2/core/SessionManager$StopHandle;
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S idle
+      S 
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - elapsedMinusApprovalWait
+  - ev
+      S @type Lorg/json/JSONObject;
+  - failFast
+      S final
+      S idle
+      S 
+  - fire
+      S taskId
+  - fireActivity
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S taskId
+      S activity
+  - fireToolEvents
+      S error
+      S taskId
+      S capabilityId
+      S 
+      S verdict
+      S name
+      S args
+      S @type [Ljava/lang/Object;
+      S tool
+      S ok
+      S ms
+      S summary
+      S tool_result
+  - forHistory
+      S tool_calls
+      S content
+      S @type Lorg/json/JSONObject;
+      S role
+      S assistant
+      S 
+  - msg
+      S @type Lorg/json/JSONObject;
+      S role
+      S content
+  - notifyFinish
+      S ok
+      S 
+      S answer
+      S error
+      S 任务完成
+      S 任务失败
+  - parseArgs
+      S @type Lorg/json/JSONObject;
+      S 
+  - plainReqBody
+      S @type Lorg/json/JSONObject;
+      S model
+      S messages
+      S @type Lorg/json/JSONArray;
+      S tools
+      S stream
+      S max_tokens
+  - replayHistory
+      S @type Ljava/util/ArrayList;
+      S type
+      S 
+      S data
+      S user/message
+      S text
+      S user
+      S assistant/message
+      S assistant
+  - runLoop
+      S ok
+      S totalTokens
+      S completionTokens
+      S promptTokens
+      S compat
+      S 
+      S 无可用模型：填 DeepSeek API Key 或配置自定义 OpenAI 兼容端点
+      S @type Lorg/json/JSONObject;
+      S none
+      S taskId
+      S prompt
+      S provider
+      S model
+      S maxSteps
+      S @type [Ljava/lang/Object;
+      S turn/start
+      S source
+      S text
+      S user/message
+      S id
+      S start
+      S @type Ljava/util/ArrayList;
+      S system
+      S 你是运行在用户手机上的智能体 hiao。你的回复由支持富媒体的界面渲染，可直接使用：
+1) Markdown 全量：标题 #、列表、**粗**、*斜*、~~删~~、`行内码`、```代码块```、[链接](url)、|表格|。
+2) 图片：![说明](https://图片直链)。仅当用户要求配图且你有可信图片直链时使用。
+3) 数学公式：行内 $E=mc^2$，独立块 $$\frac{a}{b}$$（LaTeX 子集：\frac{}{} \sqrt{} ^ _ 希腊字母）。
+4) 图表：```chart 围栏内放 JSON：{"type":"bar|line|pie","title":"标题","labels":["类目"],"series":[{"name":"系列","values":[1,2,3]}]}。用户要数据可视化时优先用它。
+5) 矢量图：```svg 围栏内放 SVG XML（rect/circle/ellipse/line/polyline/polygon/path，带 viewBox）。
+6) 画布：```canvas 围栏内放 JSON：{"w":800,"h":500,"bg":"#101014","draw":[{"t":"line","x1":0,"y1":0,"x2":100,"y2":100,"c":"#30D158","w":2},{"t":"rect","x":..,"y":..,"w":..,"h":..,"c":"..","fill":true},{"t":"circle","x":..,"y":..,"r":..,"c":".."},{"t":"text","x":..,"y":..,"s":"文字","c":"..","size":16},{"t":"path","pts":[[x,y]…],"c":"..","close":true}]}（坐标按 w×h）。
+只在用户要求图表/图形/公式/图片时用对应通道，普通回答用 Markdown；不要重复输出同一段的纯文本版本。
+      S user
+      S stopped
+      S reasoning
+      S usage
+      S thinking
+      S round
+      S body
+      S model/request
+      S @type Lcom/hiao/v2/core/WorkerSession$EngineStreamCallback;
+      S @type Lcom/hiao/v2/brain/RawBody;
+      S @type Lorg/json/JSONArray;
+      S model/error
+      S 流式中断
+      S @type Ljava/lang/StringBuilder;
+      S stream: 
+      S ms
+      S error
+      S api: 
+      S 空响应（检查端点/密钥/模型名）
+      S api: 空响应（检查 apiBase/key/模型名）
+      S prompt_tokens
+      S completion_tokens
+      S total_tokens
+      S model/response
+      S finish_reason
+      S content
+      S tool_calls
+      S function
+      S name
+      S arguments
+      S tool
+      S 你的最终回复正文为空，只有思考。请直接用一段正文给出最终结论，不要调用工具。
+      S max_steps reached
+      S 任务超时
+      S 模型返回空回答
+      S answer
+      S rounds
+      S toolCalls
+      S session
+      S turn/end
+      S assistant/message
+      S final
+      S idle
+  - safeAppend
+  - streamReqBody
+      S @type Lorg/json/JSONObject;
+      S model
+      S messages
+      S @type Lorg/json/JSONArray;
+      S tools
+      S stream
+      S include_usage
+      S stream_options
+      S max_tokens
+  - toolMsg
+      S @type Lorg/json/JSONObject;
+      S role
+      S tool
+      S tool_call_id
+      S content
+  - onEngineState
+  - access$100
+  - getString
+  - getString
+  - onCreate
+  - renderStatus
+      S 
+      S @type Lorg/json/JSONObject;
+      S ok
+      S id
+      S provider
+      S none
+      S model
+      S answer
+      S rounds
+      S toolCalls
+      S ms
+      S usage
+      S promptTokens
+      S completionTokens
+      S totalTokens
+      S session
+      S error
+      S taskId
+  - <init>
+  - onKey
+  - <init>
+  - run
+  - <init>
+  - onClick
+  - expandableCard
+  - show
+  - <init>
+  - <init>
+  - run
+      S 任务异常：未知收尾
+      S engine
+      S 会话不存在
+      S @type Ljava/lang/StringBuilder;
+      S 任务异常：
+      S 
+      S : 
+      S final
+      S idle
+  - <init>
+  - onBottomInset
+  - <init>
+  - run
+  - <init>
+  - openTab
+  - onFinish
+  - <init>
+  - <init>
+### Lcom/hiao/v2/core/backscreen/BackScreen$1;  (BackScreen.java)
+  - <init>
+  - onPause
+### Lcom/hiao/v2/core/backscreen/BackScreen$2;  (BackScreen.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/core/backscreen/BackScreen;  (BackScreen.java)
+  - <clinit>
+      S @type Landroid/os/Handler;
+      S @type Ljava/lang/Object;
+  - <init>
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - busy
+      S @type [Ljava/lang/Object;
+      S getType
+      S @type [Ljava/lang/Class;
+      S @type Ljava/lang/String;
+      S getState
+      S agent
+      S input
+      S idle
+      S basic_
+  - ensureProbe
+      S @type Lcom/hiao/v2/core/backscreen/BackScreen;
+      S display_ext
+      S setBackScreenAgentFrame
+      S @type [I
+      S @type Landroid/os/Bundle;
+      S @type [Ljava/lang/Class;
+      S getBackScreenAnimationInfo
+  - frameOf
+      S @type [I
+  - handle
+      S @type Lorg/json/JSONObject;
+      S mode
+      S show
+      S clear
+      S cleared
+      S text
+      S 
+      S seconds
+      S ok
+      S error
+      S Amoo 正在使用背屏，已让位，请稍后重试
+      S shown
+      S @type Ljava/lang/Exception;
+      S 背屏接口不可用：本机无 display_ext 服务（仅 STEPX PZ261A 支持背屏）
+      S text 不能为空（清屏请用 mode=clear）
+  - init
+  - lifecycleClear
+      S @type Ljava/lang/Object;
+  - lifecycleShow
+  - lifecycleShow
+      S BackScreen
+      S lifecycleShow 让位：Amoo 正在占用背屏
+  - push
+      S @type [Ljava/lang/Object;
+  - scheduleClear
+      S @type Lcom/hiao/v2/core/backscreen/BackScreen$2;
+  - startShow
+      S @type Ljava/lang/Object;
+      S 
+
+      S  · 
+      S @type Lcom/hiao/v2/core/backscreen/BackScreen$1;
+  - stripOf
+      S @type Landroid/graphics/Paint;
+      S sans-serif
+      S @type Landroid/graphics/Canvas;
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$1;  (BackscreenLifecycle.java)
+  - <init>
+  - <init>
+      S @type Ljava/lang/Thread;
+      S backscreen-ui
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$3;  (BackscreenLifecycle.java)
+  - <init>
+  - <init>
+      S @type Ljava/lang/StringBuilder;
+      S 需要确认 · 
+      S  项
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$4;  (BackscreenLifecycle.java)
+  - <init>
+  - access$300
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$5;  (BackscreenLifecycle.java)
+  - <init>
+  - access$600
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle;  (BackscreenLifecycle.java)
+  - <clinit>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$1;
+      S @type Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$2;
+      S @type Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$3;
+      S @type Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$4;
+  - <init>
+  - access$000
+  - access$100
+  - access$200
+  - access$202
+  - access$300
+  - access$400
+  - access$408
+  - access$500
+  - access$602
+  - access$700
+  - access$702
+  - access$800
+  - cancelPending
+  - cardText
+      S 
+      S phase
+      S step
+      S maxSteps
+      S extracting
+      S @type [Ljava/lang/Object;
+      S @type Ljava/lang/StringBuilder;
+      S 任务 · 
+      S tool
+      S streaming
+      S  · 回答中
+      S thinking
+  - init
+      S BackscreenLifecycle
+      S 背屏联动已装配
+  - onActivity
+      S 
+      S taskId
+  - onFinal
+  - push
+      S @type Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$5;
+  - shutdown
+### Lcom/hiao/v2/core/engine/EngineAssets$Probe;  (EngineAssets.java)
+  - <init>
+  - run
+### Lcom/hiao/v2/core/engine/EngineAssets;  (EngineAssets.java)
+  - <init>
+  - ctx
+      S @type Ljava/lang/IllegalStateException;
+      S EngineAssets 未初始化（App.onCreate 应先调 EngineHost.init）
+  - dshHome
+      S @type Ljava/io/File;
+      S dsh-engine-home
+  - engineRoot
+      S @type Ljava/io/File;
+      S engine
+  - firstFile
+  - hasAssetZip
+      S engine/runtime.zip
+  - init
+  - probe
+      S @type Ljava/io/File;
+      S bin/node
+      S usr/bin/node
+      S nodejs
+      S node
+      S @type [Ljava/io/File;
+      S lib/node_modules/@deepseek-ai/dsh/package.json
+      S usr/lib/node_modules/@deepseek-ai/dsh/package.json
+      S node_modules/@deepseek-ai/dsh/package.json
+      S dsh/package.json
+      S bin
+      S version
+      S 
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONObject;
+      S dsh
+      S cli
+      S dist/cli.js
+      S dist/index.js
+      S bin/dsh.js
+      S lib/cli.js
+      S @type Ljava/util/ArrayList;
+      S usr/lib
+      S usr/lib64
+      S lib
+      S @type [Ljava/lang/String;
+      S usr/bin
+      S @type Lcom/hiao/v2/core/engine/EngineAssets$Probe;
+  - readJson
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+  - tmpDir
+      S @type Ljava/io/File;
+      S tmp
+### Lcom/hiao/v2/core/engine/EngineHost$1;  (EngineHost.java)
+  - <init>
+  - access$400
+      S @type Ljava/lang/Thread;
+      S engine-host
+### Lcom/hiao/v2/core/engine/EngineHost$2;  (EngineHost.java)
+  - <init>
+  - confirmDelete
+      S @type Ljava/lang/Process;
+      S running
+      S starting
+      S @type Ljava/lang/StringBuilder;
+      S 引擎启动失败：
+      S 。
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S idle
+      S 
+### Lcom/hiao/v2/core/engine/EngineHost$3;  (EngineHost.java)
+  - <init>
+  - isFinishing
+### Lcom/hiao/v2/core/engine/EngineHost$4;  (EngineHost.java)
+  - <init>
+  - render
+### Lcom/hiao/v2/core/engine/EngineHost;  (EngineHost.java)
+  - <clinit>
+      S dsh web: (https?://\S+)
+      S @type Ljava/util/concurrent/atomic/AtomicReference;
+  - <init>
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - appendExport
+      S export 
+      S ; 
+  - appendLog
+      S @type Lcom/hiao/v2/core/engine/EngineHost;
+      S @type Ljava/io/FileOutputStream;
+  - closeQuietly
+  - cordisPatchYml
+      S @type Ljava/lang/StringBuilder;
+      S # 由 hiao v2 宿主生成：把官方 dsh 的 MCP 客户端指向本机桥（127.0.0.1:8898 的 /mcp 路由）。
+# patch 语义（官方 --dump-config-schema includePatch 原文）：插入新条目必须用 `insert:` 键；
+# 不带 insert 的行是「按 id 改写既有条目」，id 不存在会被警告跳过——初版踩坑即在此。
+# A truthy name asserts the existing plugin name rather than renaming it.
+# config 字段 = @deepseek-ai/dsh-mcp-client 的 StreamableHttpConfig（docs/config-catalog.md）：
+# transport/serverName/url/headers/toolCallTimeoutMs/failOnStartupError；
+# serverName 须匹配 [A-Za-z0-9_-]{1,32}（docs/subsystems/mcp.md），注入模型的工具名形如 mcp__hiao__<桥侧原名>。
+- insert:
+    - id: mcp-hiao
+      name: "@deepseek-ai/dsh-mcp-client"
+      config:
+        transport: streamable-http
+        serverName: hiao
+        url: http://127.0.0.1:8898/mcp?token=
+      S 
+        headers: {}
+        toolCallTimeoutMs: 600000                        # 对齐桥 soTimeout 600s（confirm 阻塞等待）
+        failOnStartupError: false                        # 桥未就绪不拖死引擎启动
+
+  - ensureExecutor
+      S @type Lcom/hiao/v2/core/engine/EngineHost;
+      S @type Lcom/hiao/v2/core/engine/EngineHost$1;
+  - init
+      S @type Ljava/io/File;
+      S workspace
+      S Documents
+  - isRunning
+      S running
+      S @type Ljava/lang/Process;
+  - logFile
+      S @type Ljava/io/File;
+      S engine.log
+  - logTail
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [B
+      S @type Ljava/lang/String;
+      S 
+  - noteWebUrl
+      S .
+      S ,
+      S )
+      S ;
+  - onBridgeTokenRotated
+      S running
+      S starting
+      S 桥令牌已轮换
+      S 重启引擎后 MCP 互连生效
+      S @type Ljava/lang/StringBuilder;
+      S 重写 cordis.patch.yml 失败: 
+      S 
+
+  - pump
+      S @type [B
+      S 
+      S @type Ljava/lang/String;
+      S @type Ljava/lang/StringBuilder;
+  - shellQuote
+      S @type Ljava/lang/StringBuilder;
+      S '
+      S '\''
+  - spawn
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/io/File;
+      S /system/bin:/system/xbin
+      S PATH
+      S LD_LIBRARY_PATH
+      S HOME
+      S DSH_HOME
+      S TMPDIR
+      S PREFIX
+      S DEEPSEEK_API_KEY
+      S etc/tls/cert.pem
+      S SSL_CERT_FILE
+      S DSH_PERMISSION_MODE
+      S danger-full-access
+      S exec
+      S /system/bin/linker64
+      S --expose-internals
+      S web
+      S --patch
+      S android-workspace.patch.yml
+      S cordis.patch.yml
+      S --host
+      S 127.0.0.1
+      S --port
+      S --no-open
+      S 
+---- 
+      S  ----
+spawn /system/bin/linker64 
+      S  web --host 
+      S  --port 
+      S  --no-open
+
+      S @type Ljava/lang/ProcessBuilder;
+      S -c
+      S /system/bin/sh
+      S @type [Ljava/lang/String;
+      S @type Ljava/lang/Exception;
+      S node 或 dsh 入口缺失
+  - start
+      S @type Lcom/hiao/v2/core/engine/EngineHost$2;
+  - startStdoutPump
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/core/engine/EngineHost$4;
+      S engine-stdout
+  - stop
+      S @type Lcom/hiao/v2/core/engine/EngineHost$3;
+  - stopProcess
+      S @type Ljava/lang/Process;
+  - writePatches
+      S @type Ljava/io/File;
+      S workspace
+      S Documents
+      S android-workspace.patch.yml
+      S # 由 hiao v2 宿主生成：官方 dsh 在 Linux 经 xdg-user-dir 定位系统「文档」目录，
+# Android 没有该机制，不补丁则引擎初始化默认工作区会失败（「无法创建默认工作区」）。
+# 把 workspace-controller.documentsDirectory 指到 $DSH_HOME/Documents，
+# 引擎随后会自建 Documents/deepseek-harness/default-workspace。
+- id: workspace-controller
+  name: "@deepseek-ai/dsh-api-workspace-controller"
+  config:
+    documentsDirectory: !!js process.env.DSH_HOME + "/Documents"
+
+      S cordis.patch.yml
+      S workspace/AGENTS.md
+      S # 工作区
+这是 hiao v2 为官方 DSH 引擎准备的默认工作区（DSH_HOME/workspace）。
+
+  - writeUtf8
+      S @type Ljava/io/FileOutputStream;
+### Lcom/hiao/v2/core/engine/EngineInstaller;  (EngineInstaller.java)
+  - <init>
+  - closeQuietly
+  - copyAssetZip
+      S @type Ljava/io/File;
+      S engine-runtime.zip
+      S @type Ljava/io/BufferedInputStream;
+      S engine/runtime.zip
+      S @type Ljava/io/FileOutputStream;
+      S @type [B
+  - countEntries
+      S @type Ljava/util/zip/ZipFile;
+  - extractZip
+      S @type Ljava/io/File;
+      S .ready
+      S @type Ljava/util/zip/ZipInputStream;
+      S @type Ljava/io/BufferedInputStream;
+      S @type Ljava/io/FileInputStream;
+      S 
+      S extracting
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S /
+      S 拒绝越界路径: 
+      S ..
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/lang/Exception;
+  - init
+  - install
+      S 0.2.0-rc.2
+      S @type Ljava/lang/Exception;
+      S 缺少引擎运行时：APK 未内置 runtime.zip 且本机未安装
+      S @type Ljava/lang/StringBuilder;
+      S 引擎运行时布局不完整：node=
+      S 缺失
+      S ，dsh 入口=
+      S 引擎版本不符：需要 0.2.0-rc.2，实读 
+      S （读不到版本）
+      S @type Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+      S idle
+      S 
+  - markExecutable
+      S bin
+      S usr/bin
+      S @type [Ljava/lang/String;
+      S @type Ljava/io/File;
+  - markerVersion
+      S @type Ljava/io/File;
+      S .ready
+  - readFile
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [B
+      S @type Ljava/lang/String;
+  - streamOut
+      S @type Ljava/io/FileOutputStream;
+      S @type [B
+  - writeMarker
+      S @type Ljava/io/File;
+      S .ready
+      S @type Ljava/io/FileOutputStream;
+      S 0.2.0-rc.2
+### Lcom/hiao/v2/core/engine/EngineTools;  (EngineTools.java)
+  - <init>
+  - handle
+      S engine_start
+      S engine_stop
+      S engine_status
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 未知引擎工具: 
+  - start
+      S @type Ljava/lang/Exception;
+      S 缺少引擎运行时：APK 未内置 runtime.zip 且本机未安装
+      S running
+      S state
+      S ok
+      S @type Lorg/json/JSONObject;
+      S note
+      S 引擎已在运行
+      S accepted
+  - status
+      S @type Lorg/json/JSONObject;
+      S ok
+      S state
+      S version
+      S url
+      S progress
+      S error
+      S patchStale
+      S adopted
+      S @type [Ljava/lang/String;
+  - stop
+      S adopted
+      S running
+      S state
+      S @type Ljava/lang/Exception;
+      S 引擎进程非本次宿主拉起，无法停止；请重启设备
+      S 
+      S ok
+      S starting
+      S @type Lorg/json/JSONObject;
+      S note
+      S 引擎未在运行
+      S stopping
+### Lcom/hiao/v2/core/engine/EngineWatcher$1;  (EngineWatcher.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/core/engine/EngineWatcher$2;  (EngineWatcher.java)
+  - <init>
+  - <init>
+      S @type Lcom/hiao/v2/core/engine/EngineWatcher$Listener;
+### Lcom/hiao/v2/core/engine/EngineWatcher$Listener;  (EngineWatcher.java)
+  - onEngineState   [abstract/native]
+### Lcom/hiao/v2/core/engine/EngineWatcher;  (EngineWatcher.java)
+  - <clinit>
+      S @type Ljava/util/concurrent/CopyOnWriteArrayList;
+      S @type Landroid/os/Handler;
+      S missing
+      S 
+  - <init>
+  - access$000
+  - access$100
+  - addListener
+  - attach
+  - boot
+      S missing
+      S 
+      S 0.2.0-rc.2
+      S patchStale
+      S ready
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/core/engine/EngineWatcher$1;
+      S engine-watch
+  - build
+      S error
+      S @type Lorg/json/JSONObject;
+      S state
+      S version
+      S 
+      S url
+      S http://127.0.0.1:3080
+      S extracting
+      S progress
+      S done
+      S total
+      S patchStale
+      S adopted
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - detachProcess
+  - healthOk
+      S @type Ljava/net/URL;
+      S http://127.0.0.1:3080
+      S @type Ljava/net/HttpURLConnection;
+      S GET
+  - launchUrl
+  - noteLaunchUrl
+  - onError
+  - onInstallDone
+      S 0.2.0-rc.2
+      S patchStale
+      S ready
+  - onInstallProgress
+      S extracting
+      S @type [I
+      S patchStale
+      S adopted
+      S 
+  - onInstallStart
+      S extracting
+      S starting
+      S running
+      S @type [I
+      S patchStale
+      S 
+  - onSpawned
+      S 
+      S version
+      S starting
+  - onStopped
+      S 
+      S version
+      S patchStale
+      S stopped
+      S missing
+  - publish
+      S 
+      S @type Lcom/hiao/v2/core/engine/EngineWatcher$2;
+  - removeListener
+  - setPatchStale
+      S state
+      S version
+      S 
+      S progress
+      S @type [I
+      S done
+      S total
+      S error
+      S adopted
+  - state
+      S state
+      S missing
+  - status
+  - tick
+      S patchStale
+      S missing
+      S running
+      S 
+      S starting
+      S @type Ljava/lang/StringBuilder;
+      S 引擎进程启动后即退出。
+      S version
+      S 引擎在 http://127.0.0.1:3080 未就绪。
+      S 引擎进程退出。
+  - tickLoop
+  - toError
+      S version
+      S 
+      S patchStale
+      S error
+      S 官方引擎异常
+### Lcom/hiao/v2/core/watchdog/Watchdog$1;  (Watchdog.java)
+  - <init>
+  - access$3200
+### Lcom/hiao/v2/core/watchdog/Watchdog;  (Watchdog.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+  - <init>
+  - access$000
+  - clip
+      S （无摘要）
+  - ensureStarted
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/core/watchdog/Watchdog$1;
+      S task-watchdog
+  - init
+  - tail4
+      S ?
+  - tick
+      S @type Lcom/hiao/v2/core/SessionManager$StallView;
+      S 任务 
+      S @type Ljava/lang/StringBuilder;
+      S  超过 10 分钟无进展，已自动停止：
+      S 任务已自动停止
+      S task_stall_stop
+      S 任务超过 10 分钟无进展，已自动停止
+      S  超过 5 分钟无进展：
+      S 任务可能停滞
+      S task_stagnant
+  - tickLoop
+### Lcom/hiao/v2/governance/ActionsLog;  (ActionsLog.java)
+  - <clinit>
+      S @type Ljava/security/SecureRandom;
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/ArrayDeque;
+  - <init>
+  - append
+      S @type Lorg/json/JSONObject;
+      S actionId
+      S 
+      S sessionId
+      S capabilityId
+      S tool
+      S args
+      S undo
+      S ActionsLog
+      S @type Ljava/lang/StringBuilder;
+      S action/done data 构造失败: 
+      S action/done
+  - appendLineLocked
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S 动作行落盘失败: 
+      S ActionsLog
+      S @type Lorg/json/JSONObject;
+      S seq
+      S ts
+      S type
+      S data
+      S prevHash
+      S hash
+  - byActionId
+      S data
+      S actionId
+  - ensureLedgerLocked
+      S @type Lcom/hiao/v2/core/ChainLedger;
+  - init
+      S @type Ljava/io/File;
+      S dsh2
+      S actions.jsonl
+      S @type Lcom/hiao/v2/core/ChainLedger;
+  - markCompensated
+      S 
+      S data
+      S undo
+      S kind
+      S @type Lorg/json/JSONObject;
+      S actionId
+      S ok
+      S ActionsLog
+      S @type Ljava/lang/StringBuilder;
+      S action/compensated data 构造失败: 
+      S action/compensated
+  - newActionId
+      S @type Ljava/lang/StringBuilder;
+      S a_
+      S _
+      S %04x
+      S @type [Ljava/lang/Object;
+      S _x
+  - readAll
+  - readAllFile
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Lorg/json/JSONObject;
+      S ActionsLog
+      S @type Ljava/lang/StringBuilder;
+      S 动作文件读取失败: 
+  - resetAfterErase
+  - tail
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+  - verify
+      S @type Lorg/json/JSONObject;
+      S ok
+      S checked
+      S brokenAt
+### Lcom/hiao/v2/governance/Approvals$BlockingListener;  (Approvals.java)
+  - onBlockingEnd   [abstract/native]
+  - onBlockingStart   [abstract/native]
+### Lcom/hiao/v2/governance/Approvals$Pending;  (Approvals.java)
+  - <init>
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S 
+      S timeout
+### Lcom/hiao/v2/governance/Approvals;  (Approvals.java)
+  - <clinit>
+      S @type Ljava/security/SecureRandom;
+      S @type Ljava/util/LinkedHashMap;
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/concurrent/CopyOnWriteArrayList;
+      S @type Ljava/util/concurrent/ConcurrentHashMap;
+  - <init>
+  - addChangeListener
+  - await
+      S 
+  - await
+      S @type Ljava/lang/StringBuilder;
+      S ap_
+      S _
+      S %04x
+      S @type [Ljava/lang/Object;
+      S @type Lcom/hiao/v2/governance/Approvals$Pending;
+      S Approvals
+      S 审批通知发送失败: 
+      S 审批钩子事件派发失败: 
+      S 审批阻塞开始回调失败: 
+      S 审批阻塞结束回调失败: 
+      S 审批通知取消失败: 
+  - count
+  - fireChange
+      S @type Ljava/lang/Runnable;
+  - init
+      S @type Landroid/os/Handler;
+  - pendingJson
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/governance/Approvals$Pending;
+      S @type Lorg/json/JSONObject;
+      S id
+      S kind
+      S title
+      S detail
+      S args
+      S capabilityId
+      S ageMs
+      S expiresInMs
+      S Approvals
+      S @type Ljava/lang/StringBuilder;
+      S pendingJson 条目构造失败: 
+  - removeChangeListener
+  - resolve
+  - resolve
+      S @type Lcom/hiao/v2/governance/Approvals$Pending;
+      S 
+      S user
+  - resolvedResult
+      S @type Ljava/lang/Boolean;
+  - setBlockingListener
+### Lcom/hiao/v2/governance/AuditLog$AuditListener;  (AuditLog.java)
+  - onAudit   [abstract/native]
+### Lcom/hiao/v2/governance/AuditLog;  (AuditLog.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+      S @type Ljava/util/ArrayDeque;
+      S @type Ljava/util/concurrent/CopyOnWriteArrayList;
+  - <init>
+  - addAuditListener
+  - append
+      S 
+  - append
+      S @type Lorg/json/JSONObject;
+      S tool
+      S 
+      S capabilityId
+      S args
+      S verdict
+      S ok
+      S ms
+      S caller
+      S error
+      S resolved_by
+      S AuditLog
+      S @type Ljava/lang/StringBuilder;
+      S audit/call data 构造失败: 
+      S audit/call
+  - appendEvent
+  - appendLineLocked
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S 审计行落盘失败: 
+      S AuditLog
+      S @type Lorg/json/JSONObject;
+      S seq
+      S ts
+      S type
+      S data
+      S prevHash
+      S hash
+  - ensureLedgerLocked
+      S @type Lcom/hiao/v2/core/ChainLedger;
+  - head
+  - init
+      S @type Ljava/io/File;
+      S dsh2
+      S audit.jsonl
+      S @type Lcom/hiao/v2/core/ChainLedger;
+  - notifyListeners
+      S @type Lcom/hiao/v2/governance/AuditLog$AuditListener;
+      S @type Ljava/lang/StringBuilder;
+      S 审计监听器异常（已忽略）: 
+      S AuditLog
+  - readAll
+  - readAllFile
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Lorg/json/JSONObject;
+      S AuditLog
+      S @type Ljava/lang/StringBuilder;
+      S 审计文件读取失败: 
+  - redactArgs
+      S @type Lorg/json/JSONObject;
+      S full
+      S audit
+      S log
+      S redact
+      S digest
+      S @type Ljava/lang/String;
+      S ***
+      S @type Ljava/lang/StringBuilder;
+      S 参数脱敏失败: 
+      S AuditLog
+  - removeAuditListener
+  - resetAfterErase
+  - tail
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+  - verify
+      S @type Lorg/json/JSONObject;
+      S ok
+      S checked
+      S brokenAt
+  - zeros64
+      S @type Ljava/lang/StringBuilder;
+### Lcom/hiao/v2/governance/CapsEngine$ManifestFault;  (CapsEngine.java)
+  - <init>
+### Lcom/hiao/v2/governance/CapsEngine;  (CapsEngine.java)
+  - <clinit>
+      S @type Ljava/security/SecureRandom;
+      S @type Ljava/util/HashSet;
+      S ui_recents
+      S shot
+      S ui_tap
+      S ui_swipe
+      S ui_click
+      S ui_back
+      S ui_home
+      S @type [Ljava/lang/String;
+      S cron_list
+      S cron_cancel
+      S ping
+      S info
+      S status
+      S approvals
+      S agent_task
+      S agent_status
+      S agent_stop
+      S ask_user
+      S plan_propose
+      S plan_exit
+      S memory_write
+      S memory_search
+      S cron_set
+      S 
+      S comms.assistant
+      S medium
+      S 1
+      S comms.amoo_call
+      S comms.share_text
+      S comms.open_url
+      S 0
+      S comms.notify
+      S apps.list_apps
+      S low
+      S apps.start_app
+      S apps.ui_dump
+      S high
+      S apps.ui_tap
+      S apps.ui_swipe
+      S apps.ui_click
+      S apps.ui_back
+      S apps.ui_home
+      S apps.ui_recents
+      S apps.shot
+      S files.ls
+      S files.read
+      S prev_content
+      S write_prev
+      S files.write
+      S rmdir
+      S files.mkdir
+      S snapshot
+      S restore
+      S files.rm
+      S move
+      S files.mv
+      S files.cp
+      S files.stat
+      S files.kb_import
+      S files.kb_search
+      S files.kb_list
+      S system.clipboard
+      S system.toast
+      S system.battery
+      S system.volume
+      S system.brightness
+      S system.vibrate
+      S system.exec
+      S comms.connector_call
+      S files.kb_delete
+      S @type [[Ljava/lang/String;
+      S @type Ljava/util/HashMap;
+      S @type Lorg/json/JSONArray;
+  - <init>
+  - capability
+      S @type Lorg/json/JSONObject;
+  - checkLease
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S caps 拒绝（清单不可用）
+      S @type Lorg/json/JSONObject;
+      S ok
+      S leaseId
+      S 
+      S 无租约
+      S capabilityId
+      S state
+      S active
+      S constraints
+      S deadline
+      S maxCalls
+      S usedCalls
+      S expired
+      S scope
+      S id
+      S exhausted
+  - consumeLease
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S caps 拒绝（清单不可用）
+      S 租约不存在
+      S state
+      S 
+      S revoked
+      S 租约已撤销
+      S expired
+      S 租约已过期
+      S exhausted
+      S 租约已耗尽
+      S active
+      S @type Ljava/lang/StringBuilder;
+      S 租约状态不可用: 
+      S constraints
+      S deadline
+      S maxCalls
+      S usedCalls
+      S capabilityId
+      S @type Lorg/json/JSONObject;
+      S leaseId
+      S lease/consumed
+      S CapsEngine
+      S lease/consumed 审计写入失败: 
+      S ok
+      S 租约消费落盘失败: 
+  - error
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+  - expectedOf
+  - fault
+      S @type Lcom/hiao/v2/governance/CapsEngine$ManifestFault;
+  - findLeaseLocked
+  - firstReasonOf
+      S 无租约
+      S revoked
+      S 租约已撤销
+      S expired
+      S 租约已过期
+      S exhausted
+      S 租约已耗尽
+      S scope
+      S 租约范围不匹配
+  - inNames
+  - indexOfLeaseLocked
+      S id
+      S 
+  - init
+      S @type Ljava/io/File;
+      S dsh2
+      S leases.json
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S __caps
+      S 
+      S @type Lorg/json/JSONObject;
+      S deny
+      S engine
+      S CapsEngine
+      S @type Ljava/lang/StringBuilder;
+      S caps 拒绝审计写入失败: 
+  - issueLease
+      S @type Lorg/json/JSONObject;
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S caps 清单不可用，拒绝签发
+      S @type Ljava/lang/StringBuilder;
+      S 未知能力，拒绝签发: 
+      S maxCalls 必须为正整数
+      S l_
+      S _
+      S %04x
+      S @type [Ljava/lang/Object;
+      S id
+      S capabilityId
+      S scope
+      S constraints
+      S maxCalls
+      S maxAmount
+      S deadline
+      S consent
+      S grantedBy
+      S user
+      S evidence
+      S 
+      S state
+      S active
+      S usedCalls
+      S createdAt
+      S leaseId
+      S lease/issued
+      S CapsEngine
+      S lease/issued 审计写入失败: 
+      S ok
+      S 租约签发失败: 
+  - leaseRequired
+      S risk
+      S 
+      S high
+  - leasesJson
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S @type Lorg/json/JSONArray;
+  - loadLeasesLocked
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+      S @type Lorg/json/JSONObject;
+      S leases
+      S leases.json 缺少 leases 数组
+      S leases.json 第 
+      S  项不是对象
+      S @type Ljava/io/File;
+      S .corrupt-
+      S CapsEngine
+      S leases.json 损坏，已备份 
+      S  并重起空表: 
+  - loadManifestLocked
+      S id
+      S 
+      S @type Ljava/util/HashMap;
+      S @type Lorg/json/JSONArray;
+      S caps-manifest.json
+      S @type Lorg/json/JSONObject;
+      S version
+      S 清单 version 必须为 1
+      S capabilities
+      S 清单缺少 capabilities 数组
+      S @type Ljava/util/HashSet;
+      S @type Ljava/lang/StringBuilder;
+      S 第 
+      S  条能力不是 JSON 对象
+      S 清单缺少能力 
+      S caps 清单缺失或损坏: 
+      S caps 清单不可用（deny-all）: 
+      S CapsEngine
+  - manifestJson
+      S @type Lorg/json/JSONArray;
+  - persistLocked
+      S CapsEngine
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .tmp
+      S @type Lorg/json/JSONObject;
+      S version
+      S leases
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 旧租约文件删除失败
+      S 租约文件 rename 失败
+      S 租约文件写回失败: 
+  - readStream
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S @type Ljava/lang/StringBuilder;
+      S @type [C
+  - refuse
+      S @type Lorg/json/JSONObject;
+      S ok
+      S reason
+  - resetAfterErase
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S @type Lorg/json/JSONArray;
+  - revokeLease
+      S @type Lcom/hiao/v2/governance/CapsEngine;
+      S 租约不存在
+      S state
+      S revoked
+      S @type Lorg/json/JSONObject;
+      S leaseId
+      S by
+      S user
+      S lease/revoked
+      S CapsEngine
+      S @type Ljava/lang/StringBuilder;
+      S lease/revoked 审计写入失败: 
+      S ok
+      S id
+      S 租约撤销落盘失败: 
+  - scopeMatched
+      S paths
+      S path
+      S dest
+      S @type [Ljava/lang/String;
+      S 
+      S /
+      S @type Ljava/lang/StringBuilder;
+  - sweepLocked
+      S state
+      S active
+      S 
+      S constraints
+      S deadline
+      S expired
+      S @type Ljava/lang/StringBuilder;
+      S 租约过期清理失败: 
+      S CapsEngine
+  - validateEntry
+      S id
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S 能力 id 缺失或重复: 
+      S 能力 id 形如 <category>.<tool>: 
+      S comms
+      S apps
+      S files
+      S system
+      S 能力类别非法: 
+      S 能力 tool 不在 Tools.NAMES: 
+      S 元/治理工具不得声明能力: 
+      S risk
+      S low
+      S medium
+      S high
+      S risk 非法: 
+      S irreversible
+      S requiresConfirmation
+      S @type Ljava/lang/Boolean;
+      S irreversible 必须为布尔: 
+      S requiresConfirmation 必须为布尔: 
+      S 不变量 2（不可逆必须二次确认）: 
+      S reversible
+      S reversible 必须为对象或 null: 
+      S 不变量 3（不可逆不得声明自动补偿）: 
+      S strategy
+      S handler
+      S snapshot
+      S rmdir
+      S prev_content
+      S 不变量 4（strategy 非法）: 
+      S restore
+      S move
+      S write_prev
+      S 不变量 4（handler 必须是已登记逆操作 kind）: 
+      S 不变量 4（handler 不得指向自身）: 
+      S 不变量 4（reversible 与 §4.2 声明不符）: 
+      S reversible 与 §4.2 声明不符: 
+      S audit
+      S 缺少 audit 声明: 
+      S log
+      S full
+      S digest
+      S audit.log 非法: 
+      S redact
+      S audit.redact 必须为数组: 
+      S @type Ljava/lang/String;
+      S audit.redact 元素必须为字符串: 
+      S legal
+      S basis
+      S user_grant
+      S legal.basis 非法: 
+      S pii
+      S 不变量 5（comms PII 参数未声明脱敏）: 
+      S  字段 
+      S GUI 兜底动作必须 requiresConfirmation:true: 
+      S GUI 兜底动作必须 manual 策略（reversible=null）: 
+      S GUI 兜底动作必须 full 审计留证: 
+      S risk 与 §4.2 不符: 
+      S 1
+      S irreversible 与 §4.2 不符: 
+      S requiresConfirmation 与 §4.2 不符: 
+### Lcom/hiao/v2/governance/Compensator;  (Compensator.java)
+  - <init>
+  - addSkipped
+      S @type Lorg/json/JSONObject;
+      S actionId
+      S reason
+  - compensate
+      S Compensator
+      S error
+      S ok
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/util/ArrayList;
+      S type
+      S action/done
+      S 
+      S @type Lorg/json/JSONObject;
+      S data
+      S actionId
+      S undo
+      S capabilityId
+      S 不可逆
+      S kind
+      S @type Ljava/lang/StringBuilder;
+      S __undo.
+      S allow
+      S ：
+      S 逆操作执行异常: 
+      S 补偿审计写入失败: 
+  - envelope
+      S @type Lorg/json/JSONObject;
+      S ok
+      S compensated
+      S skipped
+### Lcom/hiao/v2/governance/Policy$Decision;  (Policy.java)
+  - <init>
+### Lcom/hiao/v2/governance/Policy;  (Policy.java)
+  - <clinit>
+      S \brm\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|-[a-zA-Z]*f[a-zA-Z]*r[a-zA-Z]*)\s+/(sdcard)?/?(\s|$)
+      S \bdd\s+if=.*of=/dev/(block|sd)
+      S \b(reboot|shutdown|halt)\b
+      S \bpm\s+(uninstall|clear)\b
+      S \bbrick\b|\bfactory\s*reset\b|\bwipe\b
+      S /(system|vendor|data)/
+      S @type [Ljava/util/regex/Pattern;
+      S @type Ljava/util/HashSet;
+      S stat
+      S find
+      S ls
+      S cat
+      S echo
+      S pwd
+      S df
+      S free
+      S uname
+      S getprop
+      S date
+      S whoami
+      S ps
+      S grep
+      S head
+      S tail
+      S wc
+      S du
+      S @type [Ljava/lang/String;
+      S mv
+      S cp
+      S write
+      S mkdir
+      S rm
+      S read
+  - <init>
+  - allowForSession
+  - inNames
+  - isRegisteredUndoKind
+      S __undo.restore
+      S __undo.move
+      S __undo.write_prev
+      S __undo.rmdir
+  - judge
+      S 未知工具
+      S deny
+      S __
+      S allow
+      S @type Lcom/hiao/v2/governance/Policy$Decision;
+      S @type Ljava/lang/StringBuilder;
+      S 声明式逆操作（
+      S __undo.
+      S ），与正操作过同一套审计
+      S exec
+      S caps 清单不可用或该调用未声明能力，仅拒绝本次调用
+      S requiresConfirmation
+      S 会话级已允许
+      S connector_call
+      S 
+      S name
+      S 连接器已设为自动允许
+      S irreversible
+      S 不可撤销操作，需人工确认
+      S 高风险操作，需人工确认
+      S confirm
+      S 默认放行
+  - judgeExec
+      S 
+      S cmd
+      S deny
+      S @type Lcom/hiao/v2/governance/Policy$Decision;
+      S 命令为空
+      S 命中硬拒绝规则（不可恢复破坏面），仅拒绝本次调用
+      S allow
+      S @type Ljava/lang/StringBuilder;
+      S 会话级已允许：
+      S \s+
+      S confirm
+      S 命令不在白名单，需人工确认
+      S 命令在白名单内
+  - judgeFileReadSide
+      S /sdcard
+      S path
+      S /sdcard/
+      S /storage
+      S /storage/
+      S @type Lcom/hiao/v2/governance/Policy$Decision;
+      S allow
+      S 公共存储读取
+      S confirm
+      S 非公共存储路径读取，需确认
+  - judgeFileWriteSide
+      S mv
+      S path
+      S cp
+      S @type [Ljava/lang/String;
+      S dest
+      S 
+      S deny
+      S /sdcard/
+      S /Android/data/
+      S /Android/obb/
+      S @type Lcom/hiao/v2/governance/Policy$Decision;
+      S 路径越界：写入/删除只允许 /sdcard 子树
+      S @type Ljava/lang/StringBuilder;
+      S 缺少路径参数 
+  - normalizePath
+      S /+
+      S /
+      S @type Ljava/util/ArrayDeque;
+      S .
+      S ..
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/lang/String;
+  - prefixOf
+      S \s+
+      S @type Ljava/lang/StringBuilder;
+  - resetSession
+  - sessionAllowCount
+  - sessionAllowedContains
+### Lcom/hiao/v2/tools/AccessibilityHelper$1;  (AccessibilityHelper.java)
+  - <init>
+  - <init>
+      S @type Ljava/lang/Thread;
+      S a11y-shot
+### Lcom/hiao/v2/tools/AccessibilityHelper$2;  (AccessibilityHelper.java)
+  - <init>
+  - <init>
+  - onClick
+### Lcom/hiao/v2/tools/AccessibilityHelper$3;  (AccessibilityHelper.java)
+  - <init>
+  - <init>
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 截图失败（系统错误码 
+      S ）
+  - run
+### Lcom/hiao/v2/tools/AccessibilityHelper$WindowRoots;  (AccessibilityHelper.java)
+  - <init>
+      S @type Ljava/util/ArrayList;
+  - <init>
+  - <init>
+      S @type Landroid/view/accessibility/AccessibilityNodeInfo;
+      S @type Landroid/view/accessibility/AccessibilityWindowInfo;
+### Lcom/hiao/v2/tools/AccessibilityHelper;  (AccessibilityHelper.java)
+  - <clinit>
+      S @type Lcom/hiao/v2/tools/AccessibilityHelper$1;
+  - <init>
+  - access$000
+  - access$100
+  - clickNode
+      S @type Ljava/util/ArrayList;
+      S @type Landroid/view/accessibility/AccessibilityNodeInfo;
+      S @type Landroid/graphics/Rect;
+  - collect
+      S @type Ljava/lang/StringBuilder;
+      S 收集节点失败: 
+      S A11yHelper
+  - connected
+  - dispatchStroke
+      S @type Landroid/accessibilityservice/GestureDescription$Builder;
+      S @type Landroid/accessibilityservice/GestureDescription$StrokeDescription;
+      S @type [Z
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S @type Lcom/hiao/v2/tools/AccessibilityHelper$2;
+      S @type Ljava/lang/StringBuilder;
+      S 手势派发失败: 
+      S A11yHelper
+  - dump
+      S @type Lorg/json/JSONObject;
+      S 无障碍服务未开启
+      S @type [I
+      S @type Lorg/json/JSONArray;
+      S @type Landroid/view/accessibility/AccessibilityNodeInfo;
+      S ok
+      S count
+      S nodes
+      S A11yHelper
+      S @type Ljava/lang/StringBuilder;
+      S 组装 dump 结果失败: 
+      S 节点树读取失败：
+  - err
+      S ok
+      S error
+      S 未知错误
+  - globalAction
+      S @type Ljava/lang/StringBuilder;
+      S 全局动作失败: 
+      S A11yHelper
+  - matches
+      S text
+      S desc
+      S id
+      S @type Ljava/lang/StringBuilder;
+      S :id/
+      S /
+  - nn
+      S 
+  - roots
+      S A11yHelper
+      S @type Lcom/hiao/v2/tools/AccessibilityHelper$WindowRoots;
+      S @type Ljava/lang/StringBuilder;
+      S getWindows 失败: 
+      S @type Landroid/view/accessibility/AccessibilityWindowInfo;
+      S getRootInActiveWindow 失败: 
+  - screenshot
+      S @type Lorg/json/JSONObject;
+      S shot 需要 Android 11 (API 30) 且无障碍服务已开启
+      S 截图目标路径为空
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S @type Ljava/util/concurrent/atomic/AtomicReference;
+      S @type Lcom/hiao/v2/tools/AccessibilityHelper$3;
+      S 截图超时
+      S 截图未返回结果
+      S 截图被中断
+      S @type Ljava/lang/StringBuilder;
+      S takeScreenshot 派发失败: 
+      S A11yHelper
+      S 截图失败：
+  - swipe
+      S @type Landroid/graphics/Path;
+  - tap
+      S @type Landroid/graphics/Path;
+  - walkDump
+      S @type Landroid/graphics/Rect;
+      S @type Lorg/json/JSONObject;
+      S pkg
+      S cls
+      S text
+      S desc
+      S bounds
+      S @type Lorg/json/JSONArray;
+      S clickable
+      S children
+      S @type Ljava/lang/StringBuilder;
+      S 遍历节点失败: 
+      S A11yHelper
+  - writePng
+      S @type Lorg/json/JSONObject;
+      S 截屏数据无法解码
+      S 截屏位图转换失败
+      S @type Ljava/io/FileOutputStream;
+      S ok
+      S path
+      S A11yHelper
+      S @type Ljava/lang/StringBuilder;
+      S 截图保存失败: 
+      S 截屏写入失败: 
+  - <init>
+  - run
+  - <init>
+  - onClick
+      S A11yHelper
+      S 无障碍服务已连接
+### Lcom/hiao/v2/tools/AgentTools;  (AgentTools.java)
+  - <init>
+  - agentStatus
+      S @type Lorg/json/JSONObject;
+      S ok
+      S busy
+      S taskId
+      S 
+      S current
+      S last
+      S none
+      S provider
+      S deepseek_ready
+      S compat_ready
+      S model
+      S running
+      S queued
+      S tasks
+      S @type Lorg/json/JSONArray;
+  - agentStop
+      S 
+      S task_id
+      S stopping
+      S ok
+      S @type Lorg/json/JSONObject;
+      S stopped
+  - agentTask
+      S prompt
+      S 
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+      S prompt 为空
+      S max_steps
+      S wait
+      S timeout_s
+  - handle
+      S agent_task
+      S agent_status
+      S agent_stop
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S agent 工具未实现: 
+      S error
+### Lcom/hiao/v2/tools/AmooLinks$Entry;  (AmooLinks.java)
+  - <init>
+      S 
+### Lcom/hiao/v2/tools/AmooLinks;  (AmooLinks.java)
+  - <clinit>
+      S @type Ljava/util/LinkedHashMap;
+      S @type Lcom/hiao/v2/tools/AmooLinks$Entry;
+      S unreachable
+      S 
+      S open
+      S app_auther
+      S action
+      S com.stepos.ailauncher.action.OPEN_CHAT
+      S com.stepos.ailauncher
+      S open_chat
+      S com.stepos.ailauncher.action.STEP_ASSISTANT
+      S step_assistant
+      S com.stepos.aiengine.action.MODEL_MANAGER
+      S com.stepos.aiengine
+      S model_manager
+      S view
+      S stepxvibe://preview/%s
+      S preview
+  - <init>
+  - entry
+      S @type Lcom/hiao/v2/tools/AmooLinks$Entry;
+### Lcom/hiao/v2/tools/AmooTools;  (AmooTools.java)
+  - <init>
+  - amooCall
+      S target
+      S 
+      S pkg
+      S text
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 未知 target
+      S %s
+      S @type Ljava/lang/StringBuilder;
+      S  需要 pkg 参数
+      S view
+      S android.intent.extra.TEXT
+      S @type Landroid/content/Intent;
+      S android.intent.action.VIEW
+      S uri
+      S amoo 深链未配置：
+      S （待真机勘察回填 AmooLinks 表）
+      S action
+      S @type Lcom/hiao/v2/tools/AmooTools$$ExternalSyntheticLambda0;
+      S 深链唤起失败: 
+      S launched
+  - assistant
+      S 
+      S query
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S query 为空
+      S @type Landroid/content/Intent;
+      S android.intent.action.ASSIST
+      S android.intent.extra.TEXT
+      S @type Lcom/hiao/v2/tools/AmooTools$$ExternalSyntheticLambda0;
+      S @type Ljava/lang/StringBuilder;
+      S 无可用助手: 
+      S launched
+  - handle
+      S assistant
+      S amoo_call
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S amoo 域未实现工具: 
+      S error
+  - lambda$assistant$0
+### Lcom/hiao/v2/tools/AppTools$1;  (AppTools.java)
+  - <init>
+  - run
+      S @type Ljava/lang/String;
+  - <init>
+      S @type Ljava/lang/String;
+### Lcom/hiao/v2/tools/AppTools;  (AppTools.java)
+  - <init>
+  - handle
+      S list_apps
+      S start_app
+      S open_url
+      S share_text
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 应用域未实现工具: 
+      S error
+  - lambda$startApp$0
+  - listApps
+      S @type Landroid/content/Intent;
+      S android.intent.action.MAIN
+      S android.intent.category.LAUNCHER
+      S @type Ljava/util/LinkedHashMap;
+      S @type Landroid/content/pm/ResolveInfo;
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/tools/AppTools$1;
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONObject;
+      S package
+      S label
+      S ok
+      S count
+      S apps
+  - openUrl
+      S 
+      S url
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S url 为空
+      S @type Landroid/content/Intent;
+      S android.intent.action.VIEW
+      S @type Lcom/hiao/v2/tools/AppTools$$ExternalSyntheticLambda0;
+      S @type Ljava/lang/StringBuilder;
+      S 无法打开链接: 
+      S launched
+  - shareText
+      S text
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S text 为空
+      S @type Landroid/content/Intent;
+      S android.intent.action.SEND
+      S text/plain
+      S android.intent.extra.TEXT
+      S title
+      S 分享
+      S @type Lcom/hiao/v2/tools/AppTools$$ExternalSyntheticLambda0;
+      S @type Ljava/lang/StringBuilder;
+      S 分享失败: 
+      S launched
+  - startApp
+      S package
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S package 为空
+      S component
+      S /
+      S .
+      S @type Ljava/lang/StringBuilder;
+      S @type Landroid/content/Intent;
+      S action
+      S 无可用启动入口: 
+      S extras
+      S @type Ljava/lang/String;
+      S uri
+      S @type Lcom/hiao/v2/tools/AppTools$$ExternalSyntheticLambda0;
+      S 启动失败: 
+### Lcom/hiao/v2/tools/BasicTools;  (BasicTools.java)
+  - <init>
+  - approvals
+      S @type Lorg/json/JSONObject;
+      S ok
+      S items
+  - handle
+      S ping
+      S info
+      S status
+      S approvals
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 元工具未实现: 
+      S error
+  - info
+      S @type Lorg/json/JSONObject;
+      S ok
+      S app
+      S hiao-v2
+      S version
+      S 2.8.0-alpha
+      S model
+      S brand
+      S device
+      S sdk
+      S release
+      S http_port
+      S mailbox
+      S audit_head
+      S session_allow
+      S none
+      S provider
+      S deepseek_ready
+      S compat_ready
+  - mailboxInfo
+  - ping
+      S @type Lorg/json/JSONObject;
+      S ok
+      S pong
+      S app
+      S hiao-v2
+      S version
+      S 2.8.0-alpha
+      S pid
+  - status
+      S @type Lorg/json/JSONObject;
+      S ok
+      S up
+      S port
+      S tools
+      S pending
+      S busy
+      S taskId
+      S agent
+      S activity
+      S audit_head
+      S none
+      S provider
+      S deepseek_ready
+      S compat_ready
+      S engine
+### Lcom/hiao/v2/tools/ConnectorTools;  (ConnectorTools.java)
+  - <init>
+  - call
+      S truncated
+      S contentType
+      S host
+      S status
+      S error
+      S ok
+      S 
+      S POST
+      S method
+      S GET
+      S @type Ljava/lang/IllegalArgumentException;
+      S method 只支持 GET 或 POST
+      S path
+      S query
+      S body
+      S timeout_ms
+      S id
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 连接器不存在: 
+      S 缺少连接器名 name
+      S 连接器调用失败: 
+      S : 
+      S 参数非法
+      S hook
+      S connector_call
+      S comms.connector_call
+      S allow
+  - connectorList
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+      S ok
+      S connectors
+      S count
+  - connectorRemove
+      S name
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 缺少连接器名 name
+      S @type Ljava/lang/StringBuilder;
+      S 连接器不存在: 
+      S id
+      S removed
+  - connectorSave
+      S maskedKey
+      S ok
+      S name
+      S 
+      S baseUrl
+      S headers
+      S key
+      S ask
+      S trust
+      S @type Lorg/json/JSONObject;
+      S id
+      S note
+      S 密钥已加密存放在手机应用私有目录，任何工具都不返回明文；调用是否需要每次询问由能力页里该连接器的免审批开关决定
+      S 保存失败
+      S error
+  - foldQuery
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S ?
+      S @type Ljava/lang/String;
+      S UTF-8
+  - handle
+      S connector_save
+      S connector_list
+      S connector_remove
+      S connector_call
+      S 
+      S name
+      S model
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 连接器域未实现工具: 
+      S error
+### Lcom/hiao/v2/tools/DeviceTools$3;  (DeviceTools.java)
+  - <init>
+  - run
+  - <init>
+### Lcom/hiao/v2/tools/DeviceTools;  (DeviceTools.java)
+  - <init>
+  - alarmSet
+      S hour
+      S error
+      S ok
+      S minute
+      S @type Landroid/content/Intent;
+      S android.intent.action.SET_ALARM
+      S android.intent.extra.alarm.HOUR
+      S android.intent.extra.alarm.MINUTES
+      S label
+      S 
+      S android.intent.extra.alarm.MESSAGE
+      S @type Lcom/hiao/v2/tools/DeviceTools$1;
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 无法交给系统时钟: 
+      S note
+      S 已交给系统时钟
+      S minute 取值 0-59
+      S hour 取值 0-23
+      S hour 与 minute 必填
+  - handle
+      S torch
+      S media_control
+      S alarm_set
+      S timer_set
+      S sensor_read
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 设备域未实现工具: 
+      S error
+  - mediaControl
+      S 
+      S action
+      S play
+      S error
+      S ok
+      S pause
+      S toggle
+      S next
+      S prev
+      S stop
+      S audio
+      S @type Landroid/media/AudioManager;
+      S @type Lorg/json/JSONObject;
+      S 音频服务不可用
+      S @type Landroid/view/KeyEvent;
+      S action 仅支持 play|pause|toggle|next|prev|stop
+  - sensorRead
+      S 
+      S type
+      S step
+      S proximity
+      S error
+      S ok
+      S light
+      S sensor
+      S @type Landroid/hardware/SensorManager;
+      S @type Lorg/json/JSONObject;
+      S 传感器服务不可用
+      S @type Ljava/lang/StringBuilder;
+      S 设备没有该传感器: 
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S @type [F
+      S @type Lcom/hiao/v2/tools/DeviceTools$3;
+      S @type Landroid/os/HandlerThread;
+      S tools-sensor
+      S @type Landroid/os/Handler;
+      S 传感器注册失败
+      S 传感器读取超时（2 秒）
+      S value
+      S note
+      S 开机以来的累计步数，设备重启清零
+      S 单位厘米，部分设备仅近/远两档（0=近）
+      S type 仅支持 step|light|proximity
+  - timerSet
+      S seconds
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S seconds 必填
+      S @type Landroid/content/Intent;
+      S android.intent.action.SET_TIMER
+      S android.intent.extra.alarm.LENGTH
+      S label
+      S 
+      S android.intent.extra.alarm.MESSAGE
+      S @type Lcom/hiao/v2/tools/DeviceTools$2;
+      S @type Ljava/lang/StringBuilder;
+      S 无法交给系统时钟: 
+      S note
+      S 已交给系统时钟
+      S seconds 取值 1-86400
+  - torch
+      S on
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 缺少参数 on
+      S camera
+      S @type Landroid/hardware/camera2/CameraManager;
+      S 相机服务不可用
+      S @type Ljava/lang/Boolean;
+      S @type Ljava/lang/Integer;
+      S 设备没有可用的闪光灯
+      S @type Ljava/lang/StringBuilder;
+      S 手电筒操作失败: 
+### Lcom/hiao/v2/tools/FileTools$1;  (FileTools.java)
+### Lcom/hiao/v2/tools/FileTools$ExifData;  (FileTools.java)
+  - <init>
+      S @type Ljava/util/HashMap;
+  - <init>
+### Lcom/hiao/v2/tools/FileTools;  (FileTools.java)
+  - <init>
+  - canWrite
+      S /sdcard/
+      S /Android/data/
+      S /Android/obb/
+      S /sdcard/Android/data
+      S /sdcard/Android/obb
+  - copyTree
+      S @type Ljava/io/File;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/FileOutputStream;
+      S @type [B
+      S @type Ljava/lang/Exception;
+      S 操作已被用户停止
+  - cp
+      S path
+      S 
+      S dest
+      S 路径越界：写入只允许 /sdcard 子树
+      S @type Ljava/io/File;
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 源路径不存在: 
+      S 复制失败
+  - deleteTree
+  - denied
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+      S note
+      S 仅本次调用被拒绝，工具仍可用
+  - dms
+      S ,
+  - exifRead
+      S @type Ljava/io/File;
+      S 
+      S path
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 文件不存在
+      S @type Ljava/lang/String;
+      S S
+      S W
+      S has_exif
+      S has_gps
+      S 1
+      S lat
+      S lon
+      S alt_m
+      S gps_time_utc
+      S heading
+      S heading_ref
+      S datetime_original
+      S datetime
+      S make
+      S model
+      S focal_mm
+      S focal_35mm
+      S exposure_s
+      S f_number
+      S iso
+      S orientation
+      S GPS 坐标为 WGS84 十进制度
+      S 无 GPS；定位请走技能书 geo-photo 的画面线索路径。注意：StepOS 对 .jpg/.png 等图片类型的读取会在文件系统层剥离 EXIF（隐私特性）；若确认原片含 GPS，把文件复制为非图片后缀（如 .dat）后再试
+      S note
+      S @type Ljava/lang/StringBuilder;
+      S EXIF 解析失败（非 JPEG 图片）: 
+  - gpsTime
+      S ,
+      S %02d:%02d:%02d
+      S @type [Ljava/lang/Object;
+      S @type Ljava/lang/StringBuilder;
+      S T
+      S Z
+  - handle
+      S ls
+      S read
+      S exif_read
+      S write
+      S mkdir
+      S rm
+      S mv
+      S cp
+      S stat
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 文件域未实现工具: 
+      S error
+  - ls
+      S path
+      S /sdcard
+      S @type Ljava/io/File;
+      S @type Lorg/json/JSONArray;
+      S entries
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 目录不存在或不可读: 
+      S error
+      S name
+      S dir
+      S size
+      S mtime
+  - mkdir
+      S 
+      S path
+      S 路径越界：写入只允许 /sdcard 子树
+      S @type Ljava/io/File;
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 创建目录失败: 
+      S error
+      S kind
+      S rmdir
+  - mv
+      S path
+      S 
+      S dest
+      S @type Ljava/io/File;
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 源路径不存在: 
+      S 目标已存在: 
+      S snapshot
+      S 移动失败
+      S kind
+      S move
+      S from
+      S to
+      S @type Ljava/lang/IllegalStateException;
+      S 缺少动作 id，无法生成备查快照
+      S 路径越界：移动只允许 /sdcard 子树内
+  - negIf
+  - normalize
+      S /+
+      S /
+      S /./
+      S @type Ljava/util/ArrayList;
+      S .
+      S ..
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/lang/String;
+  - parseJpegExif
+      S @type Ljava/io/FileInputStream;
+      S @type [B
+      S @type Ljava/lang/Exception;
+      S bad tiff byte order
+      S @type Lcom/hiao/v2/tools/FileTools$ExifData;
+      S @type [I
+      S no exif app1
+      S not jpeg
+  - putIf
+      S @type Ljava/lang/String;
+  - rat
+  - read
+      S @type Ljava/io/File;
+      S 
+      S path
+      S max
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 文件不存在
+      S 路径是目录，read 只支持文本文件
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S UTF-8
+      S content
+      S size
+  - readAll
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S UTF-8
+  - readValue
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/lang/String;
+  - rm
+      S 
+      S path
+      S 路径越界：删除只允许 /sdcard 子树
+      S recursive
+      S @type Ljava/io/File;
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 路径不存在: 
+      S snapshot
+      S 删除失败（可能被系统占用或部分删除）
+      S kind
+      S restore
+      S target
+      S snapshotDir
+      S @type Ljava/lang/IllegalStateException;
+      S 缺少动作 id，无法生成可撤销快照
+  - s32
+  - snapshotTree
+      S @type Ljava/io/File;
+      S @type Ljava/lang/Exception;
+      S 快照目录创建失败
+      S 快照复制失败
+  - snapshotsRoot
+      S @type Ljava/io/File;
+      S dsh2
+      S snapshots
+  - stat
+      S @type Ljava/io/File;
+      S 
+      S path
+      S @type Lorg/json/JSONObject;
+      S ok
+      S exists
+      S dir
+      S size
+      S mtime
+      S readable
+      S writable
+  - typeSize
+  - u16
+  - u32
+  - undoMove
+      S from
+      S 
+      S to
+      S @type Ljava/io/File;
+      S @type Ljava/lang/Exception;
+      S 恢复移动失败
+      S @type Ljava/lang/StringBuilder;
+      S 原路径已被占用: 
+      S 被移动文件已不在: 
+      S 路径越界：恢复只允许 /sdcard 子树
+  - undoRestore
+      S target
+      S 
+      S snapshotDir
+      S @type Ljava/io/File;
+      S @type Ljava/lang/Exception;
+      S 恢复复制失败
+      S @type Ljava/lang/StringBuilder;
+      S 快照不存在或已被清理: 
+      S 目标已存在，拒绝恢复: 
+      S 快照目录缺失
+      S 路径越界：恢复只允许 /sdcard 子树
+  - undoRmdir
+      S path
+      S 
+      S @type Ljava/io/File;
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 目录非空，撤销失败: 
+      S 该路径不是目录: 
+      S 路径越界：恢复只允许 /sdcard 子树
+  - undoWritePrev
+      S path
+      S 
+      S @type Ljava/io/File;
+      S prevContent
+      S @type Ljava/lang/Exception;
+      S 恢复删除旧文件失败
+      S @type Ljava/io/FileOutputStream;
+      S UTF-8
+      S 路径越界：恢复只允许 /sdcard 子树
+  - walkIfd
+  - write
+      S path
+      S 
+      S 路径越界：写入只允许 /sdcard 子树
+      S @type Ljava/io/File;
+      S append
+      S @type Ljava/io/FileOutputStream;
+      S content
+      S UTF-8
+      S prevContent
+      S write_prev
+      S kind
+      S @type Lorg/json/JSONObject;
+      S ok
+      S bytes
+### Lcom/hiao/v2/tools/GovernanceTools;  (GovernanceTools.java)
+  - <init>
+  - askUser
+      S question
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S question 为空
+      S options
+      S @type Ljava/lang/StringBuilder;
+      S ] 
+      S timeout_s
+      S resolved_by
+      S answer
+      S answered
+      S user
+      S timeout
+      S 等待回答超时
+      S 用户未作答
+  - cronCancel
+      S id
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S id 为空
+      S 任务不存在
+      S cancelled
+  - cronList
+      S @type Lorg/json/JSONObject;
+      S ok
+      S jobs
+  - cronSet
+      S schedule
+      S 
+      S prompt
+      S schedule 非法
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S prompt 为空
+      S job
+  - handle
+      S ask_user
+      S plan_propose
+      S plan_exit
+      S cron_set
+      S cron_list
+      S cron_cancel
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 治理域未实现工具: 
+      S error
+  - planExit
+      S reason
+      S 
+      S 未说明原因
+      S @type Lorg/json/JSONObject;
+      S ok
+      S exited
+  - planPropose
+      S steps
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S steps 必须为数组
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/String;
+      S title
+      S @type Ljava/lang/StringBuilder;
+      S steps 元素必须为字符串或对象（第 
+      S  项）
+      S timeout_s
+      S note
+      S 
+      S 无活跃会话，plan_propose 仅在引擎任务内可用
+### Lcom/hiao/v2/tools/HookStore;  (HookStore.java)
+  - <init>
+  - enabled
+  - init
+  - list
+  - remove
+  - save
+  - setEnabled
+### Lcom/hiao/v2/tools/HookTools;  (HookTools.java)
+  - <init>
+  - fail
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+  - handle
+      S hook_save
+      S hook_list
+      S hook_remove
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 钩子域未实现工具: 
+      S error
+  - hookList
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+      S ok
+      S hooks
+      S count
+  - hookRemove
+      S 
+      S id
+      S 缺少钩子 id（hook_list 里取）
+      S @type Ljava/lang/StringBuilder;
+      S 钩子不存在: 
+      S @type Lorg/json/JSONObject;
+      S ok
+      S removed
+  - hookSave
+      S name
+      S 
+      S event
+      S action_type
+      S match
+      S @type Lorg/json/JSONObject;
+      S type
+      S action_text
+      S action_connector
+      S cooldown_ms
+      S notify
+      S text
+      S prompt
+      S 保存失败：prompt 动作需要 action_text（要提交的新任务指令）
+      S webhook
+      S 保存失败：webhook 动作需要 action_connector（连接器名）
+      S @type Ljava/lang/StringBuilder;
+      S 保存失败：连接器不存在: 
+      S （先用 connector_save 保存）
+      S trust
+      S ask
+      S auto
+      S 保存失败：webhook 必须绑定已开「免审批」的连接器（
+      S  目前是每次询问；请在能力页把该连接器设为免审批）
+      S connector
+      S approval_requested
+      S 保存失败：approval_requested 事件只支持 notify 动作
+      S ok
+      S id
+      S note
+      S 同一钩子两次触发的最小间隔 
+      S  秒；在能力页可随时停用或删除
+      S 保存失败
+      S 保存失败：action_type 只能是 notify / webhook / prompt
+### Lcom/hiao/v2/tools/JobStore;  (JobStore.java)
+  - <init>
+  - add
+  - cancel
+  - list
+### Lcom/hiao/v2/tools/KBTools$1;  (KBTools.java)
+  - <init>
+  - <init>
+  - run
+      S @type Lcom/hiao/v2/tools/KBTools$Hit;
+### Lcom/hiao/v2/tools/KBTools$Chunk;  (KBTools.java)
+  - <init>
+### Lcom/hiao/v2/tools/KBTools$Hit;  (KBTools.java)
+  - <init>
+### Lcom/hiao/v2/tools/KBTools;  (KBTools.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/kb
+      S @type Ljava/security/SecureRandom;
+  - <init>
+  - chunk
+      S @type Ljava/util/ArrayList;
+  - docIdsLocked
+      S @type Ljava/util/ArrayList;
+  - findCut
+  - flushCjk
+  - flushLatin
+  - handle
+      S kb_import
+      S kb_search
+      S kb_list
+      S kb_delete
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 知识库域未实现工具: 
+      S error
+  - hasBinary
+  - isCjk
+  - isLatin
+  - isSentencePunct
+  - kbDelete
+      S id
+      S 
+      S /
+      S \
+      S ..
+      S @type Lcom/hiao/v2/tools/KBTools;
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .json
+      S @type Ljava/lang/Exception;
+      S 删除失败：文件无法删除 
+      S chunkCount
+      S title
+      S ok
+      S deletedChunks
+      S totalDocs
+      S totalChunks
+      S id 非法：越出知识库目录
+      S 文档不存在（kb_list 里取 id）: 
+      S id 非法（应为 kb_list 返回的文档 id）
+      S 缺少文档 id（kb_list 里取）
+  - kbImport
+      S path
+      S 
+      S text
+      S title
+      S max_chars
+      S @type Ljava/lang/Exception;
+      S path 与 text 至少其一（path 优先，同时给出时以 path 为准）
+      S @type Ljava/io/File;
+      S /sdcard
+      S @type Ljava/lang/StringBuilder;
+      S /Android/data/
+      S /Android/obb/
+      S @type Ljava/lang/String;
+      S 源文件含二进制内容（前 8KB 出现 0x00），仅支持文本
+      S 文档过大：单源上限 2MB（当前 
+      S  字节），不静默截断
+      S 源文件不存在或不是普通文件: 
+      S path 越界：kb_import 只允许 /sdcard 子树内的源文件
+      S inline
+      S 未命名文档
+      S @type Lcom/hiao/v2/tools/KBTools;
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+      S i
+      S id
+      S source
+      S importedAt
+      S chunkCount
+      S chunks
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/tools/KBTools$Chunk;
+      S ok
+      S totalDocs
+      S totalChunks
+      S 知识库已满：全库块数上限 4000（现有 
+      S ，本次需 
+      S ），不静默截断
+      S 知识库已满：全库上限 50 篇文档，请先清理后重试
+      S 分块超限：本文档产出 
+      S  块，单文档上限 
+      S  块，不静默截断
+      S 文档内容为空
+      S text 含二进制内容（0x00），仅支持文本
+  - kbList
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/tools/KBTools;
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONObject;
+      S id
+      S title
+      S 
+      S chunkCount
+      S importedAt
+      S ok
+      S docs
+      S count
+      S totalChunks
+  - kbSearch
+      S query
+      S 
+      S limit
+      S @type Lorg/json/JSONArray;
+      S @type Lcom/hiao/v2/tools/KBTools;
+      S @type Ljava/util/ArrayList;
+      S @type Ljava/util/Map$Entry;
+      S @type Lorg/json/JSONObject;
+      S title
+      S @type Ljava/util/List;
+      S @type Lcom/hiao/v2/tools/KBTools$Chunk;
+      S @type Lcom/hiao/v2/tools/KBTools$Hit;
+      S @type Ljava/lang/String;
+      S @type Lcom/hiao/v2/tools/KBTools$1;
+      S docId
+      S i
+      S snippet
+      S score
+      S ok
+      S results
+      S count
+      S scanned
+      S note
+      S query 无法分词（至少两个相邻汉字或一个英文词）
+      S 知识库为空，先用 kb_import 导入
+      S @type Ljava/lang/Exception;
+      S query 为空
+  - loadLocked
+      S 
+      S @type Ljava/util/HashMap;
+      S .json
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S id
+      S chunks
+      S @type Ljava/util/ArrayList;
+      S text
+      S @type Lcom/hiao/v2/tools/KBTools$Chunk;
+      S i
+  - newIdLocked
+      S @type Ljava/lang/StringBuilder;
+      S kb_
+      S _
+      S @type [Ljava/lang/Object;
+      S %04x
+  - readAll
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+  - score
+      S @type Ljava/lang/String;
+  - terms
+      S @type Ljava/util/HashSet;
+      S @type Ljava/lang/StringBuilder;
+  - totalChunksLocked
+      S @type Ljava/util/List;
+  - writeDocLocked
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 无法创建知识库目录 
+      S @type Ljava/io/File;
+      S id
+      S kb_unknown
+      S .json
+      S .tmp
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 知识库写回失败: 旧文档无法覆盖 
+      S 知识库写回失败: rename 不成功 
+      S 知识库写回失败: 
+### Lcom/hiao/v2/tools/Memory;  (Memory.java)
+  - <init>
+  - search
+  - write
+### Lcom/hiao/v2/tools/MemoryTools;  (MemoryTools.java)
+  - <clinit>
+      S semantic
+      S preference
+      S short
+      S long
+      S episodic
+      S @type [Ljava/lang/String;
+  - <init>
+  - handle
+      S memory_write
+      S memory_search
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 记忆域未实现工具: 
+      S error
+  - memorySearch
+      S query
+      S 
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S query 为空
+      S limit
+      S items
+  - memoryWrite
+      S type
+      S 
+      S text
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S text 为空
+      S type 非法
+      S tags
+      S @type Lorg/json/JSONArray;
+      S item
+### Lcom/hiao/v2/tools/SkillTools;  (SkillTools.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/skills
+  - <init>
+  - appendCalling
+      S @type Lorg/json/JSONObject;
+      S code
+  - bestCountryKey
+      S country
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S 
+  - clueLookup
+      S kind
+      S 
+      S value
+      S @type Lorg/json/JSONObject;
+      S ok
+      S plate
+      S -
+      S 无匹配
+      S note
+      S matches
+      S ·
+      S  
+      S skills/geo-photo/data/plates.json
+      S area_code
+      S [^0-9]
+      S 0
+      S @type Ljava/lang/StringBuilder;
+      S skills/geo-photo/data/area_codes.json
+      S calling_code
+      S +
+      S [^0-9-]
+      S skills/geo-photo/data/calling_codes.json
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/String;
+      S driving_side
+      S skills/geo-photo/data/driving_side.json
+      S skills/geo-photo/data/country_names.json
+      S en2zh
+      S matched_as
+      S match
+      S territory
+      S name
+      S skills/geo-photo/data/territories.json
+      S by_sovereign
+      S sovereign
+      S 无匹配（属地名称或宗主国名称）
+      S admin_children
+      S skills/geo-photo/data/admin.json
+      S items
+      S parent
+      S code
+      S level
+      S 无匹配（输入省/市全名，如 河北省 / 北京市）
+      S @type Ljava/lang/Exception;
+      S 未知 kind: 
+      S （plate|area_code|calling_code|driving_side|territory|admin_children）
+      S kind 与 value 不能为空；kind ∈ plate|area_code|calling_code|driving_side|territory|admin_children
+  - entriesHits
+      S entries
+      S @type Lorg/json/JSONArray;
+      S 
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONObject;
+      S key
+  - handle
+      S skill_load
+      S clue_lookup
+      S skill_list
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 技能域未实现工具: 
+      S error
+  - loadTable
+      S @type Lorg/json/JSONObject;
+  - readAsset
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+  - readExternalSkill
+      S @type Ljava/io/File;
+      S /sdcard
+      S @type Ljava/lang/StringBuilder;
+      S SKILL.md
+      S @type Ljava/lang/Exception;
+      S 外置技能文件不存在: /sdcard/hiao/skills/
+      S /SKILL.md
+      S /
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S 
+
+…（超长截断，用 ref 分段读 references/）
+      S 外置技能路径越出 /sdcard/hiao/skills: 
+      S 外置技能根目录异常: 
+  - skillList
+      S @type Ljava/util/ArrayList;
+      S skills
+      S @type Ljava/io/File;
+      S SKILL.md
+      S @type [Ljava/lang/String;
+  - skillListTool
+      S source
+      S skills
+      S name
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/util/ArrayList;
+      S @type Lorg/json/JSONObject;
+      S assets
+      S @type Ljava/io/File;
+      S SKILL.md
+      S external
+      S @type Ljava/lang/String;
+      S 
+      S ok
+      S count
+      S note
+      S 要看技能全文用 skill_load（name 传技能名）；同名时内置优先，外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md 即自动入列
+  - skillLoad
+      S assets
+      S name
+      S 
+      S ref
+      S ok
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+      S skills
+      S note
+      S name 传技能名装载 SKILL.md；ref 可选读技能目录内 references/ 文档；外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md（含 SKILL.md 的一级目录自动入列）
+      S ..
+      S /
+      S \
+      S @type Ljava/lang/StringBuilder;
+      S skills/
+      S /SKILL.md
+      S external
+      S 
+
+…（超长截断，用 ref 分段读 references/）
+      S skill
+      S SKILL.md
+      S source
+      S content
+      S @type Ljava/lang/Exception;
+      S 技能不存在: 
+      S （内置 assets/
+      S : 
+      S ；外置 /sdcard/hiao/skills/
+      S ）
+      S ref 越出技能目录
+      S name 只能是技能目录名（字母数字连字符下划线）
+  - zhToEn
+      S skills/geo-photo/data/country_names.json
+      S en2zh
+      S @type Ljava/lang/String;
+### Lcom/hiao/v2/tools/SystemTools$1;  (SystemTools.java)
+  - <init>
+  - onDraw
+### Lcom/hiao/v2/tools/SystemTools$2;  (SystemTools.java)
+  - <init>
+  - setInteractive
+### Lcom/hiao/v2/tools/SystemTools$3;  (SystemTools.java)
+  - <init>
+  - startBlink
+### Lcom/hiao/v2/tools/SystemTools;  (SystemTools.java)
+  - <init>
+  - access$000
+  - battery
+      S @type Landroid/content/IntentFilter;
+      S android.intent.action.BATTERY_CHANGED
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S 电池广播不可用
+      S level
+      S scale
+      S percent
+      S status
+      S plugged
+      S temperature
+      S temp
+  - brightness
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S 需要「修改系统设置」权限
+      S value
+      S screen_brightness
+  - clipboard
+      S clipboard
+      S @type Landroid/content/ClipboardManager;
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S 剪贴板服务不可用
+      S op
+      S get
+      S set
+      S text
+      S 
+      S hiao
+  - drain
+      S @type Ljava/io/BufferedReader;
+      S @type Ljava/io/InputStreamReader;
+      S UTF-8
+      S @type [C
+  - exec
+      S cmd
+      S 
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S cmd 为空
+      S timeout
+      S @type Ljava/lang/ProcessBuilder;
+      S /system/bin/sh
+      S -c
+      S @type [Ljava/lang/String;
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/lang/Thread;
+      S @type Lcom/hiao/v2/tools/SystemTools$2;
+      S tools-exec-out
+      S @type Lcom/hiao/v2/tools/SystemTools$3;
+      S tools-exec-err
+      S err
+      S out
+      S 已被用户停止
+      S 执行超时（
+      S  秒）
+      S exit
+      S 命令执行失败（退出码 
+      S ）
+  - handle
+      S clipboard
+      S toast
+      S notify
+      S battery
+      S volume
+      S brightness
+      S vibrate
+      S exec
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 系统域未实现工具: 
+      S error
+  - notify
+      S title
+      S 
+      S text
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S title 与 text 均为空
+      S notified
+  - toast
+      S text
+      S 
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S text 为空
+      S @type Lcom/hiao/v2/tools/SystemTools$1;
+      S shown
+  - vibrate
+      S ms
+      S @type Landroid/os/Vibrator;
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S 设备无震动器
+  - volume
+      S audio
+      S @type Landroid/media/AudioManager;
+      S ok
+      S @type Lorg/json/JSONObject;
+      S error
+      S 音频服务不可用
+      S level
+      S max
+### Lcom/hiao/v2/tools/ToolContext$1;  (ToolContext.java)
+  - <init>
+  - getName
+### Lcom/hiao/v2/tools/ToolContext$MainTask;  (ToolContext.java)
+  - run   [abstract/native]
+### Lcom/hiao/v2/tools/ToolContext;  (ToolContext.java)
+  - <clinit>
+      S @type Ljava/lang/ThreadLocal;
+  - <init>
+  - appCtx
+      S @type Ljava/lang/IllegalStateException;
+      S ToolContext 未初始化（Tools.init 未调用）
+  - askUser
+      S 
+      S {}
+      S ask
+  - beginCall
+  - callId
+      S @type Ljava/lang/String;
+      S 
+  - cancelled
+      S @type Ljava/lang/Long;
+  - capability
+  - endCall
+  - init
+  - leaseRequired
+  - mainHandler
+      S @type Landroid/os/Handler;
+  - markDispatchStart
+  - postMain
+  - requestStop
+  - runOnMainSync
+      S @type Ljava/util/concurrent/atomic/AtomicReference;
+      S @type Ljava/util/concurrent/CountDownLatch;
+      S @type Lcom/hiao/v2/tools/ToolContext$1;
+      S 主线程调度超时
+      S @type Ljava/lang/Throwable;
+      S 主线程等待被中断
+  - setUndo
+  - takeUndo
+      S @type Lorg/json/JSONObject;
+  - workspace
+      S /sdcard
+  - workspaceDir
+      S @type Ljava/io/File;
+### Lcom/hiao/v2/tools/ToolSchemas;  (ToolSchemas.java)
+  - <clinit>
+      S @type Ljava/util/LinkedHashMap;
+      S @type [[Ljava/lang/String;
+      S @type [Ljava/lang/String;
+      S ping
+      S 探活：返回 pong 时间戳、应用标识、版本与进程号。
+      S info
+      S 运行环境信息：应用与版本、机型品牌、系统版本、桥端口、信箱目录、审计链头、会话级放行数、当前模型源及就绪状态。
+      S status
+      S 运行状态：桥运行与否与端口、工具总数、待审批数、引擎忙闲与当前任务、审计链头、当前模型源。
+      S approvals
+      S 列出当前等待人工处理的审批卡（confirm/ask/plan）。
+      S 任务指令（中文亦可）
+      S prompt
+      S string
+      S 最大轮数，缺省=设置页的默认步数
+      S max_steps
+      S integer
+      S 是否同步等待，默认 true
+      S wait
+      S boolean
+      S 同步等待上限秒 10-240，默认 240
+      S timeout_s
+      S agent_task
+      S 提交一次自主任务给引擎（多步模型-工具循环）。wait=true 时同步等待任务结束并返回摘要；wait=false 立即返回任务号，用 agent_status 轮询。引擎有空位即运行、无空位自动排队（wait=true 无空位时仍立即返回 busy，不排队）。
+      S agent_status
+      S 查询引擎状态：是否忙、当前任务号、上次任务摘要、模型源与就绪状态；并附多任务清单——running/queued 计数与 tasks 数组（任务号/会话/状态 running|queued/步骤/相位/排队毫秒）。
+      S task_id
+      S 可选：要停止的任务号（agent_status 的 tasks 里取）；缺省=最老运行中任务（旧语义）
+      S agent_stop
+      S 请求停止引擎任务：缺省停止最老运行中任务（旧语义），当前工具步返回后终止（之后 agent_status 的 last 会带 error=stopped）；传 task_id 可定向停止某一任务，未命中幂等不报错。
+      S 交给助手的问题或指令
+      S query
+      S assistant
+      S 唤起手机系统助手（语音助手/amoo）并附带一段查询文本，由助手侧应答。
+      S open|app_auther|open_chat|step_assistant|model_manager|preview
+      S target
+      S pkg
+      S preview 时的技能容器包名
+      S 随深链携带的文本（部分 target 支持）
+      S text
+      S amoo_call
+      S 唤起 amoo 深链：open（打开 amoo）/app_auther（应用作者）/preview（预览技能容器，需 pkg）立即可用；open_chat/step_assistant/model_manager 待真机勘察回填后可用。
+      S 要分享的文本
+      S 分享面板标题
+      S title
+      S share_text
+      S 调起系统分享面板，把文本分享给其他应用。
+      S url
+      S 要打开的 URL
+      S open_url
+      S 用系统浏览器或对应应用打开 URL（http/https 之外的自定义 scheme 照发，由系统裁决）。
+      S 通知标题
+      S 通知正文
+      S notify
+      S 发一条系统通知给手机用户。
+      S question
+      S 问题
+      S 候选项列表
+      S options
+      S array
+      S 等待秒数 5-600，默认 120
+      S ask_user
+      S 向手机主人提问并阻塞等待回答（人在环；默认 120 秒超时未答即失败）。
+      S list_apps
+      S 列出可启动的应用（包名+标签，上限 400）。
+      S package
+      S 应用包名
+      S component
+      S 显式组件，形如 pkg/.Activity
+      S String extra 键值对
+      S extras
+      S object
+      S 覆盖 Intent action
+      S action
+      S uri
+      S Intent data Uri
+      S start_app
+      S 启动应用（可带显式组件、String extras、action 或 uri）。
+      S max_nodes
+      S 节点上限，默认 300
+      S ui_dump
+      S 导出当前屏幕的无障碍节点树（先序，上限 max_nodes）。需无障碍服务开启。
+      S x
+      S 屏幕 x 坐标
+      S y
+      S 屏幕 y 坐标
+      S ui_tap
+      S 按屏幕坐标点击（无障碍手势）。需无障碍服务开启。
+      S x1
+      S 起点 x
+      S y1
+      S 起点 y
+      S x2
+      S 终点 x
+      S y2
+      S 终点 y
+      S ms
+      S 时长毫秒，默认 300
+      S ui_swipe
+      S 按起止坐标滑动。需无障碍服务开启。
+      S 按文本查找
+      S 按资源 id 查找
+      S id
+      S desc
+      S 按内容描述查找
+      S index
+      S 第几个匹配，默认 0
+      S ui_click
+      S 按文本/资源 id/内容描述查找节点并点击其中心（文本与描述按包含匹配；id 支持短名）。需无障碍服务开启。
+      S ui_back
+      S 按返回键。需无障碍服务开启。
+      S ui_home
+      S 回到桌面。需无障碍服务开启。
+      S ui_recents
+      S 打开最近任务。需无障碍服务开启。
+      S shot
+      S 截取当前屏幕并存 PNG（/sdcard/hiao/shots/）。需要 Android 11 (API 30) 且无障碍服务开启。
+      S 目录绝对路径，默认 /sdcard
+      S path
+      S ls
+      S 列出目录（上限 500 项）。
+      S 文件绝对路径
+      S max
+      S 最大字节数，默认 131072
+      S read
+      S 读文本文件（UTF-8，默认最多 128KB，可调上限 2MB）。
+      S 目标路径
+      S content
+      S 内容
+      S append
+      S 追加模式，默认 false
+      S write
+      S 写文本文件（仅 /sdcard 子树；旧内容会登记以便撤销）。
+      S 目录路径
+      S mkdir
+      S 建目录（含父目录；撤销时删除该空目录）。
+      S 要删除的路径
+      S recursive
+      S 递归删除，默认 true
+      S rm
+      S 删除文件/目录（删除前整树快照，可撤销恢复；需人工确认与租约）。
+      S 源路径
+      S dest
+      S mv
+      S 移动/重命名文件或目录（源先快照备查，可撤销；需人工确认与租约）。
+      S cp
+      S 复制文件或目录（目标仅限 /sdcard 子树）。
+      S 路径
+      S stat
+      S 查询文件元信息（存在/类型/大小/修改时间/读写权限）。
+      S op
+      S get|set，默认 get
+      S set 时的内容
+      S clipboard
+      S 读或写系统剪贴板。
+      S 提示文本
+      S toast
+      S 在屏幕上弹一条 Toast。
+      S battery
+      S 电量、充电状态与电池温度（系统粘性广播）。
+      S level
+      S 0-max；不传则只读
+      S volume
+      S 读或设媒体音量（STREAM_MUSIC）。
+      S 0-255；不传则只读
+      S value
+      S brightness
+      S 读或设屏幕亮度（0-255；写需要「修改系统设置」权限）。
+      S 毫秒，默认 200
+      S vibrate
+      S 震动一段时长。
+      S cmd
+      S shell 命令
+      S timeout
+      S 超时秒数 1-120，默认 20
+      S exec
+      S 执行 shell 命令（无 root；仅白名单首词直接放行，其余需人工确认，硬拒绝规则直接拒绝）。
+      S schedule
+      S interval:<分钟> 或 daily:HH:mm
+      S 到点提交给引擎的任务提示
+      S cron_set
+      S 创建定时任务（到点经引擎提交 prompt）。schedule 形如 interval:30（每 30 分钟，≥5）或 daily:09:30（本地时区）。
+      S cron_list
+      S 列出全部定时任务。
+      S 任务 id（j_<epochHex>）
+      S cron_cancel
+      S 取消一个定时任务。
+      S short|long|episodic|semantic|preference
+      S type
+      S 记忆内容
+      S tags
+      S 标签数组
+      S memory_write
+      S 写一条长期记忆（type∈short|long|episodic|semantic|preference；相似条目自动合并）。
+      S 检索词
+      S limit
+      S 返回条数，默认 8
+      S memory_search
+      S 按语义相似度检索长期记忆（30 天半衰打分）。
+      S 步骤数组，元素为字符串或 {title,tools?}
+      S steps
+      S note
+      S 补充说明
+      S 等待批准秒数，默认 300
+      S plan_propose
+      S 提出执行计划并阻塞等待用户批准（批准前一切能力工具被拒）。需在引擎任务内使用。
+      S reason
+      S 退出原因
+      S plan_exit
+      S 退出计划模式（解除阻塞）。
+      S engine_start
+      S 启动官方 DSH 引擎宿主：首次会解压内置运行时（arm64 node + @deepseek-ai/dsh），随后在本机回环 127.0.0.1:3080 拉起官方 Web 服务。异步触发，用 engine_status 轮询状态。
+      S engine_stop
+      S 停止官方 DSH 引擎进程。DSH_HOME 里的会话与工作区数据保留；重启后引擎会生成新的访问令牌。
+      S engine_status
+      S 查询官方 DSH 引擎宿主状态：state（missing/extracting/ready/starting/running/stopped/error）、引擎版本、访问基址与安装进度。
+      S 要显示的文本（建议 ≤ 20 字）
+      S 显示秒数 3-60，默认 10，到时自动清屏
+      S seconds
+      S mode
+      S show（默认，显示 text）| clear（立即清屏）
+      S backscreen
+      S 在手机背面的 17×23 点阵屏上显示一行状态文本（支持中文，超宽自动跑马灯），到时自动清屏；Amoo 占用背屏时本次调用让位失败。仅 STEPX PZ261A 机型可用。text 仅限状态短语（步骤/相位/计数类），禁止密钥、消息原文等敏感内容。
+      S on
+      S true 开灯、false 关灯
+      S torch
+      S 开关手电筒（后置闪光灯）。设备无闪光灯或相机被占用时返回失败。
+      S play|pause|toggle|next|prev|stop
+      S media_control
+      S 向系统发送媒体按键，控制当前正在播放的音频/视频应用（音乐、播客、视频等），由系统分发给活跃的媒体会话，无需 root。
+      S hour
+      S 小时 0-23
+      S minute
+      S 分钟 0-59
+      S label
+      S 闹钟备注（可选）
+      S alarm_set
+      S 在系统时钟应用里新建一个闹钟（打开时钟的闹钟设置界面，由用户在系统时钟里最终确认；需设备有时钟应用）。
+      S 时长秒数 1-86400
+      S 计时器备注（可选）
+      S timer_set
+      S 在系统时钟应用里新建一个倒计时（打开时钟的计时设置界面，由用户在系统时钟里最终确认）。
+      S step|light|proximity
+      S sensor_read
+      S 读一次设备传感器：step=计步（开机以来的累计步数，设备重启清零）、light=环境光照度（lux）、proximity=接近距离（厘米，部分设备仅近/远两档，0=近）。
+      S 照片绝对路径
+      S exif_read
+      S 读照片的 EXIF 元数据：GPS 坐标（WGS84 十进制度）、海拔、拍摄时间（含 GPS UTC 时间）、相机品牌型号、焦距、朝向、曝光参数。定位类任务的第一个动作；无 EXIF 时返回 has_exif=false。
+      S 技能名，缺省=列出全部
+      S name
+      S ref
+      S 可选，读技能目录内的 references/ 文档（如 references/clues.md）
+      S skill_load
+      S 装载 hiao 技能书（Agent Skill 标准的 SKILL.md 玩法文档）：name 缺省列出已装技能（内置 + 外置）；name=技能名返回全文（source=assets|external 标明来源），照着执行。内置优先，当前可用：geo-photo（照片地理定位/网络迷踪，改编自 geo-sleuth）；外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md 即自动入列。
+      S kind
+      S plate|area_code|calling_code|driving_side|territory|admin_children
+      S 查询值（如 京A / 0817 / +86 / 日本 / 河北省）
+      S clue_lookup
+      S 查定位线索表（geo-photo 技能配套）：kind=plate 车牌前缀→省份、area_code 国内长途区号→城市、calling_code 国际电话区号→国家、driving_side 国家→左右行驶、territory 属地/宗主国→属地信息、admin_children 省/市名→下一级行政区列表。表查询工具——先查表再推断，不要凭记忆背表。
+      S 源文本文件绝对路径（限 /sdcard 子树），与 text 至少其一
+      S 内联文本内容，与 path 至少其一
+      S 文档标题；缺省用文件名（path 时）或「未命名文档」（text 时）
+      S max_chars
+      S 目标块大小 200-1200 字符，默认 600
+      S kb_import
+      S 把一份文本文档分块导入个人知识库（/sdcard/hiao/kb/），供 kb_search 长期检索。源二选一：path=文本文件绝对路径（限 /sdcard 子树，与 text 同时给出时以 path 为准）或 text=内联文本。自动按空行/句读切块（目标 600 字符、重叠 80、单块 ≤1200）。上限：单源 ≤2MB、单文档 ≤512 块、全库 ≤50 篇/≤4000 块，超限明确报错不静默截断；二进制文件拒绝。导入后用 kb_search 检索、kb_list 查看库容。
+      S 检索词（中文词组或英文单词，可多个）
+      S 返回条数 1-8，默认 8
+      S kb_search
+      S 在个人知识库（kb_import 导入的文档）里按关键词检索：中文按相邻二字组、英文按整词（小写）匹配，按覆盖×密度打分取前 8；返回文档标题、块序号与片段。适合回查已导入的资料原文；个人长记忆请用 memory_search。
+      S kb_list
+      S 列出个人知识库全部文档（id/标题/块数/导入时间）与全库块数。kb_search 前可先看库里有什么。
+      S 工作流名：字母/数字/下划线/汉字/连字符，1-32 字符
+      S description
+      S 用途说明（workflow_list 展示）
+      S 步骤数组，元素为 {type:"prompt",text} 或 {type:"tool",tool,args?}
+      S workflow_save
+      S 把一组固定步骤保存为可复用工作流（/sdcard/hiao/workflows/<name>.json，同名覆盖）。steps 每步 {type:"prompt",text} 或 {type:"tool",tool,args?}；prompt 步的 text 与 tool 步的 args（仅字符串值）里可写 {{变量名}} 与 {{last}}（上一步结果）占位符。最多 8 步；tool 步禁止 workflow_run；tool 名必须在工具清单内。
+      S workflow_list
+      S 列出已保存的全部工作流（名字/说明/步数）。
+      S 工作流名（workflow_save 保存的名字）
+      S vars
+      S 变量表：替换步骤文本/参数中的 {{key}}；未声明的占位符原样保留
+      S max_steps_per_task
+      S 每个 prompt 步的 agent_task 最大轮数，默认 4，上限=设置页的默认步数
+      S workflow_run
+      S 按序串行执行一个已保存的工作流：prompt 步经 agent_task 同步执行（wait:true，单步 120 秒上限，每步默认 4 轮，可用 max_steps_per_task 调，上限=设置页的默认步数）；tool 步直调对应工具（走完整治理管线，需确认/租约的照常进审批）。变量替换：{{key}}←vars[key]，{{last}}←上一步结果。总步数 ≤8（执行前重校验）、总墙钟 1200 秒；任一步失败或引擎并发已满（busy 信封）即中止并返回已完成步骤摘要（partial）。适合把验证过的多步流程固化成一键任务。
+      S 连接器名：1-32 字，唯一，同名即更新
+      S baseUrl
+      S 服务根地址，http(s):// 公网地址
+      S headers
+      S 固定请求头键值对（可选）；值里可写 {{secret}} 表示密钥注入位
+      S key
+      S 密钥（可选）；更新时留空=不修改旧密钥
+      S connector_save
+      S 保存或更新一个外部服务连接器（名字唯一，同名即更新）。baseUrl 必须以 http:// 或 https:// 开头且指向公网地址（本机与内网地址一律拒绝）。headers 为随每次请求发送的固定头（值里可写 {{secret}} 表示密钥注入位）；key 为密钥，会加密存放在手机应用私有目录，任何工具都不返回明文，更新时留空表示不修改旧密钥。调用是否需要每次人工询问由能力页里该连接器的「免审批」开关决定，新保存的默认每次询问。
+      S connector_list
+      S 列出已保存的外部服务连接器：名称、地址、掩码后的密钥、是否免审批。不包含明文密钥。
+      S 要删除的连接器名
+      S connector_remove
+      S 删除一个外部服务连接器（引用它的钩子 webhook 动作将失效）。
+      S 连接器名（connector_save 保存的名字）
+      S 追加在根地址后的路径，如 /v1/query（可带查询串）
+      S method
+      S GET|POST，默认 POST
+      S URL 查询参数键值对（可选）
+      S body
+      S 请求体 JSON 对象（可选；GET 不发送）
+      S timeout_ms
+      S 超时毫秒 1000-30000，默认 15000
+      S connector_call
+      S 调用一个已保存的外部服务：最终地址 = 连接器根地址 + path，仅支持 http/https 公网地址（本机与内网一律拒绝，重定向不跟随），响应最多读取 64KB。默认每次调用需要人工确认；在能力页标记「免审批」的连接器不需确认（所有调用都留操作记录）。
+      S 钩子名：1-32 字，唯一，同名即更新
+      S event
+      S task_finished|tool_executed|approval_requested
+      S match
+      S 过滤条件（可选；字段随事件见说明，值完整匹配）
+      S action_type
+      S notify|webhook|prompt
+      S action_text
+      S notify 或 prompt 的文本（可选；支持 {{title}} 占位；notify 文本只作状态短语）
+      S action_connector
+      S webhook 时必填：连接器名（须已开免审批）
+      S cooldown_ms
+      S 同一钩子两次触发的最小间隔毫秒 0-3600000，默认 60000
+      S hook_save
+      S 保存或更新一个自动化钩子（名字唯一，同名即更新）：事件发生时自动执行动作。event 取 task_finished（任务结束）| tool_executed（执行了一个工具）| approval_requested（等你确认时）；action_type 取 notify（发系统通知）| webhook（调用已「免审批」的连接器）| prompt（提交一个新任务，最多 4 步）。approval_requested 只支持 notify；webhook 必须绑定已开「免审批」的连接器。match 是过滤条件，只允许该事件真实携带的字段：task_finished 用 taskId/ok/error，tool_executed 用 tool/risk，approval_requested 用 kind（值为完整匹配，可省略=全部匹配）。
+      S hook_list
+      S 列出已保存的自动化钩子（名字/事件/过滤条件/动作/间隔）。
+      S 钩子 id（hook_list 里取）
+      S hook_remove
+      S 删除一个自动化钩子。
+      S skill_list
+      S 列出已安装的技能（内置打包技能与外置 /sdcard/hiao/skills 技能包双源，标明来源）。要看技能全文用 skill_load。
+      S 文档 id（kb_list 里取，形如 kb_<时间戳>_<序号>）
+      S kb_delete
+      S 从个人知识库删除一篇文档（单册，按 kb_list 返回的 id）。删除不可恢复，会先请求人工确认。
+  - <init>
+  - array
+      S @type Lcom/hiao/v2/tools/ToolSchemas;
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+  - def
+      S function
+      S @type Lorg/json/JSONObject;
+      S description
+      S type
+      S @type Lorg/json/JSONArray;
+      S object
+      S properties
+      S required
+      S name
+      S parameters
+      S @type Ljava/lang/IllegalStateException;
+      S @type Ljava/lang/StringBuilder;
+      S 工具 schema 建表失败: 
+  - schema
+      S @type Lorg/json/JSONObject;
+### Lcom/hiao/v2/tools/Tools;  (Tools.java)
+  - <clinit>
+      S skill_list
+      S kb_delete
+      S ping
+      S info
+      S status
+      S approvals
+      S agent_task
+      S agent_status
+      S agent_stop
+      S assistant
+      S amoo_call
+      S share_text
+      S open_url
+      S notify
+      S ask_user
+      S list_apps
+      S start_app
+      S ui_dump
+      S ui_tap
+      S ui_swipe
+      S ui_click
+      S ui_back
+      S ui_home
+      S ui_recents
+      S shot
+      S ls
+      S read
+      S write
+      S mkdir
+      S rm
+      S mv
+      S cp
+      S stat
+      S clipboard
+      S toast
+      S battery
+      S volume
+      S brightness
+      S vibrate
+      S exec
+      S cron_set
+      S cron_list
+      S cron_cancel
+      S memory_write
+      S memory_search
+      S plan_propose
+      S plan_exit
+      S engine_start
+      S engine_stop
+      S engine_status
+      S backscreen
+      S torch
+      S media_control
+      S alarm_set
+      S timer_set
+      S sensor_read
+      S exif_read
+      S skill_load
+      S clue_lookup
+      S kb_import
+      S kb_search
+      S kb_list
+      S workflow_save
+      S workflow_list
+      S workflow_run
+      S connector_save
+      S connector_list
+      S connector_remove
+      S connector_call
+      S hook_save
+      S hook_list
+      S hook_remove
+      S @type [Ljava/lang/String;
+  - <init>
+  - aliasOf
+      S shell_exec
+      S exec
+      S file_read
+      S read
+      S file_write
+      S write
+      S file_list
+      S ls
+      S sys_info
+      S info
+  - capabilityIdOf
+      S cron_set
+      S plan_exit
+      S memory_search
+      S agent_status
+      S engine_stop
+      S skill_list
+      S sensor_read
+      S assistant
+      S cron_list
+      S engine_start
+      S ui_recents
+      S memory_write
+      S kb_search
+      S brightness
+      S amoo_call
+      S vibrate
+      S kb_import
+      S kb_delete
+      S write
+      S torch
+      S toast
+      S mkdir
+      S timer_set
+      S stat
+      S shot
+      S read
+      S ping
+      S info
+      S exec
+      S rm
+      S mv
+      S ls
+      S cp
+      S connector_remove
+      S hook_save
+      S hook_list
+      S plan_propose
+      S battery
+      S ui_home
+      S ui_dump
+      S ui_back
+      S media_control
+      S open_url
+      S ask_user
+      S ui_swipe
+      S alarm_set
+      S ui_click
+      S volume
+      S ui_tap
+      S status
+      S kb_list
+      S backscreen
+      S notify
+      S agent_task
+      S agent_stop
+      S list_apps
+      S clipboard
+      S engine_status
+      S cron_cancel
+      S exif_read
+      S share_text
+      S approvals
+      S connector_save
+      S connector_list
+      S connector_call
+      S hook_remove
+      S start_app
+      S files.
+      S 
+      S system.
+      S files.kb_delete
+      S comms.connector_call
+      S @type Ljava/lang/StringBuilder;
+      S files.exif_read
+      S apps.
+      S comms.
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - confirmTitle
+      S exec
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S 执行命令需确认: 
+      S cmd
+      S rm
+      S path
+      S 删除需确认: 
+      S mv
+      S 移动需确认: 
+      S 「
+      S 」需人工确认
+  - dispatch
+      S deny
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 
+      S 仅本次调用被拒绝，工具仍可用
+      S note
+      S __
+      S tool/call
+      S name
+      S capabilityId
+      S args
+      S verdict
+      S caller
+      S 计划未批准
+      S confirm
+      S timeout
+      S 确认超时，本次调用已拒绝
+      S 用户拒绝了本次调用
+      S resolved_by
+      S allow
+      S 会话级已允许
+      S session
+      S @type Ljava/lang/StringBuilder;
+      S 会话内已放行，自动补签一次性租约（
+      S ）
+      S leaseId
+      S 租约校验不可用
+      S reason
+      S 未知工具: 
+      S 工具执行失败: 
+      S : 
+  - dispatchUndo
+      S undo
+      S kind
+      S 
+      S @type Lorg/json/JSONObject;
+      S ok
+      S __undo.
+      S deny
+      S @type Ljava/lang/StringBuilder;
+      S allow
+      S restore
+      S move
+      S write_prev
+      S rmdir
+      S @type Ljava/lang/Exception;
+      S 未知逆操作 kind: 
+      S undo 描述符为空
+      S error
+      S tool
+      S verdict
+      S ms
+  - finish
+      S 
+  - finish
+      S verdict
+      S ms
+      S ok
+      S @type Lorg/json/JSONObject;
+      S name
+      S error
+      S tool/result
+      S tool
+      S capabilityId
+      S 
+  - indexOfName
+  - init
+  - routeHandle
+      S ping
+      S info
+      S status
+      S approvals
+      S agent_task
+      S agent_status
+      S agent_stop
+      S assistant
+      S amoo_call
+      S list_apps
+      S start_app
+      S open_url
+      S share_text
+      S ui_dump
+      S ui_tap
+      S ui_swipe
+      S ui_click
+      S ui_back
+      S ui_home
+      S ui_recents
+      S shot
+      S ls
+      S read
+      S write
+      S mkdir
+      S rm
+      S mv
+      S cp
+      S stat
+      S exif_read
+      S clipboard
+      S toast
+      S notify
+      S battery
+      S volume
+      S brightness
+      S vibrate
+      S exec
+      S ask_user
+      S plan_propose
+      S plan_exit
+      S cron_set
+      S cron_list
+      S cron_cancel
+      S memory_write
+      S memory_search
+      S engine_start
+      S engine_stop
+      S engine_status
+      S backscreen
+      S torch
+      S media_control
+      S alarm_set
+      S timer_set
+      S sensor_read
+      S skill_load
+      S clue_lookup
+      S skill_list
+      S kb_import
+      S kb_search
+      S kb_list
+      S kb_delete
+      S workflow_save
+      S workflow_list
+      S workflow_run
+      S connector_save
+      S connector_list
+      S connector_remove
+      S connector_call
+      S hook_save
+      S hook_list
+      S hook_remove
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 无路由的工具: 
+  - scopeOf
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONArray;
+      S path
+      S dest
+      S @type [Ljava/lang/String;
+      S 
+      S paths
+  - sessionEvent
+  - sessionKey
+      S exec
+      S cmd
+      S 
+      S \s+
+      S @type Ljava/lang/StringBuilder;
+### Lcom/hiao/v2/tools/UiTools;  (UiTools.java)
+  - <init>
+  - global
+      S ok
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 全局动作失败: 
+      S error
+      S action
+  - handle
+      S shot
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 无障碍服务未开启
+      S ui_dump
+      S ui_tap
+      S ui_swipe
+      S ui_click
+      S ui_back
+      S GLOBAL_ACTION_BACK
+      S ui_home
+      S GLOBAL_ACTION_HOME
+      S ui_recents
+      S GLOBAL_ACTION_RECENTS
+      S @type Ljava/lang/StringBuilder;
+      S UI 域未实现工具: 
+  - shot
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S shot 需要 Android 11 (API 30) 且无障碍服务已开启
+      S 无障碍服务未开启
+      S @type Ljava/io/File;
+      S /sdcard/hiao/shots
+      S 截图目录创建失败
+      S @type Ljava/lang/StringBuilder;
+      S shot-
+      S .png
+      S path
+  - uiClick
+      S text
+      S 
+      S id
+      S desc
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 需要 text/id/desc 之一
+      S index
+      S 未找到目标节点
+      S matched
+  - uiDump
+      S max_nodes
+  - uiSwipe
+      S x1
+      S error
+      S ok
+      S y1
+      S x2
+      S y2
+      S ms
+      S @type Lorg/json/JSONObject;
+      S 滑动失败：系统未接受该手势
+      S 需要 x1、y1、x2、y2 坐标
+  - uiTap
+      S x
+      S error
+      S ok
+      S y
+      S @type Lorg/json/JSONObject;
+      S 点击失败：系统未接受该手势（坐标可能越界）
+      S 需要 x、y 坐标
+### Lcom/hiao/v2/tools/WorkflowTools;  (WorkflowTools.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/workflows
+      S [A-Za-z0-9_\u4e00-\u9fa5-]{1,32}
+  - <init>
+  - abort
+      S 
+      S error
+      S busy
+      S 引擎并发已满（运行位被占），工作流中止；待有空闲位后重试
+      S 步骤失败（无错误详情）
+      S @type Lorg/json/JSONObject;
+      S ok
+      S step
+      S partial
+  - handle
+      S workflow_save
+      S workflow_list
+      S workflow_run
+      S @type Lorg/json/JSONObject;
+      S ok
+      S @type Ljava/lang/StringBuilder;
+      S 工作流域未实现工具: 
+      S error
+  - inNames
+  - parseSteps
+      S @type Ljava/util/ArrayList;
+      S 第 
+      S type
+      S 
+      S prompt
+      S text
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S  步（prompt）缺少 text
+      S tool
+      S workflow_run
+      S args
+      S  步 args 必须为对象
+      S  步 tool 名不在工具清单: 
+      S  步禁止 workflow_run（禁止嵌套工作流）
+      S  步（tool）缺少 tool 名
+      S  步 type 非法（prompt|tool）: 
+      S  步不是 JSON 对象
+      S steps 超限：最多 8 步
+      S steps 不能为空（1-8 步）
+  - readBounded
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+  - requireName
+      S @type Ljava/lang/Exception;
+      S name 非法：字母/数字/下划线/汉字/连字符，1-32 字符（禁 / .. 空白）
+  - stripJson
+      S .json
+  - substArgs
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+  - substValue
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONArray;
+      S @type Ljava/lang/String;
+  - substitute
+      S 
+      S {{
+      S @type Ljava/lang/StringBuilder;
+      S }}
+      S last
+  - workflowList
+      S description
+      S name
+      S steps
+      S @type Lorg/json/JSONArray;
+      S .json
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S 
+      S ok
+      S workflows
+      S count
+      S skipped
+  - workflowRun
+      S steps
+      S name
+      S 
+      S vars
+      S max_steps_per_task
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .json
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/String;
+      S @type Lorg/json/JSONArray;
+      S ms
+      S ok
+      S partial
+      S error
+      S step
+      S 总墙钟超限（1200s），第 
+      S  步前中止
+      S type
+      S prompt
+      S tool
+      S text
+      S wait
+      S timeout_s
+      S max_steps
+      S agent_task
+      S answer
+      S workflow_run
+      S 禁止嵌套 workflow（workflow_run 不得作为 tool 步）
+      S args
+      S i
+      S summary
+      S @type Ljava/lang/Exception;
+      S 工作流文件无效: 
+      S （
+      S ）
+      S 工作流不存在: 
+      S （用 workflow_list 查看已保存列表）
+  - workflowSave
+      S name
+      S 
+      S description
+      S steps
+      S @type Lorg/json/JSONArray;
+      S @type Lorg/json/JSONObject;
+      S type
+      S prompt
+      S text
+      S tool
+      S args
+      S @type Lcom/hiao/v2/tools/WorkflowTools;
+      S ok
+      S path
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S .json
+      S note
+      S 同名覆盖保存；用 workflow_run 执行
+  - writeWorkflowLocked
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 无法创建工作流目录 
+      S @type Ljava/io/File;
+      S .json
+      S .tmp
+      S @type Ljava/io/OutputStreamWriter;
+      S @type Ljava/io/FileOutputStream;
+      S 工作流写回失败: 旧文件无法覆盖 
+      S 工作流写回失败: rename 不成功 
+      S 工作流写回失败: 
+### Lcom/hiao/v2/bridge/BridgeService$1;  (BridgeService.java)
+  - <init>
+  - <clinit>
+      S engine
+### Lcom/hiao/v2/bridge/BridgeService$3;  (BridgeService.java)
+  - <init>
+  - head
+      S audit
+### Lcom/hiao/v2/core/HookEngine$1;  (HookEngine.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/core/SessionManager$1;  (SessionManager.java)
+  - <init>
+  - issueLease
+      S @type Lcom/hiao/v2/core/WorkerSession;
+  - leaseRow
+      S @type Lcom/hiao/v2/core/WorkerSession;
+### Lcom/hiao/v2/core/WorkerSession$EngineStreamCallback;  (WorkerSession.java)
+  - <init>
+      S 
+      S @type Ljava/lang/StringBuilder;
+  - flush
+      S phase
+      S delta
+      S @type [Ljava/lang/Object;
+      S taskId
+      S assistant/chunk
+  - onClick
+  - <init>
+  - <init>
+      S content
+      S reasoning
+      S streaming
+      S 
+### Lcom/hiao/v2/core/backscreen/BackscreenLifecycle$2;  (BackscreenLifecycle.java)
+  - <init>
+  - <init>
+      S activity
+      S final
+### Lcom/hiao/v2/tools/AmooTools$$ExternalSyntheticLambda0;  (D8$$SyntheticClass)
+  - <init>
+  - header
+### Lcom/hiao/v2/tools/AppTools$$ExternalSyntheticLambda0;  (D8$$SyntheticClass)
+  - <init>
+  - streamToText
+### Lcom/hiao/v2/tools/DeviceTools$1;  (DeviceTools.java)
+  - <init>
+  - renderRunResult
+### Lcom/hiao/v2/tools/DeviceTools$2;  (DeviceTools.java)
+  - <init>
+  - run

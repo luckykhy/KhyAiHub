@@ -1,0 +1,220 @@
+  - dispatch
+      S deny
+      S error
+      S ok
+      S @type Lorg/json/JSONObject;
+      S 
+      S 仅本次调用被拒绝，工具仍可用
+      S note
+      S __
+      S tool/call
+      S @type Lorg/json/JSONObject;
+      S name
+      S capabilityId
+      S args
+      S verdict
+      S caller
+      S 计划未批准
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONObject;
+      S confirm
+      S confirm
+      S deny
+      S timeout
+      S 确认超时，本次调用已拒绝
+      S 用户拒绝了本次调用
+      S @type Lorg/json/JSONObject;
+      S resolved_by
+      S allow
+      S 会话级已允许
+      S session
+      S @type Ljava/lang/StringBuilder;
+      S 会话内已放行，自动补签一次性租约（
+      S ）
+      S leaseId
+      S deny
+      S 租约校验不可用
+      S reason
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 未知工具: 
+      S @type Lorg/json/JSONObject;
+      S 
+      S deny
+      S @type Ljava/lang/StringBuilder;
+      S 工具执行失败: 
+      S @type Ljava/lang/StringBuilder;
+      S : 
+      S @type Lorg/json/JSONObject;
+      C Ljava/lang/System;->currentTimeMillis
+      C Lcom/hiao/v2/tools/ToolContext;->markDispatchStart
+      C Lorg/json/JSONObject;-><init>
+      C Ljava/lang/String;->trim
+      C Lcom/hiao/v2/tools/Tools;->aliasOf
+      C Ljava/lang/String;->length
+      C Ljava/lang/String;->startsWith
+      C Lcom/hiao/v2/tools/Tools;->indexOfName
+      C Lcom/hiao/v2/tools/Tools;->capabilityIdOf
+      C Ljava/lang/String;->length
+      C Lcom/hiao/v2/core/SessionStore;->currentId
+      C Lcom/hiao/v2/core/PlanManager;->isBlocking
+      C Lcom/hiao/v2/governance/Policy;->judge
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->toString
+      C Lcom/hiao/v2/tools/Tools;->clip
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/core/CallContext;->get
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->sessionEvent
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Ljava/lang/String;->equals
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Ljava/lang/String;->equals
+      C Lcom/hiao/v2/tools/Tools;->confirmTitle
+      C Lorg/json/JSONObject;->toString
+      C Lcom/hiao/v2/governance/Approvals;->await
+      C Lcom/hiao/v2/tools/Tools;->sessionKey
+      C Lcom/hiao/v2/governance/Policy;->allowForSession
+      C Ljava/lang/String;->equals
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Ljava/lang/String;->length
+      C Lcom/hiao/v2/governance/CapsEngine;->checkLease
+      C Lorg/json/JSONObject;->optBoolean
+      C Ljava/lang/String;->equals
+      C Ljava/lang/String;->startsWith
+      C Lcom/hiao/v2/governance/CapsEngine;->leaseRequired
+      C Lcom/hiao/v2/tools/Tools;->scopeOf
+      C Ljava/lang/System;->currentTimeMillis
+      C Ljava/lang/StringBuilder;-><init>
+      C Ljava/lang/StringBuilder;->append
+      C Lcom/hiao/v2/tools/Tools;->sessionKey
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->toString
+      C Lcom/hiao/v2/tools/Tools;->clip
+      C Lcom/hiao/v2/governance/CapsEngine;->issueLease
+      C Lorg/json/JSONObject;->optBoolean
+      C Lcom/hiao/v2/governance/CapsEngine;->checkLease
+      C Lorg/json/JSONObject;->optBoolean
+      C Lorg/json/JSONObject;->optString
+      C Lorg/json/JSONObject;->opt
+      C Ljava/lang/String;->valueOf
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Ljava/lang/String;->length
+      C Lcom/hiao/v2/governance/ActionsLog;->newActionId
+      C Lcom/hiao/v2/tools/ToolContext;->beginCall
+      C Lcom/hiao/v2/tools/Tools;->routeHandle
+      C Lcom/hiao/v2/tools/ToolContext;->endCall
+      C Lorg/json/JSONObject;->has
+      C Lorg/json/JSONObject;->put
+      C Ljava/lang/String;->length
+      C Lorg/json/JSONObject;->optBoolean
+      C Lcom/hiao/v2/tools/ToolContext;->takeUndo
+      C Lcom/hiao/v2/core/SessionStore;->currentId
+      C Lcom/hiao/v2/governance/ActionsLog;->append
+      C Ljava/lang/String;->length
+      C Lcom/hiao/v2/governance/CapsEngine;->consumeLease
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Lcom/hiao/v2/tools/ToolContext;->endCall
+      C Ljava/lang/StringBuilder;-><init>
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->toString
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      C Ljava/lang/StringBuilder;-><init>
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/Object;->getClass
+      C Ljava/lang/Class;->getSimpleName
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/Throwable;->getMessage
+      C Ljava/lang/StringBuilder;-><init>
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/Throwable;->getMessage
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->toString
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->toString
+      C Lorg/json/JSONObject;-><init>
+      C Lorg/json/JSONObject;->put
+      C Lorg/json/JSONObject;->put
+      C Lcom/hiao/v2/tools/Tools;->finish
+      F Lcom/hiao/v2/governance/Policy$Decision;->verdict
+      F Lcom/hiao/v2/governance/Policy$Decision;->verdict
+      F Lcom/hiao/v2/governance/Policy$Decision;->reason
+      F Lcom/hiao/v2/governance/Policy$Decision;->verdict
+      F Lcom/hiao/v2/governance/Policy$Decision;->reason
+      F Lcom/hiao/v2/governance/Approvals$Pending;->resolvedBy
+      F Lcom/hiao/v2/governance/Approvals$Pending;->resolvedBy
+      F Lcom/hiao/v2/governance/Approvals$Pending;->approved
+      F Lcom/hiao/v2/governance/Approvals$Pending;->allowSession
+      F Lcom/hiao/v2/governance/Approvals$Pending;->resolvedBy
+      F Lcom/hiao/v2/governance/Approvals$Pending;->resolvedBy
+      F Lcom/hiao/v2/governance/Policy$Decision;->verdict
+      F Lcom/hiao/v2/governance/Policy$Decision;->reason
+      F Lcom/hiao/v2/governance/Policy$Decision;->reason
+  - dispatchUndo
+      S undo
+      S kind
+      S 
+      S @type Lorg/json/JSONObject;
+      S ok
+      S __undo.
+      S deny
+      S @type Ljava/lang/StringBuilder;
+      S allow
+      S restore
+      S move
+      S write_prev
+      S rmdir
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/StringBuilder;
+      S 未知逆操作 kind: 
+      S @type Ljava/lang/Exception;
+      S @type Ljava/lang/Exception;
+      S undo 描述符为空
+      S error
+      S @type Ljava/lang/StringBuilder;
+      S 
+      S @type Lorg/json/JSONObject;
+      S tool
+      S @type Ljava/lang/StringBuilder;
+      S verdict
+      S ms
+      C Ljava/lang/System;->currentTimeMillis
+      C Lcom/hiao/v2/core/CallContext;->set
+      C Lcom/hiao/v2/tools/ToolContext;->markDispatchStart
+      C Lorg/json/JSONObject;->optString
+      C Lorg/json/JSONObject;-><init>
+      C Ljava/lang/StringBuilder;-><init>
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->append
+      C Ljava/lang/StringBuilder;->toString
+      C Lcom/hiao/v2/governance/Policy;->judge
+      C Ljava/lang/String;->equals
+      C Ljava/lang/String;->equals
+      C Lcom/hiao/v2/tools/FileTools;->undoRestore
+      C Ljava/lang/String;->equals
+      C Lcom/hiao/v2/tools/FileTools;->undoMove
+      C Ljava/lang/String;->equals
