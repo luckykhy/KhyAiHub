@@ -5,7 +5,7 @@
  * character → same result), so this module depends on nothing but data and
  * strings: no React, no DOM, no localStorage. The shipped data source is
  * `src/renderer/assets/pet/pet-fortune.json` (copied from
- * `delivery/brand/pet/pet-fortune.json` by scripts/brand/build-brand-assets.js);
+ * `works/brand/pet/pet-fortune.json` by scripts/brand/build-brand-assets.js);
  * it is passed in as an argument so this file stays importable by plain node
  * (the .mjs unit test imports it directly via type stripping).
  *

@@ -368,7 +368,7 @@ function catalogBlocker(entry, canonical) {
 }
 
 /**
- * Translate one `delivery/market` catalog entry into the unified descriptor.
+ * Translate one `works/market` catalog entry into the unified descriptor.
  * Catalog entries are already surveyed decisions; this keeps them readable by
  * the same router that handles live ecosystems instead of a second dialect.
  */

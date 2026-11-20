@@ -57,8 +57,11 @@ if ($proc.ExitCode -ne 0) {
 }
 
 Write-Output '=== 3/3 启动打包版 ==='
-$exe = Join-Path $appDir 'dist-electron\win-unpacked\KhyOS Desktop.exe'
-if (-not (Test-Path $exe)) { $exe = Join-Path $appDir 'dist-electron-pet\win-unpacked\KhyOS Desktop.exe' }
+# 打包输出自 2026-11-19 起落仓库根 entries/electron/dist-electron（LAYOUT-005），
+# app 内 dist-electron/ 已不存在。回退位是 2026-11-20 冗余构建整合时归档到
+# works/backup/ 的 pet 变体（见该目录 README）——留它是为了新构建缺 exe 时还能拉起旧的。
+$exe = Join-Path $repo 'entries\electron\dist-electron\win-unpacked\KhyOS Desktop.exe'
+if (-not (Test-Path $exe)) { $exe = Join-Path $repo 'works\backup\build-artifacts-20261120\khyos-electron-variants\dist-electron-pet\win-unpacked\KhyOS Desktop.exe' }
 if (-not (Test-Path $exe)) { throw 'packaged exe not found' }
 $env:KHY_OS_DIR = $repo
 $app = Start-Process -FilePath $exe -WorkingDirectory (Split-Path $exe) -PassThru

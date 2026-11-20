@@ -32,6 +32,15 @@ declare module '*.png?inline' {
   export default dataUrl
 }
 
+// khyos 活场景成品页（assets/khyos/khyos-desktop.html）：独立桌面页构建出的
+// 单文件 3D 世界，由 components/khyos/KhyosBackground.tsx 用 <webview> 托管成
+// 应用背景。走 ?url 而不是 ?inline——3MB 的页内联进 JS 包会让渲染层首屏多背
+// 一份 base64，而 webview 本来就要一次独立的文档加载，给它文件路径更合适。
+declare module '*.html?url' {
+  const src: string
+  export default src
+}
+
 // Vite 的 import.meta.glob：桌面端只用它做「可选资产」的按 glob 匹配
 // （写实真人 GLB 还没进仓时，静态 import 会直接把整个渲染层构建打挂）。
 // 这里只声明用到的那部分，不整体引入 vite/client —— 那会顺带消掉既有

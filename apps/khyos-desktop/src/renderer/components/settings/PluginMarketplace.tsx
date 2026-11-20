@@ -1,6 +1,6 @@
 // khy-canary: Khy-20261102-317-PMKT01AA
 // PluginMarketplace — 插件设置页「发现」tab. Renders the surveyed external
-// ecosystem catalog (delivery/market) that the backend already serves to the
+// ecosystem catalog (works/market) that the backend already serves to the
 // web UI, grouped one section per upstream ecosystem. Read-only by design:
 // installs still go through the khy CLI gates, so this pane only shows what
 // was surveyed, how it maps, and where it comes from.
@@ -1522,7 +1522,7 @@ export function PluginMarketplace({ search }: { search: string }) {
 
       {loading && !payload && (
         <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground-muted">
-          读取生态编目：解析 delivery/market 静态编目，并实时检索阶跃水产市场六类资产、VS Code 扩展、Kimi Code 插件与官方 MCP Registry…
+          读取生态编目：解析 works/market 静态编目，并实时检索阶跃水产市场六类资产、VS Code 扩展、Kimi Code 插件与官方 MCP Registry…
         </div>
       )}
 
@@ -1672,7 +1672,7 @@ export function PluginMarketplace({ search }: { search: string }) {
                 <div className="bg-card border border-card-border rounded-xl p-8 text-center">
                   <p className="text-sm text-foreground-muted mb-1">生态编目为空</p>
                   <p className="text-xs text-foreground-muted">
-                    后端返回了 0 个生态：请确认 delivery/market/index.json 存在，或点击「刷新编目」重试。
+                    后端返回了 0 个生态：请确认 works/market/index.json 存在，或点击「刷新编目」重试。
                   </p>
                 </div>
               )}

@@ -241,7 +241,7 @@ function countNested(dir) {
 
 function probeBuildOutputs() {
   const candidates = [
-    'delivery/web/ai-frontend/dist',
+    'delivery/channel/web/ai-frontend/dist',
     'delivery/channel/khyquant/frontend/dist',
     'runtime/node/backend/dist',
     'runtime/substrate/platform/khy_platform/bundled',
@@ -263,7 +263,7 @@ function probeBuildOutputs() {
 function probeLockfiles() {
   const names = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'];
   const dirs = [
-    '.', 'runtime/node/backend', 'runtime/node/ai-backend', 'delivery/web/ai-frontend',
+    '.', 'runtime/node/backend', 'runtime/node/ai-backend', 'delivery/channel/web/ai-frontend',
     'runtime/substrate/platform/packages/shared', 'runtime/substrate/platform/packages/ui-shared',
     'delivery/channel/khyquant/frontend', 'delivery/extension/tools/khy-markdown',
     'delivery/extension/tools/khy-markdown/muya-embed', 'scripts/docs/mermaid-embed',

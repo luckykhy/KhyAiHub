@@ -15,8 +15,19 @@ import { PROXY_AUTH_FILE, PROXY_RUNTIME_FILE, VALIDATE_TIMEOUT_MS } from './type
 import { keyFingerprint } from './keyStore.ts'
 
 export interface ProxyRuntimeFile {
+  /** 嵌套形态：早期桌面端自己的写法（旧 fixture / 手工放的文件） */
   http?: { enabled?: boolean; port?: number; host?: string; url?: string }
   https?: { enabled?: boolean; port?: number; host?: string; url?: string }
+  /** 扁平形态：网关 proxyServer.js writeRuntimeStatus 的真实写法
+   *  （proxyServer.js:330-345：{pid,host,port,httpPort,httpsPort,
+   *   httpsEnabled,httpsOnly,mode,startedAt,updatedAt}，**没有** http/https
+   *   嵌套对象）。只认嵌套会让桌面端对真实运行的网关永远判 running:false。 */
+  host?: string
+  port?: number | null
+  httpPort?: number | null
+  httpsPort?: number | null
+  httpsEnabled?: boolean
+  httpsOnly?: boolean
 }
 
 export interface ProxyStatus {
@@ -38,21 +49,30 @@ function authFile(): string {
 
 // sync read: callers (IPC) run in the main process where a sync JSON read is
 // fine; missing file → not running.
+//
+// 两种 schema 都认（读侧兼容，不迁移已落盘文件）：
+//   · 扁平 —— 网关 proxyServer.js:330-345 的真实写法。这是**主路径**。
+//   · 嵌套 —— 早期桌面端自己的写法，旧 fixture 与手工文件仍是这个形状。
+// 判活口径与网关自己的读方 utils/proxyBaseUrl.js 对齐：http 优先，https-only
+// 时取 https；两者都没有可用端口 → not running。
 export function readProxyRuntime(): { running: boolean; endpoint: string; host: string; port: number | null } {
   try {
     const raw = readFileSync(runtimeFile(), 'utf-8')
     const rt = JSON.parse(raw) as ProxyRuntimeFile
-    const http = rt.http
-    if (http?.enabled && http.port) {
-      const host = http.host || '127.0.0.1'
-      const endpoint = http.url || `http://${host}:${http.port}`
-      return { running: true, endpoint, host, port: http.port }
+    const httpPort = pickPort(rt.http?.port, rt.httpPort)
+    const httpsPort = pickPort(rt.https?.port, rt.httpsPort)
+    // http 可用（嵌套 enabled 或扁平有 httpPort 且非 httpsOnly）→ http
+    const httpOk = Boolean(rt.http?.enabled) || (httpPort !== null && !rt.httpsOnly)
+    if (httpOk && httpPort !== null) {
+      const host = rt.http?.host || rt.host || '127.0.0.1'
+      const endpoint = rt.http?.url || `http://${host}:${httpPort}`
+      return { running: true, endpoint, host, port: httpPort }
     }
-    const https = rt.https
-    if (https?.enabled && https.port) {
-      const host = https.host || '127.0.0.1'
-      const endpoint = https.url || `https://${host}:${https.port}`
-      return { running: true, endpoint, host, port: https.port }
+    const httpsOk = Boolean(rt.https?.enabled) || (httpsPort !== null && Boolean(rt.httpsEnabled || rt.httpsOnly))
+    if (httpsOk && httpsPort !== null) {
+      const host = rt.https?.host || rt.host || '127.0.0.1'
+      const endpoint = rt.https?.url || `https://${host}:${httpsPort}`
+      return { running: true, endpoint, host, port: httpsPort }
     }
   } catch {
     /* no runtime file yet */
@@ -60,7 +80,21 @@ export function readProxyRuntime(): { running: boolean; endpoint: string; host: 
   return { running: false, endpoint: '', host: '', port: null }
 }
 
+// 端口字段归一：只收有限正数（网关的 null 占位 / 字符串脏值都算没有）。
+function pickPort(...candidates: unknown[]): number | null {
+  for (const c of candidates) {
+    const n = Number(c)
+    if (Number.isFinite(n) && n > 0) return Math.floor(n)
+  }
+  return null
+}
+
+// relay 令牌：env 优先，与网关 resolvePrimaryAuthToken（proxyServer.js:629-644）
+// 同序 —— 网关以 PROXY_AUTH_TOKEN 启动时，持久化文件里那份是上一轮的残留，
+// 只读文件会让 probe 稳定拿到空令牌 → 401 → 文案把用户引向错误的修复动作。
 export function readProxyToken(): string {
+  const envToken = String(process.env.PROXY_AUTH_TOKEN || '').trim()
+  if (envToken) return envToken
   try {
     const raw = readFileSync(authFile(), 'utf-8')
     const parsed = JSON.parse(raw) as { authToken?: string }

@@ -3,7 +3,7 @@
 # 用途：把两位桌宠（澪 / 凯）建成**真正的 3D 立体模型**并导出 GLB，
 #       供桌面端用原生 WebGL 加载渲染（可旋转、有体积、有材质与贴图）。
 #
-# 造型基准：delivery/brand/pet/khy-pet-{female,male}-idle.png（AI 定妆照）。
+# 造型基准：works/brand/pet/khy-pet-{female,male}-idle.png（AI 定妆照）。
 #   澪：长蓝发 + 猫耳 + 奶白荷叶头饰 + 藏青/奶白女仆裙 + 青领结 +
 #       红金御守（嵌真商标）+ 脚下金鲤环 + 漂浮金币与光点 + 圆形金座。
 #   凯：藏青短发 + 白蓝机能外套 + 金鲤胸章 + 金币 + 金座。
@@ -12,15 +12,15 @@
 # 程序化建模是唯一能拿到真实网格的路子。
 #
 # 为什么护身符/胸牌用贴图而不是几何：Khy OS 商标必须逐像素来自品牌几何真源
-#（delivery/brand/khy-brand-geometry.js → png），用贴图上才是真商标；
+#（works/brand/khy-brand-geometry.js → png），用贴图上才是真商标；
 # 几何复刻只会变成「像商标的商标」。
 #
 # 用法（仓库根目录）：
 #   blender --background --python scripts/brand/build-pet-model.py
 #
 # 产出：
-#   delivery/brand/pet/models/khy-pet-female.glb   澪（含御守真商标贴图）
-#   delivery/brand/pet/models/khy-pet-male.glb     凯（含胸章真商标贴图）
+#   works/brand/pet/models/khy-pet-female.glb   澪（含御守真商标贴图）
+#   works/brand/pet/models/khy-pet-male.glb     凯（含胸章真商标贴图）
 #   works/design/khy-mascot/model/*-preview-*.png  四视角渲染预览
 #   works/design/khy-mascot/model/frames/*.png     36 帧转盘序列（无 WebGL 时兜底）
 
@@ -30,9 +30,9 @@ import os
 from mathutils import Vector
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT_DIR = os.path.join(REPO, 'delivery', 'brand', 'pet', 'models')
+OUT_DIR = os.path.join(REPO, 'works', 'brand', 'pet', 'models')
 PREVIEW_DIR = os.path.join(REPO, 'works', 'design', 'khy-mascot', 'model')
-MARK_PNG = os.path.join(REPO, 'delivery', 'brand', 'png', 'khy-os-mark-256.png')
+MARK_PNG = os.path.join(REPO, 'works', 'brand', 'png', 'khy-os-mark-256.png')
 
 # 品牌/角色色板（见 works/design/khy-mascot/README.md「三条线」）
 C = {

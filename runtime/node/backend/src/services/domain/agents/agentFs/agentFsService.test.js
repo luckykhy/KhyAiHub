@@ -41,7 +41,13 @@ require.cache[dataHomeKey] = {
   id: dataHomeKey,
   filename: dataHomeKey,
   loaded: true,
-  exports: { getDataHome: () => TMP, getAppDataDir: (sub) => path.join(TMP, sub) },
+  exports: {
+    getDataHome: () => TMP,
+    getAppDataDir: (sub) => path.join(TMP, sub),
+    // Same mapping-free shape as the real getDataDir, minus the DATA_PATHS tier
+    // lookup: the assertions below pin <dataHome>/agents.
+    getDataDir: (...segments) => path.join(TMP, ...segments),
+  },
 };
 require.cache[personaKey] = {
   id: personaKey,

@@ -18,15 +18,17 @@
 
 const fs = require('fs');
 const path = require('path');
+const { resolveDataPath, getDataDir } = require('../../runtime/node/backend/src/utils/dataHome');
 
 // 路径配置
-const ROOT_DIR = path.resolve(__dirname, '../..');
-const MEMORY_DIR = path.join(ROOT_DIR, '.khy/memory');
-const ARCHIVE_DIR = path.join(MEMORY_DIR, '.archive');
-const GROWTH_DIR = path.join(ROOT_DIR, '.khy/growth');
-const SKILLS_DIR = path.join(ROOT_DIR, '.khy/skills');
-const TRAINING_DIR = path.join(ROOT_DIR, '.khy/training');
-const SESSIONS_DIR = path.join(ROOT_DIR, '.khy/sessions');
+// 一律经 dataHome 解析器取址：仓库根 .khy 是 gitignore 的影子目录，运行时真正
+// 读写的是数据家。探测用 resolveDataPath（纯映射，不建目录，否则「目录是否
+// 存在」永远为真）；写入用 getDataDir。
+const MEMORY_DIR = resolveDataPath('memory');
+const GROWTH_DIR = resolveDataPath('growth');
+const SKILLS_DIR = resolveDataPath('skills');
+const TRAINING_DIR = resolveDataPath('training');
+const SESSIONS_DIR = resolveDataPath('sessions');
 
 // 颜色输出
 const chalk = {
@@ -37,15 +39,6 @@ const chalk = {
   dim: (text) => `\x1b[2m${text}\x1b[0m`,
   bold: (text) => `\x1b[1m${text}\x1b[0m`,
 };
-
-/**
- * 确保目录存在
- */
-function ensureDir(dir) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
 
 /**
  * 安全删除文件（移到回收站或归档）
@@ -81,8 +74,6 @@ function archiveMemoryFiles(dryRun) {
     return 0;
   }
   
-  ensureDir(ARCHIVE_DIR);
-  
   const files = fs.readdirSync(MEMORY_DIR)
     .filter(f => f.endsWith('.md') && f !== 'MEMORY.md' && !f.startsWith('.'));
   
@@ -99,10 +90,11 @@ function archiveMemoryFiles(dryRun) {
     return files.length;
   }
   
+  const archiveDir = getDataDir('memory', '.archive');
   let archived = 0;
   for (const file of files) {
     const src = path.join(MEMORY_DIR, file);
-    if (safeDelete(src, ARCHIVE_DIR)) {
+    if (safeDelete(src, archiveDir)) {
       archived++;
     }
   }
@@ -117,12 +109,12 @@ function archiveMemoryFiles(dryRun) {
 function resetMemoryIndex(dryRun) {
   console.log(chalk.bold('\nP0: 重置 MEMORY.md'));
   
-  const memoryIndex = path.join(MEMORY_DIR, 'MEMORY.md');
-  
   if (dryRun) {
     console.log(chalk.yellow('  [预览] 将重置 MEMORY.md 为模板'));
     return;
   }
+  
+  const memoryIndex = path.join(getDataDir('memory'), 'MEMORY.md');
   
   const template = `# 记忆索引
 
@@ -136,7 +128,6 @@ function resetMemoryIndex(dryRun) {
 *最后更新: ${new Date().toISOString()}*
 `;
   
-  ensureDir(MEMORY_DIR);
   fs.writeFileSync(memoryIndex, template, 'utf8');
   console.log(chalk.green('  ✓ 已重置 MEMORY.md'));
 }
@@ -227,9 +218,8 @@ function archiveSkillsCache(dryRun) {
     return files.length;
   }
   
-  const archiveDir = path.join(SKILLS_DIR, '.archive');
-  ensureDir(archiveDir);
-  
+  const archiveDir = getDataDir('skills', '.archive');
+
   let archived = 0;
   for (const file of files) {
     const src = path.join(SKILLS_DIR, file);
@@ -298,8 +288,7 @@ function cleanSessionData(dryRun) {
         console.log(chalk.yellow('  [预览] 将清理以下文件:'));
         files.forEach(f => console.log(chalk.dim(`    - ${f}`)));
       } else {
-        const archiveDir = path.join(SESSIONS_DIR, '.archive');
-        ensureDir(archiveDir);
+        const archiveDir = getDataDir('sessions', '.archive');
         
         for (const file of files) {
           const src = path.join(SESSIONS_DIR, file);
@@ -315,7 +304,7 @@ function cleanSessionData(dryRun) {
   }
   
   // 重置 profile.json
-  const profilePath = path.join(ROOT_DIR, '.khy/profile.json');
+  const profilePath = resolveDataPath('profile.json');
   if (fs.existsSync(profilePath)) {
     if (dryRun) {
       console.log(chalk.yellow('  [预览] 将重置 profile.json'));

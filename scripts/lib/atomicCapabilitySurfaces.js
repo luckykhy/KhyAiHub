@@ -50,14 +50,14 @@ const SURFACE_DEFS = [
     label: 'Android 原生 Tools.NAMES',
     kind: 'java-array',
     entry:
-      'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/'
+      'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/'
       + 'khy_os_client/bridge/Tools.java',
   },
   {
     id: 'mobile-dart',
     label: '手机端 Dart 内置工具',
     kind: 'dart-tools',
-    entry: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    entry: 'delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
   },
   {
     id: 'amoo-bridge',

@@ -5,6 +5,10 @@ import Editor, { type OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { Icon } from '../ui/Icon'
 import { Spinner } from '../ui/Spinner'
+import { languageForPath, runnerForPath } from '../editor/editorLanguages'
+// Monaco loader/worker 本地化随组件一起进来：monacoSetup 已移出首屏（工作台与
+// 本面板都是 lazy 入口），谁先挂载谁负责接线。
+import '../../monacoSetup'
 
 // 内置代码编辑器（查看面板编辑态，codeEditor.* 文案）：
 // Monaco 内核 —— loader 本地化与 worker 接线在 monacoSetup.ts（禁 CDN）。
@@ -37,29 +41,6 @@ interface WriteResult {
   error?: string
 }
 
-// 可运行扩展名 → 解释器命令。文件路径统一双引号包裹（空格路径）。
-const RUNNERS: Record<string, string> = {
-  js: 'node',
-  mjs: 'node',
-  cjs: 'node',
-  py: 'python',
-}
-
-// 扩展名 → Monaco 语言 id（未命中的落 plaintext：纯文本也能编辑）
-const LANGUAGES: Record<string, string> = {
-  ts: 'typescript', tsx: 'typescript', mts: 'typescript',
-  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
-  json: 'json',
-  py: 'python',
-  md: 'markdown',
-  css: 'css', scss: 'scss', less: 'less',
-  html: 'html', htm: 'html', vue: 'html', xml: 'xml', svg: 'xml',
-  yaml: 'yaml', yml: 'yaml',
-  sh: 'shell', ps1: 'powershell', bat: 'bat',
-  sql: 'sql',
-  toml: 'ini', ini: 'ini',
-}
-
 interface PtyApi {
   ptyCreate?: (opts?: { cols?: number; rows?: number; cwd?: string }) => Promise<{ ok: boolean; id?: string; error?: string }>
   ptyWrite?: (id: string, data: string) => Promise<unknown>
@@ -75,9 +56,8 @@ const ptyApi = () => (window as unknown as { __KHYOS__?: PtyApi }).__KHYOS__
 export function CodeEditorPane({ filePath, onDirtyChange }: CodeEditorPaneProps) {
   const { t } = useTranslation()
   const fileName = filePath.split(/[\\/]/).pop() || filePath
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
-  const runner = RUNNERS[ext]
-  const language = LANGUAGES[ext] ?? 'plaintext'
+  const runner = runnerForPath(filePath)
+  const language = languageForPath(filePath)
 
   const [content, setContent] = useState<string | null>(null)
   const [savedContent, setSavedContent] = useState('')

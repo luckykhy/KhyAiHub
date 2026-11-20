@@ -1434,6 +1434,15 @@ function createLargeTaskRuntimeStore(options = {}) {
   function claimTask(taskId, workerId, options = {}) {
     _ensureLoaded();
     const task = _getTaskOrThrow(taskId);
+
+    // DB-03：只允许 queued / retry_wait 被认领。旧版对任何状态都置 claimed，
+    // 而 _setTaskStatus 对 from===to 直接放行 —— 对已 claimed 的任务再 claim 会
+    // 覆盖 lease_owner（TUI 与 Web 后端是两个进程共享同一份 json，后到者抢走
+    // 先到者的租约，先到者的 startTask 随即抛 "claimed by another worker"）。
+    if (task.status !== 'queued' && task.status !== 'retry_wait') {
+      return null;
+    }
+
     const now = nowFn();
     const leaseMs = Math.max(
       1_000,
@@ -1441,6 +1450,18 @@ function createLargeTaskRuntimeStore(options = {}) {
     );
     const nowIso = new Date(now).toISOString();
     const leaseUntil = new Date(now + leaseMs).toISOString();
+
+    // 别人的租约仍在有效期内 → 不可认领（只有租约过期才允许被接管）
+    const existingLeaseUntil = task.lease_until ? new Date(task.lease_until).getTime() : 0;
+    if (
+      task.lease_owner &&
+      workerId &&
+      task.lease_owner !== workerId &&
+      Number.isFinite(existingLeaseUntil) &&
+      existingLeaseUntil > now
+    ) {
+      return null;
+    }
 
     if (task.status === 'retry_wait') {
       const dueAt = new Date(task.next_run_at || task.updated_at).getTime();

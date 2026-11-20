@@ -105,8 +105,10 @@ function _lstat(p) {
 
 /**
  * 收集运行时事实并构建卸载目标（存在性核对 + 体积）。
- * 关键：READ-ONLY 收集——绝不调用 getDataHome() 之类会 mkdir 重建目录的解析器，
- * 只读指针 + 从 env/homedir 推导，避免「边删边重建」。
+ * 关键：READ-ONLY 收集——绝不调用 getDataHome()/resolveDataPath() 之类会 mkdir
+ * 重建目录的解析器，只读指针 + 从 env 推导，避免「边删边重建」。
+ * 唯一例外是底座数据家走 getBaseHome()（单一真源，KHYOS_HOME 覆盖由它内部承担）：
+ * 它可能 mkdir 出规范位置，但该位置本身就在卸载允许清单里，执行模式会一并删掉。
  */
 function _collectTargets(env) {
   let dh = null;
@@ -128,10 +130,18 @@ function _collectTargets(env) {
     /* ignore */
   }
 
+  // 底座数据家经解析器取址（KHYOS_HOME 覆盖由 getBaseHome 内部承担，单一真源）。
+  let baseHome;
+  try {
+    baseHome = dh && typeof dh.getBaseHome === 'function' ? dh.getBaseHome() : undefined;
+  } catch {
+    /* dataHome unavailable → 计划用默认位置推导 */
+  }
+
   const homes = {
     dataHome: env.KHY_DATA_HOME || undefined,
     appHome: env.KHY_APP_HOME || undefined,
-    baseHome: env.KHYOS_HOME || undefined,
+    baseHome,
     projectDataHome: env.KHY_PROJECT_DATA_HOME || undefined,
   };
 
@@ -265,7 +275,7 @@ function _purgePip(det) {
 
 /* ── 安装台账:停进程 + 逆序回滚(门 KHY_INSTALL_LEDGER,关 → 两步整体跳过,逐字节回退 allowlist-only)── */
 
-/** 只读推导台账所在数据家(绝不 mkdir:KHY_DATA_HOME > pointer.dataHome > ~/.khy)。 */
+/** 只读推导台账所在数据家(绝不 mkdir:KHY_DATA_HOME > pointer.dataHome > 便携项目家 > 指针所在目录)。 */
 function _ledgerDataHomeReadOnly(env) {
   try {
     if (env && env.KHY_DATA_HOME) {
@@ -284,15 +294,23 @@ function _ledgerDataHomeReadOnly(env) {
     /* ignore */
   }
   // Portable deployments resolve to the project-root data home (pure computation).
+  // 非便携时的系统盘默认家取「指针所在目录」——指针恒定落在 ~/.khy/.location.json
+  // （dataHome 自己的位置 SSOT），取其目录即默认数据家。这里不能调 getDataHome() /
+  // resolveDataPath()：它们 mkdir 且回写指针，等于把待删的残骸原地重建，而目标清单
+  // 在收集阶段就已丢弃不存在的路径，重建出来的目录不会被清掉，dry-run 也不再
+  // 「不动任何文件」。
   try {
     const dh2 = require('../../utils/dataHome');
     if (typeof dh2.isPortableDeployment === 'function' && dh2.isPortableDeployment()) {
       return dh2.getProjectDataHome();
     }
+    if (typeof dh2._pointerFile === 'function') {
+      return path.dirname(dh2._pointerFile());
+    }
   } catch {
     /* ignore */
   }
-  return path.join(os.homedir(), '.khy');
+  return null;
 }
 
 /** 读并解析台账 jsonl(逐行 fail-soft,坏行跳过)。缺失 → []。 */
@@ -500,9 +518,7 @@ async function handleUninstall(subCommand, args, options = {}) {
       for (const t of targets) {
         const size = t.isDir
           ? `${_fmtBytes(t.bytes)} / ${t.files} 文件`
-          : t.kind === 'alias'
-            ? 'symlink'
-            : _fmtBytes(t.bytes);
+          : _fmtBytes(t.bytes);
         const tag = t.reversible ? chalk.dim('[可重建]') : chalk.red('[不可逆]');
         console.log(`    ${tag} ${t.label}`);
         console.log(chalk.dim(`        ${t.path}  (${size})`));

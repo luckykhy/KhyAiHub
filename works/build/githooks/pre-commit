@@ -37,6 +37,11 @@ LARGE_FILES=""
 # ⚠ 必须用 `-z` + `while IFS= read -r -d ''`，不能用 `for file in $(...)`：
 # 本仓大量文件名含空格与方括号（如 `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-004] build-root-demo.js`），
 # 词分割会把一个路径切成多个 token → `[ -f "$file" ]` 恒假 → 整个大文件检查静默失效。
+# ⚠ 只查新增（--diff-filter=A）：这条规则的意图是「不许把大文件引入仓库」，
+# 不是「不许改既有大文件」。既有跟踪的构建产物（如 works/ship/npm/bundled/runtime/khy/bundle.mjs，
+# bc43302f 入库时 16.8MB）每次被 touch 都重算全量 diff 的话，任何维护性提交都会被
+# 自己人拦下——2026-11-20 实测踩中：bundle.mjs 随 delivery 收敛更新到 18.9MB，
+# 全量口径直接把提交卡死。新增口径下它的下次引入仍会被拦，防护不减弱。
 while IFS= read -r -d '' file; do
   if [ -f "$file" ]; then
     # 跨平台获取文件大小
@@ -55,7 +60,7 @@ while IFS= read -r -d '' file; do
       LARGE_FILES="${LARGE_FILES}${file} ($((SIZE / 1048576))MB)\n"
     fi
   fi
-done < <(git diff --cached --name-only -z)
+done < <(git diff --cached --name-only -z --diff-filter=A)
 
 if [ -n "$LARGE_FILES" ]; then
   echo "❌ 错误：检测到大文件（>10MB）："
@@ -159,6 +164,33 @@ if ! node "$ROOT/scripts/ci/check-version-bump-approval.js"; then
   echo "❌ 小版本/大版本递增未获批准。要么补批准标记，要么用正规入口："
   echo "    node scripts/release/version-mode.js bump --minor|--major --approved-by <批准人>"
   exit 1
+fi
+
+# 4.7 目录结构锁（S1 观察者档，恒 exit 0，**不阻断提交**）
+#     判据 = docs/10_规范/registry/STRUCTURE-LOCK.json 的清单快照 diff：
+#     新增/消失的已登记条目即 finding（kind: structure-drift）。
+#     豁免：.git；生成物目录（build/dist/node_modules 与 BUILD-OUTPUTS.json 登记的
+#     entries/ 产物路径）；根级点目录中按 .gitignore 判为机器本地的工具家。
+#     --changed 只比对暂存区改动面，故未暂存的新根条目不在此报警。
+#     阶段权威在执行器的 GUARD_STAGE 常量（当前 S1）——与 4.2 同型：本步只做醒目
+#     提示；升到 S3 后执行器自己会非零退出，本文件无需改动。
+#     ⚠ 不要在这里改成 exit 1：PROCESS-008 PP-3 禁止 S1/S2 阻断，升阶是人的决定
+#     （改执行器常量 + 登记表，不改钩子）。
+echo "🔒 结构锁检查（S1 观察者档，不阻断）..."
+STRUCT_OUT="$(node "$ROOT/scripts/ci/check-structure-lock.js" --changed || true)"
+echo "$STRUCT_OUT"
+if echo "$STRUCT_OUT" | grep -q "structure-lock-drift-count=0"; then
+  echo "  ✅ 无结构漂移\n"
+elif echo "$STRUCT_OUT" | grep -q "structure-lock-drift-count=[1-9]"; then
+  echo ""
+  echo "⚠️⚠️  未授权的结构变更（structure-drift）⚠️⚠️"
+  echo "     确认后请更新 docs/10_规范/registry/STRUCTURE-LOCK.json（version+1）"
+  echo "     并在提交信息加：structure-lock-approved-by: <批准人>"
+  echo "     S1 观察者档：本次不阻断提交。"
+else
+  echo ""
+  echo "⚠️  结构锁执行器未回报读数（基线缺失或执行异常）——本次未做比对，不阻断。"
+  echo "     修复：node scripts/ci/check-structure-lock.js --write-snapshot"
 fi
 
 # 5. commit message 格式 —— **已移出本钩子**（2026-09-24）

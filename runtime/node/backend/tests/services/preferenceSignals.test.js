@@ -190,7 +190,9 @@ describe('学习→应用闭环 — recordResponseFeedback → getHabitContext',
     tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-habits-'));
     realHome = process.env.HOME;
     process.env.HOME = tmpHome;
-    // usageHabitService 在 require 时即以 os.homedir() 锁定路径,故须在改 HOME 后再加载。
+    // 路径不再在 require 时锁定：usageHabitService 每次调用经 dataHome 解析器
+    // （resolveDataPath/getDataDir）取址，重载模块照旧执行；但 os.homedir() 在
+    // Windows 上忽略 HOME，隔离并不生效——本套件读的是真实项目数据家。
     delete require.cache[require.resolve('../../src/services/usageHabitService')];
     habits = require('../../src/services/usageHabitService');
   });

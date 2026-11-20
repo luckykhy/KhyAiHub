@@ -1,6 +1,6 @@
 {
   "tools_contract_version": "1.0.0",
-  "$note": "Amoo / 手机桥工具名与风险契约（纯数据投影，不是运行时真源）。**口径：D1-1 部分**——契约 + 比对测试已落地；D1-2（三端从契约读、删各自 local 常量）未做，故本文件当前不驱动任何运行期行为，也**不新增任何可调用能力**：它不进 amooBridgePolicy.BRIDGE_TOOLS 的 22 项白名单，不进手机端 Tools.NAMES 的 48 项，不进协作桥 contracts 的 12 项 wire 面。投影源（各自仍是该执行面的真源）：runtime/node/backend/src/services/domain/network/amoo/amooBridgePolicy.js 的 BRIDGE_TOOLS（PC 侧执行闸，22 项）、runtime/node/backend/src/services/domain/network/phone/phoneBridgeCatalog.js 的 BRIDGE_TOOLS + UI_TOOLS（目录 32 项 + UI 11 项）、delivery/extension/bridges/khy-amoon-bridge/lib/contracts.js 的 TOOL_SPECS（协作桥 12 项 wire 工具）、delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java 的 NAMES（手机端 48 项）与同目录 LoopModes.java 的 KNOWN_TOOLS（36 项）。口径细则：① wireName 取手机侧执行面的原生工具名（Tools.NAMES），协作桥独有的能力用桥的 wire 名；一个能力一条 entry，同一能力的其它名字一律进 aliases[]（目录的 phone_* 命名与 shell_exec / file_read 等历史别名），故同名能力不写两条。② risk 词表 low/medium/high：进了 PC 执行闸的能力直接取 amooBridgePolicy 的档位（该处是平台闸门的真源），不在闸内的按手机侧语义推导（只读 low / 可逆写与执行 medium / 不可逆 high）。③ requiresConfirm = 现有执行闸强制确认的集合（amooBridgePolicy.requiresConfirm ∪ LoopModes.HIGH_RISK_TOOLS = exec、rm）；契约层不新增确认要求，D1-2 之前没有闸去强制它，secret_* 的确认由一次性投递码承担。④ scopes 词表 operator/phone/file（沿用协作桥 contracts 的 SCOPES），语义是「哪些调用方角色可发起这次调用」：operator = PC 侧持令牌的操作者，phone = 手机侧本地循环，file = 文件信箱通道；手机侧能力由 PC 操作者与手机本地循环两条路调用。⑤ phase 1 = 该能力当前可调用；协作桥的 Phase 2 占位名（contracts.PHASE2_TOOL_NAMES）不在契约内——它们不是任何一端的执行面真源。已知取舍：协作桥的 phone_exec 是白名单诊断（op 子集，只读），与手机桥的 exec（任意 shell）不是同一实现，契约按手机桥的 exec 记 high + 需确认（取更严的一档），桥自己的档位仍以桥 contracts 为准；协作桥的 phone_screenshot（PC 侧 adb 截图、落盘回传）在桥内记 medium，契约按手机侧 shot（只读截图）记 low。",
+  "$note": "Amoo / 手机桥工具名与风险契约（纯数据投影，不是运行时真源）。**口径：D1-1 部分**——契约 + 比对测试已落地；D1-2（三端从契约读、删各自 local 常量）未做，故本文件当前不驱动任何运行期行为，也**不新增任何可调用能力**：它不进 amooBridgePolicy.BRIDGE_TOOLS 的 22 项白名单，不进手机端 Tools.NAMES 的 66 项，不进协作桥 contracts 的 12 项 wire 面。投影源（各自仍是该执行面的真源）：runtime/node/backend/src/services/domain/network/amoo/amooBridgePolicy.js 的 BRIDGE_TOOLS（PC 侧执行闸，22 项）、runtime/node/backend/src/services/domain/network/phone/phoneBridgeCatalog.js 的 BRIDGE_TOOLS + UI_TOOLS（目录 32 项 + UI 11 项）、delivery/extension/bridges/khy-amoon-bridge/lib/contracts.js 的 TOOL_SPECS（协作桥 12 项 wire 工具）、delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java 的 NAMES（手机端 66 项）与同目录 LoopModes.java 的 KNOWN_TOOLS（66 项）。口径细则：① wireName 取手机侧执行面的原生工具名（Tools.NAMES），协作桥独有的能力用桥的 wire 名；一个能力一条 entry，同一能力的其它名字一律进 aliases[]（目录的 phone_* 命名与 shell_exec / file_read 等历史别名），故同名能力不写两条。② risk 词表 low/medium/high：进了 PC 执行闸的能力直接取 amooBridgePolicy 的档位（该处是平台闸门的真源），不在闸内的按手机侧语义推导（只读 low / 可逆写与执行 medium / 不可逆 high）。③ requiresConfirm = 现有执行闸强制确认的集合（amooBridgePolicy.requiresConfirm ∪ LoopModes.HIGH_RISK_TOOLS = exec、rm）；契约层不新增确认要求，D1-2 之前没有闸去强制它，secret_* 的确认由一次性投递码承担。④ scopes 词表 operator/phone/file（沿用协作桥 contracts 的 SCOPES），语义是「哪些调用方角色可发起这次调用」：operator = PC 侧持令牌的操作者，phone = 手机侧本地循环，file = 文件信箱通道；手机侧能力由 PC 操作者与手机本地循环两条路调用。⑤ phase 1 = 该能力当前可调用；协作桥的 Phase 2 占位名（contracts.PHASE2_TOOL_NAMES）不在契约内——它们不是任何一端的执行面真源。已知取舍：协作桥的 phone_exec 是白名单诊断（op 子集，只读），与手机桥的 exec（任意 shell）不是同一实现，契约按手机桥的 exec 记 high + 需确认（取更严的一档），桥自己的档位仍以桥 contracts 为准；协作桥的 phone_screenshot（PC 侧 adb 截图、落盘回传）在桥内记 medium，契约按手机侧 shot（只读截图）记 low。",
   "tools": [
     {
       "wireName": "ping",
@@ -476,6 +476,168 @@
       "risk": "low",
       "requiresConfirm": false,
       "scopes": ["operator"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "record_audio",
+      "displayName": "录一段手机麦克风的声音",
+      "risk": "high",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_record_audio"]
+    },
+    {
+      "wireName": "camera_open",
+      "displayName": "打开系统相机拍一张",
+      "risk": "high",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_camera_open"]
+    },
+    {
+      "wireName": "sync_status",
+      "displayName": "读取同步存储状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "sync_read",
+      "displayName": "读取同步记录",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "sync_verify",
+      "displayName": "校验同步记录",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "sync_append",
+      "displayName": "追加一条同步记录",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "sync_delete",
+      "displayName": "删除一条同步记录",
+      "risk": "high",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "sync_export",
+      "displayName": "导出同步存储",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_capture_start",
+      "displayName": "开始抓包",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_capture_stop",
+      "displayName": "停止抓包",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_capture_status",
+      "displayName": "读取抓包状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_capture_list",
+      "displayName": "列出抓包记录",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_capture_export",
+      "displayName": "导出抓包记录",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_rule_list",
+      "displayName": "列出改写规则",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_rule_set",
+      "displayName": "加一条改写规则",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_rule_delete",
+      "displayName": "删除一条改写规则",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "net_rule_clear",
+      "displayName": "清空改写规则",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "elevate",
+      "displayName": "提权自举",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
       "phase": 1,
       "aliases": []
     }

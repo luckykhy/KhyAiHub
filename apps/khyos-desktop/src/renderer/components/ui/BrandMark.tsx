@@ -7,7 +7,7 @@ import { useId } from 'react'
  * 形态：四段弧叶围成的光圈（= 四条主张）+ 中心菱形内核（= kernel / runtime），
  * 内核上刻一道 K 形负槽（= 品牌字母，可发现但不主导读感）。
  *
- * 几何真源：`delivery/brand/khy-brand-geometry.js` —— 本文件里的路径数据是它的**副本**，
+ * 几何真源：`works/brand/khy-brand-geometry.js` —— 本文件里的路径数据是它的**副本**，
  * 由 `apps/khyos-desktop/tests/brandMark.test.cjs` 断言两者逐字节一致。
  * 改形状请改真源后跑 `node scripts/brand/build-brand-assets.js`，不要手改这里。
  */

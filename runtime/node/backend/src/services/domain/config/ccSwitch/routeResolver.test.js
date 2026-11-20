@@ -11,7 +11,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { resolveCardRoute, appForProtocol, appsForProtocol } = require('./routeResolver');
+const { resolveCardRoute, appForProtocol, appsForProtocol, CARD_ROUTE_SOURCE } = require('./routeResolver');
 const { APPS, PROTOCOLS } = require('./constants');
 
 // Fake store: activeMap app→cardId, cards by id; `calls` records the scan order.
@@ -167,12 +167,17 @@ test('重写形状：adapterKey/apiPoolProvider/metadata 全量钉死，未识�
     userPinned: false,
     ccSwitchCardId: 'g',
     ccSwitchCardName: 'G 卡',
-    apiPoolProvider: 'cc-switch:g',
+    // 池名必须落在网关三段式 `api:<pool>:<model>` 池段正则 [a-z0-9_-] 内。
+    // 旧值 'cc-switch:g'（含冒号）会被截成 'cc-switch'、apiKeyPool.pick 精确匹配不到
+    // key/endpoint，模型 id 还被污染成 'g:<model>' —— 见 constants.cardPoolProvider。
+    apiPoolProvider: 'cc_switch_g',
   });
   // Measured: only card.id/.name are lifted out of the card; card.extraFlag and
   // card.protocol never reach the rewritten route.
   assert.equal('extraFlag' in out, false);
   assert.equal('protocol' in out, false);
+  assert.match(out.apiPoolProvider, /^[a-z0-9_-]+$/, '池名形态必须可路由');
+  assert.equal(out.metadata.source, CARD_ROUTE_SOURCE);
 });
 
 test('preferredModel 优先级：route.modelId > card.defaultModel > null', () => {
@@ -203,7 +208,10 @@ test('卡片缺 id/name 时不改写只降级：poolProvider 拼出字面 undefi
   assert.equal(resolveCardRoute({ modelId: 'm' }, { store, sourceProtocol: PROTOCOLS.GEMINI }), null, 'no active id → null');
   const anonymous = fakeStore({ [APPS.GEMINI]: 'x' }, { x: { enabled: true, protocol: PROTOCOLS.GEMINI } });
   const out = resolveCardRoute({ modelId: 'm' }, { store: anonymous, sourceProtocol: PROTOCOLS.GEMINI });
-  assert.equal(out.apiPoolProvider, 'cc-switch:undefined');
+  // 仍是「前缀 + 空 id」的降级形态（cardPoolProvider 对 undefined 走 `|| ''` 兜底，
+  // 不再拼出字面 'undefined'）。这种卡在真实数据里不会出现——store.addCard 总是先
+  // _genId()；这里锁的是「不抛、不静默变成别的名字」。
+  assert.equal(out.apiPoolProvider, 'cc_switch_');
   assert.equal(out.ccSwitchCardId, undefined);
   assert.equal('ccSwitchCardName' in out, true, 'the name key still exists');
   assert.equal(out.metadata.ccSwitchCardName, undefined);

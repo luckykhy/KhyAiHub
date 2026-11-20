@@ -16,7 +16,7 @@
  * 出厂件明文密钥（SECURITY-001）：本脚本兼作它的执行器。改动集模式下只看本次
  * 暂存的改动（`--changed` 透传给 `scripts/check_builtin_keys.py`）；**不带
  * `--changed` 且不给目标时**改动集为空、但出厂件检查照跑，此时会连同打包产物
- * （`delivery/mobile/khy-os-client-app/release/*.apk`）一起扫 —— 这也是验证「APK 里只有
+ * （`delivery/channel/mobile/khy-os-client-app/release/*.apk`）一起扫 —— 这也是验证「APK 里只有
  * 混淆密钥、没有明文」的那条命令。
  */
 'use strict';
@@ -157,8 +157,8 @@ const RECOMMENDED_CHECK_RULES = [
     commands: ['npm run check:manifest-sync', 'npm run test:maintainer:publish', 'bash scripts/release/build-and-audit-pip-purity.sh'],
   },
   {
-    match: file => /^delivery\/web\/ai-frontend\//.test(file),
-    commands: ['npm run build --prefix delivery/web/ai-frontend'],
+    match: file => /^delivery\/channel\/web\/ai-frontend\//.test(file),
+    commands: ['npm run build --prefix delivery/channel/web/ai-frontend'],
   },
 ];
 

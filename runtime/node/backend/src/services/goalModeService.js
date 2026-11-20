@@ -120,10 +120,32 @@ function formatPreflightFailure(preflight) {
 }
 
 /**
+ * 进程内并发 goal 会话计数。
+ *
+ * 提权的三件事（permissionStore profile / toolCalling dangerous mode /
+ * KHY_GOAL_MODE_ACTIVE 标记）都是**进程级**的——仓里没有按会话隔离的权限通道
+ * （toolCallingPermissions._permissionMode 同样是模块单例）。既然是进程级，就必须
+ * 引用计数：先结束的那个会话不能把提权撤掉，否则仍在跑的那个会突然失去权限；
+ * 反过来也不能重复快照，否则后一个会话的 deactivate 会把 profile 恢复成
+ * 「第一个会话快照」的值。
+ *
+ * 已知残留（架构面，非本批范围）：提权仍是进程级的，同进程内并发的另一个
+ * 普通会话会共享这份提权。要根治需把权限真源收窄到会话，属第三批。
+ */
+let _activeGoalSessions = 0;
+let _sharedSavedState = null;
+
+/**
  * 激活 goal 模式: 快照当前权限状态，提升到全权限。
  * @returns {object} savedState — 传递给 deactivate() 恢复权限
  */
 function activate() {
+  // 已有 goal 会话在自主模式里:复用已有提权,不再快照
+  if (_activeGoalSessions > 0) {
+    _activeGoalSessions += 1;
+    return { shared: true };
+  }
+
   // 快照当前状态
   const savedState = {
     dangerousMode: false,
@@ -136,7 +158,12 @@ function activate() {
   try {
     const permissionStore = require('./permissionStore');
     savedState.permissionProfile = permissionStore.getProfile();
-    permissionStore.setProfile('yolo');
+    // persist:false —— 本轮的临时提权**不许**改写用户的磁盘档案。口径与
+    // toolCallingPermissions._syncPermissionProfile 一致(那里同样明确
+    // 「in-session 模式变更不得覆盖用户 durable on-disk profile」)。
+    // 曾按默认语义落盘:进程被 SIGKILL/崩溃时 finally 不执行,permissions.json
+    // 里就留下 profile:'yolo',此后每次启动都是全自动放行(AGT-01)。
+    permissionStore.setProfile('yolo', { persist: false });
   } catch {
     /* permissionStore 不可用时跳过 */
   }
@@ -155,6 +182,8 @@ function activate() {
   process.env.KHY_GOAL_MODE_ACTIVE = 'true';
   process.env.KHY_PLAN_AUTO_APPROVE_MS = '1';
 
+  _sharedSavedState = savedState;
+  _activeGoalSessions = 1;
   return savedState;
 }
 
@@ -164,13 +193,26 @@ function activate() {
  */
 function deactivate(savedState) {
   if (!savedState) {
-    savedState = {};
+    return;
   }
 
-  // 1. 恢复 permissionStore profile
+  // 引用计数:还有 goal 会话在跑就不撤提权(撤了会让那个会话突然失去权限)
+  _activeGoalSessions = Math.max(0, _activeGoalSessions - 1);
+  if (_activeGoalSessions > 0) {
+    return;
+  }
+
+  // 共享提权时,恢复的是**首个**会话的快照(那才是提权前的状态)
+  const restore = savedState.shared ? _sharedSavedState : savedState;
+  _sharedSavedState = null;
+  if (!restore) {
+    return;
+  }
+
+  // 1. 恢复 permissionStore profile（同样不落盘：activate 没写盘,恢复也不该写）
   try {
     const permissionStore = require('./permissionStore');
-    permissionStore.setProfile(savedState.permissionProfile || 'normal');
+    permissionStore.setProfile(restore.permissionProfile || 'normal', { persist: false });
   } catch {
     /* permissionStore 不可用时跳过 */
   }
@@ -178,7 +220,7 @@ function deactivate(savedState) {
   // 2. 恢复 dangerous mode
   try {
     const toolCalling = require('./toolCalling');
-    if (!savedState.dangerousMode) {
+    if (!restore.dangerousMode) {
       toolCalling.disableDangerousMode();
     }
   } catch {
@@ -186,14 +228,14 @@ function deactivate(savedState) {
   }
 
   // 恢复环境变量
-  if (savedState.goalModeActive) {
-    process.env.KHY_GOAL_MODE_ACTIVE = savedState.goalModeActive;
+  if (restore.goalModeActive) {
+    process.env.KHY_GOAL_MODE_ACTIVE = restore.goalModeActive;
   } else {
     delete process.env.KHY_GOAL_MODE_ACTIVE;
   }
 
-  if (savedState.planAutoApproveMs) {
-    process.env.KHY_PLAN_AUTO_APPROVE_MS = savedState.planAutoApproveMs;
+  if (restore.planAutoApproveMs) {
+    process.env.KHY_PLAN_AUTO_APPROVE_MS = restore.planAutoApproveMs;
   } else {
     delete process.env.KHY_PLAN_AUTO_APPROVE_MS;
   }
@@ -325,6 +367,13 @@ function isActive() {
  * @returns {object|null} savedState 或 null
  */
 function activateIfNeeded() {
+  // 我们自己在自主模式里(计数>0):这个会话复用已有提权,并登记一次计数。
+  // 少了这一步,先结束的那个会话会把提权撤掉,仍在跑的那个会突然失去权限。
+  if (_activeGoalSessions > 0) {
+    _activeGoalSessions += 1;
+    return { shared: true };
+  }
+  // 外部标记(用户自己设了 KHY_GOAL_MODE_ACTIVE):不接管提权,保持原语义
   if (isActive()) {
     return null;
   }

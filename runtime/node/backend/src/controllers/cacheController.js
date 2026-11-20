@@ -7,6 +7,11 @@ const comprehensiveDataService = require('../services/comprehensiveDataService')
 const instrumentService = require('../services/instrumentService');
 const klineDataService = require('../services/klineDataService');
 
+// 单次批量缓存的标的数上限。每个标的都会走 comprehensiveDataService 外呼
+// 第三方数据源（akshare / AData），没有上限时**一个 HTTP 请求**就能放大成
+// 上百次外呼 —— 资源耗尽 + 上游封禁（SEC-03）。
+const MAX_BATCH_INSTRUMENTS = 50;
+
 function detectInstrumentType(symbol = '') {
   const normalizedSymbol = String(symbol || '');
   if (
@@ -192,6 +197,13 @@ class CacheController {
         return res.status(400).json({
           success: false,
           message: '标的列表不能为空',
+        });
+      }
+
+      if (instruments.length > MAX_BATCH_INSTRUMENTS) {
+        return res.status(400).json({
+          success: false,
+          message: `单次批量缓存的标的数不得超过 ${MAX_BATCH_INSTRUMENTS}（收到 ${instruments.length} 个）`,
         });
       }
 

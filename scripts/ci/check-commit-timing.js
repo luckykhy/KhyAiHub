@@ -84,7 +84,11 @@ const CODE_EXTS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.vue', '.py', 
 /** 游离产物形状（T4）。与 pre-commit 第 1 项口径一致，向前兼容探针/临时脚本。 */
 const STRAY_RE = /(^|\/)(tmp-|tmp_|\.tmp$)|\.tmp$|(^|\/)probe[-_]|(^|\/)_probe|\.bak$|\.orig$/;
 
-/** 本机态 / 不该入库的目录（T3：卷进来极可能是并发方的）。 */
+/**
+ * 本机态 / 不该入库的目录（T3：卷进来极可能是并发方的）。
+ * khy-Trajectory/ 是 2026-11-19 已拆除的可见别名；保留为存量 junction 兜底，
+ * 与 .gitignore 同处理。
+ */
 const LOCAL_STATE_DIRS = ['.khy/', '.khyos/', '.khyquant/', 'khy-Trajectory/', '.zcode/tmp/'];
 
 /** 文档类扩展名：只改这些的单元不要求运行验证（T2 豁免）。 */
@@ -282,11 +286,11 @@ const SCENARIOS = {
   },
   'unit-multi-intent': {
     changes: [
-      // 迁移后 delivery/web 与 delivery/extension 同属 delivery 顶层板块，
+      // 迁移后 delivery/channel/web 与 delivery/extension 同属 delivery 顶层板块，
       // 故第三个板块改用 works/ship（打包/交付工具）——三个**不同**顶层板块才有
       // 多意图可言，否则 T1 判据在场景层就静默失效。
       { status: 'M', path: 'runtime/node/backend/src/cli/router.js' },
-      { status: 'M', path: 'delivery/web/ai-frontend/src/App.vue' },
+      { status: 'M', path: 'delivery/channel/web/ai-frontend/src/App.vue' },
       { status: 'A', path: 'works/ship/npm/bin/helper.js' },
     ],
     verifyPending: true,

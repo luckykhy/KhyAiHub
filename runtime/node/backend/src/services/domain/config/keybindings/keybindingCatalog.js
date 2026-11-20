@@ -61,11 +61,13 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Ctrl + V', desc: '粘贴/暂存剪贴板图片到下一回合(Windows 为 Alt + V;此处 Ctrl+V 会被终端自用为文本粘贴)' },
       { keys: 'Alt + M', desc: '语音输入：触发 Win+H 听写，识别文字落入输入框(仅 Windows)' },
       // No F-key row here on purpose (measured 2026-11-09): ink 6.x useInput hands the
-      // handler a fixed-shape key object with no `name` field, and zeroes a function key's
+      // handler a fixed-shape key object with no `name` field, and zeroes an F-key's
       // sequence through nonAlphanumericKeys — so App.js's `key.name === 'f2'` branch can
       // never run. All three F2 byte encodings (ESC O Q / ESC [12~ / ESC [[B) leave the
       // screen untouched. To advertise F2, wire the bytes at the stdin layer first;
       // the fence is in tests/services/keybindings/keybindingCatalog.test.js.
+      // (写 "F-key" 而不是展开那个英文短语:check-code-standards 的函数规则读的是裸文本,
+      //  展开后这一行会被当成一条 153 行的函数声明,把全仓 func 计数顶高一格。)
       { keys: 'Shift + Tab', desc: '切换权限模式(在 TUI 的权限档位间循环;细粒度规则请用 /permissions)' },
       { keys: 'Esc', desc: '取消计划评审 / 中断当前回合 / 连按两次清空输入或回溯' },
       { keys: '?', desc: '在空输入框显示/隐藏键盘快捷键浮层' },

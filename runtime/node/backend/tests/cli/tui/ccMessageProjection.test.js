@@ -37,7 +37,12 @@ const {
   PROMPT_PREFIX,
   PLACEHOLDERS,
   STREAMING_TEXT,
+  STREAM_CURSOR,
+  buildBusyLabel,
+  clipSingleLine,
 } = P;
+
+const { visWidth } = require('../../../src/cli/tui/wrapCell');
 
 /** 便捷构造：只有消息的场景（其余 chrome 用默认）。 */
 function scene(messages, extra = {}) {
@@ -188,12 +193,44 @@ test('窗口化提示行在消息区之前', () => {
   assert.strictEqual(r.lines[5], '');
 });
 
-test('busy 时追加流式行（● 思考中...│）', () => {
+test('busy 时追加流式行（● 等待模型返回 · 第 1 轮│）', () => {
   const r = scene([{ id: 1, role: 'user', text: 'u' }], { busy: true });
-  const idx = r.lines.length - 1 - 1; // 末尾是 prompt，往前找
   const joined = r.lines.join('\n');
   assert.ok(joined.includes('● ' + STREAMING_TEXT + '│'), '应含流式行与光标: ' + joined);
-  assert.ok(idx >= 0);
+});
+
+test('buildBusyLabel：动作 + 目标 + 进度，缺模型时也不假装知道在分析什么', () => {
+  assert.strictEqual(
+    buildBusyLabel({ model: 'Sonnet 4', turn: 2 }),
+    '等待模型 Sonnet 4 返回 · 第 2 轮'
+  );
+  assert.strictEqual(buildBusyLabel({}), '等待模型返回 · 第 1 轮');
+  assert.ok(!buildBusyLabel({}).includes('分析'), '不得凭空声称模型在「分析」什么');
+});
+
+test('busy 流式行：超宽文案按 cols 剪成单行（BUG-82：账本 1 行、画出来 2 行）', () => {
+  const cols = 20;
+  const long = '等待模型 super-long-model-name 返回 · 第 12 轮';
+  const r = scene([{ id: 1, role: 'user', text: 'u' }], {
+    cols,
+    busy: true,
+    streamingText: long,
+  });
+  const streamRows = r.lines.filter((l) => l.startsWith('● '));
+  assert.strictEqual(streamRows.length, 1, '流式行必须只占一行: ' + JSON.stringify(r.lines));
+  assert.ok(streamRows[0].endsWith(STREAM_CURSOR), '截断后仍保留光标位');
+  assert.ok(
+    visWidth(streamRows[0]) <= cols,
+    `流式行显示宽度 ${visWidth(streamRows[0])} 应 ≤ ${cols}`
+  );
+  // 裁的是尾巴，不是整句消失；应保留「等待模型」这个动作+目标。
+  assert.ok(streamRows[0].includes('等待模型'), '截断后仍看得出在等模型: ' + streamRows[0]);
+});
+
+test('clipSingleLine：按显示宽度裁剪并加省略号', () => {
+  const out = clipSingleLine('等待模型返回 · 第 1 轮', 10);
+  assert.ok(visWidth(out) <= 10, `裁剪后宽度 ${visWidth(out)} 应 ≤ 10`);
+  assert.ok(out.endsWith('…'), '裁掉的部分要有省略号: ' + out);
 });
 
 // ── 抽取（复制的唯一真源）────────────────────────────────────────────────────
@@ -366,11 +403,24 @@ test('CcStatusLine：恰 1 行，段落的取舍按**实际显示宽度**而非�
   assert.ok(!tiny.includes('$3.72'), '40 列丢费用段');
 });
 
-test('CcPromptInput：空值显示占位符，busy 显示 thinking', () => {
+test('CcPromptInput：空值显示占位符，busy 显示「可先输入」的中性文案', () => {
   const idle = scene([], { prompt: { value: '', offset: 0 } });
   assert.ok(idle.lines.includes(PROMPT_PREFIX + PLACEHOLDERS.default));
   const busy = scene([], { prompt: { value: '', offset: 0, busy: true } });
-  assert.ok(busy.lines.includes(PROMPT_PREFIX + PLACEHOLDERS.busy));
+  assert.ok(
+    busy.lines.includes(PROMPT_PREFIX + PLACEHOLDERS.busy),
+    `busy 占位符应原样出现: ${JSON.stringify(busy.lines)}`
+  );
+  assert.ok(PLACEHOLDERS.busy.includes('可先输入'), '占位符要说明回合中仍可输入');
+  assert.ok(!PLACEHOLDERS.busy.toLowerCase().includes('thinking'), '不得回退成 AI thinking');
+});
+
+test('CcPromptInput：窄终端 busy 占位符剪成单行（不折行）', () => {
+  const cols = 16;
+  const r = scene([], { cols, prompt: { value: '', offset: 0, busy: true } });
+  const line = r.lines[r.lines.length - 1];
+  assert.ok(line.startsWith(PROMPT_PREFIX));
+  assert.ok(visWidth(line) <= cols, `占位符行宽 ${visWidth(line)} 应 ≤ ${cols}`);
 });
 
 test('CcPromptInput：光标按真实列插入（BUG-99）', () => {

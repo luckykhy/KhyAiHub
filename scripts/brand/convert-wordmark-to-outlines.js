@@ -12,7 +12,7 @@
  * 不用第三方库：TTF 的 cmap/loca/glyf 三张表足够，解析量也就两百行；
  * 且本仓不允许为一个「出图」动作引入 npm 依赖。
  *
- * 产出：`delivery/brand/khy-brand-wordmark.js`（生成物）——
+ * 产出：`works/brand/khy-brand-wordmark.js`（生成物）——
  *   路径数据（已归一化到 1000 单位字高）+ 各字形的推进宽度。
  *   `scripts/brand/build-brand-assets.js` 读它拼装锁定组合，于是锁定组合里不再有 `<text>`。
  *
@@ -24,7 +24,7 @@ const path = require('path');
 const os = require('os');
 
 const REPO = path.resolve(__dirname, '..', '..');
-const OUT_REL = path.join('delivery', 'brand', 'khy-brand-wordmark.js');
+const OUT_REL = path.join('works', 'brand', 'khy-brand-wordmark.js');
 
 /** 归一化字高：轮廓按 1000 单位输出，锁定组合按需要缩放。 */
 const UNITS = 1000;

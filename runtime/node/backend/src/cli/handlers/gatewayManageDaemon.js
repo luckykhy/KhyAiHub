@@ -24,12 +24,12 @@ const {
   getFeatureFamilyPrefix,
   joinFeatureKey,
 } = require('../../services/featureKeyBuilder');
-const { getDataHome, getLegacyDataHome } = require('../../utils/dataHome');
+const { getDataHome, getDataDir, resolveDataPath, getLegacyDataHome } = require('../../utils/dataHome');
 // 复用优先：8090 只是基准端口，入口不能假定「AI 前端就在 8090」。
 const { discoverKhyFrontend, readFrontendRuntime, describePortOwner } = require('../../services/aiFrontendLocator');
 
 // AI-manage 运行时常量（镜像自 handlers/gateway.js 头部；同目录叶子 → __dirname 一致 → 路径逐字节相同）。
-const AI_MANAGE_RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
+const AI_MANAGE_RUNTIME_FILE = resolveDataPath('ai_manage_runtime.json');
 const AI_MANAGE_RUNTIME_FILE_LEGACY = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
 // 整栈冷启动（web 后端 120s 上限 + vite dev server）实测可达 90s+，
 // 默认就绪等待放宽到 180s；AI_MANAGE_READY_TIMEOUT_MS 仍可覆盖。
@@ -206,30 +206,30 @@ function _resolveAiFrontendDir(options = {}) {
   }
   if (process.env.KHYQUANT_ROOT) {
     // forest layout: KHYQUANT_ROOT = runtime/node/backend (formerly services/backend);
-    // the AI frontend now lives at delivery/web/ai-frontend (formerly apps/ai-frontend),
+    // the AI frontend now lives at delivery/channel/web/ai-frontend (formerly apps/ai-frontend),
     // which is three levels above the backend root.
     candidates.push(
-      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', '..', 'delivery', 'web', 'ai-frontend')
+      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', '..', 'delivery', 'channel', 'web', 'ai-frontend')
     );
     candidates.push(
-      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'delivery', 'web', 'ai-frontend')
+      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'delivery', 'channel', 'web', 'ai-frontend')
     );
     candidates.push(
-      path.resolve(process.env.KHYQUANT_ROOT, '..', 'delivery', 'web', 'ai-frontend')
+      path.resolve(process.env.KHYQUANT_ROOT, '..', 'delivery', 'channel', 'web', 'ai-frontend')
     );
-    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'delivery', 'web', 'ai-frontend'));
+    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'delivery', 'channel', 'web', 'ai-frontend'));
     // legacy (pre-migration) layout — kept for old checkouts and portable bundles
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'apps', 'ai-frontend'));
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', 'apps', 'ai-frontend'));
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'apps', 'ai-frontend'));
   }
-  candidates.push(path.resolve(process.cwd(), 'delivery', 'web', 'ai-frontend'));
+  candidates.push(path.resolve(process.cwd(), 'delivery', 'channel', 'web', 'ai-frontend'));
   candidates.push(path.resolve(process.cwd(), 'apps', 'ai-frontend'));
   candidates.push(path.resolve(process.cwd(), 'ai-frontend'));
-  // forest layout (source + mirrored bundle): delivery/web/ai-frontend is three levels
+  // forest layout (source + mirrored bundle): delivery/channel/web/ai-frontend is three levels
   // above runtime/node/backend (legacy: apps/ai-frontend two levels above services/backend)
   candidates.push(
-    path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'delivery', 'web', 'ai-frontend')
+    path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'delivery', 'channel', 'web', 'ai-frontend')
   );
   candidates.push(path.resolve(__dirname, '..', '..', '..', '..', '..', 'apps', 'ai-frontend'));
 
@@ -279,11 +279,11 @@ function _resolveAiFrontendDistDir(options = {}, frontendDir = null) {
     const parent = path.resolve(root, '..');
     const grandParent = path.resolve(root, '..', '..');
     const greatGrandParent = path.resolve(root, '..', '..', '..');
-    // forest layout: KHYQUANT_ROOT = runtime/node/backend; delivery/web/ai-frontend is
+    // forest layout: KHYQUANT_ROOT = runtime/node/backend; delivery/channel/web/ai-frontend is
     // three levels up (formerly apps/ai-frontend, two levels above services/backend)
     const newRoots = [greatGrandParent, grandParent, parent, root];
     for (const base of newRoots) {
-      push(path.join(base, 'delivery', 'web', 'ai-frontend', 'dist'));
+      push(path.join(base, 'delivery', 'channel', 'web', 'ai-frontend', 'dist'));
     }
     // legacy (pre-migration) layout — kept for old checkouts and portable bundles
     const roots = [grandParent, parent, root];
@@ -292,10 +292,10 @@ function _resolveAiFrontendDistDir(options = {}, frontendDir = null) {
     }
   }
 
-  push(path.resolve(process.cwd(), 'delivery', 'web', 'ai-frontend', 'dist'));
+  push(path.resolve(process.cwd(), 'delivery', 'channel', 'web', 'ai-frontend', 'dist'));
   push(path.resolve(process.cwd(), 'apps', 'ai-frontend', 'dist'));
   push(path.resolve(process.cwd(), 'ai-frontend', 'dist'));
-  // forest layout (source + mirrored bundle): delivery/web/ai-frontend is three levels
+  // forest layout (source + mirrored bundle): delivery/channel/web/ai-frontend is three levels
   // above runtime/node/backend (legacy: apps/ai-frontend two levels above services/backend)
   push(
     path.resolve(
@@ -307,6 +307,7 @@ function _resolveAiFrontendDistDir(options = {}, frontendDir = null) {
       '..',
       '..',
       'delivery',
+      'channel',
       'web',
       'ai-frontend',
       'dist'
@@ -414,7 +415,7 @@ function _frontendDevUsable(frontendDir) {
  * @returns {string} "daemon.log 与 frontend.log" with resolved absolute paths
  */
 function _daemonLogHint() {
-  const logsDir = path.join(getDataHome(), 'logs');
+  const logsDir = resolveDataPath('logs');
   return `${path.join(logsDir, 'ai_manage_daemon.log')} 与 ${path.join(logsDir, 'ai_frontend_dev.log')}`;
 }
 
@@ -673,7 +674,7 @@ function _printAiManageStartupFailure(ready, apiPort, frontendPort) {
   // Surface last few lines of daemon log if available, plus targeted advice when
   // an OS-level error code (ENOMEM/EACCES/...) appears in the tail.
   try {
-    const logFile = path.join(getDataHome(), 'logs', 'ai_manage_daemon.log');
+    const logFile = resolveDataPath('logs', 'ai_manage_daemon.log');
     if (fs.existsSync(logFile)) {
       const tail = fs
         .readFileSync(logFile, 'utf8')
@@ -1382,7 +1383,7 @@ function _spawnAiManageDaemon({
   let fd = null;
   let stdio = 'ignore';
   try {
-    const logDir = path.join(path.dirname(AI_MANAGE_RUNTIME_FILE), 'logs');
+    const logDir = getDataDir('logs');
     fs.mkdirSync(logDir, { recursive: true });
     const daemonLogFile = path.join(logDir, 'ai_manage_daemon.log');
     fd = fs.openSync(daemonLogFile, 'a');

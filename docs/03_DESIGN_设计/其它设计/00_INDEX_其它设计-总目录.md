@@ -12,5 +12,6 @@
 - [[DESIGN-PHILOSOPHY] 设计哲学总纲]([DESIGN-PHILOSOPHY]%20设计哲学总纲.md)
 - [[DESIGN-QUICK-REF] 设计模式速查卡]([DESIGN-QUICK-REF]%20设计模式速查卡.md)
 - [[DESIGN-SIZE-001] khy-os 体积优化方案]([DESIGN-SIZE-001]%20khy-os%20体积优化方案.md)
+- [[DESIGN-SIZE-002] khy-os 体积治理方案（实测基线版）]([DESIGN-SIZE-002]%20khy-os%20体积治理方案（实测基线版）.md)
 - [TUI-CLASSIC-SYNC（TUI 与经典模式同步指南，原 docs/design/）](TUI-CLASSIC-SYNC.md)
 - [ycode-inspiration-plan](ycode-inspiration-plan.md)

@@ -63,10 +63,10 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 ROOT = Path(__file__).resolve().parent.parent
-# Flutter 客户端已从 apps/ 迁到 delivery/mobile/（apps/ 现只剩 khyos-desktop 桌面端）。
+# Flutter 客户端已从 apps/ 迁到 delivery/channel/mobile/（apps/ 现只剩 khyos-desktop 桌面端）。
 # 路径不跟随迁移就会让本脚本在 DART 不存在时以 exit 2 退出——守卫不是「发现明文」，
 # 而是「跑不起来」，后者更危险：R2 的 0 命中承诺从未被真正验证过。
-CLIENT = ROOT / 'delivery' / 'mobile' / 'khy-os-client-app'
+CLIENT = ROOT / 'delivery' / 'channel' / 'mobile' / 'khy-os-client-app'
 DART = CLIENT / 'lib' / 'core' / 'config' / 'built_in_keys.dart'
 
 # 与 built_in_keys.dart / gen_keys.py 保持一致

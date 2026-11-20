@@ -273,6 +273,9 @@ test('pickMdnsSerial：唯一 _adb-tls-connect 实例才命中，多实例不猜
   assert.deepEqual(config.pickMdnsSerial(['192.168.1.117:34103']), {
     ok: true,
     serial: '192.168.1.117:34103',
+    // 候选集：同主机多端口时 IO 层要逐个试连（有的广播端口已经失效），
+    // 所以纯函数不能只给一个「挑好的」。
+    candidates: ['192.168.1.117:34103'],
     source: 'adb-mdns',
   });
   assert.equal(config.pickMdnsSerial(['1.1.1.1:1', '2.2.2.2:2']).source, 'ambiguous');
@@ -308,3 +311,116 @@ test('serialSource 反映串行号来源（default 才允许 IO 层走自动档�
     'auto'
   );
 });
+
+test('pickDeviceSerial：同一台手机的两条 mDNS transport 归并为一台（真机实测形态）', () => {
+  const canonical = 'adb-ZYPZ261A01M6870010L-R9QdlL._adb-tls-connect._tcp';
+  const duplicate = 'adb-ZYPZ261A01M6870010L-R9QdlL (2)._adb-tls-connect._tcp';
+  const picked = config.pickDeviceSerial({
+    devices: [{ serial: canonical, state: 'device' }, { serial: duplicate, state: 'device' }],
+  });
+  assert.equal(picked.ok, true);
+  assert.equal(picked.serial, canonical, '优先不带 " (N)" 后缀的规范实例名');
+  assert.equal(picked.source, 'adb-devices-mdns-same-instance');
+
+  // 换顺序结果不变（确定性）
+  const reversed = config.pickDeviceSerial({
+    devices: [{ serial: duplicate, state: 'device' }, { serial: canonical, state: 'device' }],
+  });
+  assert.equal(reversed.serial, canonical);
+
+  // 不同基名仍是两台 → ambiguous，不猜
+  assert.equal(
+    config.pickDeviceSerial({
+      devices: [
+        { serial: 'adb-AAA._adb-tls-connect._tcp', state: 'device' },
+        { serial: 'adb-BBB._adb-tls-connect._tcp', state: 'device' },
+      ],
+    }).source,
+    'ambiguous'
+  );
+});
+
+test('pickMdnsSerial：同一主机的两个端口归并为一个（一台设备只有一个 IP）', () => {
+  const picked = config.pickMdnsSerial(['192.168.2.46:37801', '192.168.2.46:33503']);
+  assert.equal(picked.ok, true);
+  assert.equal(picked.serial, '192.168.2.46:33503', '同 host 时按字符串序取确定的一个');
+  assert.equal(picked.source, 'adb-mdns-same-host');
+
+  // 不同主机 → 仍是多台，不猜
+  assert.equal(
+    config.pickMdnsSerial(['192.168.2.46:33503', '192.168.2.47:33503']).source,
+    'ambiguous'
+  );
+});
+// 同主机多端口时**不替调用方挑**：一条手机会同时广播两个端口，其中一个可能已经
+// 失效（2026-11-18 实测：36973 拒绝连接、42359 是活的）。按字符串序取第一个
+// 会挑中死端口，用户只好手输地址。所以纯函数交出候选集，死活由 IO 层试出来。
+test('pickMdnsSerial：同主机多端口时交出全部候选，不替调用方猜死活', () => {
+  const picked = config.pickMdnsSerial(['192.168.2.46:36973', '192.168.2.46:42359']);
+  assert.equal(picked.ok, true);
+  assert.equal(picked.source, 'adb-mdns-same-host');
+  assert.deepEqual(picked.candidates, ['192.168.2.46:36973', '192.168.2.46:42359']);
+  // serial 仍给第一个候选（确定性排序），只是不再当作「就是这个」
+  assert.equal(picked.serial, '192.168.2.46:36973');
+});
+
+test('pickMdnsSerial：唯一实例也交出候选集（一条也要有）', () => {
+  const picked = config.pickMdnsSerial(['192.168.2.46:5555']);
+  assert.equal(picked.ok, true);
+  assert.deepEqual(picked.candidates, ['192.168.2.46:5555']);
+});
+
+test('pickMdnsSerial：多台真机时不给候选（不猜）', () => {
+  const picked = config.pickMdnsSerial(['192.168.2.46:5555', '192.168.2.47:5555']);
+  assert.equal(picked.ok, false);
+  assert.equal(picked.source, 'ambiguous');
+  assert.deepEqual(picked.candidates, []);
+});
+
+
+// ── 端口扫描档（上次 IP → 找新端口）────────────────────────────────────────
+// 这一档解决的是「端口会变、IP 不变」：手机重连后 adb 忘了旧 transport，
+// 设备表与 mDNS 又同时空（实测路由器不转发组播，mdns 列表是空的），
+// 只剩「上次那个 IP」这一条线索。
+
+test('parsePortSpec：单端口与区间都认，坏片段整段丢弃不猜', () => {
+  assert.deepEqual(config.parsePortSpec('5555'), [5555]);
+  assert.deepEqual(config.parsePortSpec('5555,30000-30002'), [5555, 30000, 30001, 30002]);
+  // 反向区间 / 越界 / 零端口都不采纳
+  assert.deepEqual(config.parsePortSpec('30002-30000,0,70000'), []);
+  // 解析不出东西时回退到 fallback，而不是空列表
+  assert.deepEqual(config.parsePortSpec('', [5555]), [5555]);
+  assert.deepEqual(config.parsePortSpec('   ', [5555]), [5555]);
+  assert.deepEqual(config.parsePortSpec(undefined, [5555]), [5555]);
+});
+
+test('splitHostPort：只认 ip:port，mDNS 实例名拆不出端口', () => {
+  assert.deepEqual(config.splitHostPort('192.168.2.46:5555'), { host: '192.168.2.46', port: 5555 });
+  assert.deepEqual(config.splitHostPort('10.0.0.7:45315'), { host: '10.0.0.7', port: 45315 });
+  assert.equal(config.splitHostPort('adb-ZYPZ261A01M6870010L._adb-tls-connect._tcp'), null);
+  assert.equal(config.splitHostPort('192.168.2.46'), null);
+  assert.equal(config.splitHostPort(''), null);
+  assert.equal(config.splitHostPort(undefined), null);
+  // 端口越界不认
+  assert.equal(config.splitHostPort('192.168.2.46:70000'), null);
+});
+
+test('pickScannedAdbPort：恰好一个开着才用，开着多个不猜', () => {
+  assert.deepEqual(config.pickScannedAdbPort([45315]), { ok: true, port: 45315, source: 'scanned-single' });
+  // 手机上除了 adb 还可能有别的服务开着——挑错端口会 adb connect 失败还误导人
+  assert.equal(config.pickScannedAdbPort([45315, 45316]).ok, false);
+  assert.equal(config.pickScannedAdbPort([45315, 45316]).source, 'scanned-ambiguous');
+  assert.equal(config.pickScannedAdbPort([]).source, 'scanned-none');
+  assert.equal(config.pickScannedAdbPort(undefined).ok, false);
+});
+
+test('sameSubnet：手机与电脑不在同一网段时，记住的 IP 就是陈旧的', () => {
+  assert.equal(config.sameSubnet('192.168.2.46', '192.168.2.11'), true);
+  assert.equal(config.sameSubnet('192.168.1.117', '192.168.2.11'), false);
+  assert.equal(config.sameSubnet('192.168.2.46', '10.0.0.1'), false);
+  // 非 IP / 空值一律判「不同网段」——宁可多扫一次，也不拿陈旧地址当活的
+  assert.equal(config.sameSubnet('', '192.168.2.11'), false);
+  assert.equal(config.sameSubnet('192.168.2.46', ''), false);
+  assert.equal(config.sameSubnet('not-an-ip', '192.168.2.11'), false);
+});
+

@@ -147,7 +147,7 @@ function probeDataPointer() {
 
 // ── 探针 3：junction / symlink ───────────────────────────────────────────
 
-/** 已知链接清单（与 scripts/link-shared-dev.js、dataHome._ensureVisibleAlias 对齐）。 */
+/** 已知链接清单（与 scripts/link-shared-dev.js 对齐）。 */
 function getKnownLinks() {
   const links = [
     {
@@ -169,19 +169,8 @@ function getKnownLinks() {
       optional: true, // hoisted 布局才有
     },
   ];
-  // khy-Trajectory 可见别名（junction，指向项目数据家）
-  const mod = _loadDataHomeModule();
-  let trajectoryTarget = path.join(ROOT, '.khy');
-  try {
-    const pointer = mod && mod._readPointer();
-    if (pointer && pointer.projectDataHome) trajectoryTarget = pointer.projectDataHome;
-  } catch { /* 保持默认 */ }
-  links.push({
-    label: 'khy-Trajectory（可见别名）',
-    linkPath: path.join(ROOT, 'khy-Trajectory'),
-    target: trajectoryTarget,
-    optional: true, // 首启时自动重建，缺失不算故障
-  });
+  // khy-Trajectory 可见别名已于 2026-11-19 用户裁决整体拆除（仓库不再使用
+  // junction/symlink），不再作为已知链接体检——存量断链不据此报红。
   return links;
 }
 

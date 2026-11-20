@@ -892,6 +892,16 @@ export function WorkspaceSidebar({
           <Icon name="code" size={15} className="flex-shrink-0" />
           <span className="flex-1">开发环境</span>
         </button>
+        {/* 模型管理：主窗内的第三个入口（另两个是 Ctrl+Shift+M 与窗口菜单，都开
+            独立无框窗）。走 hash 整屏替换分支，页面顶栏自带无条件「返回工作区」
+            出口（ModelsPage 块0）—— 侧栏进来也出得去。 */}
+        <button
+          onClick={() => { window.location.hash = '#/model-manager' }}
+          className="w-full flex items-center gap-3 px-3 h-10 rounded-lg text-sm text-foreground hover:bg-surface-hover transition-colors text-left"
+        >
+          <Icon name="plugins" size={15} className="flex-shrink-0" />
+          <span className="flex-1">模型管理</span>
+        </button>
       </div>
 
       {/* 搜索栏 */}

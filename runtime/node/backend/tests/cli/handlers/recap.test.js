@@ -18,11 +18,22 @@ const FORMATTERS_PATH = require.resolve('../../../src/cli/formatters');
 const FOREST_PATH = require.resolve('../../../src/services/domain/session/session/sessionForestService.js');
 const PERSIST_PATH = require.resolve('../../../src/services/sessionPersistence');
 const RECAP_PATH = require.resolve('../../../src/services/sessionRecapService');
+const NARR_PATH = require.resolve('../../../src/services/domain/trajectory/trajectoryNarrative');
+
+const SKELETON = [
+  '# 任务叙事 — sess_1',
+  '',
+  '> 叙述者：KHY（事后叙述 · 外叙述层 · 第三人称）',
+  '',
+  '- 改了一个文件 [#1]',
+  '',
+].join('\n');
 
 let calls;
 let forestStub;
 let persistStub;
 let recapStub;
+let narrStub;
 let origLog;
 let logged;
 
@@ -53,7 +64,20 @@ beforeEach(() => {
     formatRecap: (r) => 'RECAP(' + r.turns + ')',
   };
   cacheStub(RECAP_PATH, recapStub);
+  narrStub = {
+    collectStory: () => ({ events: [{ seq: 1 }] }),
+    buildNarrative: () => ({
+      focus: 'task',
+      stats: { total: 1, scene: 1, summary: 0, pause: 0, ellipsis: 0 },
+      paragraphs: [],
+    }),
+    renderNarrative: () => ({ markdown: SKELETON, anchorCount: 0 }),
+    maybePolish: async (md) => ({ text: md, polished: false, reason: 'gate-off' }),
+  };
+  cacheStub(NARR_PATH, narrStub);
   delete process.env.KHY_RECAP;
+  delete process.env.KHY_NARRATIVE;
+  delete process.env.KHY_NARRATIVE_POLISH;
 });
 
 afterEach(() => {
@@ -63,7 +87,10 @@ afterEach(() => {
   delete require.cache[FOREST_PATH];
   delete require.cache[PERSIST_PATH];
   delete require.cache[RECAP_PATH];
+  delete require.cache[NARR_PATH];
   delete process.env.KHY_RECAP;
+  delete process.env.KHY_NARRATIVE;
+  delete process.env.KHY_NARRATIVE_POLISH;
 });
 
 describe('门控关 → 不接管', () => {
@@ -122,5 +149,56 @@ describe('读 transcript 失败 → 诚实报错不崩', () => {
     const r = await handleRecap('recap', [], {});
     assert.equal(r, true);
     assert.ok(calls.error.some((m) => /读取会话 transcript 失败/.test(m)));
+  });
+});
+
+describe('narrative 落盘 provenance：模型润色与确定性骨架必须可区分', () => {
+  const tmp = () => require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), 'recap-prov-'));
+
+  test('--polish 成功 → stdout 与落盘都带「模型润色稿」来源行，正文是润色稿', async () => {
+    narrStub.maybePolish = async (md) => ({ text: md.replace('改了一个文件', '改写后的叙事'), polished: true, reason: 'ok' });
+    const dir = tmp();
+    const outFile = require('path').join(dir, 'n.md');
+    const { handleRecap } = freshHandler();
+    await handleRecap('narrative', ['sess_1', '--polish', '--out', outFile], {});
+    const text = require('fs').readFileSync(outFile, 'utf-8');
+    assert.match(text, /> 来源：模型润色稿/, text);
+    assert.match(text, /改写后的叙事/);
+    // 标题下第一块就是来源行（归档/转发时第一眼能看到）
+    assert.equal(text.split('\n')[2], '> 来源：模型润色稿 —— 事实骨架与 [#n] 锚点由确定性引擎生成，锚点逐条校验通过。');
+    assert.ok(logged.some((l) => /模型润色稿/.test(l)), 'stdout 与落盘同一份字节');
+    require('fs').rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('--polish 回退 → 来源行写明 reason（anchor-dropped）', async () => {
+    narrStub.maybePolish = async (md) => ({ text: md, polished: false, reason: 'anchor-dropped' });
+    const dir = tmp();
+    const outFile = require('path').join(dir, 'n.md');
+    const { handleRecap } = freshHandler();
+    await handleRecap('narrative', ['sess_1', '--polish', '--out', outFile], {});
+    const text = require('fs').readFileSync(outFile, 'utf-8');
+    assert.match(text, /> 来源：确定性骨架，未润色（reason=anchor-dropped）/);
+    assert.ok(!/模型润色稿/.test(text), '回退不得冒充润色稿');
+    require('fs').rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('未请求 --polish → 来源行声明确定性骨架，且不调 maybePolish', async () => {
+    let polishedCalls = 0;
+    narrStub.maybePolish = async (md) => { polishedCalls += 1; return { text: md, polished: true, reason: 'ok' }; };
+    const dir = tmp();
+    const outFile = require('path').join(dir, 'n.md');
+    const { handleRecap } = freshHandler();
+    await handleRecap('narrative', ['sess_1', '--out', outFile], {});
+    const text = require('fs').readFileSync(outFile, 'utf-8');
+    assert.match(text, /> 来源：确定性骨架（未请求润色）/);
+    assert.equal(polishedCalls, 0, '没请求润色就不该碰模型');
+    require('fs').rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('_withProvenance：无标题的稿子不吞内容，来源行置顶', () => {
+    const { _withProvenance, _provenanceLine } = freshHandler();
+    const out = _withProvenance('正文第一行\n第二行', '> 来源：x');
+    assert.equal(out, '> 来源：x\n\n正文第一行\n第二行');
+    assert.match(_provenanceLine(null), /未请求润色/);
   });
 });

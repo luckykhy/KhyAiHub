@@ -37,6 +37,10 @@ interface TitleBarProps {
   onToggleSidePane?: () => void
   sidePaneVisible?: boolean
   onToggleTerminal?: () => void
+  // 代码编辑器工作台（主区视图）：切换 + 未保存标点
+  onToggleEditor?: () => void
+  editorVisible?: boolean
+  editorDirty?: boolean
   // 会话 tab 头：会话标题（空 → 「新任务」）
   sessionTitle?: string
   // 新建任务（窗口菜单 Ctrl+N）→ AppLayout 清会话 + 回启动卡片页
@@ -60,6 +64,9 @@ export function TitleBar({
   onToggleSidePane,
   sidePaneVisible = false,
   onToggleTerminal,
+  onToggleEditor,
+  editorVisible = false,
+  editorDirty = false,
   sessionTitle,
   onNewTask,
   onReloadSession,
@@ -99,7 +106,7 @@ export function TitleBar({
     | {
         openExternal?: (url: string) => Promise<{ ok: boolean; error?: string }>
         openPath?: (dir: string) => Promise<{ ok: boolean; error?: string }>
-        openInEditor?: (target?: string) => Promise<{ ok: boolean; editor?: string; error?: string }>
+        openInEditor?: (target?: string) => Promise<{ ok: boolean; state?: string; editor?: string; error?: string }>
         openDirectoryPicker?: () => Promise<string | null>
         setSetting?: (k: string, v: unknown) => Promise<void>
         getBrandingLinks?: () => Promise<{ ok: boolean; feedback?: string; docs?: string; community?: string; issues?: string; error?: string }>
@@ -108,6 +115,7 @@ export function TitleBar({
           Promise<{ ok: boolean; state?: 'local' | 'release' | 'missing'; fileName?: string; url?: string; error?: string }>
         closeWindow?: () => void
         openKeyManagerWindow?: () => Promise<void>
+        openModelsWindow?: () => Promise<void>
         getWorkspacePath?: () => Promise<string>
       }
     | undefined
@@ -167,11 +175,16 @@ export function TitleBar({
     // 摘掉 —— 独立管理窗口因此只剩 `--key-manager` 启动一条路（入口③），入口① 名存实亡。
     // menu.ts 退役后入口迁到这里：自绘窗口菜单才是当前形态下唯一活着的菜单面。
     { kind: 'action', label: '密钥与端点管理', icon: 'settings', shortcut: keyLabelFor('openKeyManager'), run: () => { void api?.openKeyManagerWindow?.() } },
+    // 模型管理：与上一条同形态（同 hash 的第二个独立窗，frame:false）。键位徽章从
+    // keymap 单一真源取（Ctrl+Shift+M）—— 桌面端此前只有 Ctrl+Shift+M 一条路能到
+    // 模型管理页，窗口菜单是第二个入口（S5⑤⑥）。
+    { kind: 'action', label: '模型管理', icon: 'plugins', shortcut: keyLabelFor('openModels'), run: () => { void api?.openModelsWindow?.() } },
     { kind: 'separator' },
     // 键位标签取自 shared/keymap.ts 单一真源（[DESIGN-ARCH-125] P-03）：菜单里
     // 写死 'Ctrl+N' 而加速键没人实现，是命令面板与窗口菜单双双骗人的根源。
     { kind: 'action', label: '新建任务', icon: 'new-task', shortcut: keyLabelFor('newTask'), run: () => onNewTask?.() },
     { kind: 'action', label: '打开工作区', icon: 'folder', shortcut: keyLabelFor('openWorkspace'), run: () => { void pickWorkspace() } },
+    { kind: 'action', label: '代码编辑器', icon: 'code', shortcut: keyLabelFor('toggleEditorWorkbench'), run: () => onToggleEditor?.() },
     { kind: 'action', label: '重新加载会话', icon: 'reload', run: () => onReloadSession?.() },
     { kind: 'action', label: '在资源管理器中打开', icon: 'open-file', run: () => {
       if (!workspacePath) { toast('工作区路径不可用：请重启应用后重试', 'error'); return }
@@ -179,8 +192,17 @@ export function TitleBar({
     } },
     { kind: 'action', label: '在编辑器中打开', icon: 'code', run: () => {
       void api?.openInEditor?.(workspacePath).then((r) => {
-        if (r && !r.ok) toast(r.error || '编辑器启动失败', 'error')
-        else toast(`已在编辑器 ${r?.editor ?? ''} 中打开 ${workspacePath}`)
+        if (r && !r.ok) {
+          // 未配置外部编辑器不再是死路：直接切到主区内置代码编辑器工作台。
+          if (r.state === 'unconfigured') {
+            toast('未配置外部编辑器：已打开内置代码编辑器，在文件树中选择文件即可编辑')
+            window.dispatchEvent(new Event('khy:open-file-picker'))
+            return
+          }
+          toast(r.error || '编辑器启动失败', 'error')
+          return
+        }
+        toast(`已在编辑器 ${r?.editor ?? ''} 中打开 ${workspacePath}`)
       })
     } },
     { kind: 'separator' },
@@ -270,6 +292,27 @@ export function TitleBar({
       {/* Right icon group — mirrors ZCode D2-D4: 展开侧边面板 / 切换终端 / 窗口菜单 */}
       {!isMac && (
         <div className="flex items-center gap-0.5 pr-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <button
+            onClick={onToggleEditor}
+            className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+              editorVisible
+                ? 'bg-selected text-foreground'
+                : 'hover:bg-surface-hover text-foreground/70 hover:text-foreground'
+            }`}
+            title={editorVisible ? '切回对话视图' : '打开代码编辑器'}
+            aria-label={editorVisible ? '切回对话视图' : '打开代码编辑器'}
+            aria-pressed={editorVisible}
+          >
+            <span className="relative flex items-center justify-center">
+              <Icon name="code" size={14} />
+              {editorDirty && (
+                <span
+                  className="absolute -top-0.5 -right-1 w-1.5 h-1.5 rounded-full bg-brand"
+                  title="有未保存的文件"
+                />
+              )}
+            </span>
+          </button>
           <button
             onClick={onToggleSidePane}
             className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${

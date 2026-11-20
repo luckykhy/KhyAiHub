@@ -28,7 +28,7 @@ const path = require('path');
 const { verifyAndroidSignature } = require('./lib/verifyAndroidSignature');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const APP_DIR = path.join(REPO_ROOT, 'delivery', 'mobile', 'khy-os-client-app');
+const APP_DIR = path.join(REPO_ROOT, 'delivery', 'channel', 'mobile', 'khy-os-client-app');
 const ANDROID_DIR = path.join(APP_DIR, 'android');
 const KEY_PROPS = path.join(ANDROID_DIR, 'key.properties');
 const DEFAULT_APK = path.join(REPO_ROOT, 'dist', 'android', 'app-release.apk');

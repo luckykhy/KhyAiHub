@@ -233,7 +233,7 @@ test('addCard：归一化补齐（trim 名 / 非法协议回落 openai / models 
   assert.equal(card.keyId, 'k_1');
   assert.deepEqual(pool.added, [
     // measured: 名称/端点都 trim 了，交给池的原始 key 却原样透传（含首尾空格）。
-    ['cc-switch:' + card.id, { key: ' sk-real ', label: 'cc-switch:DeepSeek', endpoint: 'https://api.deepseek.com/v1' }],
+    ['cc_switch_' + card.id, { key: ' sk-real ', label: 'cc-switch:DeepSeek', endpoint: 'https://api.deepseek.com/v1' }],
   ]);
   assert.equal(card.baseUrl, 'https://api.deepseek.com/v1', 'baseUrl 不 trim（只在存在性门里判真假）');
   // apps 缺省才是全 12 应用。
@@ -302,7 +302,7 @@ test('updateCard：合并 / 换发密钥 / createdAt 保留 / 空 name 回落旧
   assert.equal(store.updateCard(card.id, { wireApi: 'responses' }).card.wireApi, 'responses');
   assert.equal(res.card.createdAt, created, 'createdAt 由 prev 继承');
   assert.ok(res.card.updatedAt !== created);
-  assert.deepEqual(pool.removed, [['cc-switch:' + card.id, 'k_1']], '旧池条目被摘掉');
+  assert.deepEqual(pool.removed, [['cc_switch_' + card.id, 'k_1']], '旧池条目被摘掉');
   assert.equal(pool.added[1][1].key, 'sk-2');
   assert.equal(res.card.keyId, 'k_2');
   // patch 是垃圾时的容忍：`patch = {}` 默认值只挡 undefined，null 会进解构抛错。
@@ -329,7 +329,7 @@ test('removeCard：解除所有 active 引用并摘池；agentMode 里的同卡�
   assert.deepEqual(store.removeCard('c_missing'), { success: false, error: '卡片不存在: c_missing' });
   assert.deepEqual(store.removeCard(a.id), { success: true });
   assert.deepEqual(readStoreFile().active, {}, '两个 active 指向都被解除');
-  assert.deepEqual(pool.removed, [['cc-switch:' + a.id, 'k_1']]);
+  assert.deepEqual(pool.removed, [['cc_switch_' + a.id, 'k_1']]);
   assert.deepEqual(store.listCards().map((c) => c.id), [b.id]);
   assert.deepEqual(Object.keys(store.getAllAgentModes()), ['opencode']);
   assert.equal(store.getAllAgentModes().opencode.cardId, a.id, 'measured: 已删卡片仍被 agentMode 指着');
@@ -346,7 +346,7 @@ test('getCardCredential：只认 keyId，池缺失/抛错都回 null', () => {
   assert.equal(store.getCardCredential(noKey.id), null, 'credential-free 卡片返回 null');
   const withKey = store.addCard({ name: 'B', baseUrl: 'v', key: 'sk-real' }).card;
   assert.equal(store.getCardCredential(withKey.id), null, '池里没这条 → pickById 返回 null');
-  pool.picked[`cc-switch:${withKey.id}|k_1`] = { key: 'sk-real' };
+  pool.picked[`cc_switch_${withKey.id}|k_1`] = { key: 'sk-real' };
   assert.equal(store.getCardCredential(withKey.id), 'sk-real');
   pool.picked.__throw = true;
   assert.equal(store.getCardCredential(withKey.id), null, '池抛错被吞 → null');
@@ -556,12 +556,20 @@ test('KNOWN-DEFECT 损坏主文件 + 有效 .bak：自动恢复并写 heal-audit
   wipe();
 });
 
-test('导出面与池命名空间：_poolProvider 用 cc-switch: 前缀隔离内置池', () => {
+test('导出面与池命名空间：_poolProvider 用 cc_switch_ 前缀隔离内置池', () => {
   wipe();
   const store = freshStore();
-  assert.equal(store._poolProvider('c1'), 'cc-switch:c1');
-  assert.equal(store._poolProvider(''), 'cc-switch:');
-  assert.equal(store._poolProvider(undefined), 'cc-switch:undefined');
+  // 池名会被网关当成 `api:<pool>:<model>` 的池段用，而那个正则只认 [a-z0-9_-]。
+  // 旧前缀 'cc-switch:' 含冒号 → 池段被截成 'cc-switch'、key pick 不到、模型 id 被
+  // 污染。故 2026-11-19 换成 'cc_switch_'；旧命名空间由 apiKeyPool 的只读别名兼容。
+  assert.equal(store._poolProvider('c1'), 'cc_switch_c1');
+  assert.equal(store._poolProvider(''), 'cc_switch_');
+  // measured: cardPoolProvider 对 undefined 走 `|| ''` 兜底 → 空段（旧实现拼出字面
+  // 'undefined'）。真实数据里不会发生：addCard 总是先 _genId()。
+  assert.equal(store._poolProvider(undefined), 'cc_switch_');
+  for (const id of ['c1', 'c_abc123', '', undefined]) {
+    assert.match(store._poolProvider(id), /^[a-z0-9_-]+$/, `pool name must be routable: ${id}`);
+  }
   assert.deepEqual(Object.keys(store).sort(), [
     '__test__',
     '_poolProvider',

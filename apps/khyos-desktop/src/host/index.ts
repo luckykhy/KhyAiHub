@@ -58,9 +58,12 @@
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import fs from 'node:fs'
+import os from 'node:os'
 import { createAmooSecretary } from './amooSecretary'
 import { createAmooSecretaryIpc } from './amooSecretaryIpc'
+import { createEditorPendingGate } from './editorPending'
 import { collectToolCalls } from './transcriptTools'
+import { composePersistState, toContinuationMessages } from './sessionContinuation'
 import { MAX_DIFF_ROWS, type DiffRow, type ToolDiff } from '../shared/toolDiff'
 
 const nodeRequire = createRequire(import.meta.url)
@@ -113,20 +116,64 @@ type PersistedSession = {
 // 主进程 → host 的请求信封。sessionId / contentChars 是既有处理分支一直在读的
 // 两个字段，此前没在类型里声明（TS2339 全是这一条）。
 // depId / version / manifestJson 是 env.* 分支（开发环境页）新读的三个字段。
-type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown; sessionId?: string; contentChars?: number; timeoutMs?: number; op?: string; entryId?: string; verified?: boolean; provenance?: string; depId?: string; version?: string; manifestJson?: string }
+type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown; sessionId?: string; contentChars?: number; timeoutMs?: number; op?: string; entryId?: string; verified?: boolean; provenance?: string; depId?: string; version?: string; manifestJson?: string; path?: string; mtimeMs?: number; paths?: string[]; accept?: boolean; acceptedHunks?: number[] }
 
 let gateway: { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> } | null = null
 
 type GatewayModule = { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> }
 
-function loadGateway(): GatewayModule {
-  if (gateway) return gateway
+// ── B2：embedded 核心（[DESIGN-ARCH-219] §10 / [DESIGN-ARCH-220] §12 S3）──────────
+// 桌面端此前在这里 nodeRequire 后端 aiGateway.js 直接用；现在改为经 CoreHandle：
+// 启动时 obtainCoreNode({mode:'embedded'}) 起锁/server/locator，宿主把 B1 工厂造的
+// gateway 实例注入 members，句柄的 gateway 成员直调回来。寻路（异步）与用路（同步）
+// 分离——bootCore() 在启动热身上跑一次，之后 loadGateway() 照旧同步返回。
+// 独立态下本进程内嵌核心；若数据家已有持锁核心（组合态 daemon），obtainCoreNode 会自动
+// 转 attached，桌面连到同一个核心而不是另起一个。
+type CoreHandleLike = {
+  coreId: string
+  epoch: number
+  gateway: GatewayModule
+  close: () => Promise<void>
+}
+let coreHandle: CoreHandleLike | null = null
+let coreBootError: Error | null = null
+
+async function bootCore(): Promise<void> {
+  if (coreHandle || coreBootError) return
   const gwPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'aiGateway.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const loaded = nodeRequire(gwPath) as GatewayModule
-  gateway = loaded
-  console.log('[host] aiGateway 已加载:', gwPath)
-  return loaded
+  const loaded = nodeRequire(gwPath) as GatewayModule & { createGateway?: (options?: unknown) => GatewayModule }
+  // 数据家真源仍是后端的 dataHome.js（core 不自己解析路径，宿主下发）。
+  const dataHomePath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const dataHomeModule = nodeRequire(dataHomePath) as { getDataHome?: () => string }
+  const dataHome = dataHomeModule.getDataHome ? dataHomeModule.getDataHome() : path.join(os.homedir(), '.khyquant')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { obtainCoreNode } = nodeRequire('@khy/core/locator-host') as {
+    obtainCoreNode: (options: Record<string, unknown>) => Promise<CoreHandleLike>
+  }
+  const handle = await obtainCoreNode({
+    mode: 'embedded',
+    entry: nodeRequire('@khy/core/server'),
+    members: { gateway: loaded.createGateway ? loaded.createGateway() : loaded },
+    paths: { dataHome },
+    terminalId: 'desktop',
+    clientVersion: '0.1.0',
+  })
+  coreHandle = handle
+  gateway = handle.gateway
+  console.log('[host] core embedded 已就绪:', handle.coreId, 'epoch', handle.epoch, 'dataHome', dataHome)
+}
+
+function loadGateway(): GatewayModule {
+  if (gateway) return gateway
+  if (coreBootError) throw coreBootError
+  // bootCore 尚未完成（启动热身未跑到）：如实报「核心正在启动」，不偷偷走直连老路
+  // ——两条加载路径并存会让「网关唯一出口」的边界失去意义。
+  throw new Error(
+    '核心尚未启动完成（bootCore 未返回）：桌面端现在经 CoreHandle.gateway 取网关，请稍后重试；' +
+      '若持续失败，运行 khy doctor 查看核心状态',
+  )
 }
 
 // ── 智能体工具循环（CH-2 服务直调）──────────────────────────────────
@@ -227,7 +274,8 @@ function extractReasoningFromContent(content: unknown): string {
 
 type SessionPersistenceModule = {
   listPersistedSessions: (opts?: { limit?: number }) => PersistedSession[]
-  persistSession: (sessionId: string | undefined, state: { messages: unknown[]; metadata?: { cwd?: string; projectDir?: string; source?: { type: string; id?: string } }; title?: string }) => string
+  restoreSession: (sessionId: string, opts?: Record<string, unknown>) => { sessionId?: string; title?: string; model?: string; messages?: unknown[]; createdAt?: number } | null
+  persistSession: (sessionId: string | undefined, state: { messages: unknown[]; model?: string; metadata?: { cwd?: string; projectDir?: string; source?: { type: string; id?: string } }; title?: string; createdAt?: number }) => string
 }
 
 let sessionPersistence: SessionPersistenceModule | null = null
@@ -479,7 +527,53 @@ async function listModelOptions(): Promise<ModelOption[]> {
   // `api/<pool>:<model>` vs presets `<presetId>/<model>`），并屏会让同一模型出现
   // 两条看着一样的条目、一级栏计数虚高 —— 终端 /model 同样只列采集结果。
   const collected = await collectModelEntriesFromGateway()
-  return collected.length > 0 ? collected : presetOptions(poolKeyByPreset, presets)
+  return collected.length > 0 ? collected : ensureAutoOption(presetOptions(poolKeyByPreset, presets))
+}
+
+// ── Auto（自动选型）入口 ─────────────────────────────────────────────
+// 终端 /model 顶部有「★ Auto」，桌面此前一个都没有 —— 采集叶把 Auto 放在
+// result.auto 而不是 entries 里，而 host 只投影 entries，于是桌面根本无法表达
+// 「让网关按任务自动选」。Auto 不是上游 /models 的条目，也不该被 presets 兜底
+// 吞掉：采集为空时它仍是唯一能表达自动选型的入口。
+//
+// value 约定与终端一致：adapter='auto'，**model 留空**。清空 model 是必需的 —
+// 网关把非空 model 当「钉了真实模型」，'auto' 字面量会被送上游报 model_not_found。
+type AutoModelSelectLeaf = {
+  isEnabled: (env?: NodeJS.ProcessEnv) => boolean
+}
+
+function loadAutoModelSelect(): AutoModelSelectLeaf | null {
+  try {
+    const p = path.join(
+      resolveKhyOsDir(),
+      'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'autoModelSelect.js'
+    )
+    return nodeRequire(p) as AutoModelSelectLeaf
+  } catch {
+    return null
+  }
+}
+
+function ensureAutoOption(options: ModelOption[], previewModel = ''): ModelOption[] {
+  const auto = loadAutoModelSelect()
+  if (!auto || !auto.isEnabled()) return options
+  if (options.some((o) => o.id === 'auto')) return options
+  const preview = String(previewModel || '').trim()
+  return [
+    {
+      id: 'auto',
+      label: preview ? `★ Auto · ${preview}` : '★ Auto',
+      format: 'openai',
+      adapter: 'auto',
+      model: '',
+      channel: 'auto',
+      channelKnown: true,
+      group: 'Auto',
+      // 不是静态目录兜底：UI 据此不调暗、也不落进「未经上游确认」的脚注。
+      fromUpstream: true,
+    },
+    ...options,
+  ]
 }
 
 // presets 静态目录 → 选项（兜底基线，非真实上游）。
@@ -534,7 +628,10 @@ async function collectModelEntriesFromGateway(): Promise<ModelOption[]> {
     )
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { collectModelEntries } = nodeRequire(collectedPath) as {
-      collectModelEntries: (opts: { gateway: unknown }) => Promise<{ entries: unknown[] }>
+      collectModelEntries: (opts: { gateway: unknown }) => Promise<{
+        entries: unknown[]
+        auto?: { kind?: string; previewModel?: string } | null
+      }>
     }
     const result = await collectModelEntries({ gateway: gw })
     const out: ModelOption[] = []
@@ -567,7 +664,11 @@ async function collectModelEntriesFromGateway(): Promise<ModelOption[]> {
         ...(tags.length > 0 ? { tags } : {}),
       })
     }
-    return out
+    // result.auto 是采集叶的 Auto 决策数据（terminal 同源）。single-auto 带当前
+    // 最优模型的预览；mode-axis 四档不投影到桌面（桌面只看单行 Auto）。
+    const preview =
+      result?.auto?.kind === 'single-auto' ? String(result.auto.previewModel || '') : ''
+    return ensureAutoOption(out, preview)
   } catch (err) {
     console.log('[host] collectModelEntries 失败，回落 presets 静态目录:', String((err as Error)?.message || err))
     return []
@@ -799,10 +900,76 @@ function toolResultFailed(result: unknown): boolean {
   return r.success === false || r.isError === true || r.is_error === true
 }
 
+function persistTurn(
+  sp: SessionPersistenceModule | null,
+  sessionId: string,
+  prior: unknown[],
+  prompt: string,
+  reply: string,
+  meta: { cwd: string; source: { type: string; id: string }; model?: string; title?: string; createdAt?: number }
+): string | undefined {
+  try {
+    const store = sp || loadSessionPersistence()
+    return store.persistSession(sessionId || undefined, composePersistState({
+      prior,
+      prompt,
+      reply,
+      sessionId,
+      title: meta.title,
+      createdAt: meta.createdAt,
+      model: meta.model,
+      cwd: meta.cwd,
+      source: meta.source,
+    }))
+  } catch (error) {
+    // 落盘失败不能反过来宣告本轮失败：模型答复已经拿到，用户先看到它；
+    // 但必须留痕，否则「会话列表里没有这条」会变成无从解释的静默。
+    console.log('[host] 会话落盘失败:', String((error as Error)?.message || error))
+    return sessionId || undefined
+  }
+}
+
 async function handleAiGenerate(id: string, prompt: string, options: Record<string, unknown> = {}): Promise<void> {
   const send = (msg: unknown) => {
     if (process.send) process.send(msg)
     else console.log('[host]', JSON.stringify(msg))
+  }
+  // 续写同一会话：调用方明确给了 sessionId 就必须落在那条链上；恢复不到时
+  // 如实报错，不能静默新开一条——那会让用户以为在接着说，实际上下文已换。
+  const requestedSessionId =
+    typeof options.sessionId === 'string' ? options.sessionId.trim() : ''
+  let sp: SessionPersistenceModule | null = null
+  let priorMessages: unknown[] = []
+  let restoredTitle = ''
+  let restoredCreatedAt = 0
+  let restoredModel = ''
+  if (requestedSessionId) {
+    try {
+      sp = loadSessionPersistence()
+      const restored = sp.restoreSession(requestedSessionId)
+      if (!restored || !Array.isArray(restored.messages)) {
+        send({
+          type: 'ai.result',
+          id,
+          ok: false,
+          sessionId: requestedSessionId,
+          error: `会话 ${requestedSessionId} 已不存在：请刷新会话列表后重试`,
+        })
+        return
+      }
+      priorMessages = restored.messages
+      restoredTitle = typeof restored.title === 'string' ? restored.title : ''
+      restoredCreatedAt = Number(restored.createdAt) || 0
+      restoredModel = typeof restored.model === 'string' ? restored.model : ''
+    } catch (error) {
+      send({
+        type: 'ai.result',
+        id,
+        ok: false,
+        error: `读取会话历史失败：${String((error as Error)?.message || error)}，请确认 KHY_OS_DIR 指向仓库根目录后重启应用`,
+      })
+      return
+    }
   }
   activeGenerations.set(id, Date.now())
   const controller = new AbortController()
@@ -848,6 +1015,8 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
         disableNaturalToolLoop: true,
       },
       abortSignal: controller.signal,
+      sessionId: requestedSessionId || undefined,
+      initialMessages: priorMessages.length > 0 ? toContinuationMessages(priorMessages) : undefined,
       onCost: (usage: unknown) => {
         costSink.usage = usage
       },
@@ -927,11 +1096,22 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
     // 否则每完成一次纯工具任务都会弹「未返回正文」。判空需同时看工具日志。
     const okFlag = !!replyText || toolCallLog.length > 0
     monitorOutcome = { ok: okFlag }
+    // 每轮都写回 .khy/sessions：桌面/手机/TUI 读的是同一份，否则「手机发的消息
+    // 电脑看不见」只能靠各自再存一份来补，那份副本就是下一次分叉的起点。
+    const turnResult = result as { model?: string; provider?: string } | null
+    const persistedId = persistTurn(sp, requestedSessionId, priorMessages, prompt, replyText, {
+      cwd,
+      source,
+      model: turnResult?.model || turnResult?.provider || restoredModel,
+      title: restoredTitle,
+      createdAt: restoredCreatedAt,
+    })
     send({
       type: 'ai.result',
       id,
       ok: okFlag,
       text: replyText,
+      sessionId: persistedId,
       empty: !replyText && toolCallLog.length === 0,
       provider: result?.provider,
       iterations: result?.iterations,
@@ -1001,6 +1181,36 @@ function desktopGateState(): { mode: string; budget: string | null; allowedApps:
 // 零 IO（客户端懒加载），host 启动与其它车道不受影响。release 与六个 RPC 的
 // 分派都在 ./amooSecretaryIpc，本文件只留这一处装配挂钩。
 const amooSecretaryIpc = createAmooSecretaryIpc(createAmooSecretary())
+
+// ── AI 改动待审闸门（DESIGN-ARCH-210 M3）────────────────────────────────
+// 安装在 fileWriteService 内部：只有「编辑器打开集合」内的路径需要人批准，
+// 未打开的照旧直写。装载失败只降级为「全部直写」并如实留痕 —— 写盘本身
+// 不依赖这条车道，不能因为审阅 UI 缺席把 AI 的写能力一起关掉。
+const editorPendingGate = createEditorPendingGate({
+  send: (m) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  },
+  nodeRequire: (id) => nodeRequire(id),
+  resolveKhyOsDir,
+})
+
+function installEditorPendingGate(): void {
+  try {
+    const sink = nodeRequire(
+      path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'fileWriteService.js'),
+    ) as { setPendingGate?: (fn: (input: unknown) => Promise<unknown>) => void }
+    if (typeof sink?.setPendingGate !== 'function') {
+      console.log('[host] fileWriteService 缺少 setPendingGate：AI 改动待审不可用，写盘照旧')
+      return
+    }
+    sink.setPendingGate((input) => editorPendingGate.gate(input as Parameters<typeof editorPendingGate.gate>[0]))
+    console.log('[host] AI 改动待审闸门已安装：仅编辑器打开集合内的文件需批准')
+  } catch (err) {
+    console.log('[host] AI 改动待审闸门安装失败（写盘照旧）:', String(err))
+  }
+}
+installEditorPendingGate()
 
 // ── 开发环境盘点（桌面「开发环境」页 ↔ `khy devenv` 同一条后端链）────────────
 // 单一真源是后端 dependency 子系统（DESIGN-ARCH-027 + v1 盘点/清单叶子）：探测、
@@ -1777,6 +1987,35 @@ function handleMessage(msg: HostMsg): void {
     void handleEnvExport(msg.id)
     return
   }
+  // ── 内建编辑器（DESIGN-ARCH-210 M2）──
+  // 人在工作台保存后，主进程通知这里把该路径重新记成「已读」。不同步的话，
+  // AI 下一步 Edit 会按「磁盘已变」拒绝一个它刚刚读过的文件。
+  if (msg.type === 'editor.fileWritten' && typeof msg.path === 'string' && typeof msg.mtimeMs === 'number') {
+    try {
+      const tracker = nodeRequire(
+        path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'tools', '_readTracker.js'),
+      ) as { markRead: (filePath: string, mtimeMs?: number) => void }
+      tracker.markRead(msg.path, msg.mtimeMs)
+    } catch {
+      /* 台账不可用 → AI 被要求重新 Read（宁可多一次读，不盲写） */
+    }
+    return
+  }
+  // 编辑器打开集合：只有这些路径的 AI 改动需要人批准（未打开照旧直写）。
+  if (msg.type === 'editor.watchSet') {
+    editorPendingGate.setOpenPaths(Array.isArray(msg.paths) ? msg.paths : [])
+    return
+  }
+  if (msg.type === 'editor.pendingDecision' && typeof msg.id === 'string') {
+    const res = editorPendingGate.decide(msg.id, { accept: msg.accept, acceptedHunks: msg.acceptedHunks })
+    if (!res.ok && res.error) console.log('[host] 待审决定未生效:', res.error)
+    return
+  }
+  if (msg.type === 'editor.cancelAllPending') {
+    const n = editorPendingGate.settleAll('编辑器窗口已关闭：未批准的改动不落盘')
+    if (n > 0) console.log('[host] 关窗取消待审改动:', n, '处')
+    return
+  }
   // Amoo 秘书的 release 与六个 RPC 分派都在 ./amooSecretaryIpc，这里只留挂钩。
   if (amooSecretaryIpc.handleMessage(msg)) return
 }
@@ -1809,6 +2048,15 @@ if (process.send) process.send({ type: 'ready', pid: process.pid })
 // 用户的第一笔请求到来时，缓存已经是热的，列表读回是毫秒级。
 function warmUpHostModules(): void {
   const timer = setTimeout(() => {
+    // B2：先 obtain 核心（embedded），再热身其余模块——loadGateway() 之后照旧同步返回。
+    void (async () => {
+      try {
+        await bootCore()
+      } catch (error) {
+        coreBootError = error as Error
+        console.log('[host] core 启动失败:', String((error as Error)?.message || error))
+      }
+    })()
     try {
       loadSessionPersistence()
       console.log('[host] 会话模块热身完成')

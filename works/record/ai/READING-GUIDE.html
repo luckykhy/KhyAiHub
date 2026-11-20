@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: READING-GUIDE.md -->
+<title>READING GUIDE — khy-os 可读性手册 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>ai<span class="sep">›</span>READING GUIDE — khy-os 可读性手册</div>
+      <header class="hero reveal"><h1>READING GUIDE — khy-os 可读性手册</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#reading-guide-khy-os-可读性手册">READING GUIDE — khy-os 可读性手册</a></li><li class="lvl-2"><a href="#0-30-秒版-先看哪一页">0. 30 秒版：先看哪一页</a></li><li class="lvl-2"><a href="#1-分层视图-l0-l6">1. 分层视图（L0–L6）</a></li><li class="lvl-2"><a href="#2-规模热力表">2. 规模热力表</a></li><li class="lvl-3"><a href="#2-1-三个-看起来像目录-其实不是">2.1 三个「看起来像目录、其实不是」</a></li><li class="lvl-3"><a href="#2-2-根目录碎屑-真实存在-不是幻觉">2.2 根目录碎屑（真实存在，不是幻觉）</a></li><li class="lvl-2"><a href="#3-三条链路">3. 三条链路</a></li><li class="lvl-3"><a href="#3a-普通-cli-命令">3A. 普通 CLI 命令</a></li><li class="lvl-3"><a href="#3b-ai-对话链路">3B. AI 对话链路</a></li><li class="lvl-3"><a href="#3c-web-请求链路">3C. Web 请求链路</a></li><li class="lvl-2"><a href="#4-两个状态机">4. 两个状态机</a></li><li class="lvl-3"><a href="#4-1-工具循环状态机-源码级-不是比喻">4.1 工具循环状态机（源码级，不是比喻）</a></li><li class="lvl-3"><a href="#4-2-网关选路与降级-阅读用简化模型">4.2 网关选路与降级（阅读用简化模型）</a></li><li class="lvl-2"><a href="#5-三条阅读路线">5. 三条阅读路线</a></li><li class="lvl-3"><a href="#路线-1-新人总览-约-30-分钟">路线 1：新人总览（约 30 分钟）</a></li><li class="lvl-3"><a href="#路线-2-我要改后端-约-2-小时">路线 2：我要改后端（约 2 小时）</a></li><li class="lvl-3"><a href="#路线-3-我要改前端-约-1-5-小时">路线 3：我要改前端（约 1.5 小时）</a></li><li class="lvl-2"><a href="#6-任务反查表">6. 任务反查表</a></li><li class="lvl-2"><a href="#7-src-services-分桶索引">7. `src/services` 分桶索引</a></li><li class="lvl-3"><a href="#7-1-真正吸收复杂度的子目录">7.1 真正吸收复杂度的子目录</a></li><li class="lvl-3"><a href="#7-2-平铺-js-的主题桶-705-个-按文件名关键词归类">7.2 平铺 `.js` 的主题桶（705 个，按文件名关键词归类）</a></li><li class="lvl-3"><a href="#7-3-233-个未归类文件怎么找">7.3 233 个未归类文件怎么找</a></li><li class="lvl-3"><a href="#7-4-分桶的维护规则">7.4 分桶的维护规则</a></li><li class="lvl-2"><a href="#8-不知道改哪-三步定位法">8. 不知道改哪：三步定位法</a></li><li class="lvl-2"><a href="#9-这份文档怎么保鲜">9. 这份文档怎么保鲜</a></li><li class="lvl-3"><a href="#验收清单-可读性的定义">验收清单（可读性的定义）</a></li><li class="lvl-2"><a href="#10-送别礼收口记录-2026-10-27">10. 送别礼收口记录（2026-10-27）</a></li><li class="lvl-3"><a href="#10-1-本次修掉的漂移">10.1 本次修掉的漂移</a></li><li class="lvl-3"><a href="#10-2-新增的-ci-硬门">10.2 新增的 CI 硬门</a></li><li class="lvl-3"><a href="#10-3-仍然休眠的-不要当成已接线">10.3 仍然休眠的（不要当成已接线）</a></li><li class="lvl-3"><a href="#10-4-复核命令">10.4 复核命令</a></li><li class="lvl-2"><a href="#附录-a-本次校准发现的真实问题">附录 A：本次校准发现的真实问题</a></li><li class="lvl-2"><a href="#附录-b-相关真源索引">附录 B：相关真源索引</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="reading-guide-khy-os-可读性手册">READING GUIDE — khy-os 可读性手册<a class="anchor" href="#reading-guide-khy-os-可读性手册" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>人工撰写，非生成物；请勿由 <code>khy metadata refresh</code> 覆盖。</strong><br>本文件不带 <code>khy-metadata:auto</code> 标记，因此刷新机制只维护 <code>MAP.md</code> / <code>CONTEXT.yaml</code> / <code>GUARDS.md</code>，不会碰这里。</p>
+<p>最后校准：2026-10-27（对应 <code>MAP.md</code> fingerprint=<code>011d5a32ee870ac7</code>）<br>校准方式：所有路径均用 <code>Test-Path</code> 验证存在；所有行数由 <code>Measure-Object -Line</code> 实测。</p></blockquote>
+<hr>
+<h2 id="0-30-秒版-先看哪一页">0. 30 秒版：先看哪一页<a class="anchor" href="#0-30-秒版-先看哪一页" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>你现在的问题</th><th>直接跳到</th></tr></thead><tbody><tr><td>这个项目整体长什么样</td><td>§1 分层视图</td></tr><tr><td>哪个目录大、哪个能改、哪个别碰</td><td>§2 规模热力表</td></tr><tr><td>一条命令从输入到落盘经过谁</td><td>§3A 普通 CLI 命令</td></tr><tr><td>AI 对话为什么这么绕</td><td>§3B AI 对话链路</td></tr><tr><td>前端请求打到哪</td><td>§3C Web 请求链路</td></tr><tr><td>工具调用循环到底有几个状态</td><td>§4.1 工具循环状态机</td></tr><tr><td>网关为什么换通道、冷却多久</td><td>§4.2 网关选路与降级</td></tr><tr><td>我是新人，30 分钟怎么读</td><td>§5 路线 1</td></tr><tr><td>我要改后端 / 前端</td><td>§5 路线 2 / 路线 3</td></tr><tr><td>我想加个功能，改哪个文件</td><td>§6 任务反查表</td></tr><tr><td><code>src/services</code> 里 800 多个文件怎么找</td><td>§7 分桶索引</td></tr></tbody></table>
+<blockquote><p>一句话：<strong><code>MAP.md</code> 回答「有什么」，本文件回答「为什么这样、该读哪个」。</strong></p></blockquote>
+<hr>
+<h2 id="1-分层视图-l0-l6">1. 分层视图（L0–L6）<a class="anchor" href="#1-分层视图-l0-l6" aria-label="锚点">#</a></h2>
+<pre class="mermaid">flowchart LR
+  subgraph L0[&quot;L0 内核&quot;]
+    K[&quot;runtime/boot/kernel&quot;]
+  end
+  subgraph L1[&quot;L1 Python 启动层&quot;]
+    S[&quot;runtime/substrate/platform&quot;]
+  end
+  subgraph L2[&quot;L2 Node 运行时&quot;]
+    N[&quot;runtime/node/backend&quot;]
+    A[&quot;runtime/node/ai-backend&quot;]
+  end
+  subgraph L3[&quot;L3 平台应用&quot;]
+    D[&quot;apps/khyos-desktop&quot;]
+  end
+  subgraph L4[&quot;L4 垂直应用&quot;]
+    Q[&quot;delivery/channel/khyquant&quot;]
+  end
+  subgraph L5[&quot;L5 扩展&quot;]
+    E[&quot;delivery/extension&quot;]
+  end
+  subgraph L6[&quot;L6 扩展工具&quot;]
+    T[&quot;delivery/extension/tools&quot;]
+  end
+  S --&gt; N
+  N --&gt; D
+  N --&gt; Q
+  N --&gt; E
+  E --&gt; T</pre>
+<p><strong>名册真源</strong>：<code>scripts/ci/check-repo-layout.js</code> 的 <code>LAYERS</code>（与 <code>docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005]</code> 一致）。<br><code>MAP.md</code> 里那张图由 <code>projectMetadataService.js</code> 的 <code>LAYER_MAP</code> 渲染，测试 <code>projectMetadata.test.js</code> 用对账断言锁死两份 key 集合一致——<strong>改层级必须同时改两边，否则测试红</strong>。</p>
+<table><thead><tr><th>层</th><th>允许做什么</th><th>明确禁止</th></tr></thead><tbody><tr><td>L0 <code>runtime/boot/kernel</code></td><td>引导、进程生命周期</td><td>依赖任何应用层</td></tr><tr><td>L1 <code>runtime/substrate/platform</code></td><td>Python 启动器、拉起 Node、打包辅助</td><td>承载业务逻辑</td></tr><tr><td>L2 <code>runtime/node</code></td><td><strong>全部业务逻辑</strong>：CLI、网关、服务、路由、TUI</td><td>反向 require <code>scripts/</code>（跨层）</td></tr><tr><td>L3 <code>apps</code></td><td>平台自带应用（桌面端）</td><td>被 L2 反向依赖</td></tr><tr><td>L4 <code>delivery/channel</code></td><td>垂直应用（khyquant 是独立项目，此处只是分发载体）</td><td>塞回平台内核</td></tr><tr><td>L5 <code>delivery/extension</code></td><td>扩展与交付工具</td><td>直连 L2 内部私有模块</td></tr><tr><td>L6 <code>delivery/extension/tools</code></td><td>具体扩展工具</td><td>同上</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>最常见误读</strong>：<code>delivery/channel/khyquant/</code> 不是 Khy OS 的内置模块。khyquant 是<strong>独立项目</strong>，只是随平台分发/接入；它的著作权、版本、发布节奏都另算。</p></blockquote>
+<hr>
+<h2 id="2-规模热力表">2. 规模热力表<a class="anchor" href="#2-规模热力表" aria-label="锚点">#</a></h2>
+<blockquote><p>数字来自 <code>MAP.md</code> 的扫描窗口（14,868 个文件 / 上限 20,000），是<strong>扫描到的体积</strong>，不等于安装体积（<code>node_modules</code>、<code>dist</code> 已被跳过）。<br>阅读档位只有三档：<strong>必读</strong>（入口与链路）、<strong>按需</strong>（出问题才看）、<strong>禁止手改</strong>（生成物/vendor/轨迹）。</p></blockquote>
+<table><thead><tr><th>目录</th><th>职责</th><th style="text-align:right">文件数</th><th style="text-align:right">体积</th><th>阅读档位</th></tr></thead><tbody><tr><td><code>runtime/node/backend/src</code></td><td>L2 全部业务逻辑（CLI / 服务 / 路由 / TUI）</td><td style="text-align:right">4,190</td><td style="text-align:right">—</td><td><strong>必读</strong>（只读核心 10 个文件）</td></tr><tr><td><code>runtime/node/backend/tests</code></td><td>后端测试（2,865 个 <code>.js</code>）</td><td style="text-align:right">2,865</td><td style="text-align:right">—</td><td>按需（改哪测哪）</td></tr><tr><td><code>runtime/substrate/platform</code></td><td>L1 Python 启动器 + 共享包 + 插件 SDK</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td>必读 <code>khy_platform/cli.py</code></td></tr><tr><td><code>delivery/channel/web/ai-frontend</code></td><td>Web 前端（Vue）</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td>必读 <code>src/router</code> + <code>src/api</code></td></tr><tr><td><code>delivery/channel/khyquant</code></td><td>独立项目 khyquant 的分发载体</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td>按需</td></tr><tr><td><code>delivery/extension</code> + <code>tools</code></td><td>扩展与扩展工具</td><td style="text-align:right">—</td><td style="text-align:right">69.3 MB（含 L4）</td><td>按需</td></tr><tr><td><code>apps/</code></td><td>桌面端等平台应用</td><td style="text-align:right">401</td><td style="text-align:right">647.0 MB</td><td>按需</td></tr><tr><td><code>docs/</code></td><td>规范 / 设计 / 报告（<strong>看规则先来这里</strong>）</td><td style="text-align:right">2,068</td><td style="text-align:right">56.6 MB</td><td>按需（查真源）</td></tr><tr><td><code>scripts/</code></td><td>构建 / CI / 运维脚本（只做路径判断，不 import L2）</td><td style="text-align:right">463</td><td style="text-align:right">4.6 MB</td><td>按需</td></tr><tr><td><code>works/</code></td><td>数据 / 记录 / 打包 / 门禁</td><td style="text-align:right">4,959</td><td style="text-align:right">175.7 MB</td><td><strong>禁止手改</strong>（<code>works/data</code>、<code>works/record</code> 是运行态）</td></tr><tr><td><code>entries/</code></td><td>构建产物单一根（LAYOUT-005）</td><td style="text-align:right">54</td><td style="text-align:right">140.6 MB</td><td><strong>禁止手改</strong>（可再生）</td></tr><tr><td><code>runtime/</code> 合计</td><td>L0–L2</td><td style="text-align:right">5,764</td><td style="text-align:right">50.1 MB</td><td>—</td></tr></tbody></table>
+<h3 id="2-1-三个-看起来像目录-其实不是">2.1 三个「看起来像目录、其实不是」<a class="anchor" href="#2-1-三个-看起来像目录-其实不是" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>路径</th><th>真相</th><th>处置</th></tr></thead><tbody><tr><td><code>test/</code></td><td><strong>空目录</strong>（0 文件）。真实测试在 <code>runtime/node/backend/tests</code></td><td>别在这里找测试；是否删除需走 LAYOUT-004 整理流程</td></tr><tr><td><code>-p/</code></td><td>疑似 npm 参数误建的目录</td><td>已由 <code>MAP.md</code> 标 <code>TODO(人工)</code>；确认无引用后按整理流程隔离</td></tr><tr><td><code>works/record/ai/</code></td><td>机器生成的三件套 + 本文件</td><td><strong>别手改</strong> <code>MAP.md</code>/<code>CONTEXT.yaml</code>/<code>GUARDS.md</code>；本文件例外</td></tr></tbody></table>
+<h3 id="2-2-根目录碎屑-真实存在-不是幻觉">2.2 根目录碎屑（真实存在，不是幻觉）<a class="anchor" href="#2-2-根目录碎屑-真实存在-不是幻觉" aria-label="锚点">#</a></h3>
+<p><code>$null</code>、<code>err_tmp.txt</code>、<code>out_tmp.txt</code>、<code>m[1])</code> 等文件出现在 <code>MAP.md</code> 的根文件列表里。<br>它们不影响构建，但会污染「根目录看起来有什么」的判断。清理属 LAYOUT-004（只隔离不删除，留 manifest），<strong>不要顺手 <code>rm</code></strong>。</p>
+<hr>
+<h2 id="3-三条链路">3. 三条链路<a class="anchor" href="#3-三条链路" aria-label="锚点">#</a></h2>
+<blockquote><p>每条链路只回答三个问题：<strong>谁调用我 / 我调用谁 / 我失败了谁兜底</strong>。<br>图中只画主路径；失败分支写在图后的表里。</p></blockquote>
+<h3 id="3a-普通-cli-命令">3A. 普通 CLI 命令<a class="anchor" href="#3a-普通-cli-命令" aria-label="锚点">#</a></h3>
+<pre class="mermaid">sequenceDiagram
+  autonumber
+  participant U as 用户
+  participant PY as khy_platform/cli.py
+  participant BIN as bin/khy.js
+  participant R as cli/router.js
+  participant H as cli/handlers/*.js
+  participant S as services/*.js
+  participant D as works/data/khy/
+  U-&gt;&gt;PY: khy &lt;命令&gt;
+  PY-&gt;&gt;BIN: 拉起 Node 进程
+  BIN-&gt;&gt;R: route(argv)
+  R-&gt;&gt;R: aliases 解析 + 模糊匹配
+  R-&gt;&gt;H: dispatch 到 handler
+  H-&gt;&gt;S: 调服务层
+  S-&gt;&gt;D: 读写运行态
+  S--&gt;&gt;H: 结构化结果
+  H--&gt;&gt;U: formatters 输出</pre>
+<table><thead><tr><th>锚点</th><th style="text-align:right">行数</th><th>为什么读它</th></tr></thead><tbody><tr><td><code>runtime/substrate/platform/khy_platform/cli.py</code></td><td style="text-align:right">—</td><td>Python 侧唯一入口，负责找到并拉起 Node</td></tr><tr><td><code>runtime/node/backend/bin/khy.js</code></td><td style="text-align:right">2,102</td><td>Node 侧总入口：参数预处理、环境注入、进程生命周期</td></tr><tr><td><code>runtime/node/backend/src/cli/router.js</code></td><td style="text-align:right">3,249</td><td>命令解析 + 别名 + 模糊匹配 + 分派（大 switch）</td></tr><tr><td><code>runtime/node/backend/src/cli/aliases.js</code></td><td style="text-align:right">768</td><td>中文/拼音 → 英文命令名映射</td></tr><tr><td><code>runtime/node/backend/src/cli/handlers/</code></td><td style="text-align:right">163 个文件</td><td>每个命令一个 handler（<strong>加命令就在这</strong>）</td></tr><tr><td><code>runtime/node/backend/src/services/</code></td><td style="text-align:right">705 个平铺 <code>.js</code></td><td>业务逻辑主体</td></tr></tbody></table>
+<p><strong>失败兜底</strong></p>
+<table><thead><tr><th>失败点</th><th>兜底</th></tr></thead><tbody><tr><td>Python 找不到 Node</td><td><code>node_provisioner.py</code> 按平台探测/下载便携 Node</td></tr><tr><td>端口被占</td><td>服务启动时自动探测下一个可用端口（RUNTIME-001 要求）</td></tr><tr><td>命令不存在</td><td>路由器做模糊匹配，给出最接近的命令建议</td></tr><tr><td>handler 抛错</td><td>统一错误格式化；用户可见错误走 <code>printError()</code></td></tr></tbody></table>
+<hr>
+<h3 id="3b-ai-对话链路">3B. AI 对话链路<a class="anchor" href="#3b-ai-对话链路" aria-label="锚点">#</a></h3>
+<pre class="mermaid">sequenceDiagram
+  autonumber
+  participant U as 用户
+  participant REPL as cli/replSession.js
+  participant AI as cli/ai.js
+  participant CORE as cli/aiChatCore.js
+  participant GW as services/gateway/aiGateway.js
+  participant AD as gateway/adapters/*
+  participant TL as services/tool/toolUseLoopCore.js
+  participant J as tool/toolLoopJournal.js
+  U-&gt;&gt;REPL: 输入一句话
+  REPL-&gt;&gt;AI: chat(input, state)
+  AI-&gt;&gt;CORE: 组装上下文（历史/记忆/技能/项目规则）
+  CORE-&gt;&gt;GW: generate(prompt, options)
+  GW-&gt;&gt;GW: 按 priority 选通道
+  GW-&gt;&gt;AD: 调供应商适配器
+  AD--&gt;&gt;GW: text / tool_calls
+  GW--&gt;&gt;CORE: 统一结果
+  alt 有 tool_calls
+    CORE-&gt;&gt;TL: 执行工具循环
+    TL-&gt;&gt;TL: 执行 → 结果回填 → 再推理
+    TL-&gt;&gt;J: 逐轮记录
+    TL--&gt;&gt;CORE: 本回合最终结果
+  else 纯文本
+    CORE--&gt;&gt;REPL: 最终回答
+  end
+  CORE-&gt;&gt;J: 轨迹落盘
+  REPL--&gt;&gt;U: 渲染</pre>
+<table><thead><tr><th>锚点</th><th style="text-align:right">行数</th><th>为什么读它</th></tr></thead><tbody><tr><td><code>runtime/node/backend/src/cli/repl.js</code></td><td style="text-align:right">130</td><td>交互入口的稳定门面；重活委托给 <code>replSession.js</code></td></tr><tr><td><code>runtime/node/backend/src/cli/replSession.js</code></td><td style="text-align:right">13,427</td><td>会话主循环（历史、快捷键、<code>/</code> 命令、渲染节拍）。<strong>只读，不要在这里加新逻辑</strong></td></tr><tr><td><code>runtime/node/backend/src/cli/ai.js</code></td><td style="text-align:right">721</td><td>宿主：把依赖注入 <code>aiChatCore</code>，自己不承载聊天逻辑</td></tr><tr><td><code>runtime/node/backend/src/cli/aiChatCore.js</code></td><td style="text-align:right">4,821</td><td>一轮对话的组装：上下文拼装、系统提示、工具接线</td></tr><tr><td><code>runtime/node/backend/src/services/gateway/aiGateway.js</code></td><td style="text-align:right">2,510</td><td>统一网关：优先级选路、错误分类、冷却、降级</td></tr><tr><td><code>runtime/node/backend/src/services/gateway/adapters/</code></td><td style="text-align:right">69 个文件</td><td>每家供应商一个适配器（<strong>加模型供应商就在这</strong>）</td></tr><tr><td><code>runtime/node/backend/src/services/tool/toolUseLoopCore.js</code></td><td style="text-align:right">10,428</td><td>工具循环真身：解析 tool_calls、执行、回填、再推理</td></tr><tr><td><code>runtime/node/backend/src/services/tool/toolLoopJournal.js</code></td><td style="text-align:right">373</td><td>每轮轨迹记录，失败可回放</td></tr><tr><td><code>runtime/node/backend/src/services/domain/state/stateMachine/toolLoopPhases.js</code></td><td style="text-align:right">127</td><td>工具循环的<strong>声明式状态机</strong>（§4.1 的源码）</td></tr></tbody></table>
+<p><strong>失败兜底</strong></p>
+<table><thead><tr><th>失败类型</th><th>兜底</th></tr></thead><tbody><tr><td>限流 / 过载 / 超时 / 网络 / 5xx</td><td>按错误类型进入<strong>通道冷却</strong>，换下一个健康通道（见 §4.2）</td></tr><tr><td>模型不存在</td><td>冷却 30s，并提示用 <code>/model</code> 查看可用模型</td></tr><tr><td>空响应 / 输出格式坏</td><td>进入 <code>transient_recovery</code>，重新问一次；仍失败则 <code>error_handling</code></td></tr><tr><td>工具执行失败</td><td>结果回填给模型自纠；连续失败由 <code>toolLoopDetector</code> 熔断</td></tr><tr><td>全部通道不可用</td><td>结构化报错（问题 + 原因 + 修复建议），<strong>不假装成功</strong></td></tr></tbody></table>
+<hr>
+<h3 id="3c-web-请求链路">3C. Web 请求链路<a class="anchor" href="#3c-web-请求链路" aria-label="锚点">#</a></h3>
+<pre class="mermaid">sequenceDiagram
+  autonumber
+  participant B as 浏览器
+  participant SRV as server.js
+  participant RT as src/routes/*.js
+  participant S as services/*.js
+  participant AI as gateway/aiGateway.js
+  B-&gt;&gt;SRV: HTTP / SSE
+  SRV-&gt;&gt;RT: 按路径挂载（58 个路由文件）
+  RT-&gt;&gt;S: 调服务层（校验/鉴权在路由或守卫层）
+  alt 普通 JSON 接口
+    S--&gt;&gt;RT: 数据
+    RT--&gt;&gt;B: JSON
+  else 流式接口
+    S-&gt;&gt;AI: generate(stream)
+    AI--&gt;&gt;S: token 流
+    S--&gt;&gt;B: text/event-stream 分块
+  end</pre>
+<table><thead><tr><th>锚点</th><th style="text-align:right">行数</th><th>为什么读它</th></tr></thead><tbody><tr><td><code>runtime/node/backend/server.js</code></td><td style="text-align:right">1,670</td><td>Express 装配：中间件、鉴权、路由挂载、端口探测</td></tr><tr><td><code>runtime/node/backend/src/routes/</code></td><td style="text-align:right">58 个文件</td><td>每个领域一个路由文件（<code>ai.js</code> / <code>backtest.js</code> / <code>auth.js</code> …）</td></tr><tr><td><code>delivery/channel/web/ai-frontend/src/api/</code></td><td style="text-align:right">—</td><td>前端 API 客户端（端点必须来自服务发现/env，不得硬编码）</td></tr><tr><td><code>delivery/channel/web/ai-frontend/src/router/</code></td><td style="text-align:right">—</td><td>前端路由</td></tr><tr><td><code>delivery/channel/web/ai-frontend/src/views/</code> + <code>components/</code></td><td style="text-align:right">—</td><td>页面与组件</td></tr><tr><td><code>delivery/channel/web/ai-frontend/src/stores/</code></td><td style="text-align:right">—</td><td>Pinia 状态</td></tr></tbody></table>
+<p><strong>流式接口真实存在</strong>：<code>src/routes/ai.js:407</code>、<code>aiGatewayAdmin.js:408/655</code>、<code>configSync.js:163</code>、<code>wx.js:118</code> 均含 <code>text/event-stream</code>。</p>
+<p><strong>失败兜底</strong></p>
+<table><thead><tr><th>失败点</th><th>兜底</th></tr></thead><tbody><tr><td>后端不可达</td><td>前端 <code>backendDiscovery.mjs</code> / 服务发现降级；必要时回落 CLI 通道</td></tr><tr><td>端口冲突</td><td>启动时自动探测下一个端口并传播给前端</td></tr><tr><td>流中断</td><td>前端按 SSE 事件重连；后端保留会话态</td></tr><tr><td>鉴权失败</td><td>统一 401/403 错误结构，前端跳登录</td></tr></tbody></table>
+<hr>
+<h2 id="4-两个状态机">4. 两个状态机<a class="anchor" href="#4-两个状态机" aria-label="锚点">#</a></h2>
+<h3 id="4-1-工具循环状态机-源码级-不是比喻">4.1 工具循环状态机（源码级，不是比喻）<a class="anchor" href="#4-1-工具循环状态机-源码级-不是比喻" aria-label="锚点">#</a></h3>
+<p>真源：<code>runtime/node/backend/src/services/domain/state/stateMachine/toolLoopPhases.js</code>。<br>这是一个<strong>影子观察 FSM</strong>：它不改循环行为，只把真实循环的阶段转换记录下来，用于诊断和轨迹。</p>
+<pre class="mermaid">stateDiagram-v2
+  [*] --&gt; init
+  init --&gt; send_to_ai: send
+  init --&gt; final_response: finish
+  init --&gt; error_handling: error
+  init --&gt; interrupted: interrupt
+  send_to_ai --&gt; parse_ai_output: ai_replied
+  send_to_ai --&gt; transient_recovery: retry
+  send_to_ai --&gt; error_handling: error
+  send_to_ai --&gt; final_response: finish
+  parse_ai_output --&gt; execute_tools: tools_found
+  parse_ai_output --&gt; verify_gate: no_tools / verify
+  parse_ai_output --&gt; transient_recovery: retry
+  parse_ai_output --&gt; error_handling: error
+  execute_tools --&gt; process_results: tools_done
+  execute_tools --&gt; transient_recovery: retry
+  execute_tools --&gt; error_handling: error
+  process_results --&gt; send_to_ai: send
+  process_results --&gt; verify_gate: verify
+  process_results --&gt; final_response: finish
+  transient_recovery --&gt; send_to_ai: send
+  transient_recovery --&gt; error_handling: error
+  error_handling --&gt; send_to_ai: send
+  error_handling --&gt; final_response: finish
+  verify_gate --&gt; send_to_ai: send
+  verify_gate --&gt; final_response: finish
+  final_response --&gt; [*]
+  interrupted --&gt; [*]</pre>
+<p><strong>读法</strong>：</p>
+<ol><li>主循环是 <code>send_to_ai → parse_ai_output → execute_tools → process_results → send_to_ai</code>，这是 AI 能连续调用多个工具的机制。</li><li><code>parse_ai_output → verify_gate</code> 是<strong>纯文本回复</strong>的路径；<code>verify_gate → send_to_ai</code> 是「校验不通过，逼模型再改一轮」的回边。</li><li><code>transient_recovery</code> 只处理可恢复错误（空响应、格式坏、传输抖动）；恢复不了才进 <code>error_handling</code>。</li><li><code>final_response</code> 与 <code>interrupted</code> 是终态，没有出边——<strong>任何「还在转」的循环都不该停在这里</strong>。</li></ol>
+<blockquote><p>⚠ 改工具循环前先读 <code>toolLoopDetector.js</code>（1,240 行）：它负责识别「模型在原地打转」，是防止死循环的保险丝。</p></blockquote>
+<h3 id="4-2-网关选路与降级-阅读用简化模型">4.2 网关选路与降级（阅读用简化模型）<a class="anchor" href="#4-2-网关选路与降级-阅读用简化模型" aria-label="锚点">#</a></h3>
+<p>真源：<code>aiGateway.js</code> + <code>aiGatewayRoutingMethods.js</code> + <code>aiGatewayCooldownMethods.js</code> + <code>autoModelRouting.js</code>。</p>
+<pre class="mermaid">stateDiagram-v2
+  state &quot;选路&quot; as PICK
+  state &quot;主通道&quot; as PRIMARY
+  state &quot;成功&quot; as OK
+  state &quot;错误分类&quot; as CLASSIFY
+  state &quot;冷却&quot; as COOLDOWN
+  state &quot;下一通道&quot; as NEXT
+  state &quot;结构化报错&quot; as FAIL
+  [*] --&gt; PICK
+  PICK --&gt; PRIMARY: 按 priority 取第一个可用
+  PRIMARY --&gt; OK: 返回结果
+  PRIMARY --&gt; CLASSIFY: 抛错
+  CLASSIFY --&gt; COOLDOWN: 可恢复错误
+  CLASSIFY --&gt; FAIL: 不可恢复 / 无可用通道
+  COOLDOWN --&gt; NEXT: 跳过冷却中的通道
+  NEXT --&gt; OK: 返回结果
+  NEXT --&gt; CLASSIFY: 再失败
+  COOLDOWN --&gt; PRIMARY: 冷却到期，自愈探针成功
+  OK --&gt; [*]
+  FAIL --&gt; [*]</pre>
+<p><strong>冷却时长</strong>（源码常量，可用 env 覆盖；下限 3–5s）：</p>
+<table><thead><tr><th>错误类型</th><th style="text-align:right">默认冷却</th><th>环境变量</th></tr></thead><tbody><tr><td><code>rate_limit</code></td><td style="text-align:right">20s</td><td><code>GATEWAY_RATE_LIMIT_COOLDOWN_MS</code></td></tr><tr><td><code>overloaded</code></td><td style="text-align:right">15s</td><td><code>GATEWAY_OVERLOADED_COOLDOWN_MS</code></td></tr><tr><td><code>server_error</code></td><td style="text-align:right">15s</td><td><code>GATEWAY_SERVER_ERROR_COOLDOWN_MS</code></td></tr><tr><td><code>network</code></td><td style="text-align:right">12s</td><td><code>GATEWAY_NETWORK_COOLDOWN_MS</code></td></tr><tr><td><code>timeout</code></td><td style="text-align:right">10s</td><td><code>GATEWAY_TIMEOUT_COOLDOWN_MS</code></td></tr><tr><td><code>unknown</code></td><td style="text-align:right">8s</td><td><code>GATEWAY_UNKNOWN_COOLDOWN_MS</code></td></tr><tr><td><code>model_not_found</code></td><td style="text-align:right">30s</td><td><code>GATEWAY_MODEL_NOT_FOUND_COOLDOWN_MS</code></td></tr></tbody></table>
+<p><strong>三个容易误判的点</strong>：</p>
+<ol><li><strong>冷却不是禁用</strong>。冷却期过后由自愈 ticker 探测恢复；这是「先换路，别死等」而不是「永久拉黑」。</li><li><strong>不是所有错误都该重试</strong>。<code>model_not_found</code> 冷却 30s，因为重试同一个模型名没有意义。</li><li><strong>全败必须诚实</strong>。最终是结构化报错（问题 + 原因 + 修复建议），不允许降级成「看起来成功」。</li></ol>
+<hr>
+<h2 id="5-三条阅读路线">5. 三条阅读路线<a class="anchor" href="#5-三条阅读路线" aria-label="锚点">#</a></h2>
+<blockquote><p>每条路线都按「先骨架、再链路、最后细节」排序。每个文件只写<strong>为什么读 / 读完能答什么</strong>，不写摘要（摘要会过期）。</p></blockquote>
+<h3 id="路线-1-新人总览-约-30-分钟">路线 1：新人总览（约 30 分钟）<a class="anchor" href="#路线-1-新人总览-约-30-分钟" aria-label="锚点">#</a></h3>
+<table><thead><tr><th style="text-align:right">#</th><th>文件</th><th>为什么读</th><th>读完能回答</th></tr></thead><tbody><tr><td style="text-align:right">1</td><td><code>works/record/ai/MAP.md</code></td><td>机器眼里的仓库骨架</td><td>有哪些顶层目录、入口、构建命令</td></tr><tr><td style="text-align:right">2</td><td>本文件 §1–§2</td><td>分层与规模</td><td>哪些层能改、哪些目录别碰</td></tr><tr><td style="text-align:right">3</td><td><code>runtime/substrate/platform/khy_platform/cli.py</code></td><td>一切从这里开始</td><td><code>khy</code> 命令怎么拉起 Node</td></tr><tr><td style="text-align:right">4</td><td><code>runtime/node/backend/bin/khy.js</code></td><td>Node 侧总入口</td><td>参数、环境、进程怎么初始化</td></tr><tr><td style="text-align:right">5</td><td><code>runtime/node/backend/src/cli/router.js</code></td><td>命令怎么被找到</td><td>别名、模糊匹配、handler 分派</td></tr><tr><td style="text-align:right">6</td><td><code>runtime/node/backend/src/cli/handlers/metadata.js</code></td><td>一个完整 handler 样例</td><td>一个命令从解析到输出长什么样</td></tr><tr><td style="text-align:right">7</td><td><code>runtime/node/backend/src/services/gateway/aiGateway.js</code></td><td>产品的心脏之一</td><td>多供应商怎么选路、怎么降级</td></tr><tr><td style="text-align:right">8</td><td><code>runtime/node/backend/src/services/tool/toolUseLoopCore.js</code>（只读前 200 行）</td><td>产品的心脏之二</td><td>工具调用怎么循环</td></tr><tr><td style="text-align:right">9</td><td><code>runtime/node/backend/src/services/domain/state/stateMachine/toolLoopPhases.js</code></td><td>把循环看成状态机</td><td>有哪些阶段、哪些是终态</td></tr><tr><td style="text-align:right">10</td><td><code>delivery/channel/web/ai-frontend/src/api/</code> + <code>src/router/</code></td><td>前端怎么连后端</td><td>请求从哪发、端点从哪来</td></tr></tbody></table>
+<h3 id="路线-2-我要改后端-约-2-小时">路线 2：我要改后端（约 2 小时）<a class="anchor" href="#路线-2-我要改后端-约-2-小时" aria-label="锚点">#</a></h3>
+<table><thead><tr><th style="text-align:right">#</th><th>文件</th><th>为什么读</th></tr></thead><tbody><tr><td style="text-align:right">1</td><td><code>src/cli/router.js</code> + <code>src/cli/handlers/&lt;目标命令&gt;.js</code></td><td>先确认入口在不在 handler 层</td></tr><tr><td style="text-align:right">2</td><td><code>src/services/&lt;目标服务&gt;.js</code></td><td>业务逻辑主体；顶层 705 个平铺文件，用 §7 定位</td></tr><tr><td style="text-align:right">3</td><td><code>src/services/tool/toolUseLoopCore.js</code>（若涉及 AI 工具）</td><td>改工具行为必须理解循环</td></tr><tr><td style="text-align:right">4</td><td><code>src/services/gateway/aiGateway.js</code>（若涉及模型）</td><td>改通道必须理解选路与冷却</td></tr><tr><td style="text-align:right">5</td><td><code>tests/</code> 下同名测试</td><td>仓库测试与源码同构，改哪测哪</td></tr><tr><td style="text-align:right">6</td><td><code>works/data/khy/</code></td><td>确认你改的东西落在哪个运行态目录</td></tr><tr><td style="text-align:right">7</td><td><code>docs/10_规范/</code> 对应规范</td><td>改之前先看红线（规则 ID + 守卫）</td></tr><tr><td style="text-align:right">8</td><td><code>scripts/ci/check-agent-rules.js --changed</code></td><td>提交前自检硬编码/状态文案/超时/滚动区</td></tr></tbody></table>
+<p><strong>改后端的正确顺序</strong>：先找 handler → 再找 service → 改测试 → 跑 <code>node --test &lt;该测试&gt;</code> → 跑 <code>metadata check</code>。</p>
+<h3 id="路线-3-我要改前端-约-1-5-小时">路线 3：我要改前端（约 1.5 小时）<a class="anchor" href="#路线-3-我要改前端-约-1-5-小时" aria-label="锚点">#</a></h3>
+<table><thead><tr><th style="text-align:right">#</th><th>文件</th><th>为什么读</th></tr></thead><tbody><tr><td style="text-align:right">1</td><td><code>delivery/channel/web/ai-frontend/src/router/</code></td><td>页面从哪进</td></tr><tr><td style="text-align:right">2</td><td><code>delivery/channel/web/ai-frontend/src/api/</code></td><td>后端端点怎么封装（禁止硬编码 host）</td></tr><tr><td style="text-align:right">3</td><td><code>delivery/channel/web/ai-frontend/src/stores/</code></td><td>状态放哪、谁在改</td></tr><tr><td style="text-align:right">4</td><td><code>delivery/channel/web/ai-frontend/src/views/</code> + <code>components/</code></td><td>页面与组件</td></tr><tr><td style="text-align:right">5</td><td><code>runtime/node/backend/src/routes/&lt;领域&gt;.js</code></td><td>对应后端接口</td></tr><tr><td style="text-align:right">6</td><td><code>delivery/channel/web/ai-frontend/backendDiscovery.mjs</code></td><td>后端不可达时怎么发现/降级</td></tr><tr><td style="text-align:right">7</td><td><code>delivery/channel/web/ai-frontend/src/composables/</code></td><td>SSE、轮询等复用逻辑</td></tr></tbody></table>
+<hr>
+<h2 id="6-任务反查表">6. 任务反查表<a class="anchor" href="#6-任务反查表" aria-label="锚点">#</a></h2>
+<blockquote><p>这是本文件最该被用的一节：<strong>「我想…… → 改这里」</strong>。<br>表中「还要改」列的是最容易漏、且漏了会被守卫或测试抓住的地方。</p></blockquote>
+<table><thead><tr><th>我想……</th><th>主改这里</th><th>还要改 / 注意</th></tr></thead><tbody><tr><td>加一个模型供应商</td><td><code>src/services/gateway/adapters/</code>（69 个适配器样板）</td><td>在 <code>aiGateway.js</code> 的适配器数组注册；补配置与测试；通道优先级</td></tr><tr><td>加一条 CLI 命令</td><td><code>src/cli/handlers/&lt;name&gt;.js</code></td><td><code>src/cli/aliases.js</code> + <code>src/cli/router.js</code>；<strong>命令面棘轮已满（248/245、handler 163/155），必须先退役一条</strong></td></tr><tr><td>加一个 Web 接口</td><td><code>src/routes/&lt;domain&gt;.js</code></td><td>service 实现 + 前端 <code>src/api/</code> + 契约测试；端点必须来自服务发现</td></tr><tr><td>改提示词 / 系统提示</td><td><code>src/constants/prompts.js</code></td><td>跑提示词分类守卫；注意 8,000 字符截断（<code>instructionFileService.js</code>）</td></tr><tr><td>改工具循环行为</td><td><code>src/services/tool/toolUseLoopCore.js</code>（10,428 行）</td><td>同步看 <code>toolLoopDetector.js</code> / <code>toolLoopJournal.js</code> / <code>toolLoopPhases.js</code>；只读优先</td></tr><tr><td>改网关降级策略</td><td><code>src/services/gateway/aiGateway.js</code> + <code>aiGatewayCooldownMethods.js</code></td><td>错误分类、冷却 env、结构化报错文案</td></tr><tr><td>改 TUI 样式 / 交互</td><td><code>src/cli/tui/ink-components/</code></td><td>节拍一致性守卫；<strong>不要用 ANSI 滚动区</strong>（RUNTIME-004）</td></tr><tr><td>改目录职责 / 地图</td><td><code>src/services/projectMetadataService.js</code> 的 <code>DIR_ROLES</code> / <code>LAYER_MAP</code></td><td>同步 <code>tests/projectMetadata.test.js</code>；跑 <code>khy metadata refresh</code></td></tr><tr><td>改数据落点</td><td><code>docs/10_规范/registry/DATA-LOCATIONS.json</code></td><td>不要直接往 <code>works/data/khy/</code> 根上平铺（已 200+ 项）；跑 <code>check:data-layout</code></td></tr><tr><td>加构建产物</td><td><code>entries/&lt;producer&gt;/&lt;variant&gt;</code>（深度 ≤ 2）</td><td>登记 <code>docs/10_规范/registry/BUILD-OUTPUTS.json</code>；<code>.gitignore</code> 由登记表派生</td></tr><tr><td>改版本号</td><td><code>pyproject.toml</code> + <code>works/ship/npm/package.json</code> + <code>runtime/node/backend/package.json</code> + <code>works/ship/modules/modules.json</code></td><td>四条轨道<strong>刻意不同</strong>，禁止对齐；MINOR/MAJOR 必须人批准（R-2a）</td></tr><tr><td>加一条守卫规则</td><td><code>docs/10_规范/registry/RULES-REGISTRY.json</code></td><td><strong>规则棘轮 99/94 已满，必须先退役一条</strong>；新机制只能从 S1 观察者起步</td></tr><tr><td>改仓库层级</td><td><code>scripts/ci/check-repo-layout.js</code> 的 <code>LAYERS</code></td><td>同步 <code>projectMetadataService.js</code> 的 <code>LAYER_MAP</code>（测试会对账）</td></tr><tr><td>查某个服务文件在哪</td><td>本文件 §7 分桶索引</td><td>用 `Get-ChildItem</td></tr></tbody></table>
+<hr>
+<h2 id="7-src-services-分桶索引">7. <code>src/services</code> 分桶索引<a class="anchor" href="#7-src-services-分桶索引" aria-label="锚点">#</a></h2>
+<blockquote><p>现状：<code>runtime/node/backend/src/services</code> 有 <strong>849 个直接条目</strong>（其中 <strong>705 个平铺 <code>.js</code></strong>、<strong>137 个子目录</strong>、7 个 Python/配置/说明文件）。<br><code>check-discoverability</code> 读数 848（差 1 个条目），无论哪个口径，结论相同：<strong>这个目录不能靠「按字母扫」来读</strong>。</p>
+<p><strong>不做物理搬迁</strong>：848 个文件重组会牵动 import、测试、<code>check:layout</code>，风险远大于收益。这里改用「索引层」。</p></blockquote>
+<h3 id="7-1-真正吸收复杂度的子目录">7.1 真正吸收复杂度的子目录<a class="anchor" href="#7-1-真正吸收复杂度的子目录" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>子目录</th><th style="text-align:right">直接条目</th><th>里面是什么</th></tr></thead><tbody><tr><td><code>gateway/</code></td><td style="text-align:right">167</td><td>网关核心 + 69 个供应商适配器 + 选路/冷却/计费</td></tr><tr><td><code>tool/</code></td><td style="text-align:right">41</td><td>工具循环、工具执行、轨迹日志、循环检测</td></tr><tr><td><code>domain/</code></td><td style="text-align:right">31</td><td>领域模型（含 <code>state/stateMachine/</code>、<code>trajectory/</code>、<code>eval/</code>）</td></tr><tr><td><code>crossPlatform/</code></td><td style="text-align:right">7</td><td>跨平台适配</td></tr><tr><td><code>a2a/</code></td><td style="text-align:right">6</td><td>Agent-to-Agent 协议</td></tr><tr><td><code>credentialLease/</code></td><td style="text-align:right">5</td><td>凭据租约</td></tr><tr><td><code>entrypoints/</code></td><td style="text-align:right">4</td><td>运行入口适配</td></tr><tr><td><code>reasoning/</code></td><td style="text-align:right">4</td><td>推理策略</td></tr><tr><td><code>__tests__/</code></td><td style="text-align:right">3</td><td>服务层测试</td></tr><tr><td><code>extensions/</code>、<code>mcp/</code>、<code>skills/</code></td><td style="text-align:right">各 2</td><td>扩展 / MCP / 技能包</td></tr><tr><td>其余 120+ 个单文件子目录</td><td style="text-align:right">各 1</td><td>按主题聚类的单点能力（<code>memoryEngine/</code>、<code>modelRouter/</code>、<code>search/</code>、<code>security/</code>…）</td></tr></tbody></table>
+<h3 id="7-2-平铺-js-的主题桶-705-个-按文件名关键词归类">7.2 平铺 <code>.js</code> 的主题桶（705 个，按文件名关键词归类）<a class="anchor" href="#7-2-平铺-js-的主题桶-705-个-按文件名关键词归类" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>主题桶</th><th style="text-align:right">数量</th><th>代表文件</th><th>什么时候去这里</th></tr></thead><tbody><tr><td>其他（跨主题/未归类）</td><td style="text-align:right">233</td><td><code>accountPool</code>, <code>crashRecovery</code>, <code>flowPriorityDirective</code></td><td>先用 §7.3 的 grep 找</td></tr><tr><td>基础设施 / 服务</td><td style="text-align:right">57</td><td><code>a2aMessageRouter</code>, <code>adaptiveConfig</code>, <code>aiManagementChatHttp</code></td><td>端口、路由、配置、消息、日志</td></tr><tr><td>守卫 / 自愈 / 安全</td><td style="text-align:right">57</td><td><code>answerEchoGuard</code>, <code>approvalLedger</code>, <code>authGuard</code></td><td>校验、审批、权限、自愈</td></tr><tr><td>工具循环 / 执行</td><td style="text-align:right">56</td><td><code>acpTransport</code>, <code>adaptiveExecution</code>, <code>commandDispatchPort</code></td><td>工具调用、shell、沙箱</td></tr><tr><td>任务 / 智能体</td><td style="text-align:right">52</td><td><code>a2aAgentLifecycle</code>, <code>agentCommunicationService</code></td><td>agent、任务、目标、编排</td></tr><tr><td>网关 / 模型调用</td><td style="text-align:right">49</td><td><code>agnesImageModel</code>, <code>aiManagementGatewayAdmin</code>, <code>costByModel</code></td><td>供应商、模型、计费、限流</td></tr><tr><td>提示词 / 上下文</td><td style="text-align:right">45</td><td><code>activeSkillContext</code>, <code>agentContext</code>, <code>compactionUiPort</code></td><td>prompt、上下文压缩、轮次</td></tr><tr><td>数据 / 存储 / 文件</td><td style="text-align:right">45</td><td><code>aiUploadStore</code>, <code>akshareDataService</code>, <code>arenaResultStore</code></td><td>数据源、存储、文件</td></tr><tr><td>记忆 / 会话 / 检索</td><td style="text-align:right">41</td><td><code>aiConversationPort</code>, <code>aiSessionPort</code>, <code>conversationStore</code></td><td>会话、记忆、RAG</td></tr><tr><td>终端 UI / 渲染</td><td style="text-align:right">23</td><td><code>apiErrorFormatter</code>, <code>apiKeyFormat</code>, <code>benchmarkSuite</code></td><td>格式化、终端渲染</td></tr><tr><td>仓库 / 构建 / 发布</td><td style="text-align:right">20</td><td><code>akshareUpdater</code>, <code>gitignoreAdvisor</code>, <code>gitignoreService</code></td><td>git、构建、发布</td></tr><tr><td>记录 / 文档 / 审计</td><td style="text-align:right">17</td><td><code>auditLog</code>, <code>deliveryGateReporter</code>, <code>diskAnalyzeReport</code></td><td>审计、报告、轨迹</td></tr><tr><td>量化交易</td><td style="text-align:right">10</td><td><code>backtestEngine</code>, <code>klineDataService</code>, <code>marketDataService</code></td><td>回测、行情、策略</td></tr></tbody></table>
+<blockquote><p>口径说明：桶是按<strong>文件名关键词的优先级</strong>归类的，一个文件只进一个桶（前面的桶优先），所以桶之间不重叠；233 个「未归类」是关键词确实没覆盖的，不是错误。</p></blockquote>
+<h3 id="7-3-233-个未归类文件怎么找">7.3 233 个未归类文件怎么找<a class="anchor" href="#7-3-233-个未归类文件怎么找" aria-label="锚点">#</a></h3>
+<p>不要按字母表扫。用「意图词」直接搜文件名：</p>
+<pre><code class="language-powershell"><span class="hljs-comment"># PowerShell（Windows）</span>
+<span class="hljs-built_in">Get-ChildItem</span> runtime/node/backend/src/services <span class="hljs-operator">-File</span> <span class="hljs-literal">-Filter</span> *.js |
+  <span class="hljs-built_in">Where-Object</span> { <span class="hljs-variable">$_</span>.Name <span class="hljs-operator">-match</span> <span class="hljs-string">&#x27;daemon|runtime|provision&#x27;</span> } |
+  <span class="hljs-built_in">Select-Object</span> <span class="hljs-literal">-ExpandProperty</span> Name</code></pre>
+<pre><code class="language-bash"><span class="hljs-comment"># bash / git bash</span>
+<span class="hljs-built_in">ls</span> runtime/node/backend/src/services/*.js | grep -Ei <span class="hljs-string">&#x27;daemon|runtime|provision&#x27;</span></code></pre>
+<p>常用意图 → 关键词：</p>
+<table><thead><tr><th>意图</th><th>关键词</th></tr></thead><tbody><tr><td>进程 / 守护 / 启动</td><td><code>daemon</code>, <code>runtime</code>, <code>provision</code>, <code>bootstrap</code>, <code>launch</code>, <code>watchdog</code></td></tr><tr><td>诊断 / 观测</td><td><code>diagnostic</code>, <code>telemetry</code>, <code>monitor</code>, <code>perf</code>, <code>attribution</code></td></tr><tr><td>学习 / 进化</td><td><code>learning</code>, <code>evolution</code>, <code>curriculum</code>, <code>selfOptimizer</code></td></tr><tr><td>媒体</td><td><code>image</code>, <code>video</code>, <code>voice</code>, <code>media</code>, <code>transcri</code>, <code>ocr</code></td></tr><tr><td>计费 / 订阅</td><td><code>subscription</code>, <code>billing</code>, <code>usage</code>, <code>quota</code>, <code>account</code></td></tr><tr><td>恢复 / 回滚</td><td><code>recovery</code>, <code>rollback</code>, <code>rewind</code>, <code>resume</code>, <code>salvage</code>, <code>repair</code></td></tr></tbody></table>
+<h3 id="7-4-分桶的维护规则">7.4 分桶的维护规则<a class="anchor" href="#7-4-分桶的维护规则" aria-label="锚点">#</a></h3>
+<ul><li>新增文件落 <code>services/</code> 顶层时，<strong>优先考虑放进已有子目录</strong>（<code>gateway/</code>、<code>tool/</code>、<code>domain/</code>）；</li><li>如果确实要平铺，文件名必须能表达领域（不要 <code>helper2.js</code> / <code>utils.js</code>）；</li><li>本表<strong>不自动生成</strong>，因为它表达的是「人类怎么找」，不是「机器怎么扫」。若桶计数明显失真，更新本表即可，不需要改构建。</li></ul>
+<hr>
+<h2 id="8-不知道改哪-三步定位法">8. 不知道改哪：三步定位法<a class="anchor" href="#8-不知道改哪-三步定位法" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">第 1 步：它是「用户敲的命令」吗？
+   是 → src/cli/handlers/ + src/cli/aliases.js + src/cli/router.js
+   否 → 第 2 步
+
+第 2 步：它是「模型/通道/工具」相关吗？
+   模型/供应商 → src/services/gateway/
+   工具循环     → src/services/tool/
+   上下文/提示  → src/cli/aiChatCore.js + src/constants/prompts.js
+   否 → 第 3 步
+
+第 3 步：它是「Web 接口」吗？
+   是 → src/routes/&lt;domain&gt;.js + 前端 src/api/
+   否 → 用 §7.3 的关键词在 src/services/ 里搜文件名</code></pre>
+<p><strong>最后一道保险</strong>：<code>node runtime/node/backend/bin/khy.js metadata show</code> 看机器层的入口点与符号；<br><code>works/record/ai/CONTEXT.yaml</code> 里有逐文件符号清单（<code>grep</code> 它比 <code>grep</code> 源码快）。</p>
+<hr>
+<h2 id="9-这份文档怎么保鲜">9. 这份文档怎么保鲜<a class="anchor" href="#9-这份文档怎么保鲜" aria-label="锚点">#</a></h2>
+<p>本文件<strong>不会被 <code>khy metadata refresh</code> 覆盖</strong>，所以它需要三条外部约束：</p>
+<table><thead><tr><th>风险</th><th>约束</th></tr></thead><tbody><tr><td>路径被移动/删除</td><td><code>node scripts/ci/check-doc-drift.js --changed</code>（DOCS-005）</td></tr><tr><td>命令/路径声称失真</td><td><code>node scripts/ci/check-doc-claims.js --changed</code>（DOCS-006）</td></tr><tr><td>目录职责再次漂移</td><td><code>MAP.md</code> 的 <code>TODO(人工)</code> + 本文件 §2.1</td></tr></tbody></table>
+<p><strong>每次改完架构后，按顺序跑</strong>：</p>
+<pre><code class="language-bash">node runtime/node/backend/bin/khy.js metadata refresh   <span class="hljs-comment"># 机器层</span>
+node runtime/node/backend/bin/khy.js metadata check     <span class="hljs-comment"># 必须 exit 0</span>
+node --<span class="hljs-built_in">test</span> runtime/node/backend/tests/projectMetadata.test.js
+node scripts/ci/check-doc-drift.js --changed
+node scripts/ci/check-doc-claims.js --changed</code></pre>
+<h3 id="验收清单-可读性的定义">验收清单（可读性的定义）<a class="anchor" href="#验收清单-可读性的定义" aria-label="锚点">#</a></h3>
+<ul><li>[ ] 白板 5 分钟能画出 L0–L6 分层</li><li>[ ] 任抽一条链路，能说出入口 / 关键节点 / 失败兜底</li><li>[ ] 任抽一个「我想改 X」，能在 §6 查到该改哪个文件</li><li>[ ] <code>metadata refresh</code> 连跑两次，第二次输出 <code>结构未变化</code></li><li>[ ] 新增顶层目录时，<code>MAP.md</code> 出现 <code>TODO(人工)</code>，而不是静默消失</li><li>[ ] 新人按路线 1 读完，能独立完成路线 2 的第一个小改动</li></ul>
+<hr>
+<h2 id="10-送别礼收口记录-2026-10-27">10. 送别礼收口记录（2026-10-27）<a class="anchor" href="#10-送别礼收口记录-2026-10-27" aria-label="锚点">#</a></h2>
+<blockquote><p>结论：送别礼<strong>不是纪念品</strong>，是一批「能力已存在、但没接线」的补丁。本次收口把「能修的红项」修绿，把「该拦的守卫」接进 CI，把「真休眠的」明确标注，避免再拿文档当已接线。</p></blockquote>
+<h3 id="10-1-本次修掉的漂移">10.1 本次修掉的漂移<a class="anchor" href="#10-1-本次修掉的漂移" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>问题</th><th>改动</th><th>复核</th></tr></thead><tbody><tr><td>1</td><td>OPS-091 规定前驱块用 <code>---</code> 分隔，实现只剩 <code>\n\n</code></td><td><code>dependencyWaveInjection.js</code> 补回 <code>\n\n---\n\n</code></td><td><code>dependencyWaveScheduler.test.js</code> 37/37</td></tr><tr><td>2</td><td>两个 flag 守卫读 <code>src/services/flagRegistry.js</code>（兼容 shim，不含 flag 表）</td><td>改读 <code>src/utils/flagRegistry/index.js</code></td><td>两套件 8/8、9/9</td></tr><tr><td>3</td><td><code>roleToolScope.test.js</code> 用 jest 全局却没 <code>require('node:test')</code>，在 <code>node --test</code> 下 0/1</td><td>补 <code>node:test</code> 导入 + 5 个 matcher 的最小 shim</td><td>18/18（其中 live 用例直调 <code>AgentTool.buildSubagentDenylist</code>）</td></tr><tr><td>4</td><td><code>requirementArtifact</code> 已 compose 但未登记，静默落 protocol 兜底</td><td><code>directiveComposer.DIRECTIVE_REGISTRY</code> 补登记为 <code>guard</code></td><td><code>directiveRegistryAudit.guard</code> 7/7、<code>directiveComposer.test</code> 19/19</td></tr><tr><td>5</td><td>OPS-077 契约测试仍读 <code>runtime/tools/khyos-markdown</code>（已迁到 <code>delivery/extension/tools/khy-markdown</code>）</td><td>测试改指新路径</td><td><code>mdSuggestedAppsPlan.test</code> 9/9</td></tr><tr><td>6</td><td><code>bundleLaunchContract</code> 在 Windows 被 Store 的 <code>python.exe</code> 别名骗过，探针 9009 假红</td><td><code>pythonCommand()</code> 增加 <code>--version</code> 实探</td><td>16/16（无 Python 时干净跳过）</td></tr></tbody></table>
+<h3 id="10-2-新增的-ci-硬门">10.2 新增的 CI 硬门<a class="anchor" href="#10-2-新增的-ci-硬门" aria-label="锚点">#</a></h3>
+<p><code>pr-gate.yml</code> 新增 <strong><code>gift-guards</code></strong> job（无 <code>continue-on-error</code>）：</p>
+<ul><li>后端 10 个套件 <strong>136/136</strong>：波次调度、角色工具作用域、平价守卫、会话修复、任务模板、指令注册、取来即执行、md 建议应用、文件冲突合并、启动失败归因</li><li><code>scripts/tests</code> 11 个套件 <strong>206/206</strong>：还原就绪/完整性/水合/方案/冲突/收敛、渠道启动契约、重复代码检测、症状分诊</li></ul>
+<p>在此之前，这些要么只跑在 report-only 的 <code>test:node</code>，要么根本没有任何 CI 入口（<code>scripts/tests/**</code> 只有手动 <code>npm run test:scripts</code>）。</p>
+<h3 id="10-3-仍然休眠的-不要当成已接线">10.3 仍然休眠的（不要当成已接线）<a class="anchor" href="#10-3-仍然休眠的-不要当成已接线" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>模块</th><th>状态</th><th>裁决</th></tr></thead><tbody><tr><td><code>restoreAgentService</code>（OPS-082 收敛闭环）</td><td>全仓 <strong>0 生产消费者</strong>，也不在维护映射表里；其 7 个叶子被 installer/doctor 直接复用</td><td>保留代码，文件头标 <code>DORMANT</code>；接 CLI/route 前不得宣称闭环可用</td></tr><tr><td><code>actionContractVerifier</code></td><td>0 运行时消费者（设计如此：「未来网关接缝」）</td><td>作为 <strong>CI 安全不变量</strong>存在，34 例 blocking</td></tr><tr><td><code>parityGuard</code></td><td>0 生产消费者，但有一条<strong>真 registry + 真 commandSchema</strong> 的 wiring 用例</td><td>作为 <strong>CI 平价守卫</strong>存在，8 例 blocking</td></tr><tr><td><code>bundleLaunchContract</code> / <code>mdSuggestedAppsPlan</code></td><td>契约叶子，无运行时调用</td><td>作为 <strong>CI 契约</strong>存在，16 + 9 例 blocking</td></tr></tbody></table>
+<h3 id="10-4-复核命令">10.4 复核命令<a class="anchor" href="#10-4-复核命令" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> runtime/node/backend &amp;&amp; node --<span class="hljs-built_in">test</span> \
+  tests/services/orchestrator/dependencyWaveScheduler.test.js \
+  tests/services/orchestrator/roleToolScope.test.js \
+  tests/services/management/parityGuardWiring.test.js \
+  tests/services/sessionFileRepairWiring.test.js \
+  tests/services/taskTemplateHintWiring.test.js \
+  tests/services/directiveRegistryAudit.guard.test.js \
+  tests/security/fetchExecuteGuardWiring.test.js \
+  tests/services/mdSuggestedAppsPlan.test.js \
+  tests/services/orchestrator/mergeFileConflicts.test.js \
+  tests/bootstrap/startupFailureExplain.test.js
+
+<span class="hljs-built_in">cd</span> ../../.. &amp;&amp; node --<span class="hljs-built_in">test</span> \
+  scripts/tests/restoreReadiness.test.js scripts/tests/installIntegrity.test.js \
+  scripts/tests/hydrationHealth.test.js scripts/tests/agentRestorePlan.test.js \
+  scripts/tests/restoreConflictDetector.test.js scripts/tests/restoreConflictResolver.test.js \
+  scripts/tests/restoreConvergenceVerifier.test.js scripts/tests/bundleLaunchContract.test.js \
+  scripts/tests/duplicationGuard.test.js scripts/tests/check-duplication.test.js \
+  scripts/tests/maintainerTriage.test.js</code></pre>
+<hr>
+<h2 id="附录-a-本次校准发现的真实问题">附录 A：本次校准发现的真实问题<a class="anchor" href="#附录-a-本次校准发现的真实问题" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问题</th><th>证据</th><th>状态</th></tr></thead><tbody><tr><td><code>metadata check</code> 长期 exit 1</td><td>结构已变更，MAP 指向 6 个不存在的目录</td><td>已修（生成器 + 重新生成）</td></tr><tr><td>扫描上限 4,000 导致 82% 源码不在指纹里</td><td>4,000 时仅 1,310/7,348 源文件可见</td><td>已修（默认 20,000）</td></tr><tr><td>指针文件写到错误根目录</td><td><code>works/record/AGENTS.md</code> 是 bug 产物</td><td>机制已修；遗留文件待人工决定是否删（需 <code>rollback.txt</code>）</td></tr><tr><td><code>test/</code> 是空目录</td><td>0 文件</td><td>待人工决定是否清理</td></tr><tr><td><code>-p/</code> 疑似误建</td><td><code>MAP.md</code> 标 <code>TODO(人工)</code></td><td>待人工确认</td></tr><tr><td>根目录碎屑（<code>$null</code>、<code>err_tmp.txt</code> 等）</td><td>出现在 MAP 根文件列表</td><td>待 LAYOUT-004 整理</td></tr><tr><td><code>src/services</code> 平铺 705 个 <code>.js</code></td><td><code>check-discoverability</code> 报 848 条目 / 上限 40</td><td>本文件用索引层缓解；物理搬迁单独立项</td></tr></tbody></table>
+<hr>
+<h2 id="附录-b-相关真源索引">附录 B：相关真源索引<a class="anchor" href="#附录-b-相关真源索引" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>主题</th><th>真源</th></tr></thead><tbody><tr><td>层级名册 L0–L6</td><td><code>scripts/ci/check-repo-layout.js</code> 的 <code>LAYERS</code>；<code>docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005]</code></td></tr><tr><td>规则登记</td><td><code>docs/10_规范/registry/RULES-REGISTRY.json</code></td></tr><tr><td>数据落点</td><td><code>docs/10_规范/registry/DATA-LOCATIONS.json</code></td></tr><tr><td>构建产物</td><td><code>docs/10_规范/registry/BUILD-OUTPUTS.json</code></td></tr><tr><td>版本真源</td><td><code>pyproject.toml</code>、<code>works/ship/npm/package.json</code>、<code>runtime/node/backend/package.json</code>、<code>works/ship/modules/modules.json</code></td></tr><tr><td>机器骨架</td><td><code>works/record/ai/MAP.md</code> + <code>CONTEXT.yaml</code> + <code>GUARDS.md</code></td></tr><tr><td>维护红线</td><td>根 <code>AGENTS.md</code> 的「工程规则」节 + <code>works/record/ai/GUARDS.md</code></td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../works/record/ai/plans/miniapp-webview-singleton.html"><div class="dir">← 上一篇</div><div class="ttl">小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div></a><a class="next" href="../../../works/record/CLAUDE.html"><div class="dir">下一篇 →</div><div class="ttl">Maintainability metadata — read works/record/ai/ first</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="works/record/ai/READING-GUIDE.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

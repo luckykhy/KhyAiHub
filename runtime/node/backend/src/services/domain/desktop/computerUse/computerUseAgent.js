@@ -58,6 +58,22 @@ const EXPERIENCE_ENV = 'KHY_COMPUTER_USE_EXPERIENCE';
 const MAX_SOM_MARKS = 30;
 // 卡住检测：连续多少轮「画面无变化且上一步是操作」就注入回退提示
 const STUCK_STREAK_LIMIT = 2;
+// 硬止损：提示在 2（让模型自己换策略），止损在 3（模型连着三轮都没换出去）。
+// 止损只数「verify 拿到两帧、确认画面没变」的动作轮——无证据（null）与执行失败
+// 都不进这本账，防一次解码 hiccup 或截图失败把一个正常任务中止。
+const STUCK_STOP_STREAK = STUCK_STREAK_LIMIT + 1;
+// 「非操作」动作名册：只有真正会改变画面的动作才算操作轮。
+// run() 的 isActuate、Step 5 的静置等待、卡住记账三处过去各写一份同样的清单
+// （其中卡住记账那份漏了 wait/remember，把等待轮当操作轮计数），现收敛为一份。
+const NON_ACTUATE_ACTIONS = [
+  'observe',
+  'inspect',
+  'aiAnalyze',
+  'remember',
+  'wait',
+  'finish',
+  'escalate',
+];
 // 跨应用暗记（scratchpad）：remember 动作写入。条数与单条长度都设上限，防止提示词膨胀。
 const NOTES_CAP = 24;
 const NOTE_KEY_MAX = 60;
@@ -939,6 +955,190 @@ function _detectChange(state, observation) {
   return out;
 }
 
+// ── 动作起效判定（verify 相位）───────────────────────────────────────────
+
+/**
+ * 同轮 pre→post 像素比对：这一步 actuate 是否真的改变了画面。
+ *
+ * 只看像素，不看元素清单：快轮（iter % ELEMENT_REFRESH_INTERVAL !== 0）复用缓存元素，
+ * observation.elements 与 state._prevElements 是同一个数组引用，diffElements 恒为 0/0/0，
+ * 拿它当「未生效」的证据就会误判每一次快轮。
+ *
+ * 三态：true = 画面变了，false = 画面没变，null = 没有可用证据（缺基线 / 同一帧 / 解码失败）。
+ * 「没有证据」绝不能退化成「未生效」——一次 PNG 解码 hiccup 就会触发误止损。
+ *
+ * @param {object} input
+ * @param {string} input.prevScreenPath      动作之前的截图（state._prevScreenPath）
+ * @param {string} input.postPath            动作之后的截图
+ * @param {object} [input.screenshotChanged] 已算好的 stateDetector.screenshotChanged 结果；
+ *        缺省/形状不对时在此处直接调用 detector
+ * @param {object} [input.thresholds]        { thresholdBits, thresholdLuma }
+ * @returns {{ effective: boolean|null, method: 'screenshot-dhash',
+ *             evidence: { distance: number, lumaDiff: number }|null, error?: string }}
+ */
+function _verifyActionEffect({ prevScreenPath, postPath, screenshotChanged, thresholds } = {}) {
+  const base = { method: 'screenshot-dhash', evidence: null };
+  if (!prevScreenPath || !postPath) {
+    return { ...base, effective: null, error: 'no_baseline' };
+  }
+  if (String(prevScreenPath) === String(postPath)) {
+    // 真实 capture 每次写新文件（screenCapture 的单调序号），同一路径只出现在替身/回放里，
+    // 此时没有两帧可比，只能判「无法判断」。
+    return { ...base, effective: null, error: 'same_frame' };
+  }
+  const thrBits =
+    thresholds && Number.isFinite(thresholds.thresholdBits)
+      ? thresholds.thresholdBits
+      : SCREEN_CHANGE_THRESHOLD_BITS;
+  const thrLuma =
+    thresholds && Number.isFinite(thresholds.thresholdLuma)
+      ? thresholds.thresholdLuma
+      : SCREEN_CHANGE_THRESHOLD_LUMA;
+  let cmp = screenshotChanged;
+  try {
+    if (!cmp || typeof cmp.ok !== 'boolean') {
+      cmp = stateDetector.screenshotChanged(prevScreenPath, postPath, {
+        thresholdBits: thrBits,
+        thresholdLuma: thrLuma,
+      });
+    }
+  } catch (err) {
+    return { ...base, effective: null, error: (err && err.message) || String(err) };
+  }
+  if (!cmp || cmp.ok !== true) {
+    return { ...base, effective: null, error: (cmp && cmp.error) || 'compare_failed' };
+  }
+  return {
+    effective: cmp.changed === true,
+    method: 'screenshot-dhash',
+    evidence: { distance: cmp.distance, lumaDiff: cmp.lumaDiff },
+  };
+}
+
+// ── 卡住记账（observe 的旧信号与 verify 的新信号共用一本账）──────────────────
+
+/**
+ * 卡住记账：维护两本账。
+ *   - `_noChangeStreak`：给提示词「卡住检测」用，verify 与 observe 画面 diff 都喂它，
+ *     与改动前同一语义（verify 拿不到证据时观察侧照旧兜底）。
+ *   - `_ineffectiveStreak`：只给硬止损用，只数「verify 拿到两帧、确认画面没变」的操作轮。
+ *     兜底信号不进这本账——否则两轮无效点击中间夹一次 wait，或用替身/回放时两帧无法
+ *     比较，都会把停损推到证据不足的地方。
+ *
+ * 防重复计数：verify 已裁决（true/false）的动作在这里按【动作身份】跳过。用动作的
+ * iteration 而不是轮号——LLM 输出解析失败 / observe 失败会 continue 若干轮，轮号
+ * 对不上、动作却还是那一个，按轮号会把同一个动作再计一次。
+ */
+function _updateNoChangeStreak(state) {
+  const last = state.lastActionResult;
+  const prevKey = last ? last.actionKey : '';
+  const prevFailed = last ? last.success === false : false;
+  const wasActuateTurn = !!prevKey && !NON_ACTUATE_ACTIONS.includes(prevKey) && !prevFailed;
+  const sc = state.lastChange && state.lastChange.screenChange;
+  if (sc && sc.changed === true && wasActuateTurn) {
+    // 迟到的真实变化：画面确实变了，两本账上的旧证据作废（哪怕 verify 那轮没拿到可比帧）
+    state._noChangeStreak = 0;
+    state._ineffectiveStreak = 0;
+  } else {
+    const settledByVerify = !!last && state._verifyJudgedAction === last.iteration;
+    if (!settledByVerify) {
+      const noVisualChange = !!(sc && sc.changed === false);
+      state._noChangeStreak =
+        noVisualChange && wasActuateTurn ? (state._noChangeStreak || 0) + 1 : 0;
+    }
+  }
+  state.isStuck = (state._noChangeStreak || 0) >= STUCK_STREAK_LIMIT;
+}
+
+/**
+ * verify 相位：动作之后立刻补拍一帧，用同轮 pre→post 判定这一步是否起效，并记账。
+ *
+ * 只对【真的 actuate、执行成功、且有基线】的动作裁决。wait/remember 这类不改画面的
+ * 动作没有「起效」可言（上面第一个 if 直接返回并清掉上一轮裁决），绝不给计数加一——
+ * 等待轮不是无效点击。
+ * screenshot 属 capture 类，不计入 actuation 预算（desktopControl/safetyGate.js:597-600）。
+ * 代价：每个 actuate 轮多落一张 PNG，而 screenCapture 没有清理机制（存量），此处不新增清理。
+ *
+ * 记账：false → 两本账都 +1；true → 两本账都清零；null（截图失败 / 同一帧 / 解码失败）
+ * 两本账都不动——「没证据」不是「没生效」，但也不清掉前面攒下的真实证据。
+ * 判到 true/false 时用 `_verifyJudgedAction` 记下这个动作的 iteration，让下一轮 observe
+ * 的兜底不再重复计同一件事。
+ *
+ * 时序假设（止损的风险面，PR/评审需知道）：裁决取的是 `waitMs`（默认 600ms）之后的第一帧，
+ * 慢界面（Electron / 网络页）可能还没出画。因此止损要求连续 3 个动作都判无效，且模型可用
+ * 动作里的 waitMs 或 plan-first 拉长等待；这一点没有对真实慢应用实测过。
+ *
+ * 基线不在这里重设成 post 帧（契约原方案如此）：下一轮 observe 的「屏幕画面: 已变化」
+ * 依赖动作前的旧基线，tests/services/computerUse/computerUseAgent.test.js 有一条断言把它钉住。
+ * 副作用要知道：慢界面下同一份提示词可能同时出现「屏幕画面: 已变化」与「动作起效判定:
+ * 未生效」——前者比的是动作前帧，后者比的是本轮 pre→post，以后者为准。
+ */
+async function _verifyActionStep(controller, state, { isActuate, actResult, iter }) {
+  if (!isActuate || !actResult || actResult.success === false || !state._prevScreenPath) {
+    state.lastActionVerify = null;
+    return;
+  }
+  let verdict;
+  try {
+    const post = await controller.screenshot({});
+    if (post && post.success !== false && post.path) {
+      verdict = _verifyActionEffect({
+        prevScreenPath: state._prevScreenPath,
+        postPath: post.path,
+      });
+    } else {
+      verdict = {
+        effective: null,
+        method: 'screenshot-dhash',
+        evidence: null,
+        error: (post && post.error) || 'post_capture_unavailable',
+      };
+    }
+  } catch (err) {
+    verdict = {
+      effective: null,
+      method: 'screenshot-dhash',
+      evidence: null,
+      error: (err && err.message) || String(err),
+    };
+  }
+  state.lastActionVerify = verdict;
+  if (verdict.effective === true) {
+    state._noChangeStreak = 0;
+    state._ineffectiveStreak = 0;
+  } else if (verdict.effective === false) {
+    state._noChangeStreak = (state._noChangeStreak || 0) + 1;
+    state._ineffectiveStreak = (state._ineffectiveStreak || 0) + 1;
+  }
+  if (verdict.effective === true || verdict.effective === false) {
+    // 历史条目的 iteration 是 iter+1（本轮的 act 还没落 history）
+    state._verifyJudgedAction = iter + 1;
+  }
+  state.isStuck = (state._noChangeStreak || 0) >= STUCK_STREAK_LIMIT;
+}
+
+/**
+ * is_stuck 硬止损的返回值（未到阈值返回 null）。
+ * 提示在 STUCK_STREAK_LIMIT=2（让模型自己换策略），止损在 3（模型连着三轮都没换出去）。
+ * 计数只吃 verify 的「有证据的未生效」，所以走到这里的都是「确实连点了几下、画面一动不动」，
+ * 且 summary 里的轮数就是这几个动作的个数，不会被兜底信号虚增。
+ */
+function _stuckStopResult(state, goal, iter) {
+  const streak = state._ineffectiveStreak || 0;
+  if (streak < STUCK_STOP_STREAK) {
+    return null;
+  }
+  return {
+    success: false,
+    goal,
+    iterations: iter,
+    history: state.history,
+    finished: false,
+    stoppedReason: 'repeated_no_effect',
+    summary: `已连续 ${streak} 轮操作后画面无变化，自动止损以防反复无效点击。`,
+  };
+}
+
 // ── LTM 轨迹日志 ───────────────────────────────────────────────────────────
 
 /**
@@ -954,11 +1154,8 @@ function _writeJournal(state, result) {
     return null;
   }
   try {
-    const { getDataHome } = require('../../../../utils/dataHome');
-    const dir = path.join(getDataHome(), 'computerUse', 'journal');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    const { getDataDir } = require('../../../../utils/dataHome');
+    const dir = getDataDir('computerUse', 'journal');
     const file = path.join(dir, 'journal.jsonl');
     const record = {
       ts: new Date().toISOString(),
@@ -1078,8 +1275,9 @@ function _loadExperience(goal, app, opts = {}) {
   }
   const limit = Number.isFinite(opts.limit) ? opts.limit : 2;
   try {
-    const { getDataHome } = require('../../../../utils/dataHome');
-    const file = path.join(getDataHome(), 'computerUse', 'journal', 'journal.jsonl');
+    const { resolveDataPath } = require('../../../../utils/dataHome');
+    // Read-only probe: the journal may not exist yet, so no mkdir here.
+    const file = resolveDataPath('computerUse', 'journal', 'journal.jsonl');
     if (!fs.existsSync(file)) {
       return [];
     }
@@ -1217,9 +1415,13 @@ function _buildDecisionPrompt(state) {
     }
     lines.push('');
   }
-  if (state.lastChange && (state.lastChange.elementChange || state.lastChange.screenChange)) {
+  const verifyVerdict = state.lastActionVerify;
+  if (
+    (state.lastChange && (state.lastChange.elementChange || state.lastChange.screenChange)) ||
+    verifyVerdict
+  ) {
     lines.push('## 上一步动作后的状态变化');
-    const sc = state.lastChange.screenChange;
+    const sc = state.lastChange ? state.lastChange.screenChange : null;
     if (sc) {
       if (sc.changed === true) {
         lines.push('- 屏幕画面: 已变化（动作生效或界面推进）');
@@ -1229,7 +1431,7 @@ function _buildDecisionPrompt(state) {
         lines.push(`- 屏幕画面: 无法判断变化 (${sc.error || '未知'})`);
       }
     }
-    const ec = state.lastChange.elementChange;
+    const ec = state.lastChange ? state.lastChange.elementChange : null;
     if (ec) {
       lines.push(
         `- UI 元素: 新增 ${ec.addedCount} / 消失 ${ec.removedCount} / 位置变化 ${ec.changedCount}`
@@ -1250,6 +1452,17 @@ function _buildDecisionPrompt(state) {
             .join('、')}`
         );
       }
+    }
+    if (verifyVerdict) {
+      // verify 相位的同轮 pre→post 裁决（比下一轮的「屏幕画面」更早一轮到位，且不受
+      // 快轮元素复用影响）。「无法判断」如实写原因，不拿没证据当未生效。
+      let verdictText = `无法判断（${verifyVerdict.error || '无可比对的画面'}）`;
+      if (verifyVerdict.effective === true) {
+        verdictText = '已生效';
+      } else if (verifyVerdict.effective === false) {
+        verdictText = '未生效（可能没点中，建议换目标或路径）';
+      }
+      lines.push(`- 动作起效判定：${verdictText}`);
     }
     lines.push('');
   }
@@ -1555,6 +1768,12 @@ class ComputerUseAgent {
         });
       }
 
+      // is_stuck 硬止损（提示在 2，止损在 3；账本口径见 _stuckStopResult）
+      const stuckStop = _stuckStopResult(state, goal, iter);
+      if (stuckStop) {
+        return _withAppContext(state, stuckStop);
+      }
+
       // Step 1: observe（截图 + 元素 + OCR）
       // 性能策略：无障碍树抓取(UIA)与 OCR 在部分平台较慢（实测 Windows 各 3-4s）。
       //   首轮 → 完整感知（截图+元素+OCR），建立基线；
@@ -1651,16 +1870,8 @@ class ComputerUseAgent {
         }
       }
 
-      // 卡住检测（「GUI Agents 综述」6.2 长程任务的检查点/回溯意识）：
-      // 上一步是操作且画面无变化 → 连续计数；任何变化/观察动作 → 清零。
-      const prevKey = state.lastActionResult ? state.lastActionResult.actionKey : '';
-      const wasActuateTurn = prevKey && !['observe', 'inspect', 'aiAnalyze'].includes(prevKey);
-      const noVisualChange =
-        state.lastChange &&
-        state.lastChange.screenChange &&
-        state.lastChange.screenChange.changed === false;
-      state._noChangeStreak =
-        noVisualChange && wasActuateTurn ? (state._noChangeStreak || 0) + 1 : 0;
+      // 卡住检测：上一步是真操作且画面无变化 → 计数；有变化/非操作/无证据 → 清零或跳过
+      _updateNoChangeStreak(state);
 
       // 外部视觉描述（visionDescriber）：用 deepseek-eyes 等把截图翻译成文字，
       // 供不带视觉的主模型"看懂"屏幕（尤其 Windows 文本模型决策场景）。
@@ -1831,27 +2042,18 @@ class ComputerUseAgent {
         actResult = { success: false, error: (err && err.message) || String(err) };
       }
 
-      const isActuate = ![
-        'observe',
-        'inspect',
-        'aiAnalyze',
-        'remember',
-        'wait',
-        'finish',
-        'escalate',
-      ].includes(action.action);
+      const isActuate = !NON_ACTUATE_ACTIONS.includes(action.action);
       if (isActuate && actResult.success !== false) {
         state.actuationCount++;
       }
 
       // Step 5: 短暂等待让 UI 反应
-      if (
-        !['wait', 'finish', 'escalate', 'observe', 'inspect', 'aiAnalyze', 'remember'].includes(
-          action.action
-        )
-      ) {
+      if (!NON_ACTUATE_ACTIONS.includes(action.action)) {
         await new Promise((r) => setTimeout(r, action.waitMs || 600));
       }
+
+      // Step 5b: verify —— 文件头承诺的第四相位：同轮 pre→post 判定这一步是否起效
+      await _verifyActionStep(controller, state, { isActuate, actResult, iter });
 
       // 连续失败追踪（同一动作失败计数，用于换策略提示）
       let failCount = 0;
@@ -2005,6 +2207,7 @@ module.exports = {
     _summarizeProgress,
     _recordNote,
     _detectChange,
+    _verifyActionEffect,
     _buildDecisionPrompt,
     _writeJournal,
     _quarantineScreenText,

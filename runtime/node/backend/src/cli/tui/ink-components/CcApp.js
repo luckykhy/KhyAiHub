@@ -73,6 +73,7 @@ function getCcPhoneLinkPanel() {
 let _Viewport = null;
 function getViewport() { if (!_Viewport) _Viewport = require('./Viewport'); return _Viewport; }
 const { getLayout, ccChromePlan, ccTerminalDims } = require('../utils/ccLayout');
+const { formatModelName } = require('../utils/ccFormatters');
 // Row billing must use the SAME meter as the paint (DESIGN-ARCH-103 H6): the
 // message area wraps by display width, so counting `\n` under-bills CJK replies.
 const { visualRows } = require('../wrapCell');
@@ -544,6 +545,21 @@ function CcApp({ options = {} }) {
       )
     : null;
 
+  // 忙碌行文案：动作（等待）+ 目标（哪个模型）+ 进度（第几轮）。CC 模式当前是
+  // 回声桩，拿不到真实 token 进度或工具步数，所以只说等谁、第几轮，不猜模型在
+  // 「分析」什么。文案与投影共用**同一个串**，否则账本与画面会各说各话。
+  const busyTurn = Math.max(
+    1,
+    messages.reduce((n, m) => n + (m && m.role === 'user' ? 1 : 0), 0)
+  );
+  const busyText =
+    _proj && typeof _proj.buildBusyLabel === 'function'
+      ? _proj.clipSingleLine(
+          _proj.buildBusyLabel({ model: formatModelName(modelId), turn: busyTurn }),
+          Math.max(1, cols - 3)
+        )
+      : '等待模型返回';
+
   // ── 行投影:屏幕行 ↔ 文本的唯一映射([DESIGN-ARCH-124] 方案 A + C3)──────────
   // 运行时走**手写纯字符串投影**(零 ink 开销);正确性由
   // `tests/cli/tui/ccMessageProjection.oracle.test.js` 用 ink 的 `renderToString`
@@ -560,7 +576,7 @@ function CcApp({ options = {} }) {
       return null;
     }
     try {
-      const { formatModelName, formatContext, formatCost } = require('../utils/ccFormatters');
+      const { formatContext, formatCost } = require('../utils/ccFormatters');
       const { getContextWindow } = require('../utils/ccContextWindows');
       return _proj.projectCcScene({
         cols,
@@ -578,6 +594,7 @@ function CcApp({ options = {} }) {
           busyGap: chromePlan.busyGap,
         },
         busy,
+        streamingText: busyText,
         messageBar,
         toasts,
         subAgents,
@@ -604,7 +621,7 @@ function CcApp({ options = {} }) {
       return null;
     }
   }, [
-    _selectOn, cols, rows, visibleMessages, messages.length, busy, messageBar, toasts,
+    _selectOn, cols, rows, visibleMessages, messages.length, busy, busyText, messageBar, toasts,
     subAgents, agentTreeExpanded, modelId, contextUsed, cost, vimMode, taskEstimateText,
     permissionProfile, cacheHitRate, inputValue, layout.inputMaxHeight, chromePlan,
   ]);
@@ -1198,7 +1215,7 @@ function CcApp({ options = {} }) {
                   })
             ),
         busy
-          ? React.createElement(CcStreamingMessage, { text: '思考中...', gap: chromePlan.busyGap })
+          ? React.createElement(CcStreamingMessage, { text: busyText, gap: chromePlan.busyGap })
           : null,
       ),
 

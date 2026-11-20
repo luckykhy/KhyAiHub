@@ -618,12 +618,19 @@ function _appHome() {
     const { getAppHome } = require('../utils/dataHome');
     return getAppHome();
   } catch {
-    return path.join(os.homedir(), '.khyquant');
+    // dataHome unloadable (trimmed install): the legacy home still comes from
+    // the resolver's single source instead of a hand-written literal here; if
+    // that require fails too, the error surfaces to each caller's fail-soft.
+    return require('../utils/dataHome').getLegacyDataHome();
   }
 }
 
 function _userKbFile() {
-  return path.join(_appHome(), 'growth', 'user_knowledge_base.json');
+  // Tiered 'growth' addressing via the resolver. Pure mapping (no mkdir) keeps
+  // the existsSync probe in _loadUserKnowledgeBase honest — the save path
+  // creates the directory itself before writing.
+  const { resolveDataPath } = require('../utils/dataHome');
+  return resolveDataPath('growth', 'user_knowledge_base.json');
 }
 
 function _securityLog() {
@@ -1158,7 +1165,10 @@ function _similarity(a, b) {
 const { execSync } = require('child_process');
 
 function _kbSyncConfigFile() {
-  return path.join(_appHome(), 'kb_sync.json');
+  // KB-sync state belongs to the registered 'sync' tier, not a flat file on
+  // the app home root (LAYOUT-007 addressing).
+  const { resolveDataPath } = require('../utils/dataHome');
+  return resolveDataPath('sync', 'kb_sync.json');
 }
 
 /**
@@ -1785,7 +1795,10 @@ function buildStudyModePromptContext(opts = {}) {
 
 function _tryGitFallback(config, contribution, filename, originalErr) {
   // If user has the repo cloned locally, try git add/commit/push
-  const localPath = path.join(_appHome(), 'kb-repo');
+  // git clone creates only the leaf directory, so the parent 'sync' dir has
+  // to exist first — getDataDir ensures it (fail-soft).
+  const { getDataDir } = require('../utils/dataHome');
+  const localPath = path.join(getDataDir('sync'), 'kb-repo');
 
   try {
     if (!fs.existsSync(localPath)) {

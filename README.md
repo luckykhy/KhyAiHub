@@ -152,7 +152,7 @@ AI 平台操作系统。模型调用被当作系统调用统一收口：**壳**�
 这套运行时上的**可增删单元**——这是名字里「OS」的由来（`khy about` 有完整解释）。
 
 ```text
-User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js
+User → khy 命令 → Python cli.py → Node.js runtime/node/backend/bin/khy.js
                                           │
                          ┌────────────────┼────────────────┐
                          ▼                ▼                ▼
@@ -160,24 +160,27 @@ User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js
                   (src/cli/)      (src/services/)    (src/routes/)
 ```
 
-### 仓库结构（分层，非目录树）
+### 仓库结构（章轴 + 横切轴）
 
-| 层 | 目录 | 一句话定位 |
+顶层按「变更原因」分轴：**平台怎么跑**进 `runtime/`，**东西怎么发**进 `delivery/`，
+**工程面**（脚本/文档/产物）横切于所有层。同层同轴、名字即语义：
+
+| 轴 | 目录 | 一句话定位 |
 |----|------|------------|
-| L0 | `kernel/` | 手写 C 语言 OS 内核（实验/教学资产，需自行 `make` 出 ISO 后 QEMU 引导） |
-| L1 | `platform/` | Python 启动器、`@khy/shared` / `@khy/ui-shared` / plugin-sdk 包、多渠道交付编排 |
-| L2 | `services/` | `backend`（CLI、AI 网关、各类服务、Web API）+ `ai-backend`（独立版本轨道） |
-| L3 | `apps/` | `ai-frontend`（Vue 3 管理 UI）、Electron 桌面端、provider-hub、Flutter Android App |
-| L4 | `software/` | 随平台分发的独立项目接入载体：khyquant 量化终端（**独立项目**，连接 Khy OS 使用，非其内置组成）、akshare_scripts |
-| L5 | `extensions/` | 内置拓展：一个目录一个拓展，删目录即卸载（tools / bridges / scripts） |
-| L6 | `tools/` | 独立开发者工具，不参与运行时 |
+| 章 · 运行时 | `runtime/` | `boot/kernel`（L0 手写 C 内核，QEMU 可引导）、`substrate/platform`（L1 Python 启动器 + `@khy/shared`/`@khy/ui-shared`/plugin-sdk + 交付编排）、`node/`（L2 全部业务：`backend` = CLI/AI 网关/各类服务/Web API，`ai-backend` 独立版本轨道） |
+| 章 · 桌面壳 | `apps/` | L3 平台自带桌面端（Electron + TS） |
+| 章 · 交付 | `delivery/` | `channel/`（L4 接入载体：khyquant 量化终端——**独立项目**、连接 Khy OS 使用非其内置组成；web 管理 UI；mobile 客户端；akshare_scripts）、`extension/`（L5 随包拓展，一个目录一个卸载；`tools/` = L6 独立开发工具） |
+| 横切 | `entries/` | 构建产物单一根（登记于 `docs/10_规范/registry/BUILD-OUTPUTS.json`，`.gitignore`/`.dockerignore` 由该登记表派生） |
+| 横切 | `works/` | 工程产物区：`ship/` 打包清单、`data/` 运行时数据家（T0–T4 三态）、`record/` 存证、`deploy/`/`patches/`/`design/` |
+| 横切 | `scripts/` | CI 守卫与质量门（`npm run rules:gate` 派生自治门） |
+| 横切 | `docs/` | 全套中文文档，`NN_中文/` 编号轴（01–09 生命周期阶段 / 10–19 跨阶段资产） |
 
-顶层七个业务目录的**层级定位、允许的依赖方向、以及新文件该放哪一层**，真源是
-[`[DESIGN-LAY-005] 仓库层级板块规范`](docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005]%20仓库层级板块规范.md)，
-由 `npm run check:layout` 强制执行，新增文件或新增顶层目录前先读它。
-横切目录：`scripts/`（CI 守卫与质量门）、`packaging/`（发布清单）、`docs/`（全套中文文档）、
-`entries/`（构建产物单一根，登记于 `docs/10_规范/registry/BUILD-OUTPUTS.json`，
-`.gitignore`/`.dockerignore` 由该登记表派生，守卫 `npm run check:build-root`）。
+**新文件放哪、怎么命名** → [`[DESIGN-LAY-011] 新增文件落位与命名规程`](docs/10_规范/DESIGN-LAY/[DESIGN-LAY-011]%20新增文件落位与命名规程.md)（四问决策树 + 命名语法总表）。
+**层级名册与允许的依赖方向**真源 → [`[DESIGN-LAY-005] 仓库层级板块规范`](docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005]%20仓库层级板块规范.md)，由 `npm run check:layout` 强制执行。
+
+**结构锁**：目录结构有清单快照 `docs/10_规范/registry/STRUCTURE-LOCK.json`——新增或删除已登记条目会被
+`npm run check:structure-lock` 记录（S1 观察者，不阻断）；确需变更先更新快照（version+1），
+并在提交信息加 `structure-lock-approved-by: <批准人>`。
 
 ### 版本同步
 
@@ -209,6 +212,8 @@ User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js
 ```powershell
 node scripts\ci\check-agent-rules.js --changed   # 工程红线静态体检
 npm run check:layout                             # 顶层层级与依赖方向
+npm run check:structure-lock                     # 结构锁：清单快照 drift（S1 只记录）
+npm run check:hygiene                            # 智能体卫生：临时物/junction/根级白名单外条目
 npm run rules:gate                               # 规则门（pr 档；commit 档更快）
 npm run rules:apply -- <改动文件路径>              # 查「我要改这个文件，适用哪些规则」
 ```

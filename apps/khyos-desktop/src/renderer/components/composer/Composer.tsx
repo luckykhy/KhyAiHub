@@ -3,10 +3,10 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { useAppDispatch, useAppSelector } from '../../state/store'
 import { store } from '../../state/store'
-import { addMessage, updateMessage, setMessageStatus, setStreaming, setAgentWorking, recordLastPrompt, clearSessionLoadError } from '../../state/messageSlice'
+import { addMessage, updateMessage, setMessageStatus, setStreaming, setAgentWorking, recordLastPrompt, clearSessionLoadError, setCurrentSession } from '../../state/messageSlice'
 import { beginToolTurn } from '../../state/toolExecutionSlice'
 import { addToast } from '../../state/toastSlice'
-import { useModelCatalog, groupByProvider, getModelOptionLabel, type ModelOption } from '../../utils/useModelCatalog'
+import { useModelCatalog, groupByProvider, getModelOptionLabel, resolveModelPins, type ModelOption } from '../../utils/useModelCatalog'
 import { ModeSelector, DEFAULT_AGENT_MODE } from './ModeSelector'
 import { Icon } from '../ui/Icon'
 import { ATTACHMENT_ICON, attachmentKind, attachmentTint, extensionsOf, type AttachmentKind } from './attachmentKind'
@@ -464,6 +464,8 @@ function ModelSelector({ current, currentLabel, error, onChange, options }: {
 // channel 名再判一次，认不出的归 API —— 中转站本来就是 API key）。
 function credentialBadge(channel: string): string {
   const key = String(channel || '').toLowerCase()
+  // Auto 不是凭据形态（它会在运行时落到任意已配置通道），别把「API」贴到它头上。
+  if (key === 'auto') return '自动'
   if (['ollama', 'lmstudio', 'local'].includes(key)) return '本地'
   if (['claude', 'codex', 'kiro', 'cursor', 'cursor2api', 'trae', 'qoder', 'gemini-cli'].includes(key)) return '订阅'
   return 'API'
@@ -1102,6 +1104,7 @@ export function Composer({
           fallbackReason?: string
           errorType?: string
           toolCallCount?: number
+          sessionId?: string
         }>
       }
     }).__KHYOS__
@@ -1112,7 +1115,7 @@ export function Composer({
       setSending(false)
       return
     }
-// P3-7：把当前选中的 provider 透传给 aiGateway（options.preferredAdapter，
+    // P3-7：把当前选中的 provider 透传给 aiGateway（options.preferredAdapter，
     // 与 CLI `khy gateway` 的通道选择同契约）。
     //
     // 模型级选项 id 形如 `provider/model`，channel 字段按生产者分：采集路径是
@@ -1122,17 +1125,26 @@ export function Composer({
     //
     // **modelId 而非 modelName**：modelName 是展示标签（含 `provider · model`
     // 前缀），拿它查选项表必然 miss —— 那样选中的模型压根传不到网关，桌面只
-    // 换通道不换模型。modelId 是选项表主键，查得到就同时钉住 preferredModel。
-    const selId = modelId ?? ''
-    const currentOption = catalogOptions.find((o) => o.id === selId)
-    const pid = selId ? selId.split('/')[0] : ''
-    const providerOpt = currentOption ?? catalogOptions.find((o) => o.id === pid)
-    const sendOptions: Record<string, unknown> = {}
-    const adapterKey = providerOpt?.channel || (pid && selId.includes('/') ? pid : selId)
-    if (adapterKey && providerOpt?.channelKnown !== false) sendOptions.preferredAdapter = adapterKey
-    const selectedModelId = currentOption?.model || (selId.includes('/') ? selId.slice(selId.indexOf('/') + 1) : '')
-    if (selectedModelId) sendOptions.preferredModel = selectedModelId
+    // 换通道不换模型。modelId 是选项表主键，查得到才钉网关参数；查不到 = 该
+    // 选中态是上一次运行留下的、本次采集已没有它，绝不能从 id 字符串反推出
+    // 模型名继续钉（会请求一个已消失的模型），交给网关默认通道。
+    const sendOptions: Record<string, unknown> = { ...resolveModelPins(modelId ?? '', catalogOptions) }
+    // 会话续写：带上当前会话 id，host 会把这一轮追加到同一条 .khy/sessions 链上
+    // （手机 9413 / TUI 读的是同一份）。空 id = 新任务，host 自铸 id 并在回帧里带回。
+    const activeSessionId = store.getState().message.currentSessionId || ''
+    if (activeSessionId) sendOptions.sessionId = activeSessionId
     api.aiSend({ prompt: payloadPrompt, options: sendOptions }).then((res) => {
+      // 第一轮新建的会话：后续轮次必须落在同一 id 上，侧栏也要立刻看到这条任务。
+      // 只有用户没在这轮期间切换会话/新建任务时才认领，避免把界面拽回旧会话。
+      const settledSessionId = typeof res?.sessionId === 'string' ? res.sessionId : ''
+      if (
+        settledSessionId &&
+        settledSessionId !== activeSessionId &&
+        (store.getState().message.currentSessionId || '') === activeSessionId
+      ) {
+        dispatch(setCurrentSession(settledSessionId))
+        window.dispatchEvent(new CustomEvent('khy:sessions-changed', { detail: settledSessionId }))
+      }
       if (res?.ok && res.text) {
         dispatch(updateMessage({ id: assistantId, updates: { content: res.text, status: 'complete' } }))
         dispatch(setMessageStatus({ id: assistantId, status: 'complete' }))

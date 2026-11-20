@@ -15,7 +15,8 @@
  *
  * ── 生态架构路径所有权标准（khyos 生态）──────────────────────────────
  *   底座（khyos）归属: 便携部署并入项目数据家 works/data/khy/T1-domains/base
- *   （2026-10-08 用户裁决，works/data/khyos 降级为兼容 junction）；
+ *   （2026-10-08 用户裁决并入；2026-11-19 用户裁决仓库不再使用 junction/symlink，
+ *   works/data/khyos 兼容 junction 不再维护，磁盘上的存量为历史残留）；
  *   非便携仍为 ~/.khyos   ← getBaseHome()
  *   应用（khyquant）归属: ~/.khyquant 或 ~/.khy（现状数据家）  ← getDataHome()
  *   红线：底座与应用各自独立，禁止互相直接读写对方目录/DB 文件；
@@ -40,8 +41,9 @@ const STORAGE_POINTER_VERSION = 1;
 /* ── DATA_PATHS 查表（DESIGN-LAY-007 §5.2 代码引用改向单点）────────────────
  * 逻辑名 → 档位路径（相对项目数据家）。派生自
  * docs/10_规范/registry/DATA-LOCATIONS.json 的 tiers[1..4]；2026-10-09 归位后
- * getDataDir('conversations') 一类调用经此表直接解析到 T 档家，绕过兼容
- * junction。未列入的名字走老路径（root 上仍是兼容 junction，行为不变）。 */
+ * getDataDir('conversations') 一类调用经此表直接解析到 T 档真目录。
+ * 未列入的名字走老路径，数据家根即真目录——2026-11-19 用户裁决仓库不再使用
+ * junction/symlink，不再为数据家维护任何可见别名。 */
 const DATA_PATHS = {
   conversations: 'T1-domains/sessions/conversations',
   sessions: 'T1-domains/sessions/sessions',
@@ -126,6 +128,8 @@ const DATA_PATHS = {
   remotedev: 'T1-domains/_unsorted/remotedev',
   templates: 'T1-domains/_unsorted/templates',
   workflows: 'T1-domains/_unsorted/workflows',
+  'ycode-borrowing': 'T1-domains/_unsorted/ycode-borrowing',
+  taste: 'T1-domains/base/taste',
 };
 
 // Only the first segment participates in the lookup; a rehomed root dir keeps
@@ -138,6 +142,15 @@ function _applyDataPaths(segments) {
     }
   }
   return segments;
+}
+
+/**
+ * Pure path resolution over DATA_PATHS — same mapping as getDataDir, no mkdir.
+ * 供探测/候选取型使用：存在性检查不能有建目录副作用，否则「目录是否存在」
+ * 永远为真，探测失去意义。
+ */
+function resolveDataPath(...segments) {
+  return path.join(getDataHome(), ..._applyDataPaths(segments));
 }
 
 let _cached = null;
@@ -510,7 +523,6 @@ function getProjectDataHome() {
   if (process.env.KHY_PROJECT_DATA_HOME) {
     _cachedProjectDataHome = path.resolve(process.env.KHY_PROJECT_DATA_HOME);
     _ensureDir(_cachedProjectDataHome);
-    _ensureVisibleAlias(_cachedProjectDataHome);
     return _cachedProjectDataHome;
   }
 
@@ -523,13 +535,11 @@ function getProjectDataHome() {
     if (_exists(pointer.projectDataHome)) {
       _cachedProjectDataHome = pointer.projectDataHome;
       _ensureDir(_cachedProjectDataHome);
-      _ensureVisibleAlias(_cachedProjectDataHome, getAppRoot());
       return _cachedProjectDataHome;
     }
     _warnPointerTargetMissing(pointer.projectDataHome, appDefault);
     _cachedProjectDataHome = appDefault;
     _ensureDir(_cachedProjectDataHome);
-    _ensureVisibleAlias(_cachedProjectDataHome);
     return _cachedProjectDataHome;
   }
 
@@ -564,76 +574,15 @@ function _pinProjectDataHome(dir, reason, source) {
   _ensureDir(dir);
   _cachedProjectDataHome = dir;
   _writePointer({ projectDataHome: dir, projectSource: source, projectPinnedReason: reason });
-  _ensureVisibleAlias(dir, getAppRoot());
   return dir;
 }
 
-/**
- * Maintain a non-hidden alias (`khy-Trajectory`) so the trajectory directory is
- * visible in file managers and `ls` without renaming `.khy` (referenced in ~256
- * code sites). The alias lives beside `aliasDir` (defaults to the target's
- * parent) and points at the ABSOLUTE target — so it stays valid even when the
- * real data home is relocated to another volume.
- *
- * Regenerated on every startup: both `.khy` and `khy-Trajectory` are gitignored
- * and never shipped, so this is what makes the visible alias reappear after a
- * fresh install on any machine. Fail-soft and idempotent — never clobbers a
- * real directory and never blocks startup.
- */
-/**
- * 读出一条 symlink / junction 的目标绝对路径；读不出返回 null。
- *
- * Windows 的 junction 用 readlink 读出来带 `\\?\` 前缀，须剥掉，
- * 否则 path.resolve 拿到的是带前缀的怪路径、永远判「不等于目标」。
- */
-function _linkTargetOf(linkPath) {
-  try {
-    let t = fs.readlinkSync(linkPath);
-    if (typeof t !== 'string' || !t) return null;
-    if (t.startsWith('\\\\?\\')) t = t.slice(4);
-    return path.isAbsolute(t) ? path.resolve(t) : path.resolve(path.dirname(linkPath), t);
-  } catch {
-    return null;
-  }
-}
-
-function _ensureVisibleAlias(targetDir, aliasDir) {
-  try {
-    const base = aliasDir || path.dirname(targetDir);
-    const aliasPath = path.join(base, 'khy-Trajectory');
-    if (path.resolve(aliasPath) === path.resolve(targetDir)) {
-      return;
-    } // never alias onto itself
-    const stat = fs.lstatSync(aliasPath, { throwIfNoEntry: false });
-    if (stat) {
-      // 真实文件/目录占了这个名字 → 绝不覆盖用户数据。
-      if (!stat.isSymbolicLink()) return;
-      // 链接/junction 已存在：
-      //   · 指向仍在 → 认为正确，不动（老行为，避免无谓改写）；
-      //   · 指向已消失（**断链**）→ 修回本目标。
-      // 「已有链接一律假设正确」是 BUG-018 的成因之一：数据家搬家后链接悬空，
-      // 界面/脚本看到的是一个指向不存在路径的可见别名，且**永远不会自愈**
-      // ——本仓的实测症状正是「根别名悬空（指向已消失的 .khy）」。
-      const current = _linkTargetOf(aliasPath);
-      if (current && fs.existsSync(current)) return;
-      try {
-        fs.unlinkSync(aliasPath);
-      } catch {
-        /* 摘不掉就退回到「不建别名」，绝不阻断启动 */
-        return;
-      }
-    }
-    if (process.platform === 'win32') {
-      fs.symlinkSync(targetDir, aliasPath, 'junction');
-    } else {
-      // Absolute target: works across volumes (a relative basename link would
-      // dangle once the real home is on a different drive).
-      fs.symlinkSync(targetDir, aliasPath);
-    }
-  } catch {
-    /* alias is best-effort; never block startup */
-  }
-}
+/* ── 可见别名已废除（2026-11-19 用户裁决）────────────────────────────────────
+ * 仓库不再使用 junction/symlink：khy-Trajectory 可见别名机制
+ * （_ensureVisibleAlias / _linkTargetOf）已整体拆除。项目数据家就是
+ * works/data/khy 真目录，文件管理器与 ls 直接看真目录，无需别名中转。
+ * .gitignore 的 khy-Trajectory 条目留作历史兜底；磁盘上的存量别名不会被
+ * 重建，也不再被任何消费方依赖，摘除留待人工。 */
 
 /**
  * Get a subdirectory under the project-scoped data home.
@@ -798,11 +747,11 @@ function getBaseHome() {
   } else if (isPortableDeployment()) {
     // Portable: keep base data inside the install tree. 2026-10-08 (user
     // adjudication): the base home merged INTO the project data home at
-    // works/data/khy/T1-domains/base — works/data/khyos remains only as a
-    // compatibility junction so stale literal writers land in the new home
-    // (DESIGN-LAY-007 §5 "移动即建链接"). Resolved lazily (never at require
-    // time) so the portable decision is always final by the time any base
-    // store reads it.
+    // works/data/khy/T1-domains/base. Nothing in-tree maintains the
+    // works/data/khyos compatibility junction any more (2026-11-19
+    // no-junction/symlink adjudication); disk remnants are stale artifacts.
+    // Resolved lazily (never at require time) so the portable decision is
+    // always final by the time any base store reads it.
     _cachedBaseHome = path.join(getAppRoot(), 'works', 'data', 'khy', 'T1-domains', 'base');
   } else {
     _cachedBaseHome = path.join(os.homedir(), '.khyos');
@@ -959,6 +908,7 @@ module.exports = {
   DATA_PATHS,
   getDataHome,
   getDataDir,
+  resolveDataPath,
   getLegacyDataHome,
   getLegacyBaseHome,
   getAppHome,

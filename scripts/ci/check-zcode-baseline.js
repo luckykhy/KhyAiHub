@@ -44,7 +44,7 @@ const DEFAULT_TARGETS = {
 };
 
 // M1 扫描的源目录（仅这些顶层目录下的 JS 计入「架构表面积」）。
-const SCAN_DIRS = ['runtime/boot/kernel', 'runtime/substrate/platform', 'runtime/node', 'apps', 'delivery/channel', 'delivery/web', 'delivery/extension', 'tools'];
+const SCAN_DIRS = ['runtime/boot/kernel', 'runtime/substrate/platform', 'runtime/node', 'apps', 'delivery/channel', 'delivery/channel/web', 'delivery/extension', 'tools'];
 // 排除路径片段（构建产物 / 依赖 / 打包资产 / 测试）。
 const EXCLUDE_SEGMENTS = [
   'node_modules', path.sep + 'out' + path.sep, path.sep + 'dist' + path.sep,

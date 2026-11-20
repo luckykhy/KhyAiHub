@@ -10,29 +10,24 @@
  * 3. Community skill registry (remote)
  * 4. Cross-project adaptation (patterns from one project applied to another)
  *
- * Growth persistence: ~/.khyquant/growth/skills_learned.json
+ * Growth persistence: dataHome 'growth' tier — skills_learned.json /
+ * interaction_patterns.json, resolved via resolveDataPath (probe-safe).
  */
 
 const crypto = require('crypto');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const { distillSkillFromSources } = require('./domain/skills/skills/skillSourceDistiller');
 const { runThreatScan, shouldAllowLearn } = require('./domain/skills/skills/skillThreatScanner');
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
 
-// Portable-aware app home resolved at load (legacy const semantics preserved).
-function _appHome() {
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
-  } catch {
-    return path.join(os.homedir(), '.khyquant');
-  }
-}
-const SKILLS_DIR = path.join(_appHome(), 'skills');
-const LEARNED_FILE = path.join(_appHome(), 'growth', 'skills_learned.json');
-const PATTERNS_FILE = path.join(_appHome(), 'growth', 'interaction_patterns.json');
+// 'skills'/'growth' are registered DATA_PATHS names: getDataDir creates the
+// tiered directory, resolveDataPath maps the probe-only JSON files without
+// mkdir side effects (an existsSync probe must not conjure the file).
+const SKILLS_DIR = getDataDir('skills');
+const LEARNED_FILE = resolveDataPath('growth', 'skills_learned.json');
+const PATTERNS_FILE = resolveDataPath('growth', 'interaction_patterns.json');
 
 // ─── Open Source Project Discovery Sources ──────────────────────────────────
 

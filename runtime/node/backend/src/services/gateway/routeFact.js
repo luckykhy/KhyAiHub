@@ -42,6 +42,9 @@
  *   switchedFrom 与 served 不同的首跳来源（无切换或失败时为 ''）
  *   switchReason 首跳失败类别（归一化 errorType，非原始消息；无切换时为 ''）
  *   environmental 环境级不通结论（D2 证据聚合透出；判据见 fallbackEligibilityPolicy）
+ *   bandit     可选。UCB 选路时被选中臂的读数 { adapter, pulls, mean, scope:'in-process' }；
+ *              KHY_UCB_ROUTING 关闭 / 未发生选路时**整段不出现**（默认路径零变化）。
+ *              样本只在网关进程内累积，重启清零 —— 这是披露的要点，不是实现细节。
  *
  * 一致性不变式（可断言，见 _assertCoherent）：
  *   - outcome==='ok'   ⟺ served 非空
@@ -140,6 +143,7 @@ function createEmptyRouteFact(env) {
  * @param {Record<string,string|undefined>} [options.env]  env 快照（缺省读 process.env）
  * @param {number} [options.at]  时间戳（缺省 Date.now()；显式传入以保证确定性测试）
  * @param {boolean} [options.pinnedUnavailable]  钉选通道是否不可用（由调用方判定）
+ * @param {object} [options.bandit]  UCB 选路读数 { adapter, pulls, mean }（可选）
  * @returns {object}
  */
 function buildRouteFact(result, options = {}) {
@@ -173,7 +177,27 @@ function buildRouteFact(result, options = {}) {
     reason: _str(r.error) || _str(r.fallbackReason) || '',
     at: Number.isFinite(options.at) ? Number(options.at) : Date.now(),
   };
+  _attachBandit(fact, options.bandit);
   return _attachCascade(fact, r);
+}
+
+/**
+ * UCB 选路读数挂载（块 B2）。没有读数就整段不写 —— 默认关（KHY_UCB_ROUTING=false）
+ * 时 routeFact 的字段面与 JSON 逐字节不变。scope 固定 'in-process'：样本只活在
+ * 当前网关进程里，重启即清零，任何消费方都不得把它当成持久化的历史准确率。
+ */
+function _attachBandit(fact, bandit) {
+  if (!bandit || typeof bandit !== 'object') {
+    return fact;
+  }
+  const adapter = _str(bandit.adapter);
+  const pulls = Number(bandit.pulls);
+  const mean = Number(bandit.mean);
+  if (!adapter || !Number.isFinite(pulls) || pulls < 0 || !Number.isFinite(mean)) {
+    return fact;
+  }
+  fact.bandit = { adapter, pulls, mean, scope: 'in-process' };
+  return fact;
 }
 
 /**
@@ -203,8 +227,25 @@ function _assertCoherent(fact) {
   if (f.strictPinned === true && f.pinnedUnavailable === true && outcome !== 'failed') {
     problems.push('strictPinned+pinnedUnavailable 必为 failed（strict 抑制回退）');
   }
+  if (f.bandit !== undefined) problems.push(..._banditProblems(f.bandit));
   problems.push(..._cascadeProblems(f, outcome));
   return problems;
+}
+
+/** bandit 字段的自洽检查（可选字段：只在出现时校验，绝不抛）。 */
+function _banditProblems(bandit) {
+  try {
+    if (!bandit || typeof bandit !== 'object') return ['bandit 非对象'];
+    const problems = [];
+    if (!_str(bandit.adapter)) problems.push('bandit.adapter 为空');
+    const pulls = Number(bandit.pulls);
+    if (!Number.isFinite(pulls) || pulls < 0) problems.push('bandit.pulls 必须是有限的非负数');
+    if (!Number.isFinite(Number(bandit.mean))) problems.push('bandit.mean 必须是有限数');
+    if (_str(bandit.scope) !== 'in-process') problems.push('bandit.scope 必须为 in-process');
+    return problems;
+  } catch {
+    return ['bandit 校验异常'];
+  }
 }
 
 /**
@@ -352,6 +393,33 @@ function formatCascadeNotice(fact, options = {}) {
   }
 }
 
+/**
+ * UCB 选路读数 notice（块 B2）：把「这条选路有多少样本」说到用户能看见。
+ *
+ * 与 formatCascadeNotice 分开：切换通知只在「成功且真切换」时出现，而选路读数
+ * 与是否切换无关，硬塞进同一条会让「无切换」的回合永远看不到样本量。两个函数
+ * 各自返回独立 notice 行，无 bandit 时本函数返回 ''，旧输出逐字节不变。
+ */
+function formatBanditNotice(fact, options = {}) {
+  try {
+    const f = fact && typeof fact === 'object' ? fact : {};
+    const b = f.bandit;
+    if (!b || typeof b !== 'object') return '';
+    const adapter = _str(b.adapter);
+    if (!adapter) return '';
+    const pulls = Number(b.pulls);
+    const mean = Number(b.mean);
+    const o = options && typeof options === 'object' ? options : {};
+    const name = typeof o.displayName === 'function' ? o.displayName : null;
+    const seen = Number.isFinite(pulls) && pulls > 0;
+    const sample = seen ? (Number.isInteger(pulls) ? String(pulls) : pulls.toFixed(2)) : '0';
+    const meanText = seen && Number.isFinite(mean) ? mean.toFixed(3) : '—（未观测）';
+    return `⚑ 选路 ${_safeLabel(name, adapter)}（UCB1）：样本 ${sample} · 均值 ${meanText} · 进程内统计，重启清零`;
+  } catch {
+    return '';
+  }
+}
+
 /** displayName 解析的安全包装（解析器抛错或返回空 → 回落适配器 key 原文）。 */
 function _safeLabel(name, v) {
   if (!name) return _str(v) || v;
@@ -407,6 +475,7 @@ module.exports = {
   buildRouteFact,
   formatRouteFactLabel,
   formatCascadeNotice,
+  formatBanditNotice,
   isPinnedAdapter,
   isStrictPinned,
   OUTCOMES,

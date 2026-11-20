@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: leviathan-notes.md -->
+<title>leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>brand<span class="sep">›</span>khyos-desktop<span class="sep">›</span>docs<span class="sep">›</span>leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术</div>
+      <header class="hero reveal"><h1>leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#leviathan-调研笔记-可复用的渲染管线与程序化建模技术">leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术</a></li><li class="lvl-2"><a href="#1-渲染管线顺序与每个-pass-的职责">1. 渲染管线顺序与每个 pass 的职责</a></li><li class="lvl-3"><a href="#1-1-权威顺序-两处一致">1.1 权威顺序（两处一致）</a></li><li class="lvl-3"><a href="#1-2-每个-pass-的职责与关键实现">1.2 每个 pass 的职责与关键实现</a></li><li class="lvl-3"><a href="#1-3-值得照搬的四个结构性决定">1.3 值得照搬的四个结构性决定</a></li><li class="lvl-2"><a href="#2-mrt-g-buffer-布局">2. MRT / G-Buffer 布局</a></li><li class="lvl-3"><a href="#2-1-rendertarget-配置-src-engine-js-141-158">2.1 RenderTarget 配置（`src/engine.js:141-158`）</a></li><li class="lvl-3"><a href="#2-2-两个输出槽位-src-glsl-js-72-81-所有场景材质共用-mrt-out">2.2 两个输出槽位（`src/glsl.js:72-81`，所有场景材质共用 `MRT_OUT`）</a></li><li class="lvl-3"><a href="#2-3-数据缓冲的三个下游用法-都是-白嫖-级思路">2.3 数据缓冲的三个下游用法（都是&quot;白嫖&quot;级思路）</a></li><li class="lvl-3"><a href="#2-4-线性管线-末段调色">2.4 线性管线 + 末段调色</a></li><li class="lvl-3"><a href="#2-5-与本项目现状对照-works-brand-khyos-desktop-本次实读">2.5 与本项目现状对照（`works/brand/khyos-desktop/`，本次实读）</a></li><li class="lvl-2"><a href="#3-水彩背景笔触与描线的具体做法">3. 水彩背景笔触与描线的具体做法</a></li><li class="lvl-3"><a href="#3-1-paint-pass-广义各向异性-kuwahara-src-passes-env-js-43-100">3.1 paint pass：广义各向异性 Kuwahara（`src/passes-env.js:43-100`）</a></li><li class="lvl-3"><a href="#3-2-ink-pass-数据缓冲驱动的描线-src-engine-js-18-66">3.2 ink pass：数据缓冲驱动的描线（`src/engine.js:18-66`）</a></li><li class="lvl-3"><a href="#3-3-painted-背景本体">3.3 painted 背景本体</a></li><li class="lvl-3"><a href="#3-4-water-pass-中可独立复用的-屏幕空间水面-配方-src-passes-env-js-102-522">3.4 water pass 中可独立复用的&quot;屏幕空间水面&quot;配方（`src/passes-env.js:102-522`）</a></li><li class="lvl-2"><a href="#4-骨骼-蒙皮-截面放样建模方法">4. 骨骼、蒙皮、截面放样建模方法</a></li><li class="lvl-3"><a href="#4-1-gpu-骨骼链-rest-空间建模-顶点着色器包裹-src-lev-spine-js">4.1 GPU 骨骼链：rest 空间建模 + 顶点着色器包裹（`src/lev-spine.js`）</a></li><li class="lvl-3"><a href="#4-2-下颚是逐顶点权重-不是骨骼">4.2 下颚是逐顶点权重，不是骨骼</a></li><li class="lvl-3"><a href="#4-3-截面放样-一张皮从尾到吻-src-lev-body-js">4.3 截面放样：一张皮从尾到吻（`src/lev-body.js`）</a></li><li class="lvl-3"><a href="#4-4-甲片装甲-凸包-投影贴花-按关节合并-src-archer-geo-js">4.4 甲片装甲：凸包 + 投影贴花 + 按关节合并（`src/archer-geo.js`）</a></li><li class="lvl-3"><a href="#4-5-动画-关键帧即-身体曲线-src-lev-anim-js">4.5 动画：关键帧即&quot;身体曲线&quot;（`src/lev-anim.js`）</a></li><li class="lvl-2"><a href="#5-确定性与性能注意点">5. 确定性与性能注意点</a></li><li class="lvl-3"><a href="#5-1-确定性-这套管线的立身之本">5.1 确定性（这套管线的立身之本）</a></li><li class="lvl-3"><a href="#5-2-性能">5.2 性能</a></li><li class="lvl-3"><a href="#5-3-坑点清单-读码所见-逐条有出处">5.3 坑点清单（读码所见，逐条有出处）</a></li><li class="lvl-2"><a href="#6-对本项目-khyos-desktop-的落地建议">6. 对本项目（khyos-desktop）的落地建议</a></li><li class="lvl-3"><a href="#6-1-建议照搬-按性价比排序">6.1 建议照搬（按性价比排序）</a></li><li class="lvl-3"><a href="#6-2-需要改-不适宜照搬的部分">6.2 需要改 / 不适宜照搬的部分</a></li><li class="lvl-3"><a href="#6-3-建议的落地顺序">6.3 建议的落地顺序</a></li><li class="lvl-2"><a href="#附-本笔记的边界">附：本笔记的边界</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="leviathan-调研笔记-可复用的渲染管线与程序化建模技术">leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术<a class="anchor" href="#leviathan-调研笔记-可复用的渲染管线与程序化建模技术" aria-label="锚点">#</a></h1>
+<blockquote><p>调研对象：<code>0xCodez/leviathan</code>（GitHub，默认分支 main，2026-11-08 读取）。<br><strong>地址勘误</strong>：任务给的 <code>exCodez/leviathan</code> 实际 404（该组织公开仓库数为 0）；<br>真实仓库是 <code>0xCodez/leviathan</code>（HTTP 200，55 stars，JavaScript，2026-11-04 最后推送）。<br>本笔记<strong>只提取技术与管线</strong>：上游的故事、角色、美术设定一律不引用、不改写、不致敬。<br>文中结论全部来自本次实际读取的上游源码（文件清单见文首，行号为上游 main 分支行号）；<br><strong>未运行上游代码，无实测帧率数据</strong>——唯一性能数字引自 <code>CONTRACT.md:151</code>。</p>
+<p>上游自述：three.js r170 + WebGL2 的自定义多 pass 渲染器，模仿「赛璐璐主角 + 手绘背景」<br>的动画制片流程（<code>README.md:24-38</code>）。</p></blockquote>
+<p>已读上游文件（14 个，覆盖渲染入口、着色器、建模/骨骼/动画、工具链）：</p>
+<pre><code>README.md、CONTRACT.md
+src/engine.js（渲染入口）、src/glsl.js（共享 uniform + MRT 输出）、
+src/passes-env.js（paint/water/atmosphere 后处理）、src/materials.js（场景材质 + 叠加精灵）
+src/util.js（种子随机 / 时间量化 / 关键帧）、src/main.js（装配 + 逐帧入口）
+src/lev-spine.js（GPU 骨骼链）、src/lev-body.js（截面放样建模）、
+src/lev-mat.js（脊链蒙皮材质）、src/lev-anim.js（纯函数动画）
+src/archer-geo.js（程序化甲片 + 合并器）
+tools/render.mjs（确定性采集 / 断点续渲）</code></pre>
+<blockquote><p>上游源码暂存于 <code>entries/research/</code>（可按 raw URL 再生产，不入库）；<br>本仓 <code>works/brand/khyos-film/docs/leviathan-notes.md</code> 是同源上游的另一份笔记<br>（面向 khyos-film），本文面向 khyos-desktop，两份笔记行号基准相同、结论独立核对过。</p></blockquote>
+<hr>
+<h2 id="1-渲染管线顺序与每个-pass-的职责">1. 渲染管线顺序与每个 pass 的职责<a class="anchor" href="#1-渲染管线顺序与每个-pass-的职责" aria-label="锚点">#</a></h2>
+<h3 id="1-1-权威顺序-两处一致">1.1 权威顺序（两处一致）<a class="anchor" href="#1-1-权威顺序-两处一致" aria-label="锚点">#</a></h3>
+<p><code>src/engine.js:5-11</code> 的注释与 <code>CONTRACT.md:144-145</code> 完全一致：</p>
+<pre><code>shadow depth → reflection → main MRT (color + data)
+  → paint（Kuwahara 笔触，仅 painted 像素）
+  → ink（手绘描线，仅 cel 像素）
+  → water（屏幕空间水面：反射/折射/波纹/泡沫）
+  → atmosphere（高度雾、霞、光束）
+  → overlay sprites → bloom → final grade + grain + 降采样到画布</code></pre>
+<p><code>Engine.render()</code> 严格按此顺序执行（<code>src/engine.js:246-340</code>，分节注释<br><code>// 1. shadow map</code> 在 <code>src/engine.js:252</code>、<code>// 9. bloom</code> 在 <code>:322</code>、<code>// 10. final</code> 在 <code>:330</code>）。</p>
+<h3 id="1-2-每个-pass-的职责与关键实现">1.2 每个 pass 的职责与关键实现<a class="anchor" href="#1-2-每个-pass-的职责与关键实现" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>pass</th><th>职责</th><th>关键实现（上游行号）</th></tr></thead><tbody><tr><td>1</td><td>shadow</td><td><strong>只给角色用的阴影贴图</strong>——画的是&quot;手绘光&quot;不是物理光</td><td><code>setupShadow()</code> 正交相机紧包角色（<code>near=1, far=depth*2</code>，注释直言 &quot;so the bird shades the fingers&quot;，<code>src/engine.js:211-212</code>）；<strong>只渲染 <code>opt.shadowRoots</code> 登记的根节点</strong>，场景装饰永不投影（<code>src/engine.js:258-266</code>）；<code>userData.noShadow</code> 临时隐藏法；3×3 PCF + 法线偏移 0.04，着色器自做 <code>*0.5+0.5</code>（<code>src/glsl.js:57-69</code>）</td></tr><tr><td>2</td><td>reflection</td><td>水面反射，<strong>镜像相机半分辨率</strong>渲染</td><td><code>updateReflection()</code>：位置/视点/up 相对 <code>uWaterLevel</code> 取镜像（<code>src/engine.js:226-244</code>）；半分辨率 RT（<code>src/engine.js:155</code>）；<code>userData.noReflect</code> 临时隐藏法</td></tr><tr><td>3</td><td>main MRT</td><td>场景主渲染，<strong>一次输出颜色 + 数据两张图</strong></td><td><code>count: 2</code> 的 WebGLRenderTarget + DepthTexture；<code>G.uPass=0</code>（<code>src/engine.js:281-286</code>）</td></tr><tr><td>4</td><td>paint</td><td>水彩/ gouache 笔触，<strong>只作用于背景像素</strong></td><td>广义各向异性 Kuwahara（详见 §3.1）；半径每镜头可调（<code>opt.paintRadius</code>，默认 4，<code>src/engine.js:166, 289-291</code>）</td></tr><tr><td>5</td><td>ink</td><td>手绘描线，<strong>只作用于 cel 像素</strong></td><td>id/深度/法线边缘检测 + 笔压噪声（详见 §3.2）；<code>inkSeed = floor(t*12)%5</code>——<strong>按&quot;张&quot;（on twos）换种子</strong>，同张内线条稳定、张间抖动（<code>src/main.js:100</code>）</td></tr><tr><td>6</td><td>water</td><td>屏幕空间水面：反投影世界射线 → 与水面平面求交 → 高度场/涟漪/尾流/反射/折射/焦散/泡沫</td><td>深度哨兵 8000m；像素足迹（米/像素）驱动全部 LOD（详见 §3.4）</td></tr><tr><td>7</td><td>atmosphere</td><td>指数雾 + 贴水高度雾（fbm 雾带）+ 光轴（28 次向太阳 march）</td><td>天空像素跳过雾；远处海面融进地平线色不留硬缝（<code>src/passes-env.js:524-614</code>，天空判定 <code>:554</code>，光束 <code>:591-611</code>）</td></tr><tr><td>8</td><td>overlay</td><td>能量/闪电/水花等<strong>软粒精灵</strong>，直接画到颜色 RT</td><td>实例化（<code>instanceMatrix</code> + 每实例 <code>aSprite</code> 属性，<code>src/materials.js:194-214</code>）；读 MRT 数据缓冲做<strong>软深度</strong>：<code>soft = clamp((sceneD - vDepth)/uSoft, 0, 1)</code>，相交处淡出（<code>src/materials.js:226-227</code>）</td></tr><tr><td>9</td><td>bloom</td><td>阈值 1.05 提亮 → 6 次可分离模糊：1/4 分辨率 H/V 一对 → 1/8 分辨率 H/V 一对 → 1/8 上 2px H/V 一对；final 同时采样 1/4 与 1/8 两档叠加</td><td>5-tap 线性采样权重 0.227/0.316/0.070（<code>src/engine.js:322-332</code>，权重在 BLUR_FS）</td></tr><tr><td>10</td><td>final</td><td>软肩 tone map、曝光/gamma、饱和度+vibrance、lift/gain、暗角、<strong>按帧号 hash 的胶片颗粒</strong>、淡入淡出；S&gt;1.5 时 4-tap 盒式降采样</td><td>FINAL_FS（<code>src/engine.js:95-129</code>，降采样分支在开头 <code>if(uS &gt; 1.5)</code>）</td></tr></tbody></table>
+<h3 id="1-3-值得照搬的四个结构性决定">1.3 值得照搬的四个结构性决定<a class="anchor" href="#1-3-值得照搬的四个结构性决定" aria-label="锚点">#</a></h3>
+<ol><li><strong>&quot;画在像素类别上&quot;而不是&quot;画在物体上&quot;</strong>：paint/ink 都靠 MRT 数据缓冲里的</li></ol>
+<p>材质 id 与 painted 掩码决定作用范围——后处理与场景内容彻底解耦<br>   （<code>src/glsl.js:76-80</code>）。</p>
+<ol><li><strong>全屏后处理统一用全屏四边形 + GLSL3 ShaderMaterial</strong>（<code>depthTest/depthWrite=false</code>，</li></ol>
+<p><code>frustumCulled=false</code>，一个 quad 一个 scene 一个正交相机复用），<br>   写 pass 就是 <code>pass(material, target)</code> 一行（<code>src/engine.js:205-209</code>）。</p>
+<ol><li><strong>共享 uniform 注册表 <code>G</code></strong>：所有材质 <code>...G</code> 展开的是<strong>同一个 <code>{value}</code> 对象引用</strong>，</li></ol>
+<p>一帧只改一处（uTime/uSunDir/uShadowMap…）全部材质生效（<code>src/glsl.js:3-5</code>）。</p>
+<ol><li><strong>8000m 深度哨兵</strong>：视图深度 &gt;8000 一律判天空，水/大气 pass 靠它做分支；</li></ol>
+<p>场景因此可以&quot;作弊距离&quot;，只保相机 8000m 内精致（<code>CONTRACT.md:100-101</code>；<br>   <code>src/passes-env.js:317, 554</code>）。</p>
+<ol><li><strong><code>uPass</code> 三态约定</strong>：0=主渲染 / 1=阴影深度 / 2=反射。材质在阴影 pass 早退写白</li></ol>
+<p>（<code>src/materials.js:92</code>、<code>src/lev-mat.js:82</code>），反射 pass 丢弃水下几何<br>   （<code>src/materials.js:81</code>、<code>src/lev-mat.js:81</code>）——<strong>同一份场景代码服务三个 pass</strong>，<br>   不需要另建影子场景。</p>
+<hr>
+<h2 id="2-mrt-g-buffer-布局">2. MRT / G-Buffer 布局<a class="anchor" href="#2-mrt-g-buffer-布局" aria-label="锚点">#</a></h2>
+<h3 id="2-1-rendertarget-配置-src-engine-js-141-158">2.1 RenderTarget 配置（<code>src/engine.js:141-158</code>）<a class="anchor" href="#2-1-rendertarget-配置-src-engine-js-141-158" aria-label="锚点">#</a></h3>
+<pre><code class="language-js">renderer = <span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">WebGLRenderer</span>({ <span class="hljs-attr">antialias</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">preserveDrawingBuffer</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">powerPreference</span>: <span class="hljs-string">&#x27;high-performance&#x27;</span> });
+renderer.<span class="hljs-title function_">setPixelRatio</span>(<span class="hljs-number">1</span>); renderer.<span class="hljs-property">autoClear</span> = <span class="hljs-literal">false</span>;
+renderer.<span class="hljs-property">outputColorSpace</span> = <span class="hljs-variable constant_">THREE</span>.<span class="hljs-property">LinearSRGBColorSpace</span>;   <span class="hljs-comment">// 线性管线，调色在最后</span>
+
+rtMain = <span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">WebGLRenderTarget</span>(<span class="hljs-variable constant_">IW</span>, <span class="hljs-variable constant_">IH</span>, {
+  <span class="hljs-attr">count</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">THREE</span>.<span class="hljs-property">HalfFloatType</span>,
+  <span class="hljs-attr">minFilter</span>: <span class="hljs-title class_">NearestFilter</span>, <span class="hljs-attr">magFilter</span>: <span class="hljs-title class_">NearestFilter</span>,
+  <span class="hljs-attr">depthTexture</span>: <span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">DepthTexture</span>(<span class="hljs-variable constant_">IW</span>, <span class="hljs-variable constant_">IH</span>),
+});
+rtMain.<span class="hljs-property">textures</span>[<span class="hljs-number">0</span>].<span class="hljs-property">minFilter</span> = rtMain.<span class="hljs-property">textures</span>[<span class="hljs-number">0</span>].<span class="hljs-property">magFilter</span> = <span class="hljs-title class_">LinearFilter</span>;
+<span class="hljs-comment">// textures[1]（数据）保持 Nearest——插值 id/深度会出伪影</span>
+rtA / rtB   半浮点乒乓缓冲（paint→ink→water→atmosphere 轮转）
+rtRefl      半分辨率反射
+rtShadow    <span class="hljs-number">4096</span>×<span class="hljs-number">4096</span> 仅深度（clear 成白色）
+rtBl[<span class="hljs-number">0.</span><span class="hljs-number">.3</span>]  <span class="hljs-number">1</span>/<span class="hljs-number">4</span>、<span class="hljs-number">1</span>/<span class="hljs-number">8</span> 分辨率 bloom 链</code></pre>
+<p>内部渲染分辨率 = 画布 × S（<code>scale</code> 参数，预览 1、出片 2），final pass 负责降采样<br>（<code>src/engine.js:146</code>、<code>src/main.js:16</code>）。</p>
+<h3 id="2-2-两个输出槽位-src-glsl-js-72-81-所有场景材质共用-mrt-out">2.2 两个输出槽位（<code>src/glsl.js:72-81</code>，所有场景材质共用 <code>MRT_OUT</code>）<a class="anchor" href="#2-2-两个输出槽位-src-glsl-js-72-81-所有场景材质共用-mrt-out" aria-label="锚点">#</a></h3>
+<pre><code class="language-glsl"><span class="hljs-keyword">layout</span>(<span class="hljs-keyword">location</span> = <span class="hljs-number">0</span>) <span class="hljs-keyword">out</span> <span class="hljs-type">vec4</span> oColor;
+<span class="hljs-keyword">layout</span>(<span class="hljs-keyword">location</span> = <span class="hljs-number">1</span>) <span class="hljs-keyword">out</span> <span class="hljs-type">vec4</span> oData;
+
+<span class="hljs-type">void</span> writeOut(<span class="hljs-type">vec3</span> col, <span class="hljs-type">float</span> a, <span class="hljs-type">vec3</span> nView, <span class="hljs-type">float</span> viewDepth, <span class="hljs-type">float</span> id){
+  oColor = <span class="hljs-type">vec4</span>(col, id &gt; <span class="hljs-number">0.5</span> ? <span class="hljs-number">0.0</span> : <span class="hljs-number">1.0</span>);          <span class="hljs-comment">// alpha = &quot;是否背景(可涂)像素&quot;</span>
+  oData  = <span class="hljs-type">vec4</span>(nView.xy * <span class="hljs-number">0.5</span> + <span class="hljs-number">0.5</span>, viewDepth, id); <span class="hljs-comment">// rg=视图法线, b=视图深度, a=材质 id</span>
+}</code></pre>
+<table><thead><tr><th>通道</th><th>内容</th><th>精度/编码</th><th>消费者</th></tr></thead><tbody><tr><td>color.rgb</td><td>HDR 线性颜色</td><td>half-float</td><td>paint/ink/water/atmos/bloom</td></tr><tr><td>color.a</td><td><strong>painted 掩码</strong>（背景=1，cel=0）</td><td>0/1</td><td>paint pass 的 early-out（<code>src/passes-env.js:56</code>）</td></tr><tr><td>data.rg</td><td>视图法线 xy</td><td><code>n*0.5+0.5</code>，z 由 <code>sqrt(1-x²-y²)</code> 重建（<code>src/engine.js:27</code>）</td><td>ink 法线边缘、水面焦散取世界法线</td></tr><tr><td>data.b</td><td>视图深度（<code>-mv.z</code>，米）</td><td>half-float</td><td>ink 深度边缘、water/atmos 的深度比较与像素足迹</td></tr><tr><td>data.a</td><td><strong>材质 id</strong>：0=背景(笔触无描线)，1–99=描线 cel，100+=不描线 cel</td><td>整数浮点</td><td>ink 的 <code>inked()</code> 判定与 id 跳变线</td></tr></tbody></table>
+<p>id 语义见 <code>CONTRACT.md:146-147</code>：<strong>&quot;ids wrap, keep neighbours different&quot;</strong>——<br>同一主体的不同部件用不同 id，描线才落在甲片接缝上。</p>
+<h3 id="2-3-数据缓冲的三个下游用法-都是-白嫖-级思路">2.3 数据缓冲的三个下游用法（都是&quot;白嫖&quot;级思路）<a class="anchor" href="#2-3-数据缓冲的三个下游用法-都是-白嫖-级思路" aria-label="锚点">#</a></h3>
+<ul><li><strong>ink</strong>：<code>abs(dN.a - dC.a) &gt; 0.5</code> → 部件/剪影边界线，且<strong>只在 cel 更靠前时画</strong></li></ul>
+<p>（深度比较带 0.5 容差，避免背景被角色轮廓误描）；否则按相对深度变化<br>  <code>smoothstep(0.015,0.035, rel)</code> 与法线不连续 <code>smoothstep(0.78,0.6, nd)*0.85</code><br>  出褶皱线（<code>src/engine.js:28-52</code>）。</p>
+<ul><li><strong>water</strong>：<code>sceneVD &lt; 8000 &amp;&amp; waterVD &gt; sceneVD</code> → 几何在水面前方，水面让位</li></ul>
+<p>（<code>src/passes-env.js:317</code>）；焦散从 data 的视图法线重建世界法线打在水下物体上<br>  （<code>src/passes-env.js:415-425</code>）。</p>
+<ul><li><strong>overlay 软粒子</strong>：精灵深度 vs 场景深度做软淡出（<code>src/materials.js:226-227</code>）。</li></ul>
+<h3 id="2-4-线性管线-末段调色">2.4 线性管线 + 末段调色<a class="anchor" href="#2-4-线性管线-末段调色" aria-label="锚点">#</a></h3>
+<p><code>outputColorSpace = LinearSRGBColorSpace</code>，所有 pass 在线性空间累加，<br>tone map/gamma/饱和度/vignance/grain 全在 FINAL_FS 一次做完（<code>src/engine.js:145</code>）。<br>每个镜头的光色/雾色/水色/调色来自 <code>applyLook()</code> 的 preset 按 <code>k</code> 插值<br>（<code>CONTRACT.md:124</code> 的 LOOKS 契约）——<strong>色彩脚本也是数据驱动</strong>，改色调不动着色器。</p>
+<h3 id="2-5-与本项目现状对照-works-brand-khyos-desktop-本次实读">2.5 与本项目现状对照（<code>works/brand/khyos-desktop/</code>，本次实读）<a class="anchor" href="#2-5-与本项目现状对照-works-brand-khyos-desktop-本次实读" aria-label="锚点">#</a></h3>
+<p>本项目 <code>src/render/pipeline.js:441-449</code> 已是 <code>count: 2</code> + <code>FloatType</code> + Nearest 的<br>MRT；差异在<strong>数据通道的打包方式</strong>：</p>
+<table><thead><tr><th></th><th>上游 leviathan</th><th>本项目 khyos-desktop</th></tr></thead><tbody><tr><td>RT1 布局</td><td>四通道分立：<code>(nView.xy*0.5+0.5, viewDepth, id)</code>（<code>src/glsl.js:79</code>）</td><td><code>rgb</code> 存视图法线，<code>a</code> 打包 <code>floor(depth*64)*256 + id</code>（<code>src/render/cel.js:23-31</code>）</td></tr><tr><td>深度编码</td><td>原始视图深度（米，half-float）</td><td>1/64 世界单位量化、上限 1024（<code>cel.js:19-21</code>）</td></tr><tr><td>背景判定</td><td>color.a 的 painted 掩码 + id==0 双保险</td><td>仅 <code>materialId==0</code>（<code>pipeline.js:111</code>）</td></tr><tr><td>后处理链</td><td>paint→ink→water→atmosphere→overlay→bloom→grade</td><td>watercolor→line→bloom→grade→fade→grain（<code>pipeline.js:378-380</code>）</td></tr></tbody></table>
+<p>结论：<strong>布局不同但语义同构</strong>，迁移技术时只迁算法、不迁通道格式——本项目的打包契约<br>（<code>cel.js:11-17</code> 的注释：深度必须非归一化、1/64 量化配合 mpp 淡出才不出虚线）<br>是自行推导的，继续有效。</p>
+<hr>
+<h2 id="3-水彩背景笔触与描线的具体做法">3. 水彩背景笔触与描线的具体做法<a class="anchor" href="#3-水彩背景笔触与描线的具体做法" aria-label="锚点">#</a></h2>
+<h3 id="3-1-paint-pass-广义各向异性-kuwahara-src-passes-env-js-43-100">3.1 paint pass：广义各向异性 Kuwahara（<code>src/passes-env.js:43-100</code>）<a class="anchor" href="#3-1-paint-pass-广义各向异性-kuwahara-src-passes-env-js-43-100" aria-label="锚点">#</a></h3>
+<pre><code>对每个像素：
+1. if (color.a &lt; 0.5) 原样返回            // cel 像素不涂（:56）
+2. ang = (fbm2(fc/140) - 0.5)*3.2 + 0.4   // 噪声方向场 = 笔触走向（:59）
+   dA = 主轴, dB = 副轴
+3. rad = uRadius * mix(0.72, 0.4, smoothstep(10,120,depth)) * uStep
+   // 笔刷随距离缩小——远处的窗子/招牌才不糊（:62）
+4. 3 圈 × 16 方向 = 48 次采样，椭圆偏移 (dA*cos·1.45 + dB*sin·0.8)*rr（:65-81）
+   偶数索引归入 8 个扇区，奇数索引 **对相邻两扇区各分一半**（扇区重叠）
+5. 每扇区求均值/方差；扇区权重 w = 1/(1 + pow(sd*22, 8))（:87）
+   // 越&quot;平&quot;的扇区权重越高 → 平坦区吃到大笔触，边缘与小细节被保留
+6. 输出 = 各扇区均值的加权平均
+7. 干笔与纸纹（:91-97）：
+   bristle = vnoise(旋转到笔触坐标系后的 (x/26, y/2.2))   // 沿笔触方向拉长的噪丝
+   paper   = vnoise(fc/2.5)*0.5 + vnoise(fc/9.0)*0.5      // 纸纹齿感
+   col *= 0.98 + 0.04*bristle; col *= 0.99 + 0.02*paper</code></pre>
+<p>要点：<strong>Kuwahara 的&quot;保边&quot;靠方差权重</strong>（不是硬阈值）；<strong>笔触各向异性靠把屏幕<br>坐标旋进噪声场</strong>；&quot;水彩感&quot;主要来自干笔/纸纹两级乘性噪声，不是滤镜。<br>参数默认值：<code>uRadius=4</code>、<code>uStep=S</code>（<code>src/engine.js:166</code>）。</p>
+<h3 id="3-2-ink-pass-数据缓冲驱动的描线-src-engine-js-18-66">3.2 ink pass：数据缓冲驱动的描线（<code>src/engine.js:18-66</code>）<a class="anchor" href="#3-2-ink-pass-数据缓冲驱动的描线-src-engine-js-18-66" aria-label="锚点">#</a></h3>
+<pre><code>edgeAt(uv, 8 方向, 步长 w):
+  - id 差 &gt; 0.5 → 边界线；仅当该方向 cel 更靠前才画（剪影线不包住背景）
+  - 否则相对深度 rel → smoothstep(0.015, 0.035)
+       法线点积 nd  → smoothstep(0.78, 0.6)*0.85
+线宽 w = uWidth * uS * press * dist
+  press = 0.72 + 0.56*vnoise(fc/34 + seed*7)          // 笔压：沿屏幕低频起伏（:58）
+  dist  = clamp(14/max(depth,0.1), 0.5, 1.25)         // 距离衰减
+最终: e = 0.5*edgeAt(w) + 0.5*edgeAt(w*0.55)          // 粗+细两遍 → 芯+晕（:61）
+      alpha = e * (0.82 + 0.18*vnoise(fc/7 + seed))   // 墨色不均
+      ink = mix(uInk, col.rgb*0.32, 0.25)             // 墨带一点环境色</code></pre>
+<p><code>uSeed = floor(t*12) % 5</code>（<code>src/main.js:100</code>）：笔压噪声<strong>按张变化</strong>——同属<br>&quot;on twos&quot;体系，线条在一张画内稳定、换张时重新抖，这正是手绘动画的节奏。<br>默认 <code>uWidth=1.15</code>、墨色 <code>#2a2236</code>（<code>src/engine.js:167</code>）。</p>
+<h3 id="3-3-painted-背景本体">3.3 painted 背景本体<a class="anchor" href="#3-3-painted-背景本体" aria-label="锚点">#</a></h3>
+<p>背景（天空/云/城市/植被）走<strong>普通场景渲染但写 id=0</strong>，于是自动获得笔触、<br>不获得描线——&quot;手绘背景&quot;不是 2D 贴图，而是 3D 几何 + 片元里画出来的渐变。<br>（背景材质在 <code>src/bgmaterials.js</code>，本次未读；本节结论以上述 id 契约为准。）</p>
+<h3 id="3-4-water-pass-中可独立复用的-屏幕空间水面-配方-src-passes-env-js-102-522">3.4 water pass 中可独立复用的&quot;屏幕空间水面&quot;配方（<code>src/passes-env.js:102-522</code>）<a class="anchor" href="#3-4-water-pass-中可独立复用的-屏幕空间水面-配方-src-passes-env-js-102-522" aria-label="锚点">#</a></h3>
+<ol><li>由 <code>uInvProj</code> 反投影屏幕 uv → 世界射线 → 与 <code>y=waterLevel</code> 平面求交得世界点</li></ol>
+<p>（<code>waterAt()</code>，<code>:153-158</code>）；</p>
+<ol><li><strong>像素足迹</strong>：对邻像素再求交一次，<code>dqx/dqy</code> 即&quot;米/像素&quot;（worst axis），</li></ol>
+<p>之后一切细节密度都以它为 LOD 依据（<code>:321-323</code>）；</p>
+<ol><li>高度场 = fbm2 低频涌 + vnoise 中频（<code>hfield()</code>，<code>:126-131</code>）；</li></ol>
+<p>涟漪 = 12 个槽位的扩张环（<code>exp(-x²)*env*sin(x*2.6)</code> + 一条 0.72 半径的细尾环，<br>   <code>:132-151</code>）；</p>
+<ol><li>反射：7-tap 竖向涂抹（模仿手绘水的竖向拉丝）+ 法线偏移 + 正弦摆动，</li></ol>
+<p>最后<strong>色阶 posterise 到 7 级</strong>（cel 感，<code>:382-392</code>）；</p>
+<ol><li>折射：Beer-Lambert 吸收 <code>1-exp(-path*k)</code>，光程用 Snell 定律缩短</li></ol>
+<p>（<code>pathR = min(depthB/max(cosR,0.3), under)</code>，<code>:394-409</code>）；</p>
+<ol><li>菲涅尔 Schlick <code>0.04+0.96*pow(1-ndv,5)</code> 混合水体/反射（<code>:455-458</code>）；</li><li>焦散 = <strong>Voronoi 边界光网</strong>（域扭曲 + 双尺度叠加 + 交叉点亮结 + 沿线宽变化，</li></ol>
+<p>亚像素时退化为均匀辉光，<code>vorEdge/causticNet</code>，<code>:194-227</code>）；</p>
+<ol><li>太阳闪烁 = 每格重摇的星形 glint（<code>smoothstep(0.9885,0.9975, dot(reflect,sun))</code></li></ol>
+<p>极窄锥 + 十字星芒，尺寸按输出像素，近/中/远三档密度，<code>:278-301, 469-484</code>）；</p>
+<ol><li>泡沫：接触线 + Kelvin 尾流臂（<code>arm = side - behind*0.36 - 2.2</code>）+ 涟漪泡</li></ol>
+<p>（<code>:354-369, 507-518</code>）。</p>
+<p>整段有直通开关：<code>uOn &lt; 0.5</code> 原样返回（<code>:305</code>），水面可整段摘除。</p>
+<hr>
+<h2 id="4-骨骼-蒙皮-截面放样建模方法">4. 骨骼、蒙皮、截面放样建模方法<a class="anchor" href="#4-骨骼-蒙皮-截面放样建模方法" aria-label="锚点">#</a></h2>
+<h3 id="4-1-gpu-骨骼链-rest-空间建模-顶点着色器包裹-src-lev-spine-js">4.1 GPU 骨骼链：rest 空间建模 + 顶点着色器包裹（<code>src/lev-spine.js</code>）<a class="anchor" href="#4-1-gpu-骨骼链-rest-空间建模-顶点着色器包裹-src-lev-spine-js" aria-label="锚点">#</a></h3>
+<pre><code>建模约定：所有 mesh 直接建在&quot;rest 空间&quot;——z 沿链 0(尾)→len(头)，x/y 是截面；
+骨骼是世界空间的：uBP[i] = vec4(位置, 截面缩放), uBQ[i] = 四元数。
+顶点着色器：spineAt(z/len) 在 Catmull-Rom 骨列上取 (p, q, sc)，
+            world = p + qrot(q, (p.xy*sc, p.z - zc))</code></pre>
+<ul><li>全身<strong>一次 draw、零 CPU 蒙皮</strong>：身体是一张连续曲面随骨列弯曲</li></ul>
+<p>（<code>spineGLSL</code>，<code>src/lev-spine.js:11-26</code>；蒙皮材质 <code>src/lev-mat.js:32-35</code>）；</p>
+<ul><li><code>qrot()</code> 是四元数转置优化的 <code>v + 2*cross(q.xyz, cross(q.xyz, v) + q.w*v)</code></li></ul>
+<p>（<code>src/lev-spine.js:15</code>）——比 <code>mat3</code> 构造省一条指令路径；</p>
+<ul><li><code>setBone</code> 做<strong>四元数双覆盖修正</strong>（相邻骨点积&lt;0 取负），否则 nlerp 走长弧</li></ul>
+<p>（<code>src/lev-spine.js:50</code>）；</p>
+<ul><li>三种骨骼生成：<code>fromPath(fn, upFn)</code>（沿曲线，dorsal 尽量贴 upFn，退化时沿用</li></ul>
+<p>上一帧 X 轴，<code>:86-106</code>）、<code>fromCurl(c, base, pos, k)</code>（从中心骨向两端做 FK，<br>  <code>k(s) = [pitch, yaw, twist] 弧度/骨</code>，<code>:110-130</code>）、<code>fromRoot</code>（短肢链，<code>:133</code>）；</p>
+<ul><li>CPU 侧有与着色器逐行同构的 <code>at()</code> / <code>toWorld()</code>（<code>:55-82</code>）——</li></ul>
+<p><strong>同一条插值写两遍，GPU/CPU 结果才一致</strong>（锚点、命中判定都依赖它）；</p>
+<ul><li><code>ArcPath</code> = 弧长参数化 Catmull-Rom（两端线性外推），动画沿弧长取样<strong>不拉伸</strong></li></ul>
+<p>（<code>:144-157</code>）。</p>
+<h3 id="4-2-下颚是逐顶点权重-不是骨骼">4.2 下颚是逐顶点权重，不是骨骼<a class="anchor" href="#4-2-下颚是逐顶点权重-不是骨骼" aria-label="锚点">#</a></h3>
+<p><code>jawWeight(z, a, lower)</code> 越靠嘴前权重越大（<code>src/lev-body.js:182-186</code>），<br>顶点着色器绕铰链旋转（<code>src/lev-mat.js:23-29</code>）——骨数量不变，嘴开合是蒙皮权重<br>驱动的。<strong>&quot;局部开合&quot;优先用权重，别加骨</strong>。</p>
+<h3 id="4-3-截面放样-一张皮从尾到吻-src-lev-body-js">4.3 截面放样：一张皮从尾到吻（<code>src/lev-body.js</code>）<a class="anchor" href="#4-3-截面放样-一张皮从尾到吻-src-lev-body-js" aria-label="锚点">#</a></h3>
+<pre><code>section(z) → { rx, top, bot, cy, e }        // 每个 z 一个超椭圆截面（:39-46）
+  x = rx*sign(cos)|cos|^e ; y = (top|bot)*sign(sin)|sin|^e   // e 控方圆
+  rx/top/bot 都是 curve(keys) 非均匀 Hermite 插值出来的轮廓线（:17-30）
+loftBody(): zs 非均匀布环（头部密、吻尖极密：2.8 → 1.7 → 0.9*max(0.12,(1-t)/0.04)，
+  :191-198）
+  每环 Nu(上)+Nl(下) 点，phi 绕截面；&quot;around&quot; = 从背中线起的弧长米数（贴图/鳞用，
+  :117-128）
+  sculpt(z, phi) 沿法线加位移：脊、侧脊、肩臀肌肉块、肋、眉/颊/吻/颏、眼窝、
+    唇褶——全是 gauss() 高斯包 + smoothstep 门（:56-84）
+  鳞片 = 高频 sin 叠噪，与 hide 着色器同坐标系， silhouettes 上带棱（:49-53）</code></pre>
+<p>可复用模式：<strong>&quot;轮廓曲线 → 超椭圆截面 → 高斯位移雕塑 → 非均匀环距放样 →<br>弧长参数化属性&quot;</strong>，五步全是纯函数、可复现。</p>
+<h3 id="4-4-甲片装甲-凸包-投影贴花-按关节合并-src-archer-geo-js">4.4 甲片装甲：凸包 + 投影贴花 + 按关节合并（<code>src/archer-geo.js</code>）<a class="anchor" href="#4-4-甲片装甲-凸包-投影贴花-按关节合并-src-archer-geo-js" aria-label="锚点">#</a></h3>
+<ul><li><code>hull(points)</code> = ConvexGeometry + <code>toCreasedNormals</code>；**诀窍：先整体 ×30 再算</li></ul>
+<p>折痕法线再 ÷30**——three 的 crease 哈希在 0.01 处截断，小手件法线会脏<br>  （<code>:6-7</code>）；</p>
+<ul><li><code>cbox()</code> 倒角盒（<code>:24-35</code>）、<code>superPts()</code> 超椭球（指数 e 控圆润/方硬，<code>:37-50</code>）、</li></ul>
+<p><code>ribs()</code> 环叠柔性关节（<code>:59-70</code>）、<code>extrude()</code> 带斜度的挤出（<code>:73-85</code>）、<br>  <code>tube()</code> 截面沿 Y 的躯干曲面（<code>:96-108</code>，Catmull-Rom 采样 <code>crSample</code>，<code>:88-92</code>）；</p>
+<ul><li><code>patch(S, corners, opts)</code> = 曲面 S 上的一块<strong>弯甲片</strong>：uv 网格 + 抬升 + 厚度 +</li></ul>
+<p>倒角 + 中脊 + 外张 + 冠面；法线由曲面切叉积得出；<strong>UV 用世界米/TILE + 每片随机<br>  偏移</strong>（<code>:152-155</code>，<code>TILE=3.4</code>，<code>:16</code>）——细节图集自动连续；<code>aEdge</code> 标记边缘供<br>  &quot;磨损亮边&quot;用；三角形绕向用 <code>orientTri</code> 统一外翻（<code>:189-195</code>）；</p>
+<ul><li><code>Kit</code> 合并器：按关节分 bin，<code>add()</code> 时做颜色抖动/材质标志(metal,detail,emis,id)/</li></ul>
+<p>盒投影 UV 回退（按三角面法线主导轴投影，<code>:268-272</code>）；<br>  <code>finish()</code> <strong>每关节一个 mesh</strong>——&quot;2000 块甲片只要个位数 draw call&quot;<br>  （<code>:285-311</code>）；</p>
+<ul><li>ink id 分配 <code>((n*17)%59)+1</code>（<code>:238</code>）：顺序错开 17 再取模，保证相邻部件不同</li></ul>
+<p>（<code>CONTRACT.md:147</code> 提醒 &quot;ids wrap, keep neighbours different&quot;）。</p>
+<h3 id="4-5-动画-关键帧即-身体曲线-src-lev-anim-js">4.5 动画：关键帧即&quot;身体曲线&quot;（<code>src/lev-anim.js</code>）<a class="anchor" href="#4-5-动画-关键帧即-身体曲线-src-lev-anim-js" aria-label="锚点">#</a></h3>
+<ul><li>每个表面动作都是 film time 的纯函数；大幅度动作<strong>关键帧直接存身体控制点列</strong>，</li></ul>
+<p><code>vecCurve()</code> 对扁平数组做 Hermite 时间插值（<code>:15-31</code>）；</p>
+<ul><li><code>layCurve()</code> 把控制点列重采样成 110 点并累计弧长；<code>atDist(d)</code> 二分查找</li></ul>
+<p>&quot;离头部 d 米处&quot;——<strong>脊柱按弧长贴到曲线上，永不拉伸</strong>（<code>:36-61</code>）；</p>
+<ul><li>弹道是解析的：x 匀速 + y 抛物线（<code>:77</code>），形状键 + 质心抛物线分离</li></ul>
+<p>（<code>flipFall</code> 把平均 y 归到抛物线，<code>:100-106</code>）；</p>
+<ul><li>时间量化：<code>onTwos(t)=floor(t*12+1e-6)/12</code>、<code>onThrees=floor(t*8+1e-6)/8</code></li></ul>
+<p>（<code>src/util.js:35-36</code>）——角色 12 张/s、水 FX 8 张/s，<code>G.uDrawTime</code> 喂给着色器；</p>
+<ul><li>小动画走 <code>track([[t,v,ease],...])</code> 关键帧轨（<code>src/util.js:39-51</code>）。</li></ul>
+<hr>
+<h2 id="5-确定性与性能注意点">5. 确定性与性能注意点<a class="anchor" href="#5-确定性与性能注意点" aria-label="锚点">#</a></h2>
+<h3 id="5-1-确定性-这套管线的立身之本">5.1 确定性（这套管线的立身之本）<a class="anchor" href="#5-1-确定性-这套管线的立身之本" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>手段</th><th>位置</th></tr></thead><tbody><tr><td><strong>每帧是 <code>state.t</code> 的纯函数</strong>：<code>stateFor(frame) → st</code>，各部门 <code>update(st)</code> 只读 st；帧可乱序渲染</td><td><code>src/main.js:58-70, 91-101</code>、<code>CONTRACT.md:150</code></td></tr><tr><td>种子随机数 <strong>mulberry32</strong>（禁 <code>Math.random</code>）：<code>Rng{next,range,int,pick,sign,gauss}</code></td><td><code>src/util.js:3-22</code>、<code>CONTRACT.md:150</code></td></tr><tr><td><strong>预热一帧并丢弃</strong>：&quot;首帧因 GPU 懒状态略不同，渲一帧扔掉保证每帧可复现&quot;</td><td><code>src/main.js:111-113</code></td></tr><tr><td>噪声种子挂在量化时间上：ink 种子 <code>floor(t*12)%5</code>；环境 FX 时间 <code>uEnvTime</code> 走 on threes</td><td><code>src/main.js:100</code>、<code>src/passes-env.js:15</code></td></tr><tr><td>着色器内置 hash 噪声（hash12/vnoise/fbm2/fbm3），无纹理随机源</td><td><code>src/glsl.js:45-55</code></td></tr><tr><td><strong>断点续渲</strong>：144 帧一段；段状态 = 文件在 + 元数据在 + encodeKey(scale/crf/preset/q/query/W/H/FPS) 全一致 + 字节数一致 + <code>srcHash</code>（源码哈希）一致，否则 <code>todo</code>/<code>stale</code></td><td><code>tools/render.mjs:201-208</code>（srcHash 实现 <code>:94-103</code>，默认 seg=144 在 <code>:51</code>）</td></tr><tr><td>多 page 并行 worker + 崩溃孤儿回收（pidfile：只杀&quot;仍是 chrome.exe 且命令行含同一 profile&quot;的 pid）</td><td><code>tools/render.mjs:291-297</code>、<code>:110-125</code></td></tr><tr><td>采集与渲染同一 JS 任务：<code>page.evaluate</code> 内先 <code>renderFrame(n)</code> 再 <code>capture(q)</code></td><td><code>tools/render.mjs:258-262</code></td></tr><tr><td>色彩链路：Chrome 出的 JPEG 是 full-range BT.601，转 limited-range BT.709 要先过 RGB 再换矩阵，否则色偏</td><td><code>tools/render.mjs:217-225</code></td></tr></tbody></table>
+<h3 id="5-2-性能">5.2 性能<a class="anchor" href="#5-2-性能" aria-label="锚点">#</a></h3>
+<ul><li><strong>预算</strong>：典型帧 &lt; ~0.4s @ scale 2（<code>CONTRACT.md:151</code>，上游自述，本次未实测）；</li><li><strong>批处理</strong>：Kit 合并每关节单 mesh（§4.4）；overlay 用实例化软精灵</li></ul>
+<p>（<code>src/materials.js:194-214</code>）；</p>
+<ul><li><strong>分辨率阶梯</strong>：反射 1/2、bloom 1/4→1/8、final 才降采样；出片 S=2 内部超采样</li></ul>
+<p>（<code>src/engine.js:146, 153-158, 322-339</code>）；</p>
+<ul><li><strong>集合剔除靠&quot;一套布景一镜头&quot;</strong>：部门不活跃就 <code>visible=false</code>，布景可在空间上重叠</li></ul>
+<p>（<code>CONTRACT.md:98-99</code>）；</p>
+<ul><li><strong>距离作弊</strong>：8000m 外即天空 + 雾；每镜头可覆写 <code>cam.near/far</code></li></ul>
+<p>（<code>CONTRACT.md:100-101</code>、<code>src/main.js:86-87</code>）；</p>
+<ul><li><strong>LOD 按&quot;米/像素&quot;</strong>：鳞片/细肤/雨环/glint 全用屏幕足迹决定是否绘制及密度，</li></ul>
+<p>亚像素细节主动退化成渐变/点画（<code>src/lev-mat.js:86-89</code>、<code>src/passes-env.js:342, 474-482</code>）；</p>
+<ul><li><strong>共享 uniform 对象</strong>避免逐材质 setUniform（<code>src/glsl.js:3-5</code>）；</li><li><strong>部门故障隔离</strong>：模块加载失败退 NOOP，其余部门照渲（<code>src/main.js:36-45</code>）。</li></ul>
+<h3 id="5-3-坑点清单-读码所见-逐条有出处">5.3 坑点清单（读码所见，逐条有出处）<a class="anchor" href="#5-3-坑点清单-读码所见-逐条有出处" aria-label="锚点">#</a></h3>
+<ol><li><code>preserveDrawingBuffer: true</code> + <code>antialias: false</code>：为逐帧捕获保缓冲、抗锯齿</li></ol>
+<p>全靠后处理（ink pass 兼职）（<code>src/engine.js:141</code>）。</p>
+<ol><li><strong>MRT 数据图必须保持 NearestFilter</strong>：颜色图换 Linear 无妨，id/深度被插值会</li></ol>
+<p>在 ink/water 里产生伪边缘（<code>src/engine.js:149-152</code>）。</p>
+<ol><li><strong>color.a 被征用为 painted 掩码</strong>：场景里不能有依赖 alpha 混合的透明物，</li></ol>
+<p>alpha 测试一律 <code>discard</code>（<code>src/materials.js:87-91</code>）。</p>
+<ol><li>阴影 pass 里材质要<strong>早退并写白</strong>（<code>oColor=vec4(1)</code>），否则深度比较基准错</li></ol>
+<p>（<code>src/materials.js:92</code>、<code>src/lev-mat.js:82</code>）。</p>
+<ol><li>反射 pass 用 <code>uPass&gt;1.5</code> 时 <code>discard</code> 水下几何，否则镜像里出现穿帮</li></ol>
+<p>（<code>src/materials.js:81</code>、<code>src/lev-mat.js:81</code>）。</p>
+<ol><li><code>sunShadow</code> 的 bias 矩阵算了没用（<code>void bias</code>）：裁剪矩阵原样传入、着色器自做</li></ol>
+<p><code>*0.5+0.5</code>——改阴影代码时别把两处偏移叠起来（<code>src/engine.js:222-224</code>、<br>   <code>src/glsl.js:59-60</code>）。</p>
+<ol><li>四元数双覆盖不修正，骨链 nlerp 会绕远路（<code>src/lev-spine.js:50</code>）。</li><li><code>toCreasedNormals</code> 的 0.01 哈希截断：小件先 ×30（<code>src/archer-geo.js:7</code>）。</li><li><code>onTwos</code> 的 <code>1e-6</code> epsilon：浮点边界差一拍，整帧动画会颤（<code>src/util.js:35</code>）。</li><li>ink id 取模会回绕：<strong>同帧内相邻部件 id 必须不同</strong>，否则接缝处无线</li></ol>
+<p>（<code>src/archer-geo.js:238</code>、<code>CONTRACT.md:147</code>）。</p>
+<ol><li><code>celMaterial</code> 依赖 <code>attribute aRest</code>（rest 姿态坐标做风化）；几何没这个属性时</li></ol>
+<p>WebGL 默认 (0,0,0)，风化会塌成一个点——要么烘焙 aRest，要么 weather 传<br>    <code>[0,0,0,0]</code>（<code>src/materials.js:47, 96</code>、<code>CONTRACT.md:149</code>）。</p>
+<ol><li>合并 mesh 后 <code>frustumCulled=false</code>（<code>src/archer-geo.js:304</code>）：包围盒失去</li></ol>
+<p>意义，剔除改由&quot;布景开关&quot;承担——照搬时别把两者都丢了。</p>
+<ol><li>DoubleSide 是全局默认（<code>src/materials.js:12</code>）：开放壳体需要，但 fill 成本</li></ol>
+<p>翻倍，能闭合的模型应仍用 FrontSide。</p>
+<ol><li>定长 uniform 数组（涟漪 12、尾流 8、学校 4）每帧全量上传，扩容量前先算</li></ol>
+<p>UBO/实例化替代（<code>src/engine.js:174-176</code>、<code>src/passes-env.js:19, 238</code>）。</p>
+<ol><li>捕获链路两件事：render+读画布必须同一 JS 任务（合成器任务结束才清缓冲）；</li></ol>
+<p>Chrome 出的 JPEG 是 full-range BT.601，转 limited-range BT.709 要先过 RGB<br>    再换矩阵，否则色偏（<code>tools/render.mjs:258-262, 217-225</code>）。</p>
+<ol><li><code>depthTexture</code> + MRT 组合下，WebGL1 不可用（<code>src/engine.js:148-151</code>）——</li></ol>
+<p>需锁 WebGL2（本项目 <code>pipeline.js:406-408</code> 已有同款硬校验）。</p>
+<hr>
+<h2 id="6-对本项目-khyos-desktop-的落地建议">6. 对本项目（khyos-desktop）的落地建议<a class="anchor" href="#6-对本项目-khyos-desktop-的落地建议" aria-label="锚点">#</a></h2>
+<p>项目现状（本次实读 <code>works/brand/khyos-desktop/</code>）：<code>src/render/pipeline.js</code> 已有<br>MRT（RT0 颜色 + RT1 法线/打包深度/材质 id，<code>pipeline.js:441-449</code>）+ 六段后处理链<br>（水彩笔触 → 深度/法线描线 → 软膝 bloom 三档 → 调色 → 纸面过渡 → 颗粒，<br><code>pipeline.js:378-380, 604-655</code>）；<code>src/render/cel.js</code> 是双色带 cel + 边缘光；<br><code>src/render/quantize.js</code> 已有 on twos/threes（24fps）；<code>src/util/rand.js</code> 已禁<br><code>Math.random</code> 并用 mulberry32/fmix32，且 GLSL 侧常量与 CPU 侧对齐<br>（<code>rand.js:1-5, 62-81</code>）。<strong>地基与上游同代，迁移成本低。</strong></p>
+<h3 id="6-1-建议照搬-按性价比排序">6.1 建议照搬（按性价比排序）<a class="anchor" href="#6-1-建议照搬-按性价比排序" aria-label="锚点">#</a></h3>
+<ol><li><strong>ink 双尺度线宽（芯+晕）</strong>：上游 <code>e = 0.5*edgeAt(w) + 0.5*edgeAt(w*0.55)</code></li></ol>
+<p>（<code>src/engine.js:61</code>）。本项目 LINE_FRAG 目前单尺度 Sobel<br>   （<code>pipeline.js:175-206</code>）——加一遍半宽采样即得&quot;芯+晕&quot;，是最便宜的一档提升。</p>
+<ol><li><strong>笔压噪声 + 按&quot;张&quot;换种子</strong>：<code>press = 0.72+0.56*vnoise(fc/34+seed*7)</code>、</li></ol>
+<p><code>seed = floor(t*12)%5</code>（<code>src/engine.js:58</code>、<code>src/main.js:100</code>）。本项目颗粒已按<br>   帧重摇（<code>pipeline.js:362</code>），但<strong>线条没有笔压</strong>；把种子挂到<br>   <code>quantizeOnTwos(t)</code> 上（<code>quantize.js:19-21</code>），与既有 24fps 节拍对齐。</p>
+<ol><li><strong>paint 升级为扇区方差加权</strong>：本项目水彩目前是 fbm 阈值掩码</li></ol>
+<p>（<code>pipeline.js:129-135</code>），平坦与边缘同权。借上游 8 扇区 + <code>w=1/(1+pow(sd*22,8))</code><br>   （<code>src/passes-env.js:83-90</code>）做保边；<strong>保留本项目的 mpp 淡出/展宽</strong><br>   （<code>pipeline.js:107-109</code>）——上游用深度缩半径（<code>src/passes-env.js:62</code>），<br>   本项目用米/像素淡出，后者对锁定机位更稳（<code>pipeline.js:103-106</code> 注释自述）。<br>   再叠干笔/纸纹两级乘性噪（<code>src/passes-env.js:91-97</code>）。</p>
+<ol><li><strong>id 跳变线 + &quot;仅当主体在前才画剪影&quot;规则</strong>（<code>src/engine.js:38-42</code>）：</li></ol>
+<p>本项目 materialId 目前只驱动笔触方向（<code>pipeline.js:119-120</code>），未参与描线。<br>   多部件主体出现时，用 id 差出部件边界线，深度容差 0.5 防背景被误描。</p>
+<ol><li><strong>确定性采集三件套</strong>（工具链就绪后）：预热一帧丢弃（<code>src/main.js:111-113</code>）；</li></ol>
+<p>render+读画布同一 evaluate 任务（<code>tools/render.mjs:258-262</code>）；<br>   段状态 <code>encodeKey + srcHash + 字节数</code> 断点续渲（<code>tools/render.mjs:201-208</code>）。<br>   本项目 <code>rand.js:1-5</code> 已声明&quot;capture.mjs 比对两次渲染的字节&quot;，契约先行，<br>   工具落地时直接按上游结构写。</p>
+<ol><li><strong>Kit 式按关节合并</strong>（<code>src/archer-geo.js:285-311</code>）：品牌程序化几何</li></ol>
+<p>（<code>works/brand/khy-brand-geometry.js</code> 那类）按&quot;每关节一 mesh&quot;合并，<br>   draw call 降到个位数；ink id 用 <code>(n*17)%59+1</code>（<code>:238</code>）；<br>   creased 法线 ×30 技巧（<code>:7</code>）对小手件直接生效。</p>
+<ol><li><strong>共享 uniform 注册表</strong>（<code>src/glsl.js:3-5</code>）：时间/光照/焦点一处写全局生效，</li></ol>
+<p>替代逐材质传参——本项目后处理 uniform 已集中（<code>pipeline.js:467-536</code>），<br>   场景侧可同构收敛。</p>
+<ol><li><strong>GPU 脊链蒙皮</strong>（<code>src/lev-spine.js</code>，整文件约 150 行）：<strong>仅当</strong>品牌出现</li></ol>
+<p>长条有机形态主体时启用；rest 空间建模 + 顶点着色器包裹，零 CPU 蒙皮。<br>   桌面端品牌场景若无此类主体，跳过。</p>
+<h3 id="6-2-需要改-不适宜照搬的部分">6.2 需要改 / 不适宜照搬的部分<a class="anchor" href="#6-2-需要改-不适宜照搬的部分" aria-label="锚点">#</a></h3>
+<ul><li><strong>G-buffer 通道格式不迁移</strong>：本项目是 <code>法线 rgb + a 打包(depth,id)</code> 且深度</li></ul>
+<p>1/64 量化、上限 1024（<code>cel.js:11-31</code>）；上游是四通道分立 + half-float 原始深度<br>  （<code>glsl.js:79</code>）。算法照搬，格式各守各的契约——混用会同时破坏两边。</p>
+<ul><li><strong>painted 掩码机制不迁移</strong>：上游征用 color.a（<code>glsl.js:78</code>）导致透明物只能</li></ul>
+<p><code>discard</code> 不能混合（<code>materials.js:87-91</code>）；本项目用 <code>materialId==0</code> 判定背景<br>  （<code>pipeline.js:111</code>），alpha 通道是自由的——这是本项目更好的选择，别改。</p>
+<ul><li><strong>水/大气/overlay 三件套按需裁剪</strong>：屏幕空间水面配方（§3.4）整段有 <code>uOn</code> 直通</li></ul>
+<p>开关（<code>passes-env.js:305</code>）；桌面端若只要&quot;水&quot;不要海，只取高度场+涟漪+泡沫子集。<br>  高度雾/光束（ATMOS_FS）依赖 8000m 哨兵与海面判定，本项目深度上限 1024 单位<br>  （<code>cel.js:21</code>），<strong>哨兵语义不同，不能直接搬</strong>——要雾就按本项目的深度域重推。</p>
+<ul><li><strong>上游的角色、叙事、美术设定一律不进本项目</strong>：场景与角色原创。本笔记亦未记录</li></ul>
+<p>其内容；上述文件仅作为技术出处引用。</p>
+<ul><li><strong>JPEG→x264 的 BT.601/709 链路</strong>（<code>render.mjs:217-225</code>）：本项目是 PNG/字节</li></ul>
+<p>比对链路（<code>rand.js:1-5</code> 自述），无此问题；但&quot;同一 JS 任务内 render+capture&quot;<br>   约束相同。</p>
+<ul><li><strong>分辨率/预算是上游口径</strong>：0.4s@scale2 是上游 1920×1040 的自述</li></ul>
+<p>（<code>CONTRACT.md:151</code>），本项目未实测，落地任何 pass 后自行测帧预算再定 scale。</p>
+<h3 id="6-3-建议的落地顺序">6.3 建议的落地顺序<a class="anchor" href="#6-3-建议的落地顺序" aria-label="锚点">#</a></h3>
+<ol><li><code>tools/</code> 采集侧：warm-up 帧丢弃 + 同任务 capture + 字节比对（rand.js 的契约</li></ol>
+<p>已经在等这个实现）；</p>
+<ol><li>ink：双尺度线宽 + 笔压噪声 + 挂 <code>quantizeOnTwos</code> 的种子；</li><li>paint：扇区方差加权保边（保留 mpp 淡出）+ 干笔/纸纹；</li><li>若出现多部件主体：id 分段表（1–99 描线 / 100+ 不描线）+ id 跳变线 + Kit 合并；</li><li>最后才按需加水/大气/骨骼——且每加一个 pass 重测一次帧预算。</li></ol>
+<hr>
+<h2 id="附-本笔记的边界">附：本笔记的边界<a class="anchor" href="#附-本笔记的边界" aria-label="锚点">#</a></h2>
+<ul><li>全部结论来自 2026-11-08 对 <code>0xCodez/leviathan@main</code> 的源码阅读（14 个文件，</li></ul>
+<p>清单见文首）；<strong>未运行其页面、无实测性能数据</strong>；帧预算 0.4s@scale2 引自<br>  <code>CONTRACT.md:151</code>。</p>
+<ul><li>上游 README 提到的同引擎前作与 26MB 单文件 dist 本次未读；</li></ul>
+<p><code>src/bgmaterials.js</code>（背景材质本体）本次未读，§3.3 以上游 id 契约与已读文件为准。</p>
+<ul><li>地址勘误：任务所给 <code>exCodez/leviathan</code> 返回 404（GitHub API 与 HTML 页面均确认，</li></ul>
+<p>该组织 <code>public_repos: 0</code>）；实际仓库 <code>0xCodez/leviathan</code> 可达（API 200，<br>  55 stars，2026-11-04 推送）。</p>
+<ul><li>本仓 <code>works/brand/khyos-film/docs/leviathan-notes.md</code> 为同源上游的另一份笔记</li></ul>
+<p>（面向 khyos-film 项目）；本文面向 khyos-desktop，结论独立核对。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/brand/khyos-desktop/docs/director-usage.html"><div class="dir">← 上一篇</div><div class="ttl">director.js 用法 —— 导演层契约与走位键</div></a><a class="next" href="../../../../works/brand/khyos-desktop/docs/rig-usage.html"><div class="dir">下一篇 →</div><div class="ttl">rig.js 用法 —— 建模子代理照抄这份</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/brand/khyos-desktop/docs/leviathan-notes.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

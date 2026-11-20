@@ -1,7 +1,7 @@
 /**
  * Management resource: scheduled cron jobs.
  *
- * Source of truth: the cron-jobs file under getDataHome()/growth
+ * Source of truth: the cron-jobs file under resolveDataPath('growth')
  * (services/cronScheduler.js). CLI (`khy manage cron ...`) and the Web
  * management page both invoke these ops through managementRegistry.
  *
@@ -12,7 +12,7 @@
  */
 const path = require('path');
 
-const { getDataHome } = require('../../../../../utils/dataHome');
+const { resolveDataPath } = require('../../../../../utils/dataHome');
 
 const cron = () => require('../../../../../jobs/cronScheduler');
 
@@ -20,7 +20,7 @@ function _jobsFile() {
   if (process.env.KHY_CRON_JOBS_FILE) {
     return process.env.KHY_CRON_JOBS_FILE;
   }
-  const growthDir = process.env.KHY_CRON_GROWTH_DIR || path.join(getDataHome(), 'growth');
+  const growthDir = process.env.KHY_CRON_GROWTH_DIR || resolveDataPath('growth');
   return path.join(growthDir, 'cron_jobs.json');
 }
 

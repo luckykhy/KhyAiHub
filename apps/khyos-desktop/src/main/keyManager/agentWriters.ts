@@ -176,7 +176,11 @@ export interface ApplyResult {
   targetPath?: string
 }
 
-export async function applyProxyMode(app: string, card: Card): Promise<ApplyResult> {
+export async function applyProxyMode(
+  app: string,
+  card: Card,
+  opts?: { routableModel?: string }
+): Promise<ApplyResult> {
   const proxy = readProxyRuntime()
   if (!proxy.running || !proxy.endpoint) {
     return {
@@ -195,14 +199,21 @@ export async function applyProxyMode(app: string, card: Card): Promise<ApplyResu
       const env = (doc.env && typeof doc.env === 'object' ? doc.env : {}) as Record<string, string>
       // anthropic wire root: proxy serves /v1/messages under the same host:port
       const root = proxy.endpoint.replace(/\/v1\/?$/, '').replace(/\/+$/, '')
+      // 聚合模式写给 Claude Code 的模型名取「可路由三名」api:<pool>:<model>
+      // （models:apply / agents:apply 入口传入）：裸 id 进网关会走
+      // builtin-family 分支，被 Anthropic 入站放宽逻辑清掉 preferredAdapter
+      // 后可能被 kiro/trae 等 IDE 适配器级联截走；三名是 explicit 来源，
+      // 不受该放宽分支影响。缺省回落卡片默认（裸 id）——不传 opts 的老路径
+      // 行为零变化。opencode / qodercli 分支不读 opts。
+      const ccModel = opts?.routableModel || model
       env.ANTHROPIC_BASE_URL = root
       env.ANTHROPIC_AUTH_TOKEN = relay
-      if (model) env.ANTHROPIC_MODEL = model
+      if (ccModel) env.ANTHROPIC_MODEL = ccModel
       doc.env = env
       await writeJsonAtomic(file, doc)
       await recordMode(app, 'proxy', card.id)
-      await appendAudit({ op: 'apply', target: app, detail: `proxy ${root} model=${model || '(card default)'}` })
-      return { ok: true, app, targetPath: file, detail: `已写入 ${file}（khy 聚合 → ${root}，模型 ${model || 'card 默认'}）` }
+      await appendAudit({ op: 'apply', target: app, detail: `proxy ${root} model=${ccModel || '(card default)'}` })
+      return { ok: true, app, targetPath: file, detail: `已写入 ${file}（khy 聚合 → ${root}，模型 ${ccModel || 'card 默认'}）` }
     }
     case 'opencode': {
       const file = agentTargetPath('opencode')

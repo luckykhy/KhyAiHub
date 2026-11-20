@@ -6,7 +6,7 @@
  *
  * Owns the onControlRequest response readers + the execApproval verdict
  * resolution used by the tool loop's permission seams:
- *   - _readControlDecision  allow/deny out of a control_response payload
+ *   - _readControlDecision  allow/allow-always/deny out of a control_response payload
  *   - _resolveExecApproval  execApproval verdict incl. escape valves + token stamp
  *   - _readControlAnswers   AskUserQuestion answers out of a control_response
  *
@@ -24,17 +24,22 @@
  * as the boolean `true` and "免审/始终允许" as the string `'always'`; a parser
  * that only accepted objects (the previous local implementation) mis-read those
  * as deny, so a TUI approval still produced "[ExecApproval] Approval required".
- * Returns 'allow' or 'deny'. Defaults to 'deny' (fail-closed) when the response
- * is missing or unreadable — an absent channel must never silently permit.
+ * Returns 'allow', 'allow-always' or 'deny' (the session scope is preserved so
+ * the audit trail can tell a one-off consent from a standing one). Defaults to
+ * 'deny' (fail-closed) when the response is missing or unreadable — an absent
+ * channel must never silently permit.
  */
 function _readControlDecision(resp) {
   try {
     const decision = require('../toolCalling')._decisionFromControl(resp);
-    return decision === 'allow' || decision === 'allow-always' ? 'allow' : 'deny';
+    return decision === 'allow-always' ? 'allow-always' : decision === 'allow' ? 'allow' : 'deny';
   } catch {
     // Fallback: toolCalling unavailable — tolerate primitives + object shape inline.
     if (resp === true) {
       return 'allow';
+    }
+    if (resp === 'always' || resp === 'allow-always') {
+      return 'allow-always';
     }
     if (!resp || typeof resp !== 'object') {
       return 'deny';
@@ -45,13 +50,18 @@ function _readControlDecision(resp) {
     }
     const inner = node.response && typeof node.response === 'object' ? node.response : node;
     const behavior = inner.behavior || node.behavior;
+    if (behavior === 'allow-always') {
+      return 'allow-always';
+    }
     return behavior === 'allow' ? 'allow' : 'deny';
   }
 }
 
 /**
  * Resolve an execApproval verdict for a shell command, connecting the ask-state
- * to the host approval channel (onControlRequest). Returns 'allow' | 'deny'.
+ * to the host approval channel (onControlRequest). Returns 'allow' |
+ * 'allow-always' | 'deny' — allow-always preserves the user's session-scope
+ * answer instead of collapsing it into a one-off allow.
  *
  * Contract (s03 permission pipeline, defect ①):
  *   - allowed:true                      → 'allow' (hard allow, unchanged)
@@ -61,6 +71,7 @@ function _readControlDecision(resp) {
  *         (KHY_EXEC_APPROVAL=off | dangerousMode | yolo profile)
  *       · no onControlRequest channel   → fail-closed: decide('denied') + 'deny'
  *       · channel says allow            → decide('approved') + stamp token + 'allow'
+ *       · channel says always           → same stamp + 'allow-always'
  *       · channel says deny / unreadable→ decide('denied') + 'deny'
  *
  * The EXEC_APPROVED Symbol token stamped onto call.params short-circuits the
@@ -86,7 +97,7 @@ async function _resolveExecApproval(call, approval, onControlRequest, signal, on
   const mgr = execApprovalMod && execApprovalMod.execApproval;
   const EXEC_APPROVED = execApprovalMod && execApprovalMod.EXEC_APPROVED;
 
-  const _stampAllow = () => {
+  const _stampAllow = (decision = 'allow') => {
     if (mgr) {
       try {
         mgr.decide(requestId, 'approved', { decidedBy: 'escape_valve' });
@@ -97,7 +108,7 @@ async function _resolveExecApproval(call, approval, onControlRequest, signal, on
     if (EXEC_APPROVED && call.params && typeof call.params === 'object') {
       call.params[EXEC_APPROVED] = true;
     }
-    return 'allow';
+    return decision;
   };
   const _stampDeny = (by) => {
     if (mgr) {
@@ -154,8 +165,9 @@ async function _resolveExecApproval(call, approval, onControlRequest, signal, on
     ctrlResp = null;
   }
 
-  if (_readControlDecision(ctrlResp) === 'allow') {
-    return _stampAllow();
+  const decision = _readControlDecision(ctrlResp);
+  if (decision === 'allow' || decision === 'allow-always') {
+    return _stampAllow(decision);
   }
   return _stampDeny('user_denied');
 }

@@ -177,6 +177,8 @@ function resolveDeviceSerial(env = process.env, options = {}) {
 // 与 mDNS 实例名（自动 TLS 连接的设备在设备表里的形态）。
 const SERIAL_IP_SHAPE = /^[\d.]+:\d+$/;
 const SERIAL_MDNS_CONNECT_SUFFIX = '._adb-tls-connect._tcp';
+// 同一台手机重复注册时会多出 " (2)" 之类的后缀（实例名基名相同）。
+const SERIAL_MDNS_DUP_SUFFIX = / \(\d+\)(?=\._adb-tls-connect)/;
 
 /**
  * 自动档的候选判定（纯函数，IO 层把 adb 输出解析好再喂进来）。
@@ -252,6 +254,25 @@ function pickDeviceSerial({ devices = [], mdnsMap = null } = {}) {
       && identities.size === 1 + unmappedIdentities.size) {
     return { ok: true, serial: ipForm[0], source: 'adb-devices-prefer-ip' };
   }
+  // 同一台手机重连后会同时挂两条 mDNS transport（基名相同、" (2)" 后缀、端口不同），
+  // 两条都是 state=device。这时按实例基名归并：全部同一个基名 = 一台设备，挑一个确定的
+  // （不带 " (N)" 后缀的规范名优先，其次按字符串序），不因为多一条 transport 判成多台。
+  if (identities.size === 0 && ipForm.length === 0 && otherForm.length === 0 && mdnsForm.length > 0) {
+    const baseName = (serial) => String(serial).replace(SERIAL_MDNS_DUP_SUFFIX, '');
+    const bases = new Set(mdnsForm.map(baseName));
+    if (bases.size === 1) {
+      const ranked = [...mdnsForm].sort((x, y) => {
+        const dx = SERIAL_MDNS_DUP_SUFFIX.test(x) ? 1 : 0;
+        const dy = SERIAL_MDNS_DUP_SUFFIX.test(y) ? 1 : 0;
+        if (dx !== dy) return dx - dy;
+        return x < y ? -1 : x > y ? 1 : 0;
+      });
+      return { ok: true, serial: ranked[0], source: 'adb-devices-mdns-same-instance' };
+    }
+    // 基名不同 = 真的是两台设备，不猜。
+    return { ok: false, serial: '', source: 'ambiguous' };
+  }
+
   if (identities.size === 0) {
     return { ok: false, serial: '', source: 'none' };
   }
@@ -262,15 +283,123 @@ function pickDeviceSerial({ devices = [], mdnsMap = null } = {}) {
  * 设备表没有任何 device 态条目时的兜底档：`adb mdns services` 里
  * `_adb-tls-connect` 实例的 host:port。只取 connect 实例——pairing 实例是
  * 配对档口，对它跑 `adb pair` 会 protocol fault 且配不上任何东西。
+ *
+ * 同主机多端口时**不替你挑**：一条手机会同时广播两个端口，其中一个可能已经
+ * 失效（2026-11-18 实测：36973 拒绝连接、42359 是活的）。按字符串序取第一个
+ * 会挑中死端口，用户只好手输地址。所以这里把候选全交出去（candidates），
+ * 由 IO 层逐个试连、取第一个真连上的——纯函数不碰网络，判断不了死活。
+ * serial 仍给第一个候选（确定性排序），只是为了兼容既有调用方与日志。
  */
 function pickMdnsSerial(instances = []) {
   const uniq = [...new Set(
     (Array.isArray(instances) ? instances : []).map((value) => _readString(value)).filter(Boolean)
   )];
   if (uniq.length === 1) {
-    return { ok: true, serial: uniq[0], source: 'adb-mdns' };
+    return { ok: true, serial: uniq[0], candidates: [uniq[0]], source: 'adb-mdns' };
   }
-  return { ok: false, serial: '', source: uniq.length > 1 ? 'ambiguous' : 'none' };
+  // 同一台设备重连后会同时广播两个端口（同 host、不同 port）：一台设备只有一个 IP，
+  // 同 host 的多条不是「多台设备」——但哪个还活着只有试了才知道。
+  const hosts = new Set(uniq.map((addr) => String(addr).split(':')[0]));
+  if (uniq.length > 1 && hosts.size === 1) {
+    const sorted = [...uniq].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+    return { ok: true, serial: sorted[0], candidates: sorted, source: 'adb-mdns-same-host' };
+  }
+  return { ok: false, serial: '', candidates: [], source: uniq.length > 1 ? 'ambiguous' : 'none' };
+}
+
+/**
+ * 端口规格解析："5555,30000-49999" → [5555, 30000 … 49999]。
+ *
+ * 纯函数，不碰网络。写坏的部分整段丢弃，不猜——扫到一个用户没写的端口，
+ * 比扫不到更糟。
+ */
+function parsePortSpec(spec, fallback = []) {
+  const raw = _readString(spec);
+  if (!raw) {
+    return [...fallback];
+  }
+  const ports = new Set();
+  for (const part of raw.split(',')) {
+    const piece = part.trim();
+    if (!piece) {
+      continue;
+    }
+    const range = /^(\d{1,5})-(\d{1,5})$/.exec(piece);
+    if (range) {
+      const from = Number(range[1]);
+      const to = Number(range[2]);
+      if (from > 0 && to > 0 && from <= to && to <= 65535) {
+        for (let p = from; p <= to; p++) {
+          ports.add(p);
+        }
+      }
+      continue;
+    }
+    if (/^\d{1,5}$/.test(piece)) {
+      const port = Number(piece);
+      if (port > 0 && port <= 65535) {
+        ports.add(port);
+      }
+    }
+  }
+  return ports.size > 0 ? [...ports].sort((a, b) => a - b) : [...fallback];
+}
+
+/**
+ * 从 serial 里拆出 host 与 port。只有 "<ip>:<port>" 这种形态才拆得动——
+ * mDNS 实例名（adb-ZYPZ…._adb-tls-connect._tcp）拆不出端口，那条形态走
+ * mDNS 自己那条路。
+ */
+function splitHostPort(serial) {
+  const raw = _readString(serial);
+  if (!raw) {
+    return null;
+  }
+  const match = /^(\d{1,3}(?:\.\d{1,3}){3}):(\d{1,5})$/.exec(raw);
+  if (!match) {
+    return null;
+  }
+  const port = Number(match[2]);
+  if (port <= 0 || port > 65535) {
+    return null;
+  }
+  return { host: match[1], port };
+}
+
+/**
+ * 从扫描结果里挑端口：恰好一个开着就用它；开着多个不猜——手机上除了 adb
+ * 无线调试还可能有别的服务开着，挑错端口会 adb connect 失败还误导人。
+ */
+function pickScannedAdbPort(openPorts = []) {
+  const ports = [...new Set(
+    (Array.isArray(openPorts) ? openPorts : []).map((p) => Number(p)).filter((p) => p > 0)
+  )].sort((a, b) => a - b);
+  if (ports.length === 1) {
+    return { ok: true, port: ports[0], source: 'scanned-single' };
+  }
+  return { ok: false, port: 0, source: ports.length > 1 ? 'scanned-ambiguous' : 'scanned-none' };
+}
+
+/**
+ * 两个 IPv4 是否在同一个 /24 里（消费级局域网的常识近似）。
+ *
+ * 为什么要这个判断：adb 走 Wi-Fi，手机必然与电脑在同一局域网。记住的 IP
+ * 若与电脑不在同一 /24，它几乎一定是陈旧的（手机换了 Wi-Fi）——对着一台
+ * 不同网段的主机扫端口只会白等到超时，不如直接说「上次那台不在这个网段」。
+ * 真需要跨网段时 mDNS 会重新发现设备，那条路不依赖本函数。
+ */
+function sameSubnet(hostA, hostB) {
+  const a = _readString(hostA);
+  const b = _readString(hostB);
+  if (!a || !b) {
+    return false;
+  }
+  const pa = a.split('.');
+  const pb = b.split('.');
+  if (pa.length !== 4 || pb.length !== 4) {
+    return false;
+  }
+  return pa[0] === pb[0] && pa[1] === pb[1] && pa[2] === pb[2];
 }
 
 function resolveHttpPort(env = process.env) {
@@ -429,6 +558,10 @@ module.exports = {
   buildLoopbackBaseUrl,
   pickDeviceSerial,
   pickMdnsSerial,
+  parsePortSpec,
+  splitHostPort,
+  pickScannedAdbPort,
+  sameSubnet,
   discoveryFile,
   resolvePhoneBridgeConfig,
 };

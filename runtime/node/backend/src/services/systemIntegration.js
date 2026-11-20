@@ -17,6 +17,7 @@
 
 const { LazyLoader, ModuleState } = require('./lazyLoader');
 const { MemoryBridge, MemoryType, createMemoryTools } = require('./memoryBridge');
+const { resolveDataPath } = require('../utils/dataHome');
 const { DreamScheduler, DreamPhase, HealthThreshold, createDreamTools } = require('./memoryDreamEnhancer');
 const { PermissionBroker, PermissionVerdict } = require('./permissionBroker');
 const { PromptCacheOptimizer, estimateTokens } = require('./promptCacheOptimizer');
@@ -88,7 +89,13 @@ class SystemIntegration {
       const MemoryDreaming = require('./memoryDreaming');
       const dreaming = new MemoryDreaming({
         gateway: this._gateway,
-        storePath: require('path').join(this._appHome, 'memory', 'dream-store.json'),
+        // Pure resolution — memoryDreaming probes existsSync() and mkdirs the
+        // parent on save, so the file path must not pre-create the last segment.
+        // An injected appHome still wins (DI / test isolation), matching
+        // memoryBridge's _memoryDir().
+        storePath: this._appHome
+          ? require('path').join(this._appHome, 'memory', 'dream-store.json')
+          : resolveDataPath('memory', 'dream-store.json'),
       });
       dreaming.load();
 

@@ -8,7 +8,8 @@
 //     （避免污染开发机 / 在 CI 里偷偷拉网）。
 //   - 套件缺失时记录 available:false 并降级为 SKIPPED，默认不阻塞开发机。
 //   - CI 用 `--required` 强制：缺失即视为门禁失败（release 流水线必须产出真实报告）。
-//   - 无论结果如何都写出 `scripts/ci/../../.khy/conformance-report.json` 作为可审计产物。
+//   - 无论结果如何都写出一致性报告到数据家的 reports 档（`getDataDir('reports')`），
+//     作为可审计产物。此前写在仓库根的 `.khy/` 下，那是 B8 明令禁止的影子数据目录。
 //
 // 用法：
 //   node scripts/ci/conformance-runner.mjs                 # 全跑，缺失即跳过
@@ -21,16 +22,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __filename = fileURLToPath(import.meta.url);
+const require = createRequire(import.meta.url);
+// 一致性命中数据家解析器：仓库根 .khy 是 B8 禁止的影子数据目录（CLAUDE.md §二），
+// 运行时真正读写的是数据家。写入用 getDataDir（建目录），探测/候选取型才用
+// resolveDataPath（纯映射，不建目录，否则「目录是否存在」永远为真）。
+const { getDataDir } = require('../../runtime/node/backend/src/utils/dataHome');
+// MCP / A2A 被测端点默认走 serviceDefaults 的宿主与端口真源，这里不另钉一份
+// 127.0.0.1:3000 —— 后端默认端口改时，一致性套件跟着改，不会静默测错对象。
+const { BACKEND_HOST, BACKEND_PORT } = require('../../runtime/node/backend/src/constants/serviceDefaults');
+
 const REPO_ROOT = path.resolve(path.dirname(__filename), '..', '..');
-const REPORT_DIR = path.join(REPO_ROOT, '.khy');
+const REPORT_DIR = getDataDir('reports');
 const REPORT_PATH = path.join(REPORT_DIR, 'conformance-report.json');
 
 function parseArgs(argv) {
   const args = { only: 'all', required: false, specVersion: process.env.KHY_MCP_SPEC_VERSION || '2024-11-05',
-    mcpUrl: process.env.KHY_MCP_URL || 'http://127.0.0.1:3000/mcp',
-    a2aUrl: process.env.KHY_ACP_A2A_URL || 'http://127.0.0.1:3000' };
+    mcpUrl: process.env.KHY_MCP_URL || `http://${BACKEND_HOST}:${BACKEND_PORT}/mcp`,
+    a2aUrl: process.env.KHY_ACP_A2A_URL || `http://${BACKEND_HOST}:${BACKEND_PORT}` };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--only') args.only = argv[++i];
@@ -118,7 +129,7 @@ for (const key of ['mcp', 'a2a']) {
 }
 report.gate = { pass: gatePass, blockers };
 
-if (!fs.existsSync(REPORT_DIR)) fs.mkdirSync(REPORT_DIR, { recursive: true });
+// getDataDir('reports') 已建好目录；这里只负责落盘。
 fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
 
 console.log('官方一致性套件编排 — 报告已写入 ' + REPORT_PATH);

@@ -1,4 +1,5 @@
 // khy-canary: Khy-20261102-309-0X0B0W02
+import { errText } from '../../utils/errText'
 import { useCallback, useEffect, useState } from 'react'
 
 // ── 索引库 settings page (Pattern B variant, ZC-ALIGN-001 P13) ──
@@ -66,8 +67,8 @@ export function IndexSettingsPage() {
       } else {
         setLoadError(res?.error || '索引库读取失败：请重启应用后重试')
       }
-    }).catch(() => {
-      setLoadError('索引库读取失败：主进程无响应，请重启应用')
+    }).catch((err: unknown) => {
+      setLoadError(`索引库读取失败：${errText(err)}。若持续失败请重启应用`)
     })
   }, [])
 
@@ -85,8 +86,8 @@ export function IndexSettingsPage() {
       } else {
         flash(res?.error || '创建索引失败：请确认工作区可读后重试', true)
       }
-    } catch {
-      flash('创建索引失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`创建索引失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -103,8 +104,8 @@ export function IndexSettingsPage() {
       } else {
         flash(res?.error || '重建失败：请重试', true)
       }
-    } catch {
-      flash('重建失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`重建失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -117,8 +118,8 @@ export function IndexSettingsPage() {
       const res = await a.indexSetEnabled?.(id, enabled)
       if (!res?.ok) flash(res?.error || '切换失败：请重试', true)
       else load()
-    } catch {
-      flash('切换失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`切换失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -131,8 +132,8 @@ export function IndexSettingsPage() {
       const res = await a.indexDelete?.(id)
       if (!res?.ok) flash(res?.error || '删除失败：请重试', true)
       else { flash(`已删除索引 ${name}`); load() }
-    } catch {
-      flash('删除失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`删除失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }

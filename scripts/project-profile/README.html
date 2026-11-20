@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>project-profile 生成脚本 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>project-profile<span class="sep">›</span>project-profile 生成脚本</div>
+      <header class="hero reveal"><h1>project-profile 生成脚本</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#project-profile-生成脚本">project-profile 生成脚本</a></li><li class="lvl-2"><a href="#为什么拆成两个脚本">为什么拆成两个脚本</a></li><li class="lvl-2"><a href="#改完画像必须重跑">改完画像必须重跑</a></li><li class="lvl-2"><a href="#为什么-dart-侧不自己渲染">为什么 Dart 侧不自己渲染</a></li><li class="lvl-2"><a href="#不含-check-change-safety">不含 check-change-safety</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="project-profile-生成脚本">project-profile 生成脚本<a class="anchor" href="#project-profile-生成脚本" aria-label="锚点">#</a></h1>
+<p>把「项目自我认知」烘成手机 App 能用的 Dart。</p>
+<pre><code>scripts/project-profile/
+├── build-project-profile.js     快，确定性落盘（APK 构建时跑）
+└── record-guard-snapshot.js     慢，跑守卫写快照（人或 CI 在合适时机跑）</code></pre>
+<p>单一真源在 <strong>node 侧</strong>，不在这里：</p>
+<pre><code>runtime/node/backend/src/services/domain/project/projectProfile/index.js</code></pre>
+<h2 id="为什么拆成两个脚本">为什么拆成两个脚本<a class="anchor" href="#为什么拆成两个脚本" aria-label="锚点">#</a></h2>
+<p>跑一遍守卫要几分钟，而且<strong>跑不跑得过取决于改动集</strong>，不是构建机能决定的。<br>塞进 <code>flutter build apk</code> 会让每次打包都慢到不可用，还会让「构建失败」和<br>「守卫不过」混成一句。所以：</p>
+<table><thead><tr><th>脚本</th><th>何时跑</th><th>产出</th></tr></thead><tbody><tr><td><code>build-project-profile.js</code></td><td>每次打包 APK 前</td><td><code>lib/core/config/project_profile.g.dart</code></td></tr><tr><td><code>record-guard-snapshot.js</code></td><td>想更新守卫结论时</td><td><code>works/record/ai/GUARD-SNAPSHOT.json</code></td></tr></tbody></table>
+<p>第二个的产出会被第一个读走并烘进 APK，<strong>原样带上 <code>takenAt</code></strong>——一个没有日期的<br>绿灯比不显示更糟，基线性守卫（<code>check-repo-layout</code> 的三项）会随代码增长重新变红。</p>
+<h2 id="改完画像必须重跑">改完画像必须重跑<a class="anchor" href="#改完画像必须重跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node scripts/project-profile/build-project-profile.js</code></pre>
+<p>不重跑，手机 App 拿到的是旧画像。产物文件头部标了「勿手改」，<br><code>projectProfile/index.test.js</code> 里有两条同步测试钉着生成物与渲染器一致<br>（改渲染器忘了重跑，它们会红）。</p>
+<h2 id="为什么-dart-侧不自己渲染">为什么 Dart 侧不自己渲染<a class="anchor" href="#为什么-dart-侧不自己渲染" aria-label="锚点">#</a></h2>
+<p>渲染器只有一份（node），Dart 只持有烘好的文本。两边各写一份渲染逻辑，格式就会漂——<br>而漂了的症状是手机上的 AI 和 PC 上的 AI 对同一条红线给出不同表述，<br><strong>没有任何一方会报错</strong>。</p>
+<p>工作目录后缀同理：<code>WORKSPACE_SUFFIX_TEMPLATE</code> 由渲染器导出，生成脚本直接用它，<br>不手抄。</p>
+<h2 id="不含-check-change-safety">不含 check-change-safety<a class="anchor" href="#不含-check-change-safety" aria-label="锚点">#</a></h2>
+<p><code>record-guard-snapshot.js</code> 故意不跑 <code>check-change-safety.js</code>：它按改动集扫描，<br>而本仓当前没有任何提交，<code>--changed</code> 会把整个仓库当成改动集，于是恒定报<br>「blast radius too large」。那不是守卫的结论，是仓库状态的副产品。<br>要跑它请单独跑并按需显式传路径。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../scripts/memory/README.html"><div class="dir">← 上一篇</div><div class="ttl">记忆系统管理脚本</div></a><a class="next" href="../../scripts/quarantine/README.html"><div class="dir">下一篇 →</div><div class="ttl">scripts/quarantine — 源码入口缓冲区</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="scripts/project-profile/README.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

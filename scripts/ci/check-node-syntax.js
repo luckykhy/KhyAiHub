@@ -10,7 +10,7 @@ const cp = require('child_process');
 const root = process.cwd();
 const targets = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ['services/backend', 'services/ai-backend', 'runtime/substrate/platform/packages', 'delivery/web/ai-frontend', 'scripts'];
+  : ['services/backend', 'services/ai-backend', 'runtime/substrate/platform/packages', 'delivery/channel/web/ai-frontend', 'scripts'];
 
 const validExts = new Set(['.js', '.cjs', '.mjs']);
 const ignoreDirs = new Set([

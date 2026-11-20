@@ -102,12 +102,12 @@ function _cacheEnabled() {
  */
 function _cachePath() {
   try {
-    const { getDataHome } = require('../utils/dataHome');
-    const root = getDataHome && getDataHome();
-    if (!root) {
+    const { getDataDir } = require('../utils/dataHome');
+    const cacheDir = getDataDir && getDataDir('cache');
+    if (!cacheDir) {
       return null;
     }
-    return path.join(String(root), 'cache', CACHE_FILE_NAME);
+    return path.join(String(cacheDir), CACHE_FILE_NAME);
   } catch {
     return null;
   }

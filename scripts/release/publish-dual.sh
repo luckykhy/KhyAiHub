@@ -28,10 +28,10 @@
 #   （脚本自带 `Proceed? [y/N]` 交互确认；非交互环境用 `yes y |` 喂确认。
 #    不带 --tag = 只发包，不 commit / 不打 tag / 不 push——版本红线需人另行点头。）
 #
-# 已知坑：pip 审计报 `[FAIL] No sdist (*.tar.gz) found in .../dist`。
-#   根因不在版本，而在 build-and-audit-pip-purity.sh：它先 `rm -rf dist` 再跑
+# 已知坑：pip 审计报 `[FAIL] No sdist (*.tar.gz) found in .../entries/pip`。
+#   根因不在版本，而在 build-and-audit-pip-purity.sh：它先 `rm -rf entries/pip` 再跑
 #   `python3 -m build --sdist --wheel`。**隔离(isolated)构建**要联网取 build 依赖；
-#   离线/无网时 sdist 步静默失败，dist/ 只剩 wheel → 审计找不到 tar.gz 而 FAIL。
+#   离线/无网时 sdist 步静默失败，entries/pip 只剩 wheel → 审计找不到 tar.gz 而 FAIL。
 #   规避：加 --no-isolation 走离线构建，或确保有网络后重跑：
 #     yes y | bash scripts/release/publish-dual.sh --version X.Y.Z --no-isolation
 #   另一历史外部坑：PyPI 单项目 10GB 配额可能挡 pip 上传(非本包超限，是累计配额)；
@@ -51,6 +51,16 @@ warn() { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 fail() { echo -e "${RED}[FAIL]${NC}  $*"; exit 1; }
 step() { echo; echo -e "${CYAN}===${NC} $* ${CYAN}===${NC}"; }
 
+# twine 拿到不存在的路径时会把字面量当包名处理并失败；更糟的是 shell glob 没命中时
+# 会把模式本身原样传下去。先断言产物齐备，再谈上传。
+assert_pip_artifacts() {
+  local label="$1" whl sdist
+  whl="$(compgen -G "$PIP_DIST_DIR/*.whl" || true)"
+  sdist="$(compgen -G "$PIP_DIST_DIR/*.tar.gz" || true)"
+  [[ -n "$whl" ]] || fail "$label: $PIP_DIST_DIR 下没有 .whl（pip 产物落 entries/pip，不是 dist/）"
+  [[ -n "$sdist" ]] || fail "$label: $PIP_DIST_DIR 下没有 .tar.gz（sdist 缺失，pip 渠道会缺源包）"
+}
+
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -66,6 +76,10 @@ INIT_PY="$ROOT_DIR/runtime/substrate/platform/khy_platform/__init__.py"
 PYPROJECT="$ROOT_DIR/pyproject.toml"
 NPM_PKG="$ROOT_DIR/works/ship/npm/package.json"
 BACKEND_PKG="$ROOT_DIR/runtime/node/backend/package.json"
+
+# pip 产物的唯一落点（LAYOUT-005 单一根）。dist/ 是 gitignore 的旧路径且从未在干净
+# 检出里存在——曾把 twine 指向 dist/*，导致发布链在 twine 步必中止（REL-01）。
+PIP_DIST_DIR="$ROOT_DIR/entries/pip"
 
 VERSION=''
 DRY_RUN='0'
@@ -311,22 +325,24 @@ ok "all audits passed — proceeding to publish"
 # ── 3. Publish (pip, then npm) ───────────────────────────────────────────────
 if [[ "$SKIP_PIP" == '0' ]]; then
   step "Publishing pip"
+  assert_pip_artifacts "pip 发布前检查"
   if [[ "$DRY_RUN" == '1' ]]; then
-    python3 -m twine check "$ROOT_DIR"/dist/*
+    python3 -m twine check "$PIP_DIST_DIR"/* \
+      || fail "dry run: twine check failed — nothing published"
     ok "dry run: twine check passed (not uploaded)"
   else
     # 先干跑再发布: rehearse the exact artifacts about to ship, then upload.
     if [[ "$REHEARSE" == '1' ]]; then
       info "rehearsing pip upload (twine check) before the real upload…"
-      python3 -m twine check "$ROOT_DIR"/dist/* \
+      python3 -m twine check "$PIP_DIST_DIR"/* \
         || fail "pip rehearsal failed — aborting BEFORE upload (nothing published)"
       ok "pip rehearsal passed — proceeding to real upload"
     fi
     if [[ "$TEST_PYPI" == '1' ]]; then
-      python3 -m twine upload --repository testpypi "$ROOT_DIR"/dist/*
+      python3 -m twine upload --repository testpypi "$PIP_DIST_DIR"/*
       ok "uploaded khy-os $VERSION to TestPyPI"
     else
-      python3 -m twine upload "$ROOT_DIR"/dist/*
+      python3 -m twine upload "$PIP_DIST_DIR"/*
       ok "uploaded khy-os $VERSION to PyPI"
     fi
   fi

@@ -16,9 +16,10 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const { getDataHome, getLegacyDataHome } = require('../utils/dataHome');
+const { resolveDataPath, getLegacyDataHome } = require('../utils/dataHome');
 
-const DEFAULT_GROWTH_DIR = path.join(getDataHome(), 'growth');
+// 纯解析:加载期不建目录(_saveJobs/_migrateLegacy 各自 _ensureDir 后再写)。
+const DEFAULT_GROWTH_DIR = resolveDataPath('growth');
 const GROWTH_DIR = process.env.KHY_CRON_GROWTH_DIR || DEFAULT_GROWTH_DIR;
 const JOBS_FILE = process.env.KHY_CRON_JOBS_FILE || path.join(GROWTH_DIR, 'cron_jobs.json');
 const LEGACY_JOBS_FILE = path.join(getLegacyDataHome(), 'growth', 'cron_jobs.json');

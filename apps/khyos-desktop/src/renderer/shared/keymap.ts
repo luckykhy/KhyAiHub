@@ -23,6 +23,12 @@
 // 主进程与 preload 都不 import 它。放进 src/shared 会让渲染层的每次新增都依赖
 // node 工程先重新构建。
 //
+// 例外边界（2026-11-12 立）：src/shared/commandGroup.ts 也在 src/shared，且被 main
+// 与 renderer 共用。判定口径是「有没有 main/preload 消费方」，不是「叶子够不够纯」：
+// 两边都要消费的契约型叶子只能放 src/shared（放 renderer/shared 则 main 无法 import，
+// 那是更坏的方向耦合）；仍只服务渲染层的叶子留 renderer/shared。仓内因此有两个
+// shared 家，按这条口径分流，不按目录名猜。
+//
 // 诚实边界：这张表**只登记已接线的动作**。没接线的能力不进表 —— 命令面板按本表
 // 渲染徽标，表里没有就不显示键位；能力本身没接线就不渲染那条命令。
 // 不为「看起来完整」补空壳键位（违诚实红线）。
@@ -35,7 +41,9 @@ export type DesktopAction =
   | 'openSettings'
   | 'toggleSidePane'
   | 'toggleTerminal'
+  | 'toggleEditorWorkbench'
   | 'openKeyManager'
+  | 'openModels'
   | 'toggleFullScreen'
   | 'toggleDevTools'
 
@@ -60,11 +68,20 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { action: 'openSettings', keys: 'Ctrl+,', key: ',', ctrl: true, label: '设置' },
   { action: 'toggleSidePane', keys: 'Ctrl+Alt+B', key: 'b', ctrl: true, alt: true, label: '切换面板' },
   { action: 'toggleTerminal', keys: 'Ctrl+J', key: 'j', ctrl: true, label: '切换终端' },
+  // 与 VS Code 的 Ctrl+Shift+E 对齐（资源管理器/编辑器视图切换）；消费点在
+  // AppLayout（它持有主区视图状态）。Ctrl+E 不取：与 shell 行编辑习惯冲突。
+  { action: 'toggleEditorWorkbench', keys: 'Ctrl+Shift+E', key: 'e', ctrl: true, shift: true, label: '切换代码编辑器' },
   // 以下三条原属 src/main/menu.ts（该文件零 importer，已按 [DESIGN-ARCH-125] §5.2
   // step 4 删除）。键位沿用其原值，不作重新设计：
   //   openKeyManager —— [DESIGN-ARCH-091] §5.1 入口① 的加速键，此前无处可触达
   //   toggleFullScreen / toggleDevTools —— 全应用另无实现路径（连 globalShortcut 都没有）
   { action: 'openKeyManager', keys: 'Ctrl+Shift+K', key: 'k', ctrl: true, shift: true, label: '密钥与端点管理' },
+  // openModels 与 openKeyManager 同形态（[DESIGN-ARCH-091] §5.1 入口①）：开模型
+  // 管理独立窗口（#/model-manager）。此前 App.tsx 已写好 `action === 'openModels'`
+  // 分支，但本表漏登记 —— 分支永不命中，Ctrl+Shift+M 按下没有任何反应，而 main 的
+  // models:openWindow 通道与 preload 的 openModelsWindow 都已就位（消费点在 App.tsx
+  // 的全局键位链）。键位取 Ctrl+Shift+M：与 Ctrl+Shift+K 相邻且不撞表内任何组合。
+  { action: 'openModels', keys: 'Ctrl+Shift+M', key: 'm', ctrl: true, shift: true, label: '模型管理' },
   { action: 'toggleFullScreen', keys: 'F11', key: 'f11', label: '切换全屏' },
   { action: 'toggleDevTools', keys: 'F12', key: 'f12', label: '切换开发者工具' },
 ]

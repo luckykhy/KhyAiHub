@@ -14,6 +14,7 @@ const router = express.Router();
 
 const apiResponse = require('../utils/apiResponse');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { getRegistry: getDeviceKeyRegistry } = require('../services/crossPlatform/ws/deviceSignatureAuth');
 
 // Every endpoint below is a state mutation or device/session enumeration. The two
 // most sensitive ones (POST /start-platform, POST /start-all) spawn child
@@ -83,6 +84,14 @@ router.get('/devices', async (req, res) => {
 /**
  * POST /api/cross-platform/devices/register
  * Register a new device (REST fallback for WebSocket registration).
+ *
+ * <p>断点二：带 `publicKey` 时同时把这台设备的公钥登记到设备公钥表。这是
+ * 设备签名鉴权的**唯一**信任入口——它在账号鉴权之后，所以「谁能把一把公钥
+ * 绑到某台设备上」有答案。WS 的 auth 帧里不接受登记：未鉴权的 socket 不能
+ * 创造信任，否则任何人先连一次就把自己的公钥绑上去了。
+ *
+ * <p>登记是幂等的（PC 每次连上都可能登记一次）；同一 deviceId 换公钥会被拒
+ * （`public_key_changed`），因为 deviceId 本身就是公钥指纹——换公钥就是换身份。
  */
 router.post('/devices/register', async (req, res) => {
   const hub = getHub();
@@ -90,9 +99,22 @@ router.post('/devices/register', async (req, res) => {
     return apiResponse.fail(res, 'SERVICE_UNAVAILABLE', 'Cross-platform hub not available', { status: 503 });
   }
 
-  const { deviceId, platform, deviceName, capabilities } = req.body;
+  const { deviceId, platform, deviceName, capabilities, publicKey } = req.body;
   if (!deviceId || !platform) {
     return apiResponse.fail(res, 'INVALID_ARGUMENT', 'deviceId and platform required', { status: 400 });
+  }
+
+  if (publicKey) {
+    const verdict = getDeviceKeyRegistry().enroll({
+      deviceId,
+      publicKey,
+      userId: String(req.user.id),
+      platform,
+      deviceName,
+    });
+    if (!verdict.ok) {
+      return apiResponse.fail(res, 'INVALID_ARGUMENT', verdict.code, { status: 400 });
+    }
   }
 
   try {
@@ -103,7 +125,7 @@ router.post('/devices/register', async (req, res) => {
       deviceName,
       capabilities,
     });
-    apiResponse.success(res, device);
+    apiResponse.success(res, { ...device, key_enrolled: Boolean(publicKey) });
   } catch (err) {
     apiResponse.fail(res, 'INVALID_ARGUMENT', err.message, { status: 400 });
   }
@@ -112,6 +134,9 @@ router.post('/devices/register', async (req, res) => {
 /**
  * DELETE /api/cross-platform/devices/:deviceId
  * Unregister a device.
+ *
+ * <p>同时吊销它的公钥登记：只从 hub 里摘掉、却把公钥留在签名表里，等于
+ * 「界面上删了，链路还能签名进来」——那种删除是最糟的一种，因为它看起来生效了。
  */
 router.delete('/devices/:deviceId', (req, res) => {
   const hub = getHub();
@@ -120,7 +145,8 @@ router.delete('/devices/:deviceId', (req, res) => {
   }
 
   hub.unregisterDevice(req.params.deviceId);
-  apiResponse.success(res, null, { message: 'Device unregistered' });
+  const keyRevoked = getDeviceKeyRegistry().forget(req.params.deviceId);
+  apiResponse.success(res, null, { message: 'Device unregistered', key_revoked: keyRevoked });
 });
 
 /**

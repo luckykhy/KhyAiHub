@@ -107,7 +107,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 
 - **Python 层**（`runtime/substrate/platform/khy_platform/`）：轻量启动器，负责拉起 Node.js
 - **Node.js 后端**（`runtime/node/backend/`）：所有业务逻辑（CLI、AI 网关、各类服务）
-- **Vue.js 前端**：`delivery/web/ai-frontend/`（AI 平台 UI）与
+- **Vue.js 前端**：`delivery/channel/web/ai-frontend/`（AI 平台 UI）与
   `delivery/channel/khyquant/frontend/`（独立项目 khyquant 的交易 UI，随平台分发）
 
 ---
@@ -336,7 +336,7 @@ khy status           # 查看系统状态
 **轨道 3（G3）—— 浏览器 UI 包（3 源，依赖声明必须精确对齐）**：
 
 1. `runtime/substrate/platform/packages/ui-shared/package.json` → `version`
-2. `delivery/web/ai-frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
+2. `delivery/channel/web/ai-frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
 3. `delivery/channel/khyquant/frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
 
 G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
@@ -593,6 +593,39 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 3. 任何新命令都要同步更新 `aliases.js` 中的别名表
 4. 用 `node -e "require('./runtime/node/backend/src/...')"` 做快速校验
 5. 改动后运行 `khy doctor` 验证系统健康
+
+---
+
+## 智能体卫生契约（收工三问）
+
+> 真源：[`[DESIGN-LAY-011] 新增文件落位与命名规程`](docs/10_规范/DESIGN-LAY/[DESIGN-LAY-011]%20新增文件落位与命名规程.md)。
+> 本节是 compat 层摘要，全文注入、无字数预算。
+
+### 落位（做之前）
+
+1. 临时脚本 / 探针 → `works/data/khy/T4-transient/tmp/<task>/`；程序内临时目录 → `utils/ephemeralTmp.js`
+2. 任务证据 → `works/data/khy/feedback/<task-id>/`；交付物 → `docs/NN_中文/` 编号目录
+3. 禁止：在根或任意子目录造 `.khy` / `.khyos` / `.khy-runtime`；禁止 `.tmp-*` 落在 T4 之外；禁止 junction / symlink / 硬链接
+4. 未经授权不得在仓库根新增/删除文件或目录：结构锁（`docs/10_规范/registry/STRUCTURE-LOCK.json`）比对清单快照，drift 即记录；确需变更先更新快照（version+1）并在提交信息加 `structure-lock-approved-by: <批准人>`
+
+### 收工三问（每次任务完成、退出前必答）
+
+1. 我造的东西都在允许落点吗？
+2. 我造的临时物处理了吗——删掉，或隔离进 `.../tmp/housekeeping/<date>/` 并留 manifest？
+3. 根目录有没有白名单外的新增（`git status --porcelain` 自查，目标 = 0）？
+
+### 定期清理
+
+- **每批收口**：`node scripts/ci/check-repo-layout.js`，看 `root-junk` / `root-shadow-dir` / `layer-registry` 是否归零
+- **结构锁**：每批收口加跑 `npm run check:structure-lock`（S1 观察者，恒 exit 0）——清单快照外新增 / 快照内消失即 drift finding，授权通道见「落位」第 4 条
+- **观察者**：`npm run check:hygiene`（S1，只记录不阻断）——全树 `.tmp-*`、碎片名、junction、根白名单外条目（Node 实现 `scripts/ci/check-litter.js`；本机无可用 Python，organize.py 系检查不可用）
+- **巡检**：`python scripts/maintenance/organize.py --report`（仅在有 Python 环境的机器上作为每日巡检补充）；L2 隔离需人工确认
+- **复发性事故**：`-p` 目录是 shell `mkdir -p` 事故的复发形态（2026-11-19 二次出现），已由 `root-junk` 签名兜住检测——见到即隔离，不等下次
+
+### 违反的处置
+
+临时物 → 隔离（只隔离不删除）；junction → 摘除并记录目标；碎片名文件 → 隔离。
+不得「先放着，下次再说」——根上 120 项垃圾就是这样攒出来的。
 
 ---
 

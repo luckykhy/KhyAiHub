@@ -4,17 +4,17 @@
 /**
  * build-brand-assets — Khy OS 品牌资产构建器。
  *
- * 单一真源：`delivery/brand/khy-brand-geometry.js`（几何 + 配色）。
+ * 单一真源：`works/brand/khy-brand-geometry.js`（几何 + 配色）。
  * 本脚本只做**确定性渲染与落盘**，不新增任何设计决策。
  *
  * 产物：
- *   delivery/brand/svg/**.svg                  矢量母版（主标 / 单色 / 字标 / 应用图标 / favicon）
- *   delivery/brand/png/**.png                  位图母版（应用图标 / 透明主标 / favicon）
- *   delivery/brand/icon/khy-os.ico             多尺寸 ICO（Windows / Electron）
- *   delivery/brand/khy-brand-tokens.json       五端品牌令牌取值（机器可读）
- *   delivery/web/ai-frontend/public/**         Web favicon + 内联用主标
+ *   works/brand/svg/**.svg                  矢量母版（主标 / 单色 / 字标 / 应用图标 / favicon）
+ *   works/brand/png/**.png                  位图母版（应用图标 / 透明主标 / favicon）
+ *   works/brand/icon/khy-os.ico             多尺寸 ICO（Windows / Electron）
+ *   works/brand/khy-brand-tokens.json       五端品牌令牌取值（机器可读）
+ *   delivery/channel/web/ai-frontend/public/**         Web favicon + 内联用主标
  *   apps/khyos-desktop/{resources/icon,public,launcher}/*.ico   桌面端图标
- *   delivery/mobile/.../android/app/src/main/res/**  Android 启动图标（各密度 + 自适应）
+ *   delivery/channel/mobile/.../android/app/src/main/res/**  Android 启动图标（各密度 + 自适应）
  *   runtime/node/backend/src/cli/tui/brandPixelArt.js            TUI 像素标记（生成物）
  *
  * 栅格化：本机 Edge 无头截图（HTML → PNG），与 `scripts/evidence/render-images.js` 同一套路——
@@ -35,7 +35,7 @@ const crypto = require('crypto');
 const { execFileSync, spawnSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..', '..');
-const BRAND = path.join(REPO, 'delivery', 'brand');
+const BRAND = path.join(REPO, 'works', 'brand');
 const geo = require(path.join(BRAND, 'khy-brand-geometry.js'));
 const wordmark = require(path.join(BRAND, 'khy-brand-wordmark.js'));
 const { PNG } = require(path.join(REPO, 'node_modules', 'pngjs'));
@@ -182,7 +182,7 @@ function faviconMarkSvg({ size = 32, mode = 'color' } = {}) {
 /**
  * 横向锁定组合：主标 + 字标「khy OS」。
  *
- * 字标是**矢量轮廓**（`delivery/brand/khy-brand-wordmark.js`，由
+ * 字标是**矢量轮廓**（`works/brand/khy-brand-wordmark.js`，由
  * `scripts/brand/convert-wordmark-to-outlines.js` 从系统字体的 glyf 表提取），
  * 不是 `<text>` —— 商标递交图样必须脱离字体环境复现，换机器缺字体就走样。
  */
@@ -544,7 +544,7 @@ function previewHtml({ markSvgStr, monoPaperSvg, pixelArt, tokens }) {
   形态语义：四段弧叶 = 四条主张（订阅套利 / 随身性 / 本土化 / 私有与便携）；中心菱形 = 内核（kernel / runtime）；
   内核上刻一道 K 形负槽 = 品牌字母（可发现，但不主导读感）。
   配色：墨黑 + 琥珀橙 —— 刻意避开 2023 年后 AI 产品的「蓝→紫→品红」通用渐变。
-  几何真源：<code>delivery/brand/khy-brand-geometry.js</code>，本图与全部产物由
+  几何真源：<code>works/brand/khy-brand-geometry.js</code>，本图与全部产物由
   <code>node scripts/brand/build-brand-assets.js</code> 生成。
 </p>
 
@@ -694,14 +694,14 @@ function main() {
     'khy-os-favicon.svg': faviconMarkSvg({ size: 32 }),
   };
   for (const [name, content] of Object.entries(svgs)) {
-    written.push(write(path.join('delivery/brand/svg', name), content));
+    written.push(write(path.join('works/brand/svg', name), content));
   }
 
   // ── 2. 五端令牌取值 ──
   const tokens = {
     $meta: {
       name: 'Khy OS 品牌令牌（五端同步取值）',
-      source: 'delivery/brand/khy-brand-geometry.js（几何与配色单一真源）',
+      source: 'works/brand/khy-brand-geometry.js（几何与配色单一真源）',
       updated: '2026-10-25',
       note:
         'accent = 品牌强调主色。亮暗两端各取一个文本安全值；' +
@@ -728,7 +728,7 @@ function main() {
     },
   };
   written.push(
-    write('delivery/brand/khy-brand-tokens.json', JSON.stringify(tokens, null, 2) + '\n')
+    write('works/brand/khy-brand-tokens.json', JSON.stringify(tokens, null, 2) + '\n')
   );
 
   if (SVG_ONLY) {
@@ -766,22 +766,22 @@ function main() {
 
   const pngOut = new Map();
   for (const s of iconSizes) {
-    const rel = path.join('delivery/brand/png', `khy-os-icon-${s}.png`);
+    const rel = path.join('works/brand/png', `khy-os-icon-${s}.png`);
     pngOut.set(rel, writeBuf(rel, pngs.get(`icon-${s}`)));
   }
   for (const s of markSizes) {
-    const rel = path.join('delivery/brand/png', `khy-os-mark-${s}.png`);
+    const rel = path.join('works/brand/png', `khy-os-mark-${s}.png`);
     pngOut.set(rel, writeBuf(rel, pngs.get(`mark-${s}`)));
   }
   for (const s of faviconSizes) {
-    const rel = path.join('delivery/brand/png', `khy-os-favicon-${s}.png`);
+    const rel = path.join('works/brand/png', `khy-os-favicon-${s}.png`);
     pngOut.set(rel, writeBuf(rel, pngs.get(`favicon-${s}`)));
   }
   written.push(...pngOut.values());
 
   // ── 4. ICO（桌面端 / Windows）──
   const icoSizes = [16, 24, 32, 48, 64, 128, 256];
-  const icoRel = path.join('delivery/brand/icon', 'khy-os.ico');
+  const icoRel = path.join('works/brand/icon', 'khy-os.ico');
   buildIco(
     icoSizes.map((s) => pngs.get(`icon-${s}`)),
     path.join(REPO, icoRel)
@@ -791,24 +791,24 @@ function main() {
   // ── 5. 落地各端 ──
   // Web
   written.push(
-    copy('delivery/brand/svg/khy-os-favicon.svg', 'delivery/web/ai-frontend/public/favicon.svg')
+    copy('works/brand/svg/khy-os-favicon.svg', 'delivery/channel/web/ai-frontend/public/favicon.svg')
   );
   written.push(
     copy(
-      'delivery/brand/svg/khy-kernel-mark.svg',
-      'delivery/web/ai-frontend/public/brand/khy-kernel-mark.svg'
+      'works/brand/svg/khy-kernel-mark.svg',
+      'delivery/channel/web/ai-frontend/public/brand/khy-kernel-mark.svg'
     )
   );
   for (const s of faviconSizes) {
     written.push(
       copy(
-        path.join('delivery/brand/png', `khy-os-favicon-${s}.png`),
-        `delivery/web/ai-frontend/public/favicon-${s}.png`
+        path.join('works/brand/png', `khy-os-favicon-${s}.png`),
+        `delivery/channel/web/ai-frontend/public/favicon-${s}.png`
       )
     );
   }
   written.push(
-    copy('delivery/brand/png/khy-os-icon-128.png', 'delivery/web/ai-frontend/public/apple-touch-icon.png')
+    copy('works/brand/png/khy-os-icon-128.png', 'delivery/channel/web/ai-frontend/public/apple-touch-icon.png')
   );
 
   // 桌面端
@@ -817,7 +817,7 @@ function main() {
   written.push(copy(icoRel, 'apps/khyos-desktop/launcher/khyos.ico'));
 
   // Android 启动图标
-  const resBase = 'delivery/mobile/khy-os-client-app/android/app/src/main/res';
+  const resBase = 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/res';
   for (const [dir, size] of mipmaps) {
     written.push(
       writeBuf(path.join(resBase, dir, 'ic_launcher.png'), pngs.get(`mip-${size}`))
@@ -830,13 +830,13 @@ function main() {
   // Flutter 客户端的资源（应用内品牌块用）
   written.push(
     writeBuf(
-      'delivery/mobile/khy-os-client-app/assets/brand/khy-os-mark-256.png',
+      'delivery/channel/mobile/khy-os-client-app/assets/brand/khy-os-mark-256.png',
       pngs.get('mark-256')
     )
   );
   written.push(
     writeBuf(
-      'delivery/mobile/khy-os-client-app/assets/brand/khy-os-mark-64.png',
+      'delivery/channel/mobile/khy-os-client-app/assets/brand/khy-os-mark-64.png',
       pngs.get('mark-64')
     )
   );
@@ -854,7 +854,7 @@ function main() {
   const pixelModule =
     `'use strict';\n\n` +
     `// GENERATED FILE —— 由 scripts/brand/build-brand-assets.js 生成，请勿手改。\n` +
-    `// 源：delivery/brand/khy-brand-geometry.js（几何单一真源）。\n` +
+    `// 源：works/brand/khy-brand-geometry.js（几何单一真源）。\n` +
     `// 用途：TUI 终端里的品牌标记（字符点阵 + 三档明暗）。\n` +
     `// 网格：${art[0].length} 列 × ${art.length} 行。\n\n` +
     `const MARK_ART = [\n${artLines},\n];\n\n` +
@@ -871,7 +871,7 @@ function main() {
     pixelArt: art.join('\n'),
     tokens,
   });
-  written.push(write('delivery/brand/preview.html', preview));
+  written.push(write('works/brand/preview.html', preview));
 
   // ── 8. 申请图样页 ──
   const filing = filingHtml({
@@ -879,16 +879,16 @@ function main() {
     wordmarkSvgStr: wordmarkSvg({ mode: 'ink', size: 56 }),
     lockupSvgStr: lockupSvg({ mode: 'ink' }),
   });
-  written.push(write('delivery/brand/filing.html', filing));
+  written.push(write('works/brand/filing.html', filing));
 
   // ── 9. 桌宠素材分发 ──
   // 桌宠美术带真商标（由 scripts/brand/build-pet-assets.ps1 把品牌几何真源压进空白金盘），
   // 三端各取一份：网页 public、桌面 renderer 资源、Flutter assets。
-  const petSrcDir = 'delivery/brand/pet';
+  const petSrcDir = 'works/brand/pet';
   const petTargets = [
-    'delivery/web/ai-frontend/public/brand/pet',
+    'delivery/channel/web/ai-frontend/public/brand/pet',
     'apps/khyos-desktop/src/renderer/assets/pet',
-    'delivery/mobile/khy-os-client-app/assets/brand/pet',
+    'delivery/channel/mobile/khy-os-client-app/assets/brand/pet',
   ];
   const petFiles = fs
     .readdirSync(path.join(REPO, petSrcDir))
@@ -930,7 +930,7 @@ function main() {
   written.push(
     copy(
       path.join(petSrcDir, 'pet-fortune.json'),
-      'delivery/web/ai-frontend/src/data/pet-fortune.json'
+      'delivery/channel/web/ai-frontend/src/data/pet-fortune.json'
     )
   );
 

@@ -61,6 +61,32 @@ function getExpandModelService() {
   return _expandModelService;
 }
 
+// ccSwitch 活跃卡片（桌面端「端点与密钥管理」激活的那张卡）→ 网关路由。
+// 惰性 require：store 在加载时读 dataHome，探活/列表等不碰卡片的路径不该被它拖住。
+let _ccSwitchStore;
+function getCcSwitchStore() {
+  if (!_ccSwitchStore) {
+    try {
+      _ccSwitchStore = require('../domain/config/ccSwitch/store');
+    } catch {
+      _ccSwitchStore = null; // store 不可用 → 无卡片路由，逐字节回退今日行为
+    }
+  }
+  return _ccSwitchStore;
+}
+
+let _ccSwitchRouteResolver;
+function getCcSwitchRouteResolver() {
+  if (!_ccSwitchRouteResolver) {
+    try {
+      _ccSwitchRouteResolver = require('../domain/config/ccSwitch/routeResolver');
+    } catch {
+      _ccSwitchRouteResolver = null;
+    }
+  }
+  return _ccSwitchRouteResolver;
+}
+
 const PUBLIC_ADAPTERS = [
   'kiro',
   'cursor',
@@ -1480,15 +1506,44 @@ async function handleMultiProtocol(req, res, sourceProtocol) {
     /* proceed normally */
   }
 
-  const route = modelRouter.resolveModelRoute({ model: canonical.model || null });
+  const baseRoute = modelRouter.resolveModelRoute({ model: canonical.model || null });
+
+  // ── ccSwitch 活跃卡片路由 ──
+  // 用户在桌面端为这个 app（Claude Code / Codex / …）激活了一张端点卡片时，来自该
+  // app 的请求应打到卡片自己的上游。resolveCardRoute 把路由改写为
+  // adapterKey='api' + apiPoolProvider='cc_switch_<cardId>'（卡片 key 在 apiKeyPool
+  // 里的命名空间），api 适配器据此注入卡片的 key/endpoint、模型名用卡片里的裸 id。
+  //
+  // 显式模型名前缀（claude/…、trae/…、route-map）与用户钉选永远优先于卡片 —— 卡片
+  // 只是默认，不是枷锁（resolveCardRoute 自己就是这条口径）。没有活跃卡片 /
+  // store 不可用 → 返回 null，路由逐字节回退今日行为。
+  const _cardRoute = (() => {
+    try {
+      const store = getCcSwitchStore();
+      const resolver = getCcSwitchRouteResolver();
+      if (!store || !resolver || typeof resolver.resolveCardRoute !== 'function') {
+        return null;
+      }
+      return resolver.resolveCardRoute(baseRoute, { sourceProtocol, store });
+    } catch {
+      return null; // 卡片路由绝不许阻断请求
+    }
+  })();
+  const route = _cardRoute || baseRoute;
 
   // Anthropic 协议（Claude Code 接入）：强制级联模式，让 kiro → trae → codex 等
   // IDE 适配器依次尝试，不绑死单一通道。
   // 但用户显式路由（route-map / explicit）保留 strict，避免
   // sensenova-6.7-flash-lite 等直连 API 模型被 kiro 截走。
+  // cc-switch 卡片路由同理：卡片是用户为这个 app 显式激活的上游，放宽它等于让
+  // IDE 适配器把请求截走（routeResolver.CARD_ROUTE_SOURCE 同款论证）。
   const routeSource = route.metadata?.source || route.source || '';
   if (sourceProtocol === PROTOCOLS.ANTHROPIC) {
-    if (routeSource !== 'explicit' && routeSource !== 'route-map') {
+    if (
+      routeSource !== 'explicit' &&
+      routeSource !== 'route-map' &&
+      routeSource !== getCcSwitchRouteResolver()?.CARD_ROUTE_SOURCE
+    ) {
       route.strictPreferred = false;
       route.preferredAdapter = null;
     }
@@ -1497,10 +1552,13 @@ async function handleMultiProtocol(req, res, sourceProtocol) {
   // Claude Code 发来的 claude-* 模型名 → 优先走 claude 适配器（透传模式），
   // 避免被 kiro 截走导致 tool_use 重组出错。
   // 仅当用户未显式指定适配器前缀时生效（trae/deepseek-v3 会正常路由）。
+  // 活跃卡片同样压过这条**启发式**：卡片是用户为这个 app 显式激活的上游，
+  // 而 claude-* 前缀只是「看起来像官方模型」的名字猜测。
   if (
     sourceProtocol === PROTOCOLS.ANTHROPIC &&
     routeSource !== 'explicit' &&
     routeSource !== 'route-map' &&
+    routeSource !== getCcSwitchRouteResolver()?.CARD_ROUTE_SOURCE &&
     /^claude[-_]/i.test(String(canonical.model || ''))
   ) {
     // 如果 claude 适配器可用（有 API key 或已登录），优先透传
@@ -1589,6 +1647,10 @@ async function handleMultiProtocol(req, res, sourceProtocol) {
     tools: canonical.tools || undefined,
     rawTools: body.tools || undefined, // 保留原始工具定义（含服务端工具 type 字段如 web_search_20250305）
     images: _extractedImages.length > 0 ? _extractedImages : undefined,
+    // ccSwitch 活跃卡片：把卡片在 apiKeyPool 里的命名空间透传给 api 适配器
+    // （aiGateway._resolveApiPoolProviderForRequest 的显式 pool 提示第一位）。
+    // 缺省 undefined → 老路径按模型名/通配池解析，逐字节不变。
+    apiPoolProvider: route.apiPoolProvider || undefined,
     // 透传 CC 追踪头部
     _ccTraceHeaders: req._ccTraceHeaders || undefined,
     // 透传 CC 的 anthropic-beta 头部
@@ -2440,9 +2502,18 @@ async function handleMultiProtocol(req, res, sourceProtocol) {
         id: (codexSession && codexSession.id) || `msg_${crypto.randomUUID()}`,
         model: resolvedModel,
         content: result.content,
-        thinking: null,
+        // 思考内容：网关成功结果一直带着 result.thinking（aiGatewayGenerateMethod
+        // 的池化/非池化两条成功路径都填），这里过去硬编码 null 把它丢了 —— 非流式
+        // 的 reasoning-only 回复因此表现为空 content + 无 thinking。
+        // 流式路径本来就经 onChunk({type:'thinking'}) 走 Anthropic thinking block。
+        thinking: result.thinking || null,
         toolCalls,
-        stopReason: toolCalls ? 'tool_use' : 'end_turn',
+        // 'tool_calls'（不是 'tool_use'）是 canonical stopReason 的 OpenAI 侧拼写：
+        // shared protocolConverter/anthropic.js:mapStopReason 只认 tool_calls → 'tool_use'，
+        // 没有 'tool_use' 键 → 回落 'end_turn'。写 'tool_use' 会让 Anthropic 入站的
+        // 非流式响应把「有工具调用」报成「说完了」，Claude Code 因此不执行工具。
+        // （openai/gemini 侧由 fromCanonical 的 toolCalls 分支另行覆写，同样正确。）
+        stopReason: toolCalls ? 'tool_calls' : 'end_turn',
         usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
       };
       const formatted = protocolConverter.convertResponse(canonicalResp, outputProtocol);

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>khyosclient · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>channel<span class="sep">›</span>mobile<span class="sep">›</span>khy-os-client-app<span class="sep">›</span>khyosclient</div>
+      <header class="hero reveal"><h1>khyosclient</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-client">khy_os_client</a></li><li class="lvl-2"><a href="#迭代方式-先读这段-能省掉每次几分钟的等待">迭代方式（先读这段，能省掉每次几分钟的等待）</a></li><li class="lvl-2"><a href="#getting-started">Getting Started</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-client">khy_os_client<a class="anchor" href="#khy-os-client" aria-label="锚点">#</a></h1>
+<p>A new Flutter project.</p>
+<h2 id="迭代方式-先读这段-能省掉每次几分钟的等待">迭代方式（先读这段，能省掉每次几分钟的等待）<a class="anchor" href="#迭代方式-先读这段-能省掉每次几分钟的等待" aria-label="锚点">#</a></h2>
+<p><strong>改 Dart 就用 <code>flutter run</code>，不要用 <code>flutter build apk</code>。</strong></p>
+<p>本工程的原生侧是 llama.cpp + mtmd + <code>GGML_CPU_ALL_VARIANTS</code> 的 7 个 CPU 后端</p>
+<ul><li>quickjs-ng，<code>.cxx</code> 产物 1.4 GB，一次全量重编以分钟计。而源码是 **Dart 88 个</li></ul>
+<p>文件 / 31,086 行**、Kotlin 18 个文件 / 6,442 行——绝大部分改动落在 Dart 侧，<br>那一侧根本不需要重新构建。</p>
+<pre><code class="language-powershell">D:\Portable\<span class="hljs-number">2</span><span class="hljs-literal">-tools</span>\flutter\flutter\bin\flutter.bat run</code></pre>
+<p>连上真机后改 Dart → 按 <code>r</code> 热重载（秒级）、按 <code>R</code> 热重启。不重编原生、不重新<br>打包、不跑 R8。只有改了 Kotlin / C++（<code>android/app/src/main/cpp/</code>）/<br><code>CMakeLists.txt</code> / <code>build.gradle</code> 才需要完整重建。</p>
+<p><strong>一个工作时段内别在 debug 与 release 之间来回切。</strong> <code>.cxx/Debug</code> 与<br><code>.cxx/RelWithDebInfo</code> 是两套独立产物，每切一次就把整个 llama.cpp + 7 个后端<br>变体重编一遍。本地看效果固定用 <code>flutter run</code>（debug）；要出包才用<br><code>scripts\release\build-android.ps1 -ApkOnly</code>（release，会跑 R8 与签名）。</p>
+<p><strong>别为了构建速度去关 <code>GGML_CPU_ALL_VARIANTS</code>。</strong> 那是拿运行时推理速度换构建<br>时间，方向反了；压缩构建时间的方向是热重载和 Gradle 缓存，不是砍后端变体。</p>
+<h2 id="getting-started">Getting Started<a class="anchor" href="#getting-started" aria-label="锚点">#</a></h2>
+<p>This project is a starting point for a Flutter application.</p>
+<p>A few resources to get you started if this is your first Flutter project:</p>
+<ul><li><a href="https://docs.flutter.dev/get-started/learn-flutter" target="_blank" rel="noopener">Learn Flutter</a></li><li><a href="https://docs.flutter.dev/get-started/codelab" target="_blank" rel="noopener">Write your first Flutter app</a></li><li><a href="https://docs.flutter.dev/reference/learning-resources" target="_blank" rel="noopener">Flutter learning resources</a></li></ul>
+<p>For help getting started with Flutter development, view the<br><a href="https://docs.flutter.dev/" target="_blank" rel="noopener">online documentation</a>, which offers tutorials,<br>samples, guidance on mobile development, and a full API reference.</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../delivery/channel/mobile/khy-os-client-app/HANDOFF.html"><div class="dir">← 上一篇</div><div class="ttl">khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00）</div></a><a class="next" href="../../../../delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/.github/pull_request_template.html"><div class="dir">下一篇 →</div><div class="ttl">Overview</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="delivery/channel/mobile/khy-os-client-app/README.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

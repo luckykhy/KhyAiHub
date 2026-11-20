@@ -50,6 +50,15 @@ describe('commandRegistry', () => {
       expect(registry.CATEGORIES).toHaveProperty('dev');
       expect(registry.CATEGORIES).toHaveProperty('workflow');
       expect(registry.CATEGORIES).toHaveProperty('system');
+      expect(registry.CATEGORIES).toHaveProperty('analysis');
+    });
+
+    test('analysis is the LAST key — inserting it mid-object reorders every group before it', () => {
+      // getAll() 的 catOrder 就是 Object.keys(CATEGORIES)：未知分类按 999 排尾，故
+      // analysis 三行（commandSchema.js:1548/2150）今天就以「未知分类」占着队尾，收编
+      // 进注册表等于原地不动。插中部会把它前面的组整体挪到它之后，那才会真改终端两个
+      // 菜单的平铺序 —— 这条断言就是防那个「让断言有意义」的改法。
+      expect(Object.keys(registry.CATEGORIES).at(-1)).toBe('analysis');
     });
   });
 
@@ -125,6 +134,36 @@ describe('commandRegistry', () => {
         expect(arr[0]).toHaveProperty('label');
         expect(arr[0]).toHaveProperty('desc');
       }
+    });
+
+    test('every row carries a category string (register() 兜底保证非空)', () => {
+      const arr = registry.toSlashCommands();
+      for (const row of arr) {
+        expect(typeof row.category).toBe('string');
+        expect(row.category.length).toBeGreaterThan(0);
+      }
+    });
+
+    test('analysis 三行相邻（收编进 CATEGORIES 不拆散它们）', () => {
+      const cats = registry.toSlashCommands().map((r) => r.category);
+      const i = cats.indexOf('analysis');
+      expect(i).toBeGreaterThan(-1);
+      expect(cats.slice(i, i + 3)).toEqual(['analysis', 'analysis', 'analysis']);
+    });
+
+    test('every row carries its registration source', () => {
+      // source 是桌面侧分组（slashCommandSources.ts 的 groupKeyFor）的唯一输入：
+      // 缺一行 = 那一行在桌面回落 'khy'（「Khy 内置」）。register() 的 source 默认
+      // 'user'，故每行都应有非空字符串。
+      for (const row of registry.toSlashCommands()) {
+        expect(typeof row.source).toBe('string');
+        expect(row.source.length).toBeGreaterThan(0);
+      }
+      const builtin = registry.toSlashCommands().find((r) => r.cmd === '/ulw-loop');
+      expect(builtin.source).toBe('builtin');
+      registry.register({ cmd: '/source-probe', label: 'SP', desc: '' }, 'plugin');
+      const probe = registry.toSlashCommands().find((r) => r.cmd === '/source-probe');
+      expect(probe.source).toBe('plugin');
     });
 
     test('includes builtin /ulw-loop slash command', () => {

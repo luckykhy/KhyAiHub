@@ -31,7 +31,7 @@
 <p>一句话分工：<strong>模型在云端，执行器在手机，策略在桥里。</strong></p>
 <hr>
 <h2 id="为什么有这一个单元">为什么有这一个单元<a class="anchor" href="#为什么有这一个单元" aria-label="锚点">#</a></h2>
-<p>手机侧原本的反代是 <code>delivery/mobile/khy-os-client-app</code> 里的 <code>AmooLoop</code>：它通过无障碍服务<br><strong> scraping Amoo 的聊天气泡</strong>来驱动。实测代价（2026-10-25，PZ261A / StepOS / Android 16）：</p>
+<p>手机侧原本的反代是 <code>delivery/channel/mobile/khy-os-client-app</code> 里的 <code>AmooLoop</code>：它通过无障碍服务<br><strong> scraping Amoo 的聊天气泡</strong>来驱动。实测代价（2026-10-25，PZ261A / StepOS / Android 16）：</p>
 <table><thead><tr><th>问题</th><th>实测</th></tr></thead><tbody><tr><td>单轮延迟</td><td>约 6 分钟（Amoo 流式输出 + 两次稳定采样）</td></tr><tr><td>前置条件</td><td>无障碍服务必须开启，否则空转到超时</td></tr><tr><td>进程生命周期</td><td>StepOS 会在 App 退后台时冻结它（<code>Became not working FGS</code>），桥的 LISTEN 套接字还在但无人应答</td></tr><tr><td>截止时间</td><td>单任务上限被提到 3 小时</td></tr></tbody></table>
 <p>云端网关这条路把这些全绕开了：工具调用就是工具调用，不需要读屏、不需要前台、没有分钟级延迟。<br><strong>实测一次签名请求即通</strong>：<code>HTTP 200</code>，<code>content: &quot;47&quot;</code>，<code>usage</code> 正常。</p>
 <p>设备工具那一半不变——仍然走 <code>domain/network/phone</code> 的桥客户端。</p>

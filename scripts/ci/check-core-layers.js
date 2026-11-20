@@ -290,7 +290,7 @@ function isSkinPath(file) {
   return (
     rel.includes('/src/cli/tui/') ||
     rel.includes('apps/khyos-desktop/') ||
-    rel.includes('/delivery/web/') ||
+    rel.includes('/delivery/channel/web/') ||
     rel.includes('/delivery/channel/')
   );
 }
@@ -659,7 +659,7 @@ const visualCandidates = [];
   const visual = contract.visual || {};
   const roots = [
     path.join(REPO_ROOT, 'apps/khyos-desktop/src'),
-    path.join(REPO_ROOT, 'delivery/web/ai-frontend/src'),
+    path.join(REPO_ROOT, 'delivery/channel/web/ai-frontend/src'),
     path.join(REPO_ROOT, 'delivery/channel/khyquant/frontend/src'),
     path.join(REPO_ROOT, 'runtime/node/backend/src/cli/tui'),
   ].filter((d) => fs.existsSync(d));

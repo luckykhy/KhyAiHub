@@ -63,7 +63,10 @@ function setChatHttpDeps(deps = {}) {
 // merged into options.images, and text/document/reference blocks prepended to the
 // user's message. Keeping resolution server-side is what lets the chat request
 // body stay under the 1 MB parseBody cap — only opaque ids travel over the wire.
-function _resolveChatAttachments(body, baseMessage) {
+//
+// SEC-04：ownerUserId 传给存储层做属主校验 —— 请求体里塞他人附件 id 的，按
+// 「附件不存在」处理（recover 到 missing），不会被解析进模型上下文。
+function _resolveChatAttachments(body, baseMessage, ownerUserId) {
   const ids = Array.isArray(body.attachments) ? body.attachments : [];
   let message = String(baseMessage || '');
   let images = Array.isArray(body.images) ? body.images.slice() : [];
@@ -71,7 +74,7 @@ function _resolveChatAttachments(body, baseMessage) {
   if (ids.length) {
     let resolved;
     try {
-      resolved = require('./aiUploadStore').resolveForChat(ids);
+      resolved = require('./aiUploadStore').resolveForChat(ids, ownerUserId);
     } catch {
       resolved = null;
     }
@@ -128,7 +131,7 @@ async function handleChatHttp(req, res) {
 
   const body = await parseBody(req);
   const rawMessage = String(body.message || body.question || '').trim();
-  const { message, images } = _resolveChatAttachments(body, rawMessage);
+  const { message, images } = _resolveChatAttachments(body, rawMessage, auth.user?.id);
   if (!message && !(images && images.length)) {
     return sendJson(res, 400, { success: false, message: 'message is required' });
   }
@@ -301,7 +304,7 @@ async function handleChatStreamHttp(req, res) {
 
   const body = await parseBody(req);
   const rawMessage = String(body.message || body.question || '').trim();
-  const { message, images: attachmentImages } = _resolveChatAttachments(body, rawMessage);
+  const { message, images: attachmentImages } = _resolveChatAttachments(body, rawMessage, auth.user?.id);
   if (!message && !(attachmentImages && attachmentImages.length)) {
     return sendJson(res, 400, { success: false, message: 'message is required' });
   }

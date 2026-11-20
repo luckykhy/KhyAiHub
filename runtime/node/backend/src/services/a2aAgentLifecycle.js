@@ -39,8 +39,7 @@ const DEFAULTS = {
   maxChildren: 10,
   agentTimeoutMs: 300_000, // 5 minutes
   maxTotalAgents: 50,
-  // workspaceBaseDir is deliberately absent: it used to be
-  // `path.resolve(process.cwd(), '.khy', 'agent-workspaces')` evaluated at
+  // workspaceBaseDir is deliberately absent: it used to be evaluated at
   // require time, so merely importing this module from the repo root forked a
   // second workspace tree. Resolved per-instance now (see
   // _defaultWorkspaceBaseDir) so the location follows the data home.
@@ -51,17 +50,17 @@ const DEFAULTS = {
  *
  * Was cwd-relative at require time; now goes through dataHome so KHY_DATA_HOME
  * and the portable pointer decide it. KHY_A2A_WORKSPACE_DIR still wins.
+ *
+ * No cwd fallback on purpose: `<repo root>/.khy/agent-workspaces` was the
+ * shadow tree this resolver exists to prevent — importing the module from the
+ * repo root forked a second workspace tree that nothing else reads.
  */
 function _defaultWorkspaceBaseDir() {
   const override = process.env.KHY_A2A_WORKSPACE_DIR;
   if (override) {
     return path.resolve(override);
   }
-  try {
-    return require('../utils/dataHome').getDataDir('agent-workspaces');
-  } catch {
-    return path.resolve(process.cwd(), '.khy', 'agent-workspaces');
-  }
+  return require('../utils/dataHome').getDataDir('agent-workspaces');
 }
 
 // ── Agent Session ─────────────────────────────────────────────────────────

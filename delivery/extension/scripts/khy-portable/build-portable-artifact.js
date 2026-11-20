@@ -16,6 +16,8 @@ const VERSION = require(path.join(ROOT, 'runtime', 'node', 'backend', 'package.j
 const NODE_VERSION = '22.12.0';
 const KINDS = new Set(['portable-dev', 'portable-runtime']);
 const ROOT_EXCLUDES = new Set([
+  // khy-Trajectory*：2026-11-19 裁决拆除的可见别名（junction），保留为存量兜底，
+  // 老机器上这条链接若还在，不进便携产物。
   '.git', '.khy', '.khyquant', '.khyquant-data', '.khy-Trajectory',
   'khy-Trajectory', 'dist', 'data', 'cache', 'logs',
 ]);
@@ -101,7 +103,7 @@ function resolveInputs(options) {
     slug,
     artifactName: `${options.kind}-${VERSION}-${slug}`,
     artifactDir: path.join(options.out, `${options.kind}-${VERSION}-${slug}`),
-    aiFrontend: path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'dist'),
+    aiFrontend: path.join(ROOT, 'delivery', 'channel', 'web', 'ai-frontend', 'dist'),
     quantFrontend: path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'dist'),
     runtimeBundle: path.join(ROOT, 'entries', 'executables', 'modules', 'khy', 'bundle.mjs'),
   };
@@ -143,7 +145,7 @@ function validateInputs(options, inputs) {
       errors,
     );
     requireDir(path.join(ROOT, 'node_modules'), 'root workspace dependencies', errors);
-    requireDir(path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', errors);
+    requireDir(path.join(ROOT, 'delivery', 'channel', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', errors);
     requireDir(path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', errors);
   }
   requireFile(path.join(inputs.aiFrontend, 'index.html'), 'AI frontend build', errors);
@@ -433,7 +435,7 @@ async function buildArtifact(options) {
           quant: { built: true, entry: 'web/quant/index.html' },
         }
       : {
-          ai: { source: 'source/delivery/web/ai-frontend' },
+          ai: { source: 'source/delivery/channel/web/ai-frontend' },
           quant: { source: 'source/delivery/channel/khyquant/frontend' },
         },
     nativeModules: [],

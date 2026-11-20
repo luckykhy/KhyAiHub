@@ -51,12 +51,6 @@ test('类型留空时采全部已知类型', () => {
   assert.deepEqual(picked.map((p) => p.type), ['image', 'video']);
 });
 
-test('find 的 argv 走 shell，路径是参数不是命令串', () => {
-  assert.deepEqual(collect.buildFindArgv({ serial: 'x' }, '/sdcard/DCIM'), [
-    'shell', 'find', '/sdcard/DCIM', '-type', 'f',
-  ]);
-});
-
 test('时间窗：7d/48h/2w 都能解析成起始时间戳，空串不设窗', () => {
   const now = 1700000000000;
   assert.equal(collect.parseSince('7d', now), now - 7 * 86400000);

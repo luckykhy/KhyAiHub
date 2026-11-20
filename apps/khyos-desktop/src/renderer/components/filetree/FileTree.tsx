@@ -20,11 +20,15 @@ interface ReadTreePayload {
 }
 
 interface FileTreeProps {
-  // 选中文件 → 侧边面板 codeViewer 标签（AppLayout.openFileTab）
+  // 选中文件 → 调用方决定落到哪里（工作台宽编辑面 / 侧边面板窄预览）
   onOpenFile: (filePath: string) => void
   // 可选树根：调用方有会话级工作区（session workspacePath）时传入该目录；
   // 缺省则回退主进程 cwd 工作区（旧行为）
   rootPath?: string
+  // 外部新建文件成功后自增 → 重新拉根目录（否则新文件要等手动刷新才出现）
+  refreshToken?: number
+  // 传入则显示「新建文件」按钮；实际落盘由调用方负责
+  onCreateFile?: () => void
 }
 
 // Loading text carries action + target (Rule 2). Item count is unknown until
@@ -49,7 +53,7 @@ const loadDir = (dirPath: string, query: string): Promise<ReadTreePayload> => {
   return api.workspaceReadTree(dirPath, query)
 }
 
-export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
+export function FileTree({ onOpenFile, rootPath, refreshToken, onCreateFile }: FileTreeProps) {
   const [resolvedRoot, setResolvedRoot] = useState('')
   const [rootName, setRootName] = useState('Workspace')
   const [items, setItems] = useState<TreeItem[]>([])
@@ -100,7 +104,7 @@ export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
       setItems(res.items || [])
     })
     return () => { cancelled = true }
-  }, [resolvedRoot, search, reloadSeq])
+  }, [resolvedRoot, search, reloadSeq, refreshToken])
 
   // Escape clears the file search (workspaceFileTree.clearSearch)
   useEffect(() => {
@@ -122,6 +126,16 @@ export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
         </svg>
         <span className="text-sm font-medium text-foreground truncate" title={rootPath}>{rootName}</span>
         <div className="flex-1" />
+        {onCreateFile && (
+          <button
+            onClick={onCreateFile}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"
+            title="新建文件"
+            aria-label="新建文件"
+          >
+            <Icon name="plus" size={13} />
+          </button>
+        )}
         <button
           onClick={handleRefresh}
           className="w-7 h-7 rounded-md flex items-center justify-center text-foreground-subtle hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"

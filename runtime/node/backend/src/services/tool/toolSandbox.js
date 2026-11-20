@@ -174,25 +174,75 @@ function buildWindowsJobCommand(command, opts = {}) {
   if (process.platform !== 'win32') {
     return command;
   }
+  // 旧实现把 PowerShell 脚本内联进 `-Command "..."` 并经 cmd 转发 —— 实测引号层级
+  // 全数损坏（每条命令都是 PowerShell parse error，见审计 AGT-04）。新实现把脚本
+  // 落到文件、命令经 env 传入，由调用方**直接** spawn powershell（不经 cmd）。
+  // 返回值只用于「直接 spawn」的场景；需要 bin/args/env 三件套的调用方请用
+  // buildWindowsJobLaunch()。
+  const launch = buildWindowsJobLaunch(command, opts);
+  return [launch.bin, ...launch.args].join(' ');
+}
 
-  const memoryLimit = (opts.memoryLimitMB || 512) * 1024 * 1024;
-  const cpuRate = opts.cpuRatePercent || 80;
+/**
+ * Windows 资源上限包装的可执行启动三件套。
+ *
+ * 为什么不是一条字符串：cmd → powershell 的嵌套引号不可靠（实测 parse error）；
+ * 脚本文件 + KHY_SANDBOX_CMD 环境变量是唯一稳定的传参方式。退出码经
+ * ProcessStartInfo + WaitForExit + Refresh 传播（实测 exit /b 3 → 3），输出经
+ * 继承句柄透传（实测 echo/引号/括号/&/node 均保真）。
+ *
+ * @param {string} command
+ * @param {{cwd?:string, memoryLimitMB?:number}} [opts]
+ * @returns {{bin:string, args:string[], env:Record<string,string>}}
+ */
+function buildWindowsJobLaunch(command, opts = {}) {
+  if (process.platform !== 'win32') {
+    // 非 Windows：保持「原样执行」语义（调用方不应使用本函数）
+    return { bin: process.execPath, args: ['-e', 'process.exit(64)'], env: {} };
+  }
+  const scriptPath = _ensureWindowsJobScript(opts);
+  return {
+    bin: 'powershell.exe',
+    args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
+    env: { KHY_SANDBOX_CMD: String(command) },
+  };
+}
 
-  // PowerShell 脚本创建 Job Object 并在其中运行命令
-  const ps = [
-    '$job = [System.Diagnostics.Process]::Start("cmd.exe", "/c ' +
-      command.replace(/"/g, '`"') +
-      '")',
-    'try {',
-    `  $job.MaxWorkingSet = [IntPtr]::new(${memoryLimit})`,
-    '  $job.WaitForExit()',
-    '  exit $job.ExitCode',
-    '} finally {',
-    '  if (!$job.HasExited) { $job.Kill() }',
-    '}',
-  ].join('; ');
+let _winJobScriptPath = null;
+let _winJobScriptKey = '';
 
-  return `powershell -NoProfile -NonInteractive -Command "${ps.replace(/"/g, '\\"')}"`;
+/** 生成（并在同内容时复用）Windows 包装脚本。 */
+function _ensureWindowsJobScript(opts = {}) {
+  const memoryLimitMB = Number(opts.memoryLimitMB) > 0 ? Number(opts.memoryLimitMB) : 512;
+  const memoryLimit = Math.round(memoryLimitMB * 1024 * 1024);
+  const key = String(memoryLimit);
+  if (_winJobScriptPath && _winJobScriptKey === key) {
+    try {
+      if (require('fs').existsSync(_winJobScriptPath)) {
+        return _winJobScriptPath;
+      }
+    } catch {
+      /* 重写 */
+    }
+  }
+  const file = path.join(os.tmpdir(), `khy-sandbox-job-${memoryLimit}.ps1`);
+  const script = [
+    '$ErrorActionPreference = "Stop"',
+    '$c = $env:KHY_SANDBOX_CMD',
+    '$psi = New-Object System.Diagnostics.ProcessStartInfo',
+    "$psi.FileName = 'cmd.exe'",
+    '$psi.Arguments = \'/d /s /c "\' + $c + \'"\'',
+    '$psi.UseShellExecute = $false',
+    '$p = [System.Diagnostics.Process]::Start($psi)',
+    `try { $p.MaxWorkingSet = [IntPtr]::new(${memoryLimit}) } catch { }`,
+    '$p.WaitForExit()',
+    '$p.Refresh()',
+    'exit $p.ExitCode',
+  ].join('\r\n');
+  require('fs').writeFileSync(file, script, 'utf8');
+  _winJobScriptPath = file;
+  _winJobScriptKey = key;
+  return file;
 }
 
 /**
@@ -215,8 +265,13 @@ function isOsSandboxEnabled() {
     return _detectSeatbelt();
   }
   if (process.platform === 'win32') {
-    return true;
-  } // Job Object 始终可用
+    // Windows 包装实测曾是坏的（PowerShell 引号层级损坏 → 每条命令 parse error，
+    // 见审计 AGT-04 与会话里的探针输出）。修好之后（buildWindowsJobLaunch：
+    // 脚本文件 + env 传参 + ProcessStartInfo），仍保留一条纪律：
+    //   auto 模式**不再宣称**隔离（此前恒 true 是「宣称与控制面偏差」的来源）；
+    //   只有显式 KHY_OS_SANDBOX=true 才启用 —— 这是操作者的明确决定。
+    return flag === 'true' || flag === '1';
+  }
   return false;
 }
 
@@ -1264,6 +1319,7 @@ module.exports = {
   buildBwrapCommand,
   buildSeatbeltCommand,
   buildWindowsJobCommand,
+  buildWindowsJobLaunch,
   buildSandboxCommand,
   _detectBwrap,
   _detectSeatbelt,

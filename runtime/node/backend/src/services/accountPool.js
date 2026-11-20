@@ -1018,24 +1018,21 @@ async function acquire(poolType, userId = 'default') {
 
   // Balanced lease selection (C-2): in 'Balance' mode pick load-aware (LRU/P2C);
   // otherwise preserve the legacy uniform-random pick.
+  //
+  // DB-01：选号（SELECT）与置约（UPDATE）之间必须是 CAS。置约的 WHERE 带
+  // `status='available'`，SQLite 把每条 UPDATE 串行化 —— 谁先把它置成 leased，
+  // 谁的 WHERE 才命中；后到者命中 0 行。sqliteCompat 不向 Sequelize 暴露
+  // changes 行数，所以胜负用「改后再读」确认：只有确认自己赢了的那个请求才写
+  // account_leases 租约。输掉的换下一个候选（有界重试），绝不双租约。
   const _selector = require('./accountSelector');
   const _leasePolicy = _selector.policyForMode(_schedulingCache.schedulingMode);
-  let account;
-  if (_leasePolicy === 'mru') {
-    const [accounts] = await _db.query(
-      `SELECT * FROM account_pool
-       WHERE pool_type = :poolType
-         AND status = 'available'
-         AND enabled = 1
-       ORDER BY RANDOM() LIMIT 1`,
-      { replacements: { poolType: norm } }
-    );
-    if (accounts.length === 0) {
-      throw new Error(`No available accounts in ${poolType} pool`);
-    }
-    account = accounts[0];
-  } else {
-    const [accounts] = await _db.query(
+  const MAX_CAS_ATTEMPTS = 8;
+  let account = null;
+  let requestId = null;
+  let leaseUntil = null;
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const [candidates] = await _db.query(
       `SELECT * FROM account_pool
        WHERE pool_type = :poolType
          AND status = 'available'
@@ -1043,22 +1040,40 @@ async function acquire(poolType, userId = 'default') {
        ORDER BY COALESCE(last_used_at, created_at) ASC, id ASC`,
       { replacements: { poolType: norm } }
     );
-    if (accounts.length === 0) {
+    if (candidates.length === 0) {
       throw new Error(`No available accounts in ${poolType} pool`);
     }
-    account = _selector.pickBalanced(accounts, { policy: _leasePolicy }) || accounts[0];
+    // 选号语义保持原样：mru（非 Balance 模式）沿用随机挑一个，其余交给 pickBalanced。
+    const picked =
+      _leasePolicy === 'mru'
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : _selector.pickBalanced(candidates, { policy: _leasePolicy }) || candidates[0];
+    requestId = crypto.randomUUID();
+    leaseUntil = new Date(Date.now() + LEASE_DURATION_MS).toISOString();
+
+    await _db.query(
+      `UPDATE account_pool
+       SET status = 'leased', leased_by = :userId,
+           lease_until = :leaseUntil, last_used_at = datetime('now'), updated_at = datetime('now')
+       WHERE id = :id AND status = 'available' AND enabled = 1`,
+      { replacements: { userId, leaseUntil, id: picked.id } }
+    );
+
+    const [won] = await _db.query(
+      `SELECT id FROM account_pool
+       WHERE id = :id AND status = 'leased' AND leased_by = :userId`,
+      { replacements: { id: picked.id, userId } }
+    );
+    if (won.length === 1) {
+      account = picked;
+      break;
+    }
+    // 输给了并发竞争者：该账号已被别人租走，换下一个候选再试
   }
 
-  const requestId = crypto.randomUUID();
-  const leaseUntil = new Date(Date.now() + LEASE_DURATION_MS).toISOString();
-
-  await _db.query(
-    `UPDATE account_pool
-     SET status = 'leased', leased_by = :userId,
-         lease_until = :leaseUntil, last_used_at = datetime('now'), updated_at = datetime('now')
-     WHERE id = :id`,
-    { replacements: { userId, leaseUntil, id: account.id } }
-  );
+  if (!account) {
+    throw new Error(`No available accounts in ${poolType} pool (lost every lease race)`);
+  }
 
   await _db.query(
     `INSERT INTO account_leases (request_id, account_id, pool_type, status, lease_until, last_heartbeat)
@@ -1155,30 +1170,53 @@ async function acquireSkipCooldown(poolType, userId) {
   await ensureReady();
   const norm = normalizePoolType(poolType);
 
-  const [accounts] = await _db.query(
-    `SELECT * FROM account_pool
-     WHERE pool_type = :poolType
-       AND status = 'available'
-       AND enabled = 1
-     ORDER BY RANDOM() LIMIT 1`,
-    { replacements: { poolType: norm } }
-  );
+  // DB-01：与 acquire() 同一套 CAS —— 置约的 WHERE 带 status='available'，
+  // 改后再读确认自己赢了才写租约；输掉的换下一个候选（有界重试）。
+  const MAX_CAS_ATTEMPTS = 8;
+  let account = null;
+  let requestId = null;
+  let leaseUntil = null;
 
-  if (accounts.length === 0) {
-    throw new Error(`No available accounts in ${poolType} pool`);
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const [candidates] = await _db.query(
+      `SELECT * FROM account_pool
+       WHERE pool_type = :poolType
+         AND status = 'available'
+         AND enabled = 1
+       ORDER BY RANDOM()`,
+      { replacements: { poolType: norm } }
+    );
+
+    if (candidates.length === 0) {
+      throw new Error(`No available accounts in ${poolType} pool`);
+    }
+
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    requestId = crypto.randomUUID();
+    leaseUntil = new Date(Date.now() + LEASE_DURATION_MS).toISOString();
+
+    await _db.query(
+      `UPDATE account_pool
+       SET status = 'leased', leased_by = :userId,
+           lease_until = :leaseUntil, last_used_at = datetime('now'), updated_at = datetime('now')
+       WHERE id = :id AND status = 'available' AND enabled = 1`,
+      { replacements: { userId, leaseUntil, id: picked.id } }
+    );
+
+    const [won] = await _db.query(
+      `SELECT id FROM account_pool
+       WHERE id = :id AND status = 'leased' AND leased_by = :userId`,
+      { replacements: { id: picked.id, userId } }
+    );
+    if (won.length === 1) {
+      account = picked;
+      break;
+    }
   }
 
-  const account = accounts[0];
-  const requestId = crypto.randomUUID();
-  const leaseUntil = new Date(Date.now() + LEASE_DURATION_MS).toISOString();
-
-  await _db.query(
-    `UPDATE account_pool
-     SET status = 'leased', leased_by = :userId,
-         lease_until = :leaseUntil, last_used_at = datetime('now'), updated_at = datetime('now')
-     WHERE id = :id`,
-    { replacements: { userId, leaseUntil, id: account.id } }
-  );
+  if (!account) {
+    throw new Error(`No available accounts in ${poolType} pool (lost every lease race)`);
+  }
 
   await _db.query(
     `INSERT INTO account_leases (request_id, account_id, pool_type, status, lease_until, last_heartbeat)

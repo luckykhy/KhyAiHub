@@ -102,12 +102,16 @@ RUN apt-get update \
 #   `_is_standalone_bundle_install()` 恒为 True ⇒ `khy` 命令**永远**执行 bundle.mjs
 #   （cli.py:2648-2655）。删了它，`docker run khy-os khy ...` 这条既有用法直接报废，
 #   而 HTTP 服务本来也不用它 —— 省 2% 体积换一条契约，不划算。
+# 版本必须钉住：镜像同时装 PyPI 的 pip 包与本仓源码（见下），装 latest 会让
+# `khy --version` 报出的版本与镜像里的后端源码分叉（REL-02 / DEP-09）。
+# 故此处不再有「空值就装 latest」的分支——空值即构建失败，由调用方把版本传进来。
 ARG KHY_OS_VERSION=""
+LABEL org.opencontainers.image.version="${KHY_OS_VERSION}"
 RUN if [ -z "$KHY_OS_VERSION" ]; then \
-      pip install --no-cache-dir khy-os; \
-    else \
-      pip install --no-cache-dir "khy-os==${KHY_OS_VERSION}"; \
+      echo "::error::KHY_OS_VERSION 未传 —— 镜像必须钉住 pip 包版本，不允许装 latest"; \
+      exit 1; \
     fi \
+    && pip install --no-cache-dir "khy-os==${KHY_OS_VERSION}" \
     && khy --version
 
 # ── Non-root user (security best practice) ────────────────────────────────────
@@ -165,8 +169,8 @@ COPY runtime/substrate/platform/packages/shared/package.json runtime/substrate/p
 COPY runtime/substrate/platform/packages/ui-shared/package.json runtime/substrate/platform/packages/ui-shared/
 COPY runtime/substrate/platform/packages/plugin-sdk/package.json runtime/substrate/platform/packages/plugin-sdk/
 COPY delivery/extension/tools/khy-markdown/package.json delivery/extension/tools/khy-markdown/
-COPY delivery/web/ai-frontend/package.json delivery/web/ai-frontend/
-COPY delivery/web/provider-hub/package.json delivery/web/provider-hub/
+COPY delivery/channel/web/ai-frontend/package.json delivery/channel/web/ai-frontend/
+COPY delivery/channel/web/provider-hub/package.json delivery/channel/web/provider-hub/
 COPY delivery/channel/khyquant/frontend/package.json delivery/channel/khyquant/frontend/
 
 # --frozen-lockfile：锁文件与 package.json 不同步时**构建即失败**，
@@ -237,8 +241,10 @@ RUN set -e; \
     echo '[build] 符号链接完整性 OK（全部解析在 /app 内）'
 
 # 运行期目录需对 khy 用户可写（sqlite / logs / cache）。
-# ⚠ data/ 刻意**不**在这里清空：runtime/node/backend/data/.admin_initial_password
-#   被 git 跟踪，是初始管理员口令的真源，删了会改掉首次启动行为。
+# data/ 是运行期数据目录（sqlite 等），刻意**不**在这里清空。
+# 首启管理员口令由 services/credentialGenerator.js 按机器指纹派生并落在数据家
+# （.khy/credentials/default-admin.json），**不再**由仓库里的文件提供 ——
+# 那个明文口令文件已从版本库退役（SEC-06）。
 RUN mkdir -p /home/khy/.khy /app/runtime/node/backend/logs /app/runtime/node/backend/data \
     && chown -R khy:khy /app /home/khy/.khy
 USER khy

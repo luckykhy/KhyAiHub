@@ -7,8 +7,8 @@
  * - Incremental save: only stores changed files since last checkpoint
  * - Cross-platform: works on Linux, macOS, Windows (via tar)
  *
- * Storage layout:
- *   ~/.khyquant/checkpoints/
+ * Storage layout (取址经 utils/dataHome 的 getDataDir('checkpoints')):
+ *   <checkpoints root>/
  *     <project-hash>/
  *       manifest.json        — checkpoint metadata index
  *       <id>.tar.gz          — full snapshot (tar mode)
@@ -50,14 +50,13 @@ function _gitBin() {
   }
 }
 
-// Lazily resolve the checkpoint root (portable-aware); fallback to legacy.
+// Lazily resolve the checkpoint root (portable-aware). getDataDir 与
+// cleanupService 的 resolveDataPath('checkpoints') 同口径——写入与清扫必须落在
+// 同一棵树上；解析器自身 fail-soft（dataHome.js:388 起无抛出路径），因此这里
+// 不再留 `os.homedir() + '.khyquant'` 那种字面量兜底分支。
 function _checkpointRoot() {
-  try {
-    const { getAppDataDir } = require('../../../../utils/dataHome');
-    return getAppDataDir('checkpoints');
-  } catch {
-    return path.join(os.homedir(), '.khyquant', 'checkpoints');
-  }
+  const { getDataDir } = require('../../../../utils/dataHome');
+  return getDataDir('checkpoints');
 }
 const MAX_CHECKPOINTS = 10;
 const MAX_TOTAL_DISK_MB = 500; // hard cap: 500 MB total checkpoint storage per project

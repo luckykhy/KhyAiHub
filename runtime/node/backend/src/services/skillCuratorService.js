@@ -10,33 +10,21 @@
  *   - Pinned skills are exempt from automatic transitions
  *   - Skills are NEVER deleted, only archived (moved to .archive/)
  *
- * Data file: ~/.khyquant/growth/skill_usage.json
+ * Data file: getDataDir('growth')/skill_usage.json
+ * Archive:   getDataDir('skills')/.archive/
  */
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
-// Portable-aware homes resolved at load (legacy const semantics preserved).
-function _appHome() {
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
-  } catch {
-    return path.join(os.homedir(), '.khyquant');
-  }
-}
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
 
-function _dataHome() {
-  try {
-    const { getDataHome } = require('../utils/dataHome');
-    return getDataHome();
-  } catch {
-    return path.join(os.homedir(), '.khy');
-  }
-}
-const GROWTH_DIR = path.join(_appHome(), 'growth');
-const USAGE_FILE = path.join(GROWTH_DIR, 'skill_usage.json');
-const USER_SKILLS_DIR = path.join(_dataHome(), 'skills');
+// 'growth' / 'skills' are registered DATA_PATHS names; the flat app-home fork
+// they used to sit under only resolved via the compatibility junction removed
+// on 2026-11-19. USAGE_FILE goes through resolveDataPath so the existence
+// probes in _loadData()/_resetForTest() stay side-effect free.
+const GROWTH_DIR = getDataDir('growth');
+const USAGE_FILE = resolveDataPath('growth', 'skill_usage.json');
+const USER_SKILLS_DIR = getDataDir('skills');
 const ARCHIVE_DIR = path.join(USER_SKILLS_DIR, '.archive');
 
 const DEFAULT_CONFIG = {

@@ -110,7 +110,7 @@
       "title": "桌面端（Provider Hub 卡片枢纽）",
       "artifactKind": "exe",
       "delivery": "仅 electron-vite 构建产物，无安装包",
-      "source": "delivery/web/provider-hub",
+      "source": "delivery/channel/web/provider-hub",
       "markers": ["package.json", "electron.vite.config.ts"],
       "toolchain": ["node"],
       "status": "degraded",
@@ -124,7 +124,7 @@
       "artifactOutput": "provider-hub",
       "ports": [],
       "notes": [
-        "定位与 GUI 规范见 [DESIGN-ARCH-094]（与 delivery/web/ai-frontend、apps/khyos-desktop 平级的 L3 应用）。"
+        "定位与 GUI 规范见 [DESIGN-ARCH-094]（与 delivery/channel/web/ai-frontend、apps/khyos-desktop 平级的 L3 应用）。"
       ]
     },
     {
@@ -133,7 +133,7 @@
       "title": "网页端（AI 平台管理前端）",
       "artifactKind": "html",
       "delivery": "Vite 静态产物，由 backend 托管；含 Dockerfile + nginx.conf",
-      "source": "delivery/web/ai-frontend",
+      "source": "delivery/channel/web/ai-frontend",
       "markers": ["index.html", "vite.config.js"],
       "toolchain": ["node"],
       "status": "ready",
@@ -181,11 +181,11 @@
       "title": "移动端（Flutter，随身端）",
       "artifactKind": "apk",
       "delivery": "app-release.apk + app-release.aab + SHA256SUMS.txt",
-      "source": "delivery/mobile/khy-os-client-app",
+      "source": "delivery/channel/mobile/khy-os-client-app",
       "markers": ["pubspec.yaml", "android/app/build.gradle"],
       "toolchain": ["flutter"],
       "status": "ready",
-      "statusNote": "源目录指针已于 2026-10-14 修正为 delivery/mobile/khy-os-client-app（原 apps/khy-os-client-app 是方案 P 迁移前的旧路径，目录早已搬走、条目指针未同步）；仓库级四维（源目录/标记文件/构建档）齐备。实机构建/运行还需本机 Flutter SDK + Android SDK + 连接设备，那是本机级事实，不影响仓库级定档（[DESIGN-ARCH-117] §五）",
+      "statusNote": "源目录指针已于 2026-10-14 修正为 delivery/mobile/khy-os-client-app（原 apps/khy-os-client-app 是方案 P 迁移前的旧路径，目录早已搬走、条目指针未同步）；2026-11-19 随 delivery 单轴化再迁一层（delivery/mobile → delivery/channel/mobile，现指针见 source）。仓库级四维（源目录/标记文件/构建档）齐备。实机构建/运行还需本机 Flutter SDK + Android SDK + 连接设备，那是本机级事实，不影响仓库级定档（[DESIGN-ARCH-117] §五）",
       "launch": {
         "default": { "command": "flutter", "args": ["run"], "mode": "attach" }
       },

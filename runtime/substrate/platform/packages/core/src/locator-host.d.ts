@@ -19,6 +19,9 @@ export interface ObtainCoreNodeOptions {
   terminalId: string;
   clientVersion: string;
   enginesKhy?: string;
+  coreVersion?: string;
+  /** 宿主注入的成员实现：core 永不 import backend，网关经 B1 createGateway() 传入。 */
+  members?: Partial<Record<'gateway' | 'events' | 'storage' | 'session' | 'capabilities' | 'plugins', unknown>>;
   /** 宿主传入的 embedded 实现：路径字符串或已加载模块（electron-vite 场景）。 */
   bundledEntry?: string | { createCoreServer: (options: unknown) => unknown };
   entry?: string | { createCoreServer: (options: unknown) => unknown };

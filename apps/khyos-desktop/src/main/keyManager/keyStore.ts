@@ -300,6 +300,78 @@ export async function listPoolEntriesPlain(): Promise<PlainEntry[]> {
   return out
 }
 
+// ── poolKey 解析与可路由三名（后端 proxyAccess.js 的桌面侧同算法镜像）──────
+//
+// 为什么桌面端要镜像一份：聚合模式写给 Claude Code 的模型名必须是
+// `api:<poolKey>:<model>` 三名（后端 proxyServer 的 modelRouter 只把
+// explicit 来源的 api: 前缀认成 api 适配器优先；裸 id 走 builtin-family，
+// 会被入站放宽逻辑清掉 preferredAdapter 后掉进级联，可能被 IDE 适配器截走）。
+// 后端构造三名的两个纯函数在 domain/config/ccSwitch/proxyAccess.js，桌面端
+// 不能 import 后端模块（跨工程），这里逐字同算法镜像，改一侧必须同步另一侧。
+
+// 池名 slug：与后端 proxyAccess._slug 同式（小写、非字母数字折叠为下划线）。
+// 结果必匹配 /^[a-z0-9_]+$/ —— apiAdapter 的池名正则只认 [a-z0-9_-]，
+// slug 出界会让三名落回 builtin-family 而不是 explicit 适配器。
+function poolKeySlug(name: string): string {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+}
+
+// 池名归一化：与后端 domain/config/ccSwitch/constants.js 的
+// normalizePoolProviderName + _canonicalPoolProviderName（proxyAccess.js:186）
+// 逐字同算法镜像。三级处理：
+//   1. 旧 ccSwitch 命名空间 `cc-switch:<cardId>` → 现行 `cc_switch_<cardId>`
+//      （constants.CARD_POOL_NAMESPACE）。必须逐字映射而不是通用字符折叠：
+//      通用折叠会把 `-` 留在名里得到 `cc-switch_<id>`，与 apiKeyPool 的别名表
+//      （`cc_switch_<id>` ↔ `cc-switch:<id>`）对不上，卡片 key 照样 pick 不到。
+//   2. 已合法（/^[a-z0-9_-]+$/）→ 原样透传（openai / deepseek / my-provider）。
+//   3. 其余非法形态 → 字符类外字符折叠为 `_`（兜底，正常不会走到）。
+// 为什么非做不可：api_keys.json 的顶层 provider 名会被当成网关三名
+// `api:<poolKey>:<model>` 的池段，而 apiAdapter.parseProviderModel 的三段式
+// 正则只认 [a-z0-9_-]（constants.js:84-94 的注释就是这个坑的案发记录）。
+// 本机 works/data/khy/api_keys.json 里就有 4 个 `cc-switch:<cardId>` 命名空间，
+// 原样返回会拼出解不出池、模型 id 被卡片 id 污染的四段名。
+export function canonicalPoolProviderName(raw: string): string {
+  const name = String(raw || '').trim()
+  if (!name) return ''
+  const legacyPrefix = 'cc-switch:'
+  if (name.toLowerCase().startsWith(legacyPrefix)) {
+    return `cc_switch_${name.slice(legacyPrefix.length).trim()}`
+  }
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+}
+
+// 卡片 → 池内 provider 名（poolKey）。先按 keyId 扫 api_keys.json（最准：
+// keyId 是 md5(provider:key) 前 12 位，与后端 apiKeyPool 同式），扫不到
+// 回退卡片名 slug（与后端 resolvePoolKeyFromCard 同序）。
+// 返回的池名必匹配 /^[a-z0-9_-]+$/（否则调用方按「解不出池」拒绝，见
+// models.ts 的 poolKey 下限校验），故这里对池扫描命中值做 canonical 归一化。
+export async function resolvePoolKeyForCard(card: Card): Promise<string> {
+  const keyId = card && typeof card.keyId === 'string' ? card.keyId : ''
+  if (keyId) {
+    const plain = await listPoolEntriesPlain()
+    for (const e of plain) {
+      if (e.key && keyIdFor(e.provider, e.key) === keyId) return canonicalPoolProviderName(e.provider)
+    }
+  }
+  return poolKeySlug(card?.name || '')
+}
+
+// 可路由三名 api:<poolKey>:<model>。已是该形态原样透传（幂等，避免二次拼接）
+// ——与后端 proxyAccess._routableModelName 逐字同式。
+export function routableModelName(poolKey: string, model: string): string {
+  const m = String(model || '').trim()
+  if (/^api:[^:]+:.+/.test(m)) return m
+  if (!poolKey || !m) return m
+  return `api:${poolKey}:${m}`
+}
+
 export async function listPool(): Promise<PoolListResult> {
   const doc = await loadPool()
   const providers: ProviderView[] = []

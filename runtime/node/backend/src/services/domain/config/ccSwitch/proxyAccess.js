@@ -20,6 +20,11 @@ const fs = require('fs');
 const path = require('path');
 
 const { getDataHome, getLegacyDataHome } = require('../../../../utils/dataHome');
+const {
+  normalizePoolProviderName,
+  cardPoolProvider,
+  LEGACY_CARD_POOL_NAMESPACE,
+} = require('./constants');
 
 const PROXY_RUNTIME_FILE = 'proxy_server_runtime.json';
 const PROXY_AUTH_FILE = 'proxy_server_auth.json';
@@ -164,6 +169,32 @@ function resolveProxyAccess() {
   };
 }
 
+/**
+ * 把池扫描命中的 provider 名收敛成**网关三名认得的池名**。
+ *
+ * 三级处理：
+ *   1. 旧 ccSwitch 命名空间 `cc-switch:<cardId>` → 现行 `cc_switch_<cardId>`
+ *      （constants.cardPoolProvider 单一真源）。必须逐字映射而不是通用字符折叠：
+ *      通用折叠会把 `-` 留在名里得到 `cc-switch_<id>`，那与 apiKeyPool 的别名表
+ *      （`cc_switch_<id>` ↔ `cc-switch:<id>`）对不上，卡片 key 照样 pick 不到。
+ *   2. 已合法（/^[a-z0-9_-]+$/）→ 原样透传（openai / deepseek / my-provider 不误伤）。
+ *   3. 其余非法形态 → 字符类外字符折叠为 `_`（兜底，正常不会走到）。
+ *
+ * @param {string} raw api_keys.json 的顶层 provider 名
+ * @returns {string}
+ */
+function _canonicalPoolProviderName(raw) {
+  const name = String(raw || '').trim();
+  if (!name) {
+    return '';
+  }
+  const legacyPrefix = `${LEGACY_CARD_POOL_NAMESPACE}:`;
+  if (name.toLowerCase().startsWith(legacyPrefix)) {
+    return cardPoolProvider(name.slice(legacyPrefix.length));
+  }
+  return normalizePoolProviderName(name);
+}
+
 /** 取卡片在密钥池里对应的 provider 名（poolKey）；扫不到返回 ''。 */
 function _scanPoolKeyForCard(keyId) {
   if (!keyId) {
@@ -178,7 +209,10 @@ function _scanPoolKeyForCard(keyId) {
     for (const entry of Array.isArray(entries) ? entries : []) {
       const key = entry && typeof entry.key === 'string' ? entry.key : '';
       if (key && _keyIdFor(provider, key) === keyId) {
-        return provider;
+        // 池名要被网关三段式模型名 `api:<pool>:<model>` 用，池段只收 [a-z0-9_-]。
+        // 旧版 ccSwitch 把卡片 key 登记在 `cc-switch:<cardId>` 命名空间（含冒号），
+        // 原样返回会让拼出来的三名解不出池。这里收敛成合法形态；已合法者原样透传。
+        return _canonicalPoolProviderName(provider);
       }
     }
   }
@@ -275,5 +309,5 @@ module.exports = {
   PROXY_RUNTIME_FILE,
   PROXY_AUTH_FILE,
   API_KEYS_FILE,
-  __test__: { _keyIdFor, _slug, _findInDataHome, _routableModelName },
+  __test__: { _keyIdFor, _slug, _findInDataHome, _routableModelName, _canonicalPoolProviderName },
 };

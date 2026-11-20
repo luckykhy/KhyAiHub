@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * check-frontend-tokens — design-token drift gate for delivery/web/ai-frontend.
+ * check-frontend-tokens — design-token drift gate for delivery/channel/web/ai-frontend.
  *
  * The frontend used to spell colours inline: 291 hex literals, 85 rgba() calls,
  * 135 static style="..." attributes and 9 :style="{...}" bindings, most of them
@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
-const FRONTEND = path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'src');
+const FRONTEND = path.join(ROOT, 'delivery', 'channel', 'web', 'ai-frontend', 'src');
 const BASELINE = path.join(__dirname, '..', 'frontend-tokens.baseline.json');
 
 // The token file itself is the vocabulary definition, not a consumer: its hex and
@@ -96,7 +96,7 @@ if (jsonOnly) {
 if (writeMode) {
   const baseline = {
     note: 'Design-token drift budget. Values may only decrease. See check-frontend-tokens.js.',
-    themeExcluded: 'delivery/web/ai-frontend/src/styles/newapi-theme.css',
+    themeExcluded: 'delivery/channel/web/ai-frontend/src/styles/newapi-theme.css',
     ...counts,
   };
   fs.writeFileSync(BASELINE, JSON.stringify(baseline, null, 2) + '\n');

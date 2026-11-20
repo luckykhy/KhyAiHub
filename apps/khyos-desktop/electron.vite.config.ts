@@ -3,6 +3,15 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
+// ⚠️ out/ 必须留在 app 目录内，别为了 LAYOUT-005 把它迁去 entries/（2026-11-19 试过，
+// 已回退并登记为寄生产物）。两个硬理由，都有 app-builder-lib 源码为依据：
+//   1. package.json 的 main 在开发态（electron . 从 app 目录读）与打包态（asar 内
+//      解析）必须指向同一处——asar 内路径逃不出归档，迁出去打包产物直接起不来。
+//   2. electron-builder 的 files 匹配走不出 app 目录：filter.js 的 createFilter 只对
+//      walker 走过的文件算「相对 appDir」路径再 minimatch，`../` 字符串 pattern 静默
+//      零匹配（高级 {from,to} pattern 虽可越界，但 main 的第 1 条理由仍然无解）。
+// 打包输出 dist-electron 相反——那是纯输出、无运行时解析语义，已迁 entries/electron/。
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],

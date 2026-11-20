@@ -1,10 +1,10 @@
 'use strict';
 
 /**
- * ecoMarkets.js — 外部生态市场编目（delivery/market）的唯一数据源。
+ * ecoMarkets.js — 外部生态市场编目（works/market）的唯一数据源。
  *
  * 编目是静态勘察产物，且不在任何分发面内（pip sdist 与 npm files 均不含
- * delivery/market），装机环境上整个目录可能不存在。所以「数据根三态解析」
+ * works/market），装机环境上整个目录可能不存在。所以「数据根三态解析」
  * 与「读不到即降级」是一等公民：缺失一律收敛为可展示的降级载荷，不抛给调用
  * 方、不 500。生态之间按 index 的 eco↔file 配对逐文件装配并用 catalog.eco
  * 复核，A 生态的文件结构上到不了 B 生态的响应里。
@@ -31,7 +31,7 @@ function _hasIndex(dir) {
 }
 
 /**
- * 数据根候选链：env 显式覆盖 → 仓库内 delivery/market → 工作区数据家
+ * 数据根候选链：env 显式覆盖 → 仓库内 works/market → 工作区数据家
  * works/data/khy/eco-markets（装机后人工放入的编目）。全部落空返回空 root，
  * 由 loadEcoMarkets 走降级。env 指向不存在的目录仍然胜出——显式覆盖的故障
  * 必须可见，而不是静默回落到另一份编目。
@@ -42,7 +42,7 @@ function resolveRoot(env) {
     return { root: path.resolve(fromEnv), source: 'env' };
   }
   const appRoot = getAppRoot();
-  const repo = path.join(appRoot, 'delivery', 'market');
+  const repo = path.join(appRoot, 'works', 'market');
   if (_hasIndex(repo)) {
     return { root: repo, source: 'repo' };
   }
@@ -93,7 +93,7 @@ function degradedReason(detail) {
   return (
     `生态市场编目不可用：${problem}（识别码 ${ENV_ROOT}）。` +
     `修复：把 ${ENV_ROOT} 指向含 index.json 与 catalogs/ 的编目根目录，` +
-    '或在仓库 delivery/market、works/data/khy/eco-markets 之一放入编目后重试。'
+    '或在仓库 works/market、works/data/khy/eco-markets 之一放入编目后重试。'
   );
 }
 
@@ -131,7 +131,7 @@ function _buildEcosystem(root, item, warnings) {
     entries: normList(catalog.entries),
     blocked: normList(catalog.blocked),
     // uncertainties 与另外三个槽位形状不同：真实编目里是一条条勘察注记
-    // （delivery/market/catalogs/*.json 全为字符串数组，实测 6 个生态共 36 条），
+    // （works/market/catalogs/*.json 全为字符串数组，实测 6 个生态共 36 条），
     // 视图 EcoMarkets.vue 也按 `{{ u }}` 字符串插值渲染。用 normList 会把整个
     // 「残留风险」块过滤成空数组——视图的 v-if 永不成立，页面静默丢数据。
     uncertainties: normStrings(catalog.uncertainties),

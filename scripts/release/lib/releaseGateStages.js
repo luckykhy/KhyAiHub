@@ -22,6 +22,10 @@
  */
 
 // 有序阶段清单。顺序按依赖递进:先版本/清单一致性,再语法/红线,再体检,最后重命令。
+// 执行器用这个退出码表示 SKIP(未验证):薄壳据此把状态记为 'skip',而不是 PASS/FAIL。
+// 78 沿用 sysexits.h 的 EX_CONFIG,与 npm/node 的正常退出码不冲突。
+const SKIP_EXIT_CODE = 78;
+
 const STAGES = [
   {
     id: 'version-sync',
@@ -69,7 +73,7 @@ const STAGES = [
     // 出厂件明文密钥(SECURITY-001 的形态判据),**全量**模式。
     // 与上一条 small-model-safety 是同一判据的两个模式:那条经 `check:change-safety`
     // 自带 `--changed`,只看本次暂存的改动;本条目**刻意不带 --changed** ⇒ 改动集为空、
-    // 检查照跑,并连同打包产物(delivery/mobile/khy-os-client-app/release/*.apk)一起逐 zip 条目扫。
+    // 检查照跑,并连同打包产物(delivery/channel/mobile/khy-os-client-app/release/*.apk)一起逐 zip 条目扫。
     // APK 是构建产物,提交时刻根本不存在 —— 所以「装到机器上的包只有混淆密钥」这件事
     // 只有发版前才查得到,也只有这道门查。APK 缺失不算失败(与 android-signature 同样
     // 容忍缺产物),此时只覆盖源树。
@@ -99,10 +103,13 @@ const STAGES = [
     id: 'doctor-preflight',
     // 只读体检(等价 khy preflight):绝不用会写盘/自愈的 `khy doctor`(裸),那属于
     // 环境门的手动步骤。--check 让 doctor 只诊断不修复,退出码如实反映阻塞项。
+    // 走仓库内 node 入口而非裸 `khy` 命令:发布门在干净 runner 上执行,那里 PATH 上
+    // 并没有装 khy(CI 只装依赖,不装本仓的 bin),裸命令必然 ENOENT ⇒ must 阶段恒红。
+    // node 直入与 khy.bat 的无 Python 兜底路径同源,本机与 CI 读数一致。
     title: 'khy doctor 只读体检(--check,不自愈)',
     tier: 'must',
     kind: 'deterministic',
-    command: 'khy doctor --check',
+    command: 'node runtime/node/backend/bin/khy.js doctor --check',
   },
   {
     // 离机还原就绪自检:发布物在别的电脑/系统上「装完能完整、简单地还原」是本渠道
@@ -214,6 +221,28 @@ const STAGES = [
     tier: 'recommended',
     kind: 'deterministic',
     command: 'node scripts/ci/check-golden-path.js',
+  },
+  {
+    // 依赖漏洞读数(老化判据):发布链此前只有 SBOM→grype(在 CI 里),`npm audit`
+    // 不在任何门里 —— 「从没检查过期」因此不会出现在任何通过率上。
+    //
+    // 执行器 scripts/release/audit-deps.js 内部跑的正是
+    //   npm audit --omit=dev --audit-level=high --json
+    // 并把 JSON 折成一行 critical/high/moderate 计数(见该文件头部)。
+    //
+    // tier 刻意是 'recommended':失败只进 warnings,绝不翻 automatedGo —— 漏洞
+    // 数量受上游发布时间影响,不该让单人维护者的所有发布被一条上游 advisory 阻断。
+    //
+    // ⚠ SKIP ≠ PASS:离线 / registry 未实现 audit 端点 / 无 lockfile 时执行器以
+    // skipExitCode(78)退出,薄壳把 status 记为 'skip'。既不是 PASS 也不是 FAIL,
+    // 读数上就是「未验证」——不得把 78 改成 0,那等于把「没查」读成「干净」。
+    id: 'dependency-audit',
+    title: '依赖漏洞审计(npm audit --omit=dev --audit-level=high)',
+    tier: 'recommended',
+    kind: 'deterministic',
+    command: 'node scripts/release/audit-deps.js',
+    skipExitCode: SKIP_EXIT_CODE,
+    showDetailOnPass: true,
   },
 
   // ── 环境门 ────────────────────────────────────────────────────────────────
@@ -330,7 +359,11 @@ function formatResultLine(r) {
   const mark = STATUS_MARK[r.status] || String(r.status).toUpperCase();
   const tierTag = r.tier === 'must' ? 'must' : 'reco';
   const time = r.kind === 'deterministic' && r.ms ? ` (${r.ms}ms)` : '';
-  return `[${mark}] (${tierTag}) ${r.title}${time}`;
+  // 只对 PASS 追加读数(detail 的第一行):失败/SKIP 的定位信息由 formatReport 的
+  // 独立段落展示,不挤在这一行。showDetailOnPass 的阶段(如依赖漏洞审计)借此把
+  // 「critical=0 high=0 ...」这类一行摘要显示出来,否则干净跑完就只剩一个 PASS。
+  const reading = r.status === 'pass' && r.detail ? ` — ${firstLines(r.detail, 1)}` : '';
+  return `[${mark}] (${tierTag}) ${r.title}${time}${reading}`;
 }
 
 /**
@@ -431,6 +464,7 @@ module.exports = {
   STAGES,
   TIERS,
   KINDS,
+  SKIP_EXIT_CODE,
   selectStages,
   makeResult,
   computeVerdict,

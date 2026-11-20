@@ -215,9 +215,9 @@ khy doctor
 **先读这些文件：**
 - `runtime/node/backend/src/routes/aiGatewayAdmin.js`
 - `runtime/node/ai-backend/src/routes/aiGatewayAdmin.js`
-- `delivery/web/ai-frontend/src`
-- `delivery/web/ai-frontend/package.json`
-- `delivery/web/ai-frontend/vite.config.js`
+- `delivery/channel/web/ai-frontend/src`
+- `delivery/channel/web/ai-frontend/package.json`
+- `delivery/channel/web/ai-frontend/vite.config.js`
 - `runtime/node/backend/src/cli/handlers/gateway.js`
 - `runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js`
 - `runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
@@ -230,7 +230,7 @@ khy doctor
 
 ```bash
 npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js
-npm run build --prefix delivery/web/ai-frontend
+npm run build --prefix delivery/channel/web/ai-frontend
 ```
 
 ---
@@ -251,7 +251,7 @@ npm run build --prefix delivery/web/ai-frontend
 - `runtime/node/backend/src/services/aiManagementServer.js`
 - `runtime/substrate/platform/packages/shared/src/models/Conversation.js`
 - `runtime/node/backend/src/services/conversationStore.js`
-- `delivery/web/ai-frontend/src/composables/useProjects.js`
+- `delivery/channel/web/ai-frontend/src/composables/useProjects.js`
 
 **参考文档：**
 - docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-026] khyos系统级服务调用审批网关规范.md
@@ -259,8 +259,8 @@ npm run build --prefix delivery/web/ai-frontend
 **跑这些验证命令（绿灯＝这块没坏）：**
 
 ```bash
-npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js
-npm run build --prefix delivery/web/ai-frontend
+npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js
+npm run build --prefix delivery/channel/web/ai-frontend
 ```
 
 ---
@@ -621,8 +621,8 @@ npm run test:one -- scripts/tests/bundleLaunchContract.test.js
 - `runtime/node/backend/src/services/proxyConfigService.js`
 - `runtime/node/backend/src/services/aiManagementProxyEgress.js`
 - `runtime/node/backend/src/services/aiManagementServer.js`
-- `delivery/web/ai-frontend/src/composables/useProxies.js`
-- `delivery/web/ai-frontend/src/views/ProxyManagement.vue`
+- `delivery/channel/web/ai-frontend/src/composables/useProxies.js`
+- `delivery/channel/web/ai-frontend/src/views/ProxyManagement.vue`
 - `runtime/node/backend/tests/proxyCoreConfigGen.test.js`
 
 **参考文档：**
@@ -631,8 +631,8 @@ npm run test:one -- scripts/tests/bundleLaunchContract.test.js
 **跑这些验证命令（绿灯＝这块没坏）：**
 
 ```bash
-npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js
-npm run build --prefix delivery/web/ai-frontend
+npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js
+npm run build --prefix delivery/channel/web/ai-frontend
 ```
 
 ---
@@ -658,9 +658,9 @@ npm run build --prefix delivery/web/ai-frontend
 ### 前端响应信封解包单一真源(unwrap)  `frontend-response-envelope`
 
 **先读这些文件：**
-- `delivery/web/ai-frontend/src/api/unwrap.js`
-- `delivery/web/ai-frontend/src/api/unwrap.test.js`
-- `delivery/web/ai-frontend/src/api/unwrap.wiring.test.js`
+- `delivery/channel/web/ai-frontend/src/api/unwrap.js`
+- `delivery/channel/web/ai-frontend/src/api/unwrap.test.js`
+- `delivery/channel/web/ai-frontend/src/api/unwrap.wiring.test.js`
 
 **参考文档：**
 - docs/07_OPS_运维/OPS-MAN/[OPS-MAN-003] ai-管理-访问与登录.md
@@ -2440,9 +2440,9 @@ node --check runtime/node/backend/src/services/gateway/visionExhaustionDiagnosti
 - adding another background/navigation-orphaned GET that should degrade locally: mirror the { silent: true } + local error-ref + view alert pattern here rather than firing the global notifyError
 
 **先读这些文件：**
-- `delivery/web/ai-frontend/src/composables/useWorkflow.js`
-- `delivery/web/ai-frontend/src/views/Workflows.vue`
-- `delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js`
+- `delivery/channel/web/ai-frontend/src/composables/useWorkflow.js`
+- `delivery/channel/web/ai-frontend/src/views/Workflows.vue`
+- `delivery/channel/web/ai-frontend/src/composables/useWorkflow.wiring.test.js`
 
 **参考文档：**
 - docs/07_OPS_运维/OPS-MAN/[OPS-MAN-135] 工作流列表载入本页降级不泄漏全局横幅.md
@@ -2450,8 +2450,8 @@ node --check runtime/node/backend/src/services/gateway/visionExhaustionDiagnosti
 **跑这些验证命令（绿灯＝这块没坏）：**
 
 ```bash
-npm run test:one -- delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js
-node --check delivery/web/ai-frontend/src/composables/useWorkflow.js
+npm run test:one -- delivery/channel/web/ai-frontend/src/composables/useWorkflow.wiring.test.js
+node --check delivery/channel/web/ai-frontend/src/composables/useWorkflow.js
 ```
 
 ---
@@ -2757,7 +2757,7 @@ node --check runtime/node/backend/src/services/syscallGateway/actionContractVeri
 - 外科手术式约束：本生成器只新增 .html 与 docs/19_资产/site/nav-data.js、dead-links.json，不改任何 .md 源文；同输入=同输出（无时间戳/随机数），可重复运行。
 - 面向小白的互动件在 .md 里用围栏/行内语法书写，由 renderMarkdown() 渲染、docs-site.js 在客户端激活、docs-site.css 提供动画：```callout kind|标题（吉祥物插话，kind=tip/note/warn/star/ask）、```quiz（Q:/问: 题干，- [x]/- [ ] 选项，> 解释；多选自动识别）、```flip（用 --- 分正反面的翻卡）、行内 +[文字](提示)（悬浮气泡弹窗）。改这些语法或动画须同步更新 build_docs_site.test.js 的断言。
 - 互动件防呆门：lint_docs_widgets.js 扫全站 .md，抓作者常见错误——quiz 无正确答案/无题干/空选项、flip 缺 --- 分隔或正反面空、callout 用了不认识的 kind、popover 空文字/空提示、围栏未闭合、疑似拼错的围栏名。renderMarkdown 对这些是静默容错（会渲染出坏页），本 linter 补上反馈。error=一定坏页会让 docs:verify 失败，warning（如 quiz 无解释）默认只提示。已并入 docs:verify（先 lint 再查存在性/链接）；单独跑 npm run docs:lint。新增互动件规则见 lint_docs_widgets.js 顶部 HOW-TO-EXTEND，并在 lint_docs_widgets.test.js 补坏/好样本断言。
-- pip 安装后跳转一致性（本次修复的根因）：文档站产物（nav-data.js + 各 .html）若在完整源码开发树生成、再被裁剪进 wheel 的 khy_os/bundled/，会引用不随包的文档（CLAUDE.html、.ai/*.html 等）→ 用户点侧栏/首页卡片打开不存在的 *.html 报 ERR_FILE_NOT_FOUND。两条腿修复：①构建时——setup.py 的 BuildWithBundle.run() 在 bundle 组装完成后调 scripts/release/docs_bundle_regen.py:regenerate_docs_site()，在 bundle 内重跑生成器（ROOT 自解析为 bundle 根），产出与实际随包内容一致的站点；fail-soft：node 缺失/失败则 strip_stale_docs_artifacts() 清掉陈旧产物（只删带模板签名且有同名 .md 的 .html + nav-data.js/dead-links.json/docs-index，绝不碰 delivery/web/ai-frontend 等应用页），宁可无 html 也绝不发布断链；设 KHY_SKIP_DOCS_REGEN=1 可跳过。②用户机器——khy docs build（别名 site/rebuild/regenerate/generate）经 runtime/substrate/platform/khy_platform/docs_site.py 在安装目录内随时重新生成；只拦这几个别名，绝不遮蔽 Node 端 docs quickstart/ai-fastlane/maintainer/... 子命令。改这两条腿须同步更新 tests/unit/test_docs_site_build.py。 点目录断链子机理：setuptools 打包**无条件丢弃一切点目录**（.khy-runtime/、.githooks/ 等，任何 glob/配置都改不了）；但重生成此刻的 bundle 仍带着这些点目录里的 .md，生成器会照常给它们建同名 .html+侧栏卡片+首页引用，随后打包又把那些 .html 连点目录一起扔掉 → 侧栏留下指向不随包 html 的**活死链卡片**（非降级纯文本）。对策在 docs_bundle_regen.py:_prune_dot_directories()——重生成**之前**把点目录从 bundle 副本里删掉（不递归/不删 symlink 目标，对齐 khy-Trajectory symlink 红线），使「重生成输入」=「实际随包内容」；指向点目录文档的交叉引用于是被 neutralizeDeadLinks 正确降级。刻意不改共享生成器 build_docs_site.js：它在完整源码开发树的 npm run docs:build 里**应当**索引 .ai/ 等点目录文档，裁剪只针对进 wheel 的 bundle 副本。
+- pip 安装后跳转一致性（本次修复的根因）：文档站产物（nav-data.js + 各 .html）若在完整源码开发树生成、再被裁剪进 wheel 的 khy_os/bundled/，会引用不随包的文档（CLAUDE.html、.ai/*.html 等）→ 用户点侧栏/首页卡片打开不存在的 *.html 报 ERR_FILE_NOT_FOUND。两条腿修复：①构建时——setup.py 的 BuildWithBundle.run() 在 bundle 组装完成后调 scripts/release/docs_bundle_regen.py:regenerate_docs_site()，在 bundle 内重跑生成器（ROOT 自解析为 bundle 根），产出与实际随包内容一致的站点；fail-soft：node 缺失/失败则 strip_stale_docs_artifacts() 清掉陈旧产物（只删带模板签名且有同名 .md 的 .html + nav-data.js/dead-links.json/docs-index，绝不碰 delivery/channel/web/ai-frontend 等应用页），宁可无 html 也绝不发布断链；设 KHY_SKIP_DOCS_REGEN=1 可跳过。②用户机器——khy docs build（别名 site/rebuild/regenerate/generate）经 runtime/substrate/platform/khy_platform/docs_site.py 在安装目录内随时重新生成；只拦这几个别名，绝不遮蔽 Node 端 docs quickstart/ai-fastlane/maintainer/... 子命令。改这两条腿须同步更新 tests/unit/test_docs_site_build.py。 点目录断链子机理：setuptools 打包**无条件丢弃一切点目录**（.khy-runtime/、.githooks/ 等，任何 glob/配置都改不了）；但重生成此刻的 bundle 仍带着这些点目录里的 .md，生成器会照常给它们建同名 .html+侧栏卡片+首页引用，随后打包又把那些 .html 连点目录一起扔掉 → 侧栏留下指向不随包 html 的**活死链卡片**（非降级纯文本）。对策在 docs_bundle_regen.py:_prune_dot_directories()——重生成**之前**把点目录从 bundle 副本里删掉（不递归/不删 symlink 目标，对齐 khy-Trajectory symlink 红线），使「重生成输入」=「实际随包内容」；指向点目录文档的交叉引用于是被 neutralizeDeadLinks 正确降级。刻意不改共享生成器 build_docs_site.js：它在完整源码开发树的 npm run docs:build 里**应当**索引 .ai/ 等点目录文档，裁剪只针对进 wheel 的 bundle 副本。
 
 **先读这些文件：**
 - `scripts/docs/build_docs_site.js`

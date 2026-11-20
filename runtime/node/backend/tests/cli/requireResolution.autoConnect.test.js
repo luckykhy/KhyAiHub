@@ -23,7 +23,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '../../../..');
-const BACKEND_SRC = path.join(ROOT, 'services/backend/src');
+// 方案 P 迁移后后端在 runtime/node/backend/（旧路径 services/backend/ 已不存在）。
+// ROOT 这里是 runtime/，因此要按 node/backend 再拼一层。
+const BACKEND_SRC = path.join(ROOT, 'node', 'backend', 'src');
 
 const RESOLVE_EXTS = ['', '.js', '.cjs', '.mjs', '.json', '.node'];
 

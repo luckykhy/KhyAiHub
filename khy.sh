@@ -155,7 +155,13 @@ set_portable_env() {
     export KHY_DATA_HOME="${KHY_DATA_HOME:-$SCRIPT_DIR/works/data/khy}"
     export KHY_PROJECT_DATA_HOME="${KHY_PROJECT_DATA_HOME:-$SCRIPT_DIR/works/data/khy}"
     export KHYQUANT_DATA_HOME="${KHYQUANT_DATA_HOME:-$KHY_DATA_HOME}"
-    export KHYOS_HOME="${KHYOS_HOME:-$SCRIPT_DIR/works/data/khyos}"
+    # KHYOS_HOME is deliberately NOT exported. getBaseHome() in
+    # runtime/node/backend/src/utils/dataHome.js owns the base home; the
+    # KHY_PORTABLE_ROOT/KHYQUANT_PORTABLE_ROOT exports above steer it onto its
+    # portable branch (works/data/khy/T1-domains/base). The pin this replaces
+    # carried works/data/khyos, a compatibility junction retired by the
+    # 2026-11-19 no-junction adjudication -- setting it would recreate the path
+    # as a real directory and fork the base home off the resolver.
     export KHY_RUNTIME_HOME="${KHY_RUNTIME_HOME:-$KHY_DATA_HOME/runtime}"
     export KHY_CACHE_HOME="${KHY_CACHE_HOME:-$KHY_DATA_HOME/cache}"
     export KHY_LOG_HOME="${KHY_LOG_HOME:-$KHY_DATA_HOME/logs}"

@@ -2334,7 +2334,7 @@ rm -rf zcode-analysis/khyos-out/
       "**/*.wasm"
     ],
     "directories": {
-      "output": "dist-electron"
+      "output": "../../entries/electron/dist-electron"
     },
     "files": [
       "out/**/*",
@@ -3173,7 +3173,7 @@ node scripts/ci/test-shortcuts.js
 **步骤 4：体积优化（0.5 天）**
 
 ```bash
-ls -lh dist-electron/win-unpacked/resources/app.asar
+ls -lh ../../entries/electron/dist-electron/win-unpacked/resources/app.asar
 # 目标：≤ 120 MB
 node scripts/ci/check-dynamic-imports.js
 ```

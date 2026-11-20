@@ -15,27 +15,27 @@ const DATA_HOME = require.resolve('../../src/utils/dataHome');
 
 function statsFor(fileContents) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-userkb-'));
-  const dir = path.join(root, 'growth');
-  fs.mkdirSync(dir, { recursive: true });
-  const target = path.join(dir, 'user_knowledge_base.json');
-  fs.writeFileSync(target, fileContents);
-  // Precondition: the fixture is really on the path the service will read.
-  assert.strictEqual(fs.readFileSync(target, 'utf-8'), fileContents);
-
-  const prev = process.env.KHY_APP_HOME;
-  process.env.KHY_APP_HOME = root;
-  // dataHome memoises the app home in a module local, so both it and the service
+  const prev = process.env.KHY_DATA_HOME;
+  process.env.KHY_DATA_HOME = root;
+  // dataHome memoises the data home in a module local, so both it and the service
   // must be re-required for the redirect to take effect.
   delete require.cache[SERVICE];
   delete require.cache[DATA_HOME];
   try {
-    const { getAppHome } = require(DATA_HOME);
-    assert.strictEqual(path.resolve(getAppHome()), path.resolve(root),
-      'KHY_APP_HOME did not redirect the app home; the test would read the real store');
+    const { getDataHome, resolveDataPath } = require(DATA_HOME);
+    assert.strictEqual(path.resolve(getDataHome()), path.resolve(root),
+      'KHY_DATA_HOME did not redirect the data home; the test would read the real store');
+    // The store lives at the tiered 'growth' address the service resolves to,
+    // not flat under the app home.
+    const target = resolveDataPath('growth', 'user_knowledge_base.json');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, fileContents);
+    // Precondition: the fixture is really on the path the service will read.
+    assert.strictEqual(fs.readFileSync(target, 'utf-8'), fileContents);
     return require(SERVICE).getKnowledgeStats();
   } finally {
-    if (prev === undefined) delete process.env.KHY_APP_HOME;
-    else process.env.KHY_APP_HOME = prev;
+    if (prev === undefined) delete process.env.KHY_DATA_HOME;
+    else process.env.KHY_DATA_HOME = prev;
     delete require.cache[SERVICE];
     delete require.cache[DATA_HOME];
     fs.rmSync(root, { recursive: true, force: true });

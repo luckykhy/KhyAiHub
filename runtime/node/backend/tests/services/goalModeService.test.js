@@ -249,4 +249,73 @@ describe('goalModeService', () => {
       expect(GOAL_TRIGGER_RE.test('这不是目标：而是描述')).toBe(false);
     });
   });
+
+  // ── 提权边界（AGT-01）────────────────────────────────────────────────
+  //
+  // 一次 goal/coding 轮次会把进程级权限提到 yolo。此前 setProfile 按默认语义
+  // **落盘**，于是进程被 SIGKILL/崩溃时 finally 不执行，permissions.json 里留下
+  // profile:'yolo' —— 此后每次启动都是全自动放行，用户无从得知。
+  describe('activate/deactivate 的提权边界', () => {
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+
+    /** 把 app home 指到临时目录，并重载模块，使 permissionStore 重新解析落盘位置。 */
+    function withTempAppHome(fn) {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-goalmode-'));
+      const prev = process.env.KHY_APP_HOME;
+      process.env.KHY_APP_HOME = dir;
+      jest.resetModules();
+      try {
+        return fn(dir);
+      } finally {
+        if (prev === undefined) delete process.env.KHY_APP_HOME;
+        else process.env.KHY_APP_HOME = prev;
+        jest.resetModules();
+      }
+    }
+
+    test('提权只改内存，磁盘档案里的 profile 不被改写成 yolo', () => {
+      withTempAppHome((dir) => {
+        const permissionsFile = path.join(dir, 'permissions.json');
+        fs.writeFileSync(permissionsFile, JSON.stringify({ profile: 'normal' }), 'utf8');
+
+        const permissionStore = require('../../src/services/permissionStore');
+        const goal = require('../../src/services/goalModeService');
+
+        const saved = goal.activate();
+        try {
+          expect(permissionStore.getProfile()).toBe('yolo');
+          const onDisk = JSON.parse(fs.readFileSync(permissionsFile, 'utf8'));
+          expect(onDisk.profile).toBe('normal');
+        } finally {
+          goal.deactivate(saved);
+        }
+        // 恢复同样不落盘
+        expect(permissionStore.getProfile()).toBe('normal');
+        expect(JSON.parse(fs.readFileSync(permissionsFile, 'utf8')).profile).toBe('normal');
+      });
+    });
+
+    test('并发 goal 会话：先结束的不能把提权撤掉', () => {
+      withTempAppHome(() => {
+        const permissionStore = require('../../src/services/permissionStore');
+        const goal = require('../../src/services/goalModeService');
+
+        const first = goal.activateIfNeeded();
+        const second = goal.activateIfNeeded();
+        expect(first).not.toBeNull();
+        expect(second).not.toBeNull();
+
+        // 第一个会话先结束 → 提权仍在（第二个会话还在跑）
+        goal.deactivateIfNeeded(first);
+        expect(permissionStore.getProfile()).toBe('yolo');
+
+        // 最后一个会话结束 → 提权撤销，恢复到提权前的档案
+        goal.deactivateIfNeeded(second);
+        expect(permissionStore.getProfile()).not.toBe('yolo');
+        expect(process.env.KHY_GOAL_MODE_ACTIVE).toBeUndefined();
+      });
+    });
+  });
 });

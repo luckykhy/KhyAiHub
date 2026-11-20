@@ -25,10 +25,10 @@
 #   blender --background --python scripts/brand/build-pet-realistic-relief.py
 #
 # 产出：
-#   delivery/brand/pet/models/khy-pet-female-realistic.glb        ← 第三形态模型槽位
-#   delivery/brand/pet/models/khy-pet-male-realistic.glb          ← 第三形态模型槽位
-#   delivery/brand/pet/models/khy-pet-female-realistic-turntable.png ← 无 WebGL 时的 2.5D 兜底
-#   delivery/brand/pet/models/khy-pet-male-realistic-turntable.png
+#   works/brand/pet/models/khy-pet-female-realistic.glb        ← 第三形态模型槽位
+#   works/brand/pet/models/khy-pet-male-realistic.glb          ← 第三形态模型槽位
+#   works/brand/pet/models/khy-pet-female-realistic-turntable.png ← 无 WebGL 时的 2.5D 兜底
+#   works/brand/pet/models/khy-pet-male-realistic-turntable.png
 #   works/design/khy-mascot/model/khy-pet-*-realistic-relief-preview-*.png
 
 import bpy
@@ -38,7 +38,7 @@ import os
 import numpy as np
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT_DIR = os.path.join(REPO, 'delivery', 'brand', 'pet', 'models')
+OUT_DIR = os.path.join(REPO, 'works', 'brand', 'pet', 'models')
 PREVIEW_DIR = os.path.join(REPO, 'works', 'design', 'khy-mascot', 'model')
 INBOX = os.path.join(REPO, 'works', 'design', 'khy-mascot', 'model', 'inbox')
 

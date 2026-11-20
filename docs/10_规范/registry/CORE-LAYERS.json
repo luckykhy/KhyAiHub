@@ -673,8 +673,8 @@
           "runtime/node/backend/src/cli/tui/ink-components/PromptFrame.js",
           "runtime/node/backend/src/cli/tui/ink-components/Transcript.js",
           "runtime/node/backend/src/cli/tui/ink-components/ToolLines.js",
-          "delivery/web/ai-frontend/src/views/Layout.vue",
-          "delivery/web/ai-frontend/src/views/UserHome.vue",
+          "delivery/channel/web/ai-frontend/src/views/Layout.vue",
+          "delivery/channel/web/ai-frontend/src/views/UserHome.vue",
           "delivery/channel/khyquant/frontend/src/App.vue",
           "delivery/channel/khyquant/frontend/src/views/Dashboard.vue",
           "runtime/node/backend/src/cli/tui/app.js"
@@ -718,13 +718,13 @@
               "baselineFiles": 10,
               "baselineLines": 2681
             },
-            "delivery/web/ai-frontend/src/views/Layout.vue": {
+            "delivery/channel/web/ai-frontend/src/views/Layout.vue": {
               "maxFiles": 1,
               "maxLines": 9,
               "baselineFiles": 1,
               "baselineLines": 9
             },
-            "delivery/web/ai-frontend/src/views/UserHome.vue": {
+            "delivery/channel/web/ai-frontend/src/views/UserHome.vue": {
               "maxFiles": 1,
               "maxLines": 944,
               "baselineFiles": 1,
@@ -759,7 +759,7 @@
         "roots": [
           "runtime/node/backend/src/cli/tui/ink-components/SidebarPanel.js",
           "apps/khyos-desktop/src/renderer/components/filetree/FileTree.tsx",
-          "delivery/web/ai-frontend/src/views/AIChat.vue",
+          "delivery/channel/web/ai-frontend/src/views/AIChat.vue",
           "delivery/channel/khyquant/frontend/src/views/Trading.vue"
         ]
       },
@@ -772,7 +772,7 @@
           "apps/khyos-desktop/src/renderer/components/settings/SettingsPage.tsx",
           "apps/khyos-desktop/src/renderer/components/automations/AutomationsPage.tsx",
           "apps/khyos-desktop/src/renderer/components/keyManager/KeyManagerPage.tsx",
-          "delivery/web/ai-frontend/src/views/admin/Settings.vue",
+          "delivery/channel/web/ai-frontend/src/views/admin/Settings.vue",
           "delivery/channel/khyquant/frontend/src/views/AdminLogin.vue"
         ],
         "budget": {
@@ -806,7 +806,7 @@
         "files": 104,
         "lines": 24952
       },
-      "delivery/web/ai-frontend/src": {
+      "delivery/channel/web/ai-frontend/src": {
         "files": 202,
         "lines": 52020
       },
@@ -820,7 +820,7 @@
           "files": 37,
           "lines": 9415
         },
-        "delivery/web/ai-frontend/src/main.js": {
+        "delivery/channel/web/ai-frontend/src/main.js": {
           "files": 4,
           "lines": 983
         },
@@ -848,11 +848,11 @@
           "files": 10,
           "lines": 2681
         },
-        "delivery/web/ai-frontend/src/views/Layout.vue": {
+        "delivery/channel/web/ai-frontend/src/views/Layout.vue": {
           "files": 1,
           "lines": 9
         },
-        "delivery/web/ai-frontend/src/views/UserHome.vue": {
+        "delivery/channel/web/ai-frontend/src/views/UserHome.vue": {
           "files": 1,
           "lines": 944
         },

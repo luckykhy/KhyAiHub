@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: director-usage.md -->
+<title>director.js 用法 —— 导演层契约与走位键 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>brand<span class="sep">›</span>khyos-desktop<span class="sep">›</span>docs<span class="sep">›</span>director.js 用法 —— 导演层契约与走位键</div>
+      <header class="hero reveal"><h1>director.js 用法 —— 导演层契约与走位键</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#director-js-用法-导演层契约与走位键">director.js 用法 —— 导演层契约与走位键</a></li><li class="lvl-2"><a href="#0-先读-两条硬约束">0. 先读：两条硬约束</a></li><li class="lvl-2"><a href="#1-导出清单">1. 导出清单</a></li><li class="lvl-2"><a href="#2-场景覆盖">2. 场景覆盖</a></li><li class="lvl-2"><a href="#3-姿势键-ctx-第二参数">3. 姿势键（`ctx` 第二参数）</a></li><li class="lvl-3"><a href="#lampkeeper-que-pose-idle-walk-kneel-reach-expression-calm-think-speak-sleep-amount-wind">lampkeeper-que（`pose` idle|walk|kneel|reach，`expression` calm|think|speak|sleep，`amount`，`wind`）</a></li><li class="lvl-3"><a href="#inbox-ding-pose-idle-walk-climb-ride-sit-sleep-expression-calm-speak-think-take-sleep-cover-wind">inbox-ding（`pose` idle|walk|climb|ride|sit|sleep，`expression` calm|speak|think|take|sleep，`cover`，`wind`）</a></li><li class="lvl-3"><a href="#paper-moth-jian-pose-rest-sleep-fly-alert-perch-feed-rain-winghz-wind-mood">paper-moth-jian（`pose` rest|sleep|fly|alert|perch|feed|rain，`wingHz`，`wind`，`mood`）</a></li><li class="lvl-3"><a href="#tortoise-dai-pose-walk-idle-rest-expression-calm-alert-asleep-startled-gaitsec-wind-chew">tortoise-dai（`pose` walk|idle|rest，`expression` calm|alert|asleep|startled，`gaitSec`，`wind`，`chew`）</a></li><li class="lvl-3"><a href="#ink-eel-yuan-pose-cruise-lurk-roll-expression-cursor-all-off-poset-exprt">ink-eel-yuan（`pose` cruise|lurk|roll，`expression` cursor|all|off，`poseT`/`exprT`）</a></li><li class="lvl-3"><a href="#导演自有的两个键">导演自有的两个键</a></li><li class="lvl-2"><a href="#4-生命感四件套-落地压扁回弹">4. 生命感四件套 + 落地压扁回弹</a></li><li class="lvl-2"><a href="#5-特效-一团一个-mesh-不画每颗粒">5. 特效：一团一个 mesh，不画每颗粒</a></li><li class="lvl-2"><a href="#6-材质交换-导演替渲染层做的那一步">6. 材质交换（导演替渲染层做的那一步）</a></li><li class="lvl-2"><a href="#7-与-src-main-js-的接线-已接">7. 与 `src/main.js` 的接线（已接）</a></li><li class="lvl-2"><a href="#8-自测">8. 自测</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="director-js-用法-导演层契约与走位键">director.js 用法 —— 导演层契约与走位键<a class="anchor" href="#director-js-用法-导演层契约与走位键" aria-label="锚点">#</a></h1>
+<blockquote><p>真源：<code>src/director/director.js</code>（场景调度、相机、走位、表情、特效的<strong>唯一</strong>公共层，ES module）。<br>签名、默认值、行为一律以源码为准，本文只做速查与键位表。<br>依赖：<code>three@^0.170</code>、<code>src/render/cel.js</code>、<code>src/render/quantize.js</code>、<code>src/util/rand.js</code>，<br>以及三份 JSON（<code>src/story/scenes.json</code>、<code>src/story/cast.json</code>、<code>works/brand/khy-brand-tokens.json</code>，<br>后两份由打包器内联，Node ESM 侧带 <code>with { type: 'json' }</code>）。</p></blockquote>
+<h2 id="0-先读-两条硬约束">0. 先读：两条硬约束<a class="anchor" href="#0-先读-两条硬约束" aria-label="锚点">#</a></h2>
+<ol><li><strong><code>renderSceneAt(sceneId, t)</code> 是 <code>(sceneId, t)</code> 的纯函数。</strong> 采集链按 <code>t = i/24</code> 逐场景取帧，</li></ol>
+<p>并比对同一时刻两次渲染的字节（<code>scripts/capture.mjs --selftest</code>）。所以一帧之内不许读墙钟、<br>   不许跨调用累加状态、不许 <code>Math.random</code> / <code>Date.now</code>。随机一律走 <code>src/util/rand.js</code> 的<br>   <code>hash1</code> / <code>hashString</code> / <code>mulberry32</code>；所有脚本运动都写成 <code>t</code> 的函数。</p>
+<ol><li><strong>姿势一拍二、特效一拍三</strong>（<code>src/render/quantize.js</code>）：手绘动画一张画hold 两帧，</li></ol>
+<p>24fps 每帧重算姿势就是 sub-frame crawl。<strong>间距</strong>（飞行航线、相机运动、走位）保持一拍一——<br>   这正是手绘里 spacing 的含义；模型自身的节律（呼吸、眨眼、振翅）随之落在量化时钟上。</p>
+<h2 id="1-导出清单">1. 导出清单<a class="anchor" href="#1-导出清单" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { createDirector } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./director/director.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> director = <span class="hljs-title function_">createDirector</span>({ scene, camera, pipeline, models, scenes });
+<span class="hljs-comment">// scene   THREE.Scene        场景图；角色组与导演自建的环境/特效都挂进来</span>
+<span class="hljs-comment">// camera  THREE.PerspectiveCamera  透视相机（管线的 mpp 由透视投影推导，正交会抛错）</span>
+<span class="hljs-comment">// pipeline createPipeline() 的返回值，至少要有 render(t) / setFade(a)</span>
+<span class="hljs-comment">// models  { [castId]: modelModule }，由 main.js 组装后传入（五个 cast.json id 一个不能少）</span>
+<span class="hljs-comment">// scenes  scenes.json 的内容（也接受 [{ id, durationSec }] 数组；缺省回落到磁盘上的 scenes.json）</span></code></pre>
+<table><thead><tr><th>导出</th><th>签名</th><th>行为</th></tr></thead><tbody><tr><td><code>sceneIds()</code></td><td><code>() =&gt; string[]</code></td><td>场景顺序，<strong>必须与 scenes.json 的 scenes 数组同序同名</strong>（capture 用它比对）</td></tr><tr><td><code>sceneAt(t)</code></td><td><code>(t) =&gt; id</code></td><td>按 cycle 与各场景 durationSec 推 <code>t</code> 落在哪个场景（自动轮播，可越界可取负）</td></tr><tr><td><code>renderAt(t)</code></td><td><code>(t) =&gt; t</code></td><td><code>renderSceneAt(sceneAt(t), t - 场景起点)</code>；读播放头（<code>setScene</code> 改的锚点）</td></tr><tr><td><code>renderSceneAt(sceneId, t)</code></td><td><code>(id, t) =&gt; t</code></td><td><strong>纯函数</strong>：一切相机、姿势、表情、特效由 <code>(sceneId, t)</code> 推出</td></tr><tr><td><code>renderTransition(fromId, toId, k)</code></td><td><code>k∈[0,1]</code></td><td>纸色淡切：前半段淡出到纸色、后半段从纸色淡入；两侧内容不硬跳</td></tr><tr><td><code>setScene(id)</code></td><td><code>(id) =&gt; id</code></td><td>只影响<strong>播放模式</strong>的手动切换：把轮播锚点挪到该场景首帧；采集模式不走它</td></tr><tr><td><code>currentScene()</code></td><td><code>() =&gt; id</code></td><td>播放头当前所在场景（= <code>sceneAt(0)</code>）</td></tr><tr><td><code>dispose()</code></td><td><code>() =&gt; void</code></td><td>卸下角色组、销毁导演自建的几何/材质；<strong>scene / camera / pipeline 归调用方</strong>，不动</td></tr></tbody></table>
+<h2 id="2-场景覆盖">2. 场景覆盖<a class="anchor" href="#2-场景覆盖" aria-label="锚点">#</a></h2>
+<p>四场全覆盖（<code>sceneIds()</code> = <code>dawn-lamp, tortoise-crossing, night-rain, homecoming</code>）。<br>每个场景一段方向函数（<code>directDawnLamp</code> 等），返回相机、逐角色 <code>ctx/place/life</code> 与环境/特效状态。</p>
+<table><thead><tr><th>场景</th><th>时长</th><th>相机</th><th>在场角色</th><th>主事件 → 画面</th></tr></thead><tbody><tr><td><code>dawn-lamp</code> 晨灯</td><td>28s</td><td>static <code>[0.2,1.75,7.2]</code> fov 40</td><td>阙·丁·笺·岱龟（渊不入画）</td><td>t=6 灯芯点起（两帧内从无到有）；t=12 丁开机受命；t=15 阙提灯转身面向海面；t=19 笺蛾惊醒飞两圈半；t=27.9 龟首出水</td></tr><tr><td><code>tortoise-crossing</code> 渡海</td><td>32s</td><td>orbit：半径 6.5m、140° 弧（尾侧→头侧），末 15% ease-out，fov 48</td><td>全体五名</td><td>步态 3.2s、每 1.6s 一簇水花；t=13 渊横渡墨面之下；t=16 弧顶正侧面；t=26 阙按甲片、笺蛾落指尖</td></tr><tr><td><code>night-rain</code> 夜雨</td><td>30s</td><td>handheld：基准 dolly + 种子摇晃（±0.06m，阵风 ×1.5，t=24 后余振衰减），t=18 摇向海面再回摇，fov 55</td><td>全体五名</td><td>t=13 信笺脱盖、渊翻身；t=15 笺蛾衔住弧顶信笺；t=22 送进阙掌心；t=24 雨收、屏滚「已收妥」</td></tr><tr><td><code>homecoming</code> 归港</td><td>28s</td><td>dolly/crane：y 5.6→3.2、z 9.9，lookAt (0.9, 1.95→1.3, 2.6)（前 5 秒下沉后保持），前 18% 匀速之后二次 ease-out（t=17 时走完全程 79%），fov 40</td><td>全体五名</td><td>t=5 阙下行抵达单膝点地投递、琥珀窗亮起；t=14 甲缝流光应答；t=19 渊辞别；t=26 笺蛾绕行一圈后出画</td></tr></tbody></table>
+<p>环境与特效按场景显影（探针实测）：码头灯台只在晨灯；壳脊灯杆挂岱龟 <code>spine4</code> 骨上（随甲胄呼吸），<br>渡海/夜雨/归港三场随行；环灯在晨灯与渡海可见，夜雨场隐藏（壳脊灯是唯一光源），归港场也不出画——<br>scenes.json 的 fx 把它放在地平线外，只留湿滩上那道光带替它转格；<br>湿滩/纸屋/光带只在归港；雨场、信笺只在夜雨。</p>
+<h2 id="3-姿势键-ctx-第二参数">3. 姿势键（<code>ctx</code> 第二参数）<a class="anchor" href="#3-姿势键-ctx-第二参数" aria-label="锚点">#</a></h2>
+<p>键位全部来自各模型文件自己声明的面，导演只做选择与编排，不发明新键。</p>
+<h3 id="lampkeeper-que-pose-idle-walk-kneel-reach-expression-calm-think-speak-sleep-amount-wind">lampkeeper-que（<code>pose</code> idle|walk|kneel|reach，<code>expression</code> calm|think|speak|sleep，<code>amount</code>，<code>wind</code>）<a class="anchor" href="#lampkeeper-que-pose-idle-walk-kneel-reach-expression-calm-think-speak-sleep-amount-wind" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>pose</th><th>expression</th><th>备注</th></tr></thead><tbody><tr><td>dawn-lamp</td><td>idle → <strong>reach</strong> 5.5–8.3</td><td>calm</td><td>t=14.5 预备（反向仰 0.8s，拱形在节拍点归零），t=14.5–16.1 转身 yaw −2.35；相机锁定、脚不离开台阶，姿势曲线全走一拍二；闲置段叠呼吸压扁（模型 4.2s 同相位）与 9.1s 横向重心转移；尘埃光斑簇挪到灯座右侧甲板（不再爬过脸部）</td></tr><tr><td>tortoise-crossing</td><td>idle → <strong>reach</strong> 25.4–27.9</td><td>calm</td><td>立于南脊灯杆旁，面具朝向龟首</td></tr><tr><td>night-rain</td><td>idle</td><td>calm</td><td><code>wind 0.21</code>（衣摆 12°，t=9–24.5），整组 roll 0.02</td></tr><tr><td>homecoming</td><td><strong>walk</strong>（t&lt;5.98，<code>tOffset +1</code>）→ <strong>kneel</strong> 5.4–24.2 → idle</td><td>calm</td><td>6s/14 步之字形下行；14 次落地压扁 + 抵达压扁</td></tr></tbody></table>
+<h3 id="inbox-ding-pose-idle-walk-climb-ride-sit-sleep-expression-calm-speak-think-take-sleep-cover-wind">inbox-ding（<code>pose</code> idle|walk|climb|ride|sit|sleep，<code>expression</code> calm|speak|think|take|sleep，<code>cover</code>，<code>wind</code>）<a class="anchor" href="#inbox-ding-pose-idle-walk-climb-ride-sit-sleep-expression-calm-speak-think-take-sleep-cover-wind" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>pose</th><th>expression</th><th>备注</th></tr></thead><tbody><tr><td>dawn-lamp</td><td><strong>climb</strong> 11.2–12.7 → sit</td><td><strong>take</strong> 11.8–13.4</td><td>t&lt;10.6 藏在阙腰后挂篓里（不显影）；抵达台阶即落地压扁</td></tr><tr><td>tortoise-crossing</td><td>ride</td><td>calm</td><td>骑右肩，<code>wind −0.3</code>（天线后倒）</td></tr><tr><td>night-rain</td><td>sit</td><td><strong>think</strong> 13.4–22（光标狂闪）→ <strong>take</strong> 22.6–24.2</td><td><code>cover</code> 窗 12.6–14.6（信笺自此脱出又自己合上）</td></tr><tr><td>homecoming</td><td>walk（<code>tOffset +1.42</code>）→ idle</td><td>calm</td><td>与阙平行、间距恒定；<code>cover</code> 窗 0–8</td></tr></tbody></table>
+<h3 id="paper-moth-jian-pose-rest-sleep-fly-alert-perch-feed-rain-winghz-wind-mood">paper-moth-jian（<code>pose</code> rest|sleep|fly|alert|perch|feed|rain，<code>wingHz</code>，<code>wind</code>，<code>mood</code>）<a class="anchor" href="#paper-moth-jian-pose-rest-sleep-fly-alert-perch-feed-rain-winghz-wind-mood" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>pose</th><th>wingHz</th><th>备注</th></tr></thead><tbody><tr><td>dawn-lamp</td><td>sleep → rest(17–19) → <strong>fly</strong>(19–27.75) → perch</td><td>0.5→3.4</td><td>绕阙两圈半（3.5s/圈）后落左肩</td></tr><tr><td>tortoise-crossing</td><td>fly → perch(≥27.1)</td><td>3.2 / 2.4</td><td>龟首前 2m 巡飞，t=24 前极点折返</td></tr><tr><td>night-rain</td><td>rain(栖息挡雨) → <strong>fly</strong>(13–22.8) → rain</td><td>5.5</td><td><code>wind 0.6</code>；逆风横穿</td></tr><tr><td>homecoming</td><td>rest → fly(26–28)</td><td>4</td><td><code>mood 1</code>（翅脉全明，最高兴的一档）</td></tr></tbody></table>
+<h3 id="tortoise-dai-pose-walk-idle-rest-expression-calm-alert-asleep-startled-gaitsec-wind-chew">tortoise-dai（<code>pose</code> walk|idle|rest，<code>expression</code> calm|alert|asleep|startled，<code>gaitSec</code>，<code>wind</code>，<code>chew</code>）<a class="anchor" href="#tortoise-dai-pose-walk-idle-rest-expression-calm-alert-asleep-startled-gaitsec-wind-chew" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>pose / expression</th><th>gaitSec</th><th>走位</th></tr></thead><tbody><tr><td>dawn-lamp</td><td>walk→idle；calm→<strong>alert</strong> 27.5–28</td><td>3.2</td><td>水下阴影自右向左，t=24–28 上浮让龟首出水</td></tr><tr><td>tortoise-crossing</td><td>walk / calm</td><td>3.2</td><td>x = 0.4t，yaw π/2 沿 +X 横渡</td></tr><tr><td>night-rain</td><td>walk / <strong>asleep</strong></td><td><strong>6</strong></td><td>x = 2+0.15t；颈收回甲缘避雨</td></tr><tr><td>homecoming</td><td><strong>rest</strong> / alert</td><td>3.2</td><td>泊滩，yaw 0.6，后半身 12s 周期起伏</td></tr></tbody></table>
+<h3 id="ink-eel-yuan-pose-cruise-lurk-roll-expression-cursor-all-off-poset-exprt">ink-eel-yuan（<code>pose</code> cruise|lurk|roll，<code>expression</code> cursor|all|off，<code>poseT</code>/<code>exprT</code>）<a class="anchor" href="#ink-eel-yuan-pose-cruise-lurk-roll-expression-cursor-all-off-poset-exprt" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>pose / expression</th><th>备注</th></tr></thead><tbody><tr><td>dawn-lamp</td><td>—</td><td>不入画（隐藏）</td></tr><tr><td>tortoise-crossing</td><td>cruise / cursor</td><td>t=12.9–22.2 龟腹另一侧墨面下横渡</td></tr><tr><td>night-rain</td><td><strong>roll</strong> / all</td><td><code>poseT = exprT = t−13</code>，海面鼓起一道发光脊又落下</td></tr><tr><td>homecoming</td><td>lurk / all</td><td><code>exprT = t−19</code>，t=18.9–20.9 远处最后一颗方点</td></tr></tbody></table>
+<h3 id="导演自有的两个键">导演自有的两个键<a class="anchor" href="#导演自有的两个键" aria-label="锚点">#</a></h3>
+<ul><li><code>tOffset</code>（秒）：给节律固定的模型整体移相。归港场阙的行走开始于纸色淡切期间</li></ul>
+<p>（scenes.json：起步于本场 t=0 前 1 秒），而模型的步频钉死 1.17Hz、14 步需 5.98s——<br>  于是阙带 <code>+1</code>、丁带 <code>+1.42</code>，脚步与下行路程因此对得上，不滑不跳。</p>
+<ul><li><code>place</code> / <code>life</code>：不走 <code>ctx</code>，由导演在 <code>update()</code> <strong>之后</strong>写 group 变换与叠加旋转</li></ul>
+<p>（见下节）。模型各自的 <code>update()</code> 已在开头复位自己驱动的骨，所以叠加绝不累加。</p>
+<h2 id="4-生命感四件套-落地压扁回弹">4. 生命感四件套 + 落地压扁回弹<a class="anchor" href="#4-生命感四件套-落地压扁回弹" aria-label="锚点">#</a></h2>
+<p>全部是 <code>update()</code> 之后的<strong>叠加量</strong>，纯函数：</p>
+<table><thead><tr><th>件</th><th>实现</th><th>位置</th></tr></thead><tbody><tr><td>预备动作</td><td><code>anticipate(t, at, lead)</code>：主动作前 0.4s 的反向仰/沉</td><td>阙 t=15 转身前（group roll 0.05×预备量）</td></tr><tr><td>头部滞后</td><td><code>yawFn(t−3/24) − yawFn(t)</code>：脚本曲线在滞后窗内的差，加到 <code>head</code>/<code>skull</code> 骨</td><td>阙（转身）、岱龟（上浮/泊滩起伏）、笺蛾（航线高度）、步态相位差</td></tr><tr><td>身体扭转</td><td><code>0.045·sin(步态相位·2π)</code>，加到躯干骨（阙 chest / 丁 spine / 岱龟 spine4 / 笺蛾 spine2）</td><td>随步态相位</td></tr><tr><td>跟随动作</td><td><code>followAt(t, at, amp, hz, decay)</code>：衰减振荡，加到末端骨（阙 hem-f / 丁 tail-9 / 笺蛾 antenna-l-0 / 岱龟 tail）</td><td>主运动结束之后</td></tr><tr><td>落地压扁回弹</td><td><code>squashAt(t, at)</code>：2.5 帧压到 −0.17，随后过冲回弹；group scale = (1+s/2, 1+s, 1+s/2)</td><td>丁落台阶（t=12.7）、阙 14 次落脚与抵达（t=5.98）</td></tr></tbody></table>
+<h2 id="5-特效-一团一个-mesh-不画每颗粒">5. 特效：一团一个 mesh，不画每颗粒<a class="anchor" href="#5-特效-一团一个-mesh-不画每颗粒" aria-label="锚点">#</a></h2>
+<ul><li><strong>水花</strong>：一团 = 一个 <code>RingGeometry(0.8, 1.0)</code> 细轮廓环，18 个池。时刻表是静态数据</li></ul>
+<p>（<code>SPLASH_SCHEDULE</code>）：渡海场每 1.6s 一簇（按 <code>LEG_DEFS</code> 的踝位）、夜雨场 46 簇雨点、<br>  归港场纸山水珠两组、晨灯场龟首出水一簇。膨胀 + 淡出，位置随该场岱龟的 x 偏移。</p>
+<ul><li><strong>音符可视</strong>：<code>beatFlash(t, def)</code> 读 scenes.json 的 beats（music 权重 1、微事件 0.4），</li></ul>
+<p>快起慢衰，驱动灯焰/环灯增益与尘埃亮度——全片唯一一处把配乐节律写进画面的地方。</p>
+<ul><li><strong>尘埃/光斑</strong>：一簇 = 一个八面体（<code>MOTES</code> 6 簇，种子参数），随节拍呼吸；夜雨场只在灯柱附近。</li></ul>
+<p>亮度掉下去时<strong>缩小淡出</strong>，不是整团 <code>visible=false</code>——鼓点闪光是指数衰减，硬切曾让每团尘在节拍后<br>  2.24 秒瞬间蒸发（实测 f53→f54 块差 161，全场景最大单跳）；颜色另带 0.3 的点亮下限，<br>  暗尘读作琥珀小点而非纸天上的黑方块（晨灯场的尘簇已挪到灯座右侧甲板，不爬脸）。</p>
+<ul><li><strong>雨</strong>：整场一条 <code>LineSegments</code>（一次 draw call），逐顶点色——落入灯柱的雨丝变成发光墨字，</li></ul>
+<p>判定跑在一拍三的时钟上，所以一字停留整整一个三帧节拍。灯柱下宽 1.0m、上收 0.35m。<br>  雨丝的 12 度斜角是<strong>画面里的读数</strong>，不是世界空间的角度：本场相机几乎正对世界 z 轴，<br>  在世界 z 上斜 12 度投到屏幕上只有约 4 度（实测 t=14 中位数 4.0°），且每条雨丝还会被<br>  透视除法按它与相机的相对位置额外径向拖拽（于是出现 0°–66° 的离散、约五分之一方向反了）。<br>  所以 <code>applyRain</code> 把每条雨丝按相机自身的 <code>right</code>/<code>up</code> 基来搭——下落沿 <code>up</code>、斜角沿 <code>right</code>，<br>  两者都与视线方向正交，透视除法抓不到东西，投影分离量就恰好是 (斜角, −长度)，<br>  <code>RAIN_SLANT</code> 因此是帧内读数（实测：所有完整落在视锥内的雨丝一律 12.0°）。</p>
+<ul><li><strong>远景</strong>：海天是带 ink→paper 渐变的整面（ Horizon 处已成纸色，与天纸无缝），</li></ul>
+<p>「每像素多少米」的淡出完全交给 <code>pipeline</code> 的 mpp fade，远处不堆任何细节 mesh。<br>  天是一张<strong>相机在内的圆柱</strong>（r=300、底边在水线）：渡海场的轨道摆到 70° 侧角时，<br>  有限平面墙会被上方射线擦穿（实测修前 f0 有 24% 画幅掉到渲染器黑色 clear），<br>  相机在内的壳任何角度都打得中。</p>
+<h2 id="6-材质交换-导演替渲染层做的那一步">6. 材质交换（导演替渲染层做的那一步）<a class="anchor" href="#6-材质交换-导演替渲染层做的那一步" aria-label="锚点">#</a></h2>
+<p><code>render/pipeline.js</code> 只给 GLSL3 材质写第二张 RT；阙/丁/笺的 <code>MeshBasicMaterial</code> 与渊的<br><code>MeshStandardMaterial</code> 会让 G-buffer 那段未定义，描线与笔触全花。于是导演按<strong>源材质对象</strong><br>一对一换上皮影 cel 材质（<code>cel-&lt;castId&gt;</code>，G-buffer id：阙 1 / 丁 2 / 笺蛾 3 / 渊 7；<br>岱龟自带 GLSL3 cel 与 11–24 的 id，不动）。两条要知道的：</p>
+<ol><li><code>render/cel.js</code> 的顶点着色器不含 skinning chunk（它的契约是非蒙皮 mesh），</li></ol>
+<p>所以交换时把 chunk 补上（与 <code>tortoise-dai.js</code> 同一套）并 <code>needsUpdate</code>；<br>   片元着色器——二band 观感与 G-buffer 打包——仍是 cel.js 里那一份。</p>
+<ol><li>有的模型透过 mesh 写颜色（阙的摆缘光斑 <code>spot.mesh.material.color</code>、渊的九颗方点），</li></ol>
+<p>有的透过闭包写（丁的字行、笺蛾的墨脉、渊的眼）。交换时把<strong>同一个 Color 实例</strong>别到<br>   cel 材质上（<code>cel.color = src.color</code>），两条写通道都活着；每帧 <code>syncCel()</code> 再把它<br>   读进 <code>uBase</code>/<code>uShadow</code>。透明源（瞬膜、墨雾）把不透明度折进颜色（压黑），<br>   与岱龟涟漪同一种处理——MRT 下混合会连打包好的深度与 id 一起混掉。</p>
+<ol><li><code>syncCel()</code> 必须排在 <code>applyCasts()</code> <strong>之后</strong>（<code>applyFrame</code> 里的步骤顺序就是契约）：</li></ol>
+<p>模型在 <code>update()</code> 里写颜色，提前一步同步，渲染进这一帧的就是上一帧的颜色——同 t<br>   两次渲染会差出十几个像素，<code>scripts/capture.mjs --selftest</code> 的字节复现判据直接红。</p>
+<h2 id="7-与-src-main-js-的接线-已接">7. 与 <code>src/main.js</code> 的接线（已接）<a class="anchor" href="#7-与-src-main-js-的接线-已接" aria-label="锚点">#</a></h2>
+<p><code>src/main.js</code> 是页面侧装配入口，按四个扁平路径装载集成模块：<code>./pipeline.js</code>、<code>./director.js</code>、<br><code>./audio.js</code>、<code>./models.js</code>（<code>build.mjs</code> 的集成插件认同一份名册，缺哪个就把哪个换成运行期<br>throw，build 不因此失败、页面响亮报错）。这四个扁平文件是<strong>路径适配壳</strong>，实现本体在<br><code>src/render/pipeline.js</code>、<code>src/director/director.js</code>、<code>src/audio/audio.js</code>、<code>src/models/*.js</code>；<br>壳不含逻辑（与 <code>src/audio.js</code> 的同款注释同一约定）。</p>
+<p>装配发生在 <code>main.js</code>：场景图与透视相机由页面建（<code>dispose()</code> 契约写明 scene/camera/pipeline<br>归调用方），管线用 <code>createPipeline()</code>，五个 cast.json id 在 main.js 键合成 <code>{ [castId]: model }</code><br>后随 <code>scenes: storyData</code> 一起进 <code>createDirector()</code>。页面循环经 <code>graph.update(t, sceneId)</code> 走<br><code>renderSceneAt</code>——它内部 applyFrame + <code>pipeline.render</code>，末次 blit 落在画布上；页面<strong>不</strong>再<br>自己 <code>renderer.render</code>，否则会把后处理链的成品盖成未调色的原图（画面在动、全链白接）。<br>轮播槽位与 HUD 标题读 <code>src/story/scenes.json</code>——采集链读的是同一份。</p>
+<h2 id="8-自测">8. 自测<a class="anchor" href="#8-自测" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --check src/director/director.js</code></pre>
+<p>语法之外，行为检查（纯函数性、场景覆盖、轮播与手动切换、纸色淡切曲线、环境/特效显影、<br>生命感叠加量非零、落地压扁、灯柱墨字）由<strong>仓外</strong>一次性脚本验证，不入库：<br><code>renderSceneAt</code> 逐场景每 0.5s 一帧共 240 帧无抛错、骨矩阵零 NaN、同 <code>(sceneId, t)</code> 两次渲染<br>相机与全部角色变换逐字节一致。采集链的字节级判据（<code>scripts/capture.mjs --selftest</code>）<br>需要 WebGL2 上下文，本机之外由采集链路自己跑。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/backup/build-artifacts-20261120/README.html"><div class="dir">← 上一篇</div><div class="ttl">冗余构建归档 · 2026-11-20</div></a><a class="next" href="../../../../works/brand/khyos-desktop/docs/leviathan-notes.html"><div class="dir">下一篇 →</div><div class="ttl">leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/brand/khyos-desktop/docs/director-usage.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

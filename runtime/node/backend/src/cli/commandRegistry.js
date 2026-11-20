@@ -29,6 +29,13 @@ const CATEGORIES = {
   dev: '\u5f00\u53d1\u5de5\u5177', // 开发工具
   workflow: '\u5de5\u4f5c\u6d41', // 工作流
   system: '\u7cfb\u7edf', // 系统
+  // 追加在末尾，不插中部：getAll() 的 catOrder 就是本对象的键序，未知分类按 999 排尾 ——
+  // analysis 三行（commandSchema.js:1548/2150）今天就以「未知分类」占着队尾，收编等于原地
+  // 不动；插中部会把它前面的组整体挪到它之后，那才会改终端两个菜单的平铺序（该约束由
+  // tests/cli/commandRegistry.test.js 的 .at(-1) 断言守着）。commandCatalogUi.js 的
+  // _EXTRA_CATEGORY_LABELS 曾有一份 analysis 副本，被 _categoryLabel 的 `||` 顺序
+  // 掩蔽（标签值不变、分叉不红），2026-11-12 已删 —— 组名真源只有这一处。
+  analysis: '\u5206\u6790', // 分析
 };
 
 // ── Registry state ────────────────────────────────────────────────
@@ -260,17 +267,26 @@ function unregister(cmd) {
 
 /**
  * Convert to the legacy SLASH_COMMANDS array format for backward compatibility.
- * @returns {Array<{cmd, label, desc, route, flag, _skillDir?, _commandFile?}>}
+ * @returns {Array<{cmd, label, desc, route, flag, category, source, _skillDir?, _commandFile?}>}
  */
 function toSlashCommands() {
-  return getAll().map(({ cmd, label, desc, route, flag, _skillDir, _commandFile }) => {
-    const row = { cmd, label, desc, route, flag };
-    // The REPL picker dispatches on `selected._skillDir` / `selected._commandFile`;
-    // dropping them here turns every advertised skill row into a silent no-op.
-    if (_skillDir) row._skillDir = _skillDir;
-    if (_commandFile) row._commandFile = _commandFile;
-    return row;
-  });
+  // category / source 随行下发：register() 已保证 category 每行有值（cmdDef.category ||
+  // _builtinCategories[cmd] || 'system'），source 是入册来源（builtin|tool|plugin|mcp|user）。
+  // 加性字段对既有消费者安全：router.js:773/replSession.js:1828/TUI useCompletions 全部按
+  // 字段名读（sc.cmd/sc.route/sc.flag/…），没有一处 Object.keys / 展开 / JSON.stringify
+  // 整行，多一个键不会改变任何既有读取结果。
+  // source 供桌面侧分组：用户技能与 CC 桥在后端同为 source 'user'（registerUserSkills /
+  // registerCcCommands 都用 registerBulk(list,'user')），只有 _skillDir/_commandFile 分得开。
+  return getAll().map(
+    ({ cmd, label, desc, route, flag, category, source, _skillDir, _commandFile }) => {
+      const row = { cmd, label, desc, route, flag, category, source };
+      // The REPL picker dispatches on `selected._skillDir` / `selected._commandFile`;
+      // dropping them here turns every advertised skill row into a silent no-op.
+      if (_skillDir) row._skillDir = _skillDir;
+      if (_commandFile) row._commandFile = _commandFile;
+      return row;
+    }
+  );
 }
 
 /**

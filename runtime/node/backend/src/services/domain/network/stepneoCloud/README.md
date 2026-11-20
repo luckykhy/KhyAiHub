@@ -10,7 +10,7 @@ function calling 交给模型。
 
 ## 为什么有这一个单元
 
-手机侧原本的反代是 `delivery/mobile/khy-os-client-app` 里的 `AmooLoop`：它通过无障碍服务
+手机侧原本的反代是 `delivery/channel/mobile/khy-os-client-app` 里的 `AmooLoop`：它通过无障碍服务
 ** scraping Amoo 的聊天气泡**来驱动。实测代价（2026-10-25，PZ261A / StepOS / Android 16）：
 
 | 问题 | 实测 |

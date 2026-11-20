@@ -15,6 +15,8 @@
 // Directories never read from the source tree (runtime data, caches, build
 // artefacts, VCS). Aligned with run-portable.bat's exclusion list, PLUS the
 // runtime-data directories it misses (.khy / .khyquant-data / sweeps).
+// .khy-Trajectory is the 2026-11-19-removed visible alias; kept so a stale
+// junction on an old machine never gets copied into the portable package.
 const EXCLUDE_DIRS = [
   '.git',
   '__pycache__',
@@ -38,6 +40,9 @@ const EXCLUDE_FILES = ['*.db', '*.db-shm', '*.db-wal', '_debug.log', '.sync-mani
 // Target-side protection list: paths matching these are NEVER written to and
 // NEVER deleted on the portable copy, in ANY mode (including --mirror). This
 // is what keeps the portable copy's local data alive across syncs.
+// .khy-Trajectory stays listed for the same reason as in EXCLUDE_DIRS (a
+// stale junction from before the 2026-11-19 alias removal must not be
+// written through or deleted by the sync engine).
 const PROTECTED_TARGET_DIRS = [
   '.khyquant-data',
   '.khy',

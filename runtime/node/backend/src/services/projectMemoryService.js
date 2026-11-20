@@ -13,7 +13,6 @@
  */
 const crypto = require('crypto');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const PROJECTS_DIR_NAME = 'projects';
@@ -24,28 +23,20 @@ let _cachedProjectsDir = null;
 /**
  * Resolve the projects root lazily via the portable-aware dataHome resolver.
  * Portable deployments (.portable marker or KHYQUANT_PORTABLE_ROOT) keep the
- * projects store under the project-scoped data home (<root>/.khy/projects);
- * regular installs keep the HISTORICAL location ~/.khyquant/projects
- * unchanged (100% behavior-compatible for non-portable installs).
+ * projects store under the project-scoped data home; regular installs go
+ * through the app-home resolver, so an established ~/.khyquant keeps its
+ * historical location byte-identical while a fresh install converges onto the
+ * unified data home instead of forking a second root.
  * @returns {string} Absolute path to the projects root
  */
 function getProjectsDir() {
   if (_cachedProjectsDir) {
     return _cachedProjectsDir;
   }
-  try {
-    const dataHome = require('../utils/dataHome');
-    if (typeof dataHome.isPortableDeployment === 'function' && dataHome.isPortableDeployment()) {
-      _cachedProjectsDir = dataHome.getProjectDataDir(PROJECTS_DIR_NAME);
-    } else {
-      // Non-portable installs: pin the historical user-home location so
-      // behavior stays byte-identical regardless of getAppHome() fallbacks.
-      _cachedProjectsDir = path.join(os.homedir(), '.khyquant', PROJECTS_DIR_NAME);
-    }
-  } catch {
-    // Legacy-compatible fallback when dataHome is unavailable.
-    _cachedProjectsDir = path.join(os.homedir(), '.khyquant', PROJECTS_DIR_NAME);
-  }
+  const { isPortableDeployment, getProjectDataDir, getAppDataDir } = require('../utils/dataHome');
+  _cachedProjectsDir = isPortableDeployment()
+    ? getProjectDataDir(PROJECTS_DIR_NAME)
+    : getAppDataDir(PROJECTS_DIR_NAME);
   return _cachedProjectsDir;
 }
 

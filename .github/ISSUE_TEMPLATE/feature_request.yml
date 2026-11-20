@@ -40,7 +40,7 @@ body:
         - CLI 与 TUI (runtime/node/backend/src/cli)
         - AI 网关与供应商适配 (runtime/node/backend/src/services/gateway)
         - 后端服务与 Web API (runtime/node/backend)
-        - AI 管理前端 (delivery/web/ai-frontend)
+        - AI 管理前端 (delivery/channel/web/ai-frontend)
         - khyquant 量化应用 (delivery/channel/khyquant)
         - Python 启动器 (runtime/substrate/platform/khy_platform)
         - OS 内核 (kernel, C)

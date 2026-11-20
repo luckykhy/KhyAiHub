@@ -2,7 +2,7 @@
  * petRealisticAssets —— 「真人」形态（第三形态）的资产登记表。
  *
  * 写实真人 3D 模型落在**一个固定的槽位**上：
- * `delivery/brand/pet/models/khy-pet-{female,male}-realistic.glb`，
+ * `works/brand/pet/models/khy-pet-{female,male}-realistic.glb`，
  * 再由 scripts/brand/build-brand-assets.js 分发到各端。
  *
  * 槽位名只表示「这是第三形态的模型位」，**不表示实现方式**。现在装的是

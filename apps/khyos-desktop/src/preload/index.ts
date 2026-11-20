@@ -1,6 +1,8 @@
 ﻿// khy-canary: Khy-20261102-274-2KNQ50Q7
 import { contextBridge, ipcRenderer } from 'electron'
 import { createAmooSecretaryApi } from './amooSecretary'
+import { createAgentbusApi } from './agentbus'
+import { createEditorApi } from './editor'
 
 // Phase 0b: 暴露首批 20 个高频 RPC 方法（stub 实现）
 
@@ -295,14 +297,17 @@ const api = {
   amoonInbox: (limit?: number) => ipcRenderer.invoke('amoon:inbox', limit),
   amoonStart: () => ipcRenderer.invoke('amoon:start'),
   amoonStop: () => ipcRenderer.invoke('amoon:stop'),
-
-  // ── Amoo 秘书（问一句 + 中止 + 共享记忆 + 循环状态）：API 片段在 ./amooSecretary，
-  // 通道名与 main 的 amooSecretary:* 配对随片段走；这里只留一次 spread。
+  // 秘书、「电脑端 AI」与内建编辑器工作台的 API 片段各自随自己的模块走，这里只留三次 spread。
   ...createAmooSecretaryApi(ipcRenderer),
+  ...createAgentbusApi(ipcRenderer),
+  ...createEditorApi(ipcRenderer),
 
   // ── 密钥与端点管理 (DESIGN-ARCH-091 §6, P1) ──
   // 入口①（§5.1）：主窗窗口菜单 / Ctrl+Shift+K 打开独立管理窗口
   openKeyManagerWindow: () => ipcRenderer.invoke('keymanager:openWindow'),
+  // 模型管理独立窗口（#/model-manager）：Ctrl+Shift+M / 窗口菜单入口；
+  // 侧栏入口走主窗 hash 整屏分支（App.tsx 的 route === 'model-manager'）
+  openModelsWindow: () => ipcRenderer.invoke('models:openWindow'),
   // keys
   keysList: () => ipcRenderer.invoke('keys:list'),
   keysAdd: (input: Record<string, unknown>) => ipcRenderer.invoke('keys:add', input),
@@ -323,6 +328,20 @@ const api = {
     ipcRenderer.invoke('endpoints:validate', input),
   modelsFetch: (input: { endpoint: string; protocol?: string; key?: string }) =>
     ipcRenderer.invoke('models:fetch', input),
+  // models（受管模型列表：卡片 models[]/defaultModel 的派生视图）。
+  // 通道名是 models:managed 而非 models:list —— 后者已被 host 转发的模型
+  // 选择器数据占用（见上方 listModels），重复注册在 Electron 44.2.0 会抛错。
+  // catalog 由 main 按 cardId 解析明文 key，渲染层不传凭据（脱敏方向）。
+  modelsManaged: () => ipcRenderer.invoke('models:managed'),
+  modelsAdd: (input: { cardId: string; model: string; makeDefault?: boolean }) =>
+    ipcRenderer.invoke('models:add', input),
+  modelsUpdate: (input: { cardId: string; from: string; to?: string; makeDefault?: boolean }) =>
+    ipcRenderer.invoke('models:update', input),
+  modelsRemove: (input: { cardId: string; model: string }) => ipcRenderer.invoke('models:remove', input),
+  modelsApply: (input: { app: 'claude-code'; cardId: string; model: string; mode: 'proxy' | 'direct' }) =>
+    ipcRenderer.invoke('models:apply', input),
+  modelsProbe: (input: { cardId: string; model: string }) => ipcRenderer.invoke('models:probe', input),
+  modelsCatalog: (input: { cardId: string }) => ipcRenderer.invoke('models:catalog', input),
   // cards (credential-free)
   cardsList: () => ipcRenderer.invoke('cards:list'),
   cardsAdd: (input: Record<string, unknown>) => ipcRenderer.invoke('cards:add', input),

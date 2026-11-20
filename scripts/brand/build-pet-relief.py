@@ -13,9 +13,9 @@
 #   blender --background --python scripts/brand/build-pet-relief.py
 #
 # 产出：
-#   delivery/brand/pet/models/khy-pet-female-relief.glb
-#   delivery/brand/pet/models/khy-pet-male-relief.glb
-#   delivery/brand/pet/models/khy-pet-koi-relief.glb
+#   works/brand/pet/models/khy-pet-female-relief.glb
+#   works/brand/pet/models/khy-pet-male-relief.glb
+#   works/brand/pet/models/khy-pet-koi-relief.glb
 #   works/design/khy-mascot/model/khy-pet-*-relief-preview-*.png（往返校验图）
 
 import bpy
@@ -25,8 +25,8 @@ import os
 import numpy as np
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT_DIR = os.path.join(REPO, 'delivery', 'brand', 'pet', 'models')
-ART_DIR = os.path.join(REPO, 'delivery', 'brand', 'pet')
+OUT_DIR = os.path.join(REPO, 'works', 'brand', 'pet', 'models')
+ART_DIR = os.path.join(REPO, 'works', 'brand', 'pet')
 PREVIEW_DIR = os.path.join(REPO, 'works', 'design', 'khy-mascot', 'model')
 
 # 网格密度。140 时单个 GLB 5.5MB（桌面端 ?inline 内联后渲染包多涨 13MB）；

@@ -145,12 +145,18 @@ function endpointInSource(ep) {
 const RELOCATIONS = [
   ['services/backend', 'runtime/node/backend'],
   ['services/ai-backend', 'runtime/node/ai-backend'],
-  ['apps/ai-frontend', 'delivery/web/ai-frontend'],
-  ['apps/provider-hub', 'delivery/web/provider-hub'],
+  ['apps/ai-frontend', 'delivery/channel/web/ai-frontend'],
+  ['apps/provider-hub', 'delivery/channel/web/provider-hub'],
   ['software/khyquant', 'delivery/channel/khyquant'],
   ['packaging', 'works/ship'],
   ['platform', 'runtime/substrate/platform'],
   ['.ai', 'works/record/ai'],
+  // 2026-11-19 delivery 单轴化（层级轴收敛）：web/mobile 并入 delivery/channel，
+  // brand/market 归工程产物区 works/。
+  ['delivery/web', 'delivery/channel/web'],
+  ['delivery/mobile', 'delivery/channel/mobile'],
+  ['delivery/brand', 'works/brand'],
+  ['delivery/market', 'works/market'],
 ];
 
 const basenameIndex = (() => {

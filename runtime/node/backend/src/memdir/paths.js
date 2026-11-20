@@ -30,44 +30,18 @@ const MAX_ENTRYPOINT_BYTES = 25_000;
 let _cachedMemoryDir = null;
 
 /**
- * Last-resort .khy home used when utils/dataHome cannot be loaded.
- * Prefers the portable/install root (<root>/.khy) derived from the env
- * override or this file's location (paths.js lives at
- * <root>/services/backend/src/memdir/, so the root is four levels up); only
- * falls back to the user home when no install root can be derived.
- * @returns {string}
- */
-function _fallbackKhyHome() {
-  try {
-    const root = process.env.KHYQUANT_PORTABLE_ROOT
-      ? path.resolve(process.env.KHYQUANT_PORTABLE_ROOT)
-      : path.resolve(__dirname, '..', '..', '..', '..');
-    if (
-      process.env.KHYQUANT_PORTABLE_ROOT ||
-      fs.existsSync(path.join(root, '.portable')) ||
-      fs.existsSync(path.join(root, 'works', 'data', 'khy'))
-    ) {
-      return path.join(root, 'works', 'data', 'khy');
-    }
-  } catch {
-    /* fall through to user home */
-  }
-  return path.join(os.homedir(), '.khy');
-}
-
-/**
- * Resolve the KHY-OS project-scoped data home (<root>/.khy).
- * Falls back to the portable/install root (then ~/.khy) if dataHome cannot
- * be loaded.
+ * Resolve the KHY-OS project-scoped data home (sessions/trajectories/memory).
+ *
+ * utils/dataHome is the single source of truth for every .khy location. The
+ * last-resort fallback that used to live here fabricated <root>/works/data/khy
+ * (or ~/.khy) from a hand-rolled root derivation that still counted the
+ * pre-方案-P layout — four levels up from src/memdir lands on <root>/runtime,
+ * so the fallback forked a shadow home exactly when the resolver was
+ * unavailable (BUG-018's "code moved, derivation didn't" drift).
  * @returns {string}
  */
 function _projectDataHome() {
-  try {
-    const { getProjectDataHome } = require('../utils/dataHome');
-    return getProjectDataHome();
-  } catch {
-    return _fallbackKhyHome();
-  }
+  return require('../utils/dataHome').getProjectDataHome();
 }
 
 // Memory-home unification gate decisions (pure leaf). fail-soft: if the leaf is
@@ -81,24 +55,25 @@ try {
 
 /**
  * Resolve the DURABLE memory home. For regular installs this is
- * getDataHome()/memory (e.g. ~/.khy/memory) — the same root the
- * dreaming/consolidation side writes to (getDataDir('memory')). For PORTABLE
+ * resolveDataPath('memory') — same root as getDataDir('memory') (DATA_PATHS
+ * sends it to <dataHome>/T1-domains/memory/memory, off the compatibility
+ * junction) — the root the dreaming/consolidation side writes to. For PORTABLE
  * deployments (.portable marker or KHYQUANT_PORTABLE_ROOT) it resolves to
  * getProjectDataHome()/memory so memory travels with the portable directory
- * instead of being pinned to the system-drive user home. Falls back to the
- * portable/install root (then ~/.khy/memory) if dataHome fails.
+ * instead of being pinned to the system-drive user home.
  * @returns {string}
  */
 function _dataHomeMemory() {
-  try {
-    const dataHome = require('../utils/dataHome');
-    if (typeof dataHome.isPortableDeployment === 'function' && dataHome.isPortableDeployment()) {
-      return path.join(dataHome.getProjectDataHome(), MEMORY_DIR_NAME);
-    }
-    return path.join(dataHome.getDataHome(), MEMORY_DIR_NAME);
-  } catch {
-    return path.join(_fallbackKhyHome(), MEMORY_DIR_NAME);
+  const dataHome = require('../utils/dataHome');
+  if (typeof dataHome.isPortableDeployment === 'function' && dataHome.isPortableDeployment()) {
+    return path.join(dataHome.getProjectDataHome(), MEMORY_DIR_NAME);
   }
+  // Resolver, not getDataDir: callers probe existence and build candidate
+  // lists (aiSession's MEMORY.md candidates, prompts.js statSync), and
+  // creating the dir here would make "does it exist" always true. Same
+  // DATA_PATHS root as getDataDir('memory'); creation stays with
+  // ensureMemoryDirExists().
+  return dataHome.resolveDataPath(MEMORY_DIR_NAME);
 }
 
 /**
@@ -121,9 +96,9 @@ function getMemoryDir() {
   }
 
   // 2. Unified durable home (gate KHY_MEMORY_UNIFIED_HOME, default ON):
-  //    resolve to getDataHome()/memory — the same root dreaming writes to,
-  //    durable across pip upgrades. Gate OFF → fall through to legacy below
-  //    (byte-identical historical resolution).
+  //    resolveDataPath('memory') — same root as getDataDir('memory'), the one
+  //    dreaming writes to, durable across pip upgrades. Gate OFF → fall through
+  //    to legacy below (byte-identical historical resolution).
   if (_memoryUnify && _memoryUnify.unifiedHomeEnabled(process.env)) {
     _cachedMemoryDir = path.normalize(_dataHomeMemory()) + path.sep;
     return _cachedMemoryDir;
@@ -197,13 +172,14 @@ let _legacyMergeDone = false;
 /**
  * One-time ADDITIVE merge of orphaned legacy memory into the canonical dir.
  *
- * When the unified-home gate moved recall to getDataHome()/memory, any memory
- * previously written under the legacy getProjectDataHome()/memory would be
- * orphaned. This copies the legacy-only files into the canonical dir so nothing
- * is lost — ADDITIVE only: the source is never deleted or moved (honoring
- * dataHome.js's "live data is not auto-migrated" red line), and established
- * canonical files are never overwritten (established-wins, see planLegacyMerge).
- * Copied files are unioned into MEMORY.md via the existing updateMemoryIndex.
+ * When the unified-home gate moved recall to the unified durable home
+ * (resolveDataPath('memory')), any memory previously written under the legacy
+ * getProjectDataHome()/memory would be orphaned. This copies the legacy-only
+ * files into the canonical dir so nothing is lost — ADDITIVE only: the source
+ * is never deleted or moved (honoring dataHome.js's "live data is not
+ * auto-migrated" red line), and established canonical files are never
+ * overwritten (established-wins, see planLegacyMerge). Copied files are unioned
+ * into MEMORY.md via the existing updateMemoryIndex.
  *
  * Best-effort and gated (KHY_MEMORY_MERGE_LEGACY); any error is swallowed so a
  * merge problem never blocks a save/recall. Runs at most once per process.

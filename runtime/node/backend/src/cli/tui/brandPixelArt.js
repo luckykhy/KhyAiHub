@@ -1,7 +1,7 @@
 'use strict';
 
 // GENERATED FILE —— 由 scripts/brand/build-brand-assets.js 生成，请勿手改。
-// 源：delivery/brand/khy-brand-geometry.js（几何单一真源）。
+// 源：works/brand/khy-brand-geometry.js（几何单一真源）。
 // 用途：TUI 终端里的品牌标记（字符点阵 + 三档明暗）。
 // 网格：13 列 × 13 行。
 

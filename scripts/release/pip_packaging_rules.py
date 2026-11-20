@@ -35,11 +35,11 @@ SDIST_RECURSIVE_INCLUDES = _ordered_unique([
     "runtime/substrate/platform/packages/moonbit-plugin-sdk",
     "docs",
     "delivery/extension",
-    "delivery/web/ai-frontend",
+    "delivery/channel/web/ai-frontend",
     "delivery/channel/khyquant",
     # 品牌资产包：几何与配色单一真源 + 生成物。带进 sdist 是为了让「主标只有一个来源」
     # 这条约定在仓外也成立（`node scripts/brand/build-brand-assets.js` 可重跑）。
-    "delivery/brand",
+    "works/brand",
     "runtime/boot/kernel/src",
     "runtime/boot/kernel/boot",
     "runtime/boot/kernel/moonbit",
@@ -58,7 +58,6 @@ SDIST_FILE_INCLUDES = _ordered_unique([
     "runtime/substrate/platform/khy_platform/_resources/tray-icon.png",
     "runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs",
     "package-lock.json",
-    "delivery/web/ai-frontend/package-lock.json",
     "delivery/channel/khyquant/frontend/package-lock.json",
     "README.md",
     "AGENTS.md",
@@ -82,7 +81,7 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     # the 10.5 MB WYSIWYG vendor bundle is an immutable first-use payload.
     "delivery/extension/tools/khy-markdown/muya-embed/node_modules",
     "delivery/extension/tools/khy-markdown/vendor",
-    "delivery/web/ai-frontend/node_modules",
+    "delivery/channel/web/ai-frontend/node_modules",
     "runtime/node/backend/models",
     "runtime/node/backend/logs",
     "runtime/node/backend/temp",
@@ -101,20 +100,20 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     ".tmp",
     "dist",
     # ``prune dist`` above only matches the REPOSITORY-ROOT dist/. Nested frontend
-    # build outputs are gitignored (delivery/web/ai-frontend/.gitignore:11, .gitignore:9)
+    # build outputs are gitignored (delivery/channel/web/ai-frontend/.gitignore:11, .gitignore:9)
     # with zero git-tracked files, but MANIFEST.in walks the WORKING TREE, so
-    # ``recursive-include delivery/web/ai-frontend *`` drags a local ``npm run build``
+    # ``recursive-include delivery/channel/web/ai-frontend *`` drags a local ``npm run build``
     # result into the sdist. That leaked ~24 MB, including a THIRD byte-identical
     # copy of the muya bundle (dist/vendor/khyos-muya.{js,css}, 10.52 MB) on top
     # of the SSOT and the public/ mirror below. Both trees regenerate from source
     # via each frontend's build script, so they are pure derivatives.
-    "delivery/web/ai-frontend/dist",
+    "delivery/channel/web/ai-frontend/dist",
     "delivery/channel/khyquant/frontend/dist",
     # Build-time mirror of delivery/extension/tools/khy-markdown/vendor/ produced by
-    # delivery/web/ai-frontend/scripts/sync-md-vendor.mjs (srcDir -> public/vendor).
+    # delivery/channel/web/ai-frontend/scripts/sync-md-vendor.mjs (srcDir -> public/vendor).
     # Verified byte-identical to the SSOT, so shipping it doubles 10.52 MB for
     # nothing; the sync script recreates it during the frontend build.
-    "delivery/web/ai-frontend/public/vendor",
+    "delivery/channel/web/ai-frontend/public/vendor",
     # Local reference material: 23.77 MB across 40 files with ZERO runtime
     # consumers (only .gitignore:107, .dockerignore:48, two generated nav cards
     # in docs/index.html, and the generated docs/19_资产/site/nav-data.js reference
@@ -133,7 +132,7 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     "delivery/channel/khyquant/tests",
     "runtime/substrate/platform/packages/shared/tests",
     "delivery/extension/tools/khy-markdown/test",
-    "delivery/web/ai-frontend/test",
+    "delivery/channel/web/ai-frontend/test",
     "runtime/boot/kernel/build",
     "runtime/boot/kernel/iso/output",
     "runtime/substrate/platform/packages/moonbit-plugin-sdk/node_modules",
@@ -161,9 +160,9 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     "runtime/node/backend/test-data-criterion-2",
     # Editor recommendations for whoever opens the frontend locally. Gitignored,
     # zero runtime consumers, and pure noise in a source release.
-    "delivery/web/ai-frontend/.vscode",
+    "delivery/channel/web/ai-frontend/.vscode",
     # Local Cursor rule files under the backend (a single .mdc today). Same
-    # reasoning as delivery/web/ai-frontend/.vscode — untracked tool configuration that a
+    # reasoning as delivery/channel/web/ai-frontend/.vscode — untracked tool configuration that a
     # fresh clone does not have, so shipping it would make the sdist contain
     # files the repository does not. Pruned as a directory: ``exclude`` is a
     # no-op on directories, which is why the first attempt at this fix left the
@@ -198,11 +197,11 @@ SDIST_EXCLUDES = _ordered_unique([
     # npm run docs:mermaid
     "docs/19_资产/mermaid.min.js",
     # Frontend build log + coverage report. Outputs of `npm run build` and
-    # `npm run test:coverage` in delivery/web/ai-frontend, written on whichever machine
-    # last ran them, gitignored, and — like delivery/web/ai-frontend/.vscode below —
+    # `npm run test:coverage` in delivery/channel/web/ai-frontend, written on whichever machine
+    # last ran them, gitignored, and — like delivery/channel/web/ai-frontend/.vscode below —
     # pure noise in a source release.
-    "delivery/web/ai-frontend/build-bg.log",
-    "delivery/web/ai-frontend/coverage/coverage-final.json",
+    "delivery/channel/web/ai-frontend/build-bg.log",
+    "delivery/channel/web/ai-frontend/coverage/coverage-final.json",
     # JVM scratch files from a Kotlin/Java experiment. Committed by accident and
     # tracked since, so they are in every fresh clone — but a compiled .class and
     # its throwaway .java source are not part of this project's source release.
@@ -222,7 +221,7 @@ SDIST_EXCLUDES = _ordered_unique([
     "docs/11_报告/历史/stash_patch.txt",
     # Local AI-tool configuration (Cline rule file). Untracked, absent from a fresh
     # clone, and re-created by the tool itself — the same reasoning that excluded
-    # delivery/web/ai-frontend/.vscode. The Cursor directory in the same tree is handled
+    # delivery/channel/web/ai-frontend/.vscode. The Cursor directory in the same tree is handled
     # by SDIST_PRUNE_DIRS. Shipping these would make the sdist contain files the
     # repository does not.
     "runtime/node/backend/.clinerules",
@@ -348,7 +347,7 @@ GLOBAL_EXCLUDES = _ordered_unique([
 # HOW-TO-EXTEND: add a path here only if it is a genuine runtime document; if it
 # has an adjacent .md it is a generated derivative and must stay excluded.
 SDIST_FINAL_INCLUDES = _ordered_unique([
-    "delivery/web/ai-frontend/index.html",
+    "delivery/channel/web/ai-frontend/index.html",
     "delivery/channel/khyquant/frontend/index.html",
     "delivery/channel/khyquant/frontend/ml-test.html",
     "delivery/channel/khyquant/frontend/public/offline.html",
@@ -386,9 +385,6 @@ BASE_COPY_PAYLOADS = [
 ]
 
 ROOT_DOCS = ["README.md", "AGENTS.md"]
-ROOT_LOCKFILES = [
-    "package-lock.json",
-]
 
 PACKAGE_RESOURCE_INCLUDES = {
     "khy_platform": [
@@ -447,6 +443,7 @@ COPY_EXCLUDE_PATTERNS = _ordered_unique([
     # fixture (test/fixtures/coze/sample-linear.zip).
     "*.rar",
     ".khy",
+    # khy-Trajectory 是 2026-11-19 裁决拆除的可见别名；留条目兜底存量 junction 不进包。
     "khy-Trajectory",
     "sessions.db*",
     "*.db-shm",
@@ -469,6 +466,7 @@ POST_COPY_PRUNE_BASENAMES = _ordered_unique([
     "ollama-runner",
     # Local runtime scratch that must never travel in the bundle.
     ".khy",
+    # 同上：2026-11-19 已拆除的可见别名，留条目兜底存量 junction 不进 bundle。
     "khy-Trajectory",
 ])
 
@@ -737,7 +735,7 @@ REQUIRED_SDIST_PATHS = _ordered_unique([
     # route on bundled installs. If ai-backend ever drops out of packaging again,
     # the release audit fails here instead of shipping a broken wheel.
     "runtime/node/ai-backend/src/middleware/auth.js",
-    "delivery/web/ai-frontend/src/main.js",
+    "delivery/channel/web/ai-frontend/src/main.js",
     "delivery/channel/khyquant/frontend/src/main.js",
     "runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs",
 ])

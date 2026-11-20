@@ -1820,12 +1820,12 @@ def _locate_ai_frontend(backend_dir: Path):
     """Find the ai-frontend checkout that ships with this backend, or None.
 
     Forest layout since the R4 migration: ai-frontend lives at
-    <root>/delivery/web/ai-frontend, three levels above runtime/node/backend.
+    <root>/delivery/channel/web/ai-frontend, three levels above runtime/node/backend.
     Pre-migration checkouts kept it at <root>/apps/ai-frontend, two levels above
     services/backend — still recognized so old installs keep bootstrapping.
     """
     if len(backend_dir.parents) >= 3:
-        candidate = backend_dir.parents[2] / "delivery" / "web" / "ai-frontend"
+        candidate = backend_dir.parents[2] / "delivery" / "channel" / "web" / "ai-frontend"
         if candidate.exists():
             return candidate
     legacy = backend_dir.parent.parent / "apps" / "ai-frontend"

@@ -82,7 +82,7 @@ function labelOf(severity) {
 
 /**
  * 本守卫扫描的源根（`--changed` 的前缀匹配与登记表 `paths` 共用同一集合）。
- * 刻意只收 **Node 模块**：`delivery/web/*` 是浏览器面（无 `require`），
+ * 刻意只收 **Node 模块**：`delivery/channel/web/*` 是浏览器面（无 `require`），
  * `apps/khyos-desktop` 是 TS/Electron 面，均不适用本判据。
  */
 const SCAN_ROOTS = Object.freeze([

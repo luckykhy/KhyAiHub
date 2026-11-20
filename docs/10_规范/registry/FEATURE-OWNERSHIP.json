@@ -1,7 +1,7 @@
 {
   "$schemaNote": "能力域 → 唯一实现位置登记表。schema 单一真源：docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md §4 B-U1。守卫脚本 check:feature-ownership 尚未落地（B-G1/B-G2 分阶段建设项），本文件当前由人工评审使用。",
   "version": 2,
-  "updated": "2026-10-13",
+  "updated": "2026-11-16",
   "status": "seeded",
   "capabilities": [
     {
@@ -90,7 +90,7 @@
     {
       "domain": "asset-customer-panel",
       "summary": "AI 资产与客户面板的双源并行刷新与非主源失败降级",
-      "canonical": "delivery/web/ai-frontend/src/composables/useAssetCustomer.js",
+      "canonical": "delivery/channel/web/ai-frontend/src/composables/useAssetCustomer.js",
       "ownedLayers": [
         "L3"
       ],
@@ -356,6 +356,133 @@
       "notes": "登记 2026-10-11（产品所有者明确要求，用户原话与需求五问存证 works/data/khy/feedback/external-delegation-gate-20261011/requirement-5q.md）。闸插在 _generateWithAdapterIsolation（aiGatewayRoutingMethods.js）——全仓唯一 entry.adapter.generate 内容生成执行点（探活 ping 的三处直调不承载用户内容，刻意不过闸），一次设闸覆盖 REPL/TUI/任务/工具循环/Web/khy <agent> 全部入口。判定次序：policy deny→拒（压过一切）；policy allow→放；humanPin 字面 'user-command'（全仓唯一写入点 cli/handlers/ide.js startChat，用户亲手敲 `khy <agent>`）→放；会话 'always' 记忆→放；其余经 options.onControlRequest 的 can_use_tool 通道询问（tool_name='external_delegation'），headless/抛异常/应答非法一律拒绝并留 cause。env 钉选（GATEWAY_PREFERRED_ADAPTER）不构成人类批准——预检直写 process.env / 自检修复写 .env / setActiveChannel 直写三条机器写入路径实证，外部 key 钉选一律过闸。测试 src/services/gateway/delegationGate.test.js（node:test 旁置，18 条全绿）。",
       "rolloutStage": "S3",
       "rolloutNote": "外部智能体委派审批是产品所有者明确要求的用户交互审批闸（同命令风险分级/工具 requestPermission 族）：交互授权是产品契约本身，不是叠加在 AI 贡献者上的治理机制，不属 PROCESS-008 rollout.mechanisms[] 管辖域；按 PP-1「存量豁免」口径登记 S3（对照 shell-command-risk 条目同型）。每次判定留痕 works/data/khy/ruleguard/delegation-gate.jsonl（KHY_DELEGATION_GATE_OBSERVE_FILE 可覆盖、2MB 裁半、fail-soft），若将来人决定纳入 PROCESS-008 升阶管理，样本流已在；升阶是人的决定，登记不代劳。"
+    },
+    {
+      "domain": "mobile-privileged-shell",
+      "summary": "手机端免 root 特权 shell 通道：khyos 自带的 uid-2000 代理（sidecar），一次提权、长驻服务、能力前置探测与失败诚实降级；不依赖任何第三方 App",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/ElevationManager.kt",
+      "ownedLayers": [
+        "L3"
+      ],
+      "pattern": "Adapter",
+      "method": "self-developed",
+      "source": "自研：khyos 自带的 uid-2000 提权代理（sidecar），协议形态与交互结论借鉴 RikkaApps/Shizuku@v13.6.0 但不取其代码（idea 档，见 SOURCING-PROVENANCE）",
+      "aliases": [
+        "ShizukuServiceManager",
+        "execViaShizuku",
+        "Shizuku binder",
+        "免 root 提权",
+        "特权 shell 通道"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "登记 2026-11-09（[DESIGN-ARCH-207] P-01 期 1 溯源补登，零代码 diff；本域能力早于登记已在仓，非新增实现）。归属裁定：Shizuku 的免 root 提权通道已以 adapter 档落在 ShizukuServiceManager.kt（import rikka.shizuku.Shizuku / moe.shizuku.server.IShizukuService；connectShizukuService() 走 Shizuku.getBinder() + IShizukuService.Stub.asInterface，失败返回 null 诚实降级），并接进 Tools.java 三级提权链与 [DESIGN-ARCH-206] 文件管理器 shell 后端。method=adapter 取 [DESIGN-SOURCING-001] §4 B-U1 合法值（self-developed | idea | reference | adapter | vendored | fork；现有 16 域未用过但枚举内含）；pattern=Adapter 取模式注册表既有值；ownedLayers 只填 L3（端侧交付层，与 asset-customer-panel 的 delivery/channel/web/ 同层），符合 B-U5 第 1 条单实现层约束。source 必填因 method!==self-developed。许可证约束：上游 Apache-2.0 附 SECTION 6 三条额外限制（禁用 launcher 图标、禁用 Shizuku 作 app 名、禁用 moe.shizuku.privileged.api applicationId 与 moe.shizuku.manager.permission.* 权限声明），详见 SOURCING-PROVENANCE 对应行。前置核实：2026-11-09 git status --porcelain 空、git ls-files 命中，canonical 已提交入仓（[DESIGN-ARCH-207] Q3 的「未提交态」担忧已排除）。禁止新开 ShizukuBridgeV2 之类并行实现（B-U5.1）；将来改提权链只在此文件与 Tools.java 上扩展。**追加（2026-11-11，[DESIGN-ARCH-211] 解包取证后的更正与补登，不改写上文）**：解包官方 APK + javap 核三个 AAR 后查明，此前「官方通道不可用」**不是 Shizuku 没启动，而是客户端根本没接线**——`Shizuku.getBinder()` 只是读静态字段，真正送 binder 的是清单里声明的 `rikka.shizuku.ShizukuProvider`（须 exported=true / multiprocess=false，管理 App 会校验并原样报错），而本仓既没引 `dev.rikka.shizuku:provider` 依赖也没有清单声明；且代码只读 `checkSelfPermission()` 从不 `requestPermission()`，于是 Shizuku 的「已授权的应用」名单里永远没有本 App，那句「请在 Shizuku 中授权」在真机上无法执行。**本次已落地**：build.gradle 补 provider 依赖、AndroidManifest 补 provider 声明（authority ${applicationId}.shizuku）、ShizukuServiceManager 增 requestPermission() 主动申请（被拒则重开申请闸）并把「没启动 / 没注册 provider / 没授权」三种失败原因分开报、新增回归测试 ShizukuProviderWiringTest（正向 3/3、反向摘掉接线 3/3——故障形态是「少一行声明」，无设备时只能靠源码守）。取证载体见 [DESIGN-ARCH-211]，可复现脚本 delivery/channel/mobile/khy-os-client-app/scripts/analyze-shizuku-apk.ps1（产物默认写在仓库外，B-S3 不引入上游文件）。同轮新增两条 PC 侧武装脚本（start-shizuku-service.ps1 拉起官方 server、provision-shell-sidecar.ps1 -FromDevice 武装 khyos 自带 uid-2000 sidecar），后者证明**本仓自有通道与官方通道同权限级**，故 adapter 归属与「不搬上游代码」的边界不变（上游源码不入库，[DESIGN-ARCH-207] 裁定不改写）。官方通道的客户端授权待新构建后真机验证，本行不写「已通过」。**追加（2026-11-12，[DESIGN-ARCH-212] 自举提权代理 · 期 1 已落地）**：本域的**归属不变**（提权链仍只有这一条 canonical：`Tools.java` 三级降级 sidecar → shizuku → app uid），本提案**不新增第二个提权实现**，只给既有 sidecar 补「谁来拉起它」这一段——现状是 PC 侧 `provision-shell-sidecar.ps1` 跑一条 adb 命令（每次重启要重跑），目标是 **khyos 自己**用最小 adb 客户端连本机无线调试端点完成配对并把 sidecar 以 uid 2000 拉起，从而「装了 khyos 就能提权、不装 Shizuku、不用电脑」。机制依据是 Shizuku v13 在 Android 11+ 上的同一条自启动路径（解包证据见 [DESIGN-ARCH-211] §2.3 与 [DESIGN-ARCH-212] §2.1）。**期 1 已落地**：`AdbProtocol.kt`（adb 帧格式）+ `AdbProtocolTest.kt`（黄金向量，8/8 绿）+ `scripts/capture-adb-wire-format.js`（重新抓向量）；协议字节全部**实测**自真实 `platform-tools/adb.exe`，钉住三条与常识相左的事实（magic = command XOR 0xffffffff；data_crc32 = payload 字节和而非 CRC32、且只有 CNXN 填；服务串带 NUL 而 CNXN banner 不带）——错一条握手就静默不成立，在手机上与「服务没开」无法区分。**期 2/3（配对与传输、自启动与 UI）待实施，未写「已通过」**；边界已登记：别的 App 仍无法经官方 Shizuku API 调用 khyos（包名/签名唯一 + 上游 Section 6 禁止冒用 + B-S3），khyos 提供的是自己的等价能力（uid 2000 shell）。**追加（2026-11-12，人裁决「完全移除官方 Shizuku」）**：本域曾以 adapter 档直连官方 Shizuku binder（canonical 指向已删除的 ShizukuServiceManager.kt）。现该路径**整体删除**——依赖坐标、清单里的客户端 provider、内置 APK、自动安装通道一并移除；canonical 改为 **ElevationManager.kt**，提权由 khyos 自带的 uid-2000 sidecar 提供（与 Shizuku server 同级），method 由 adapter 改为 **self-developed**：借鉴的只是「一次提权、按调用方身份鉴权、能力前置探测、失败诚实降级」这些结论（idea 档，见 SOURCING-PROVENANCE）。提权链降为两级（sidecar → App uid）。反向守卫 scripts/ci/check-no-shizuku-dependency.js 防止依赖回流（2026-11-12 实测：移除前 42 处 → 移除后 0 处）。"
+    },
+    {
+      "domain": "desktop-computer-use",
+      "summary": "桌面 GUI 自治闭环：ComputerUseTool + ComputerUseAgent 的 observe → think → act → verify 循环与四级授权闸门",
+      "canonical": "runtime/node/backend/src/services/domain/desktop/computerUse/computerUseAgent.js",
+      "ownedLayers": [
+        "L2"
+      ],
+      "pattern": "Facade",
+      "method": "self-developed",
+      "source": null,
+      "aliases": [
+        "ComputerUseTool",
+        "ComputerUseAgent",
+        "computer_use",
+        "CUA",
+        "桌面 GUI Agent",
+        "gui_agent"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "登记 2026-11-09（[DESIGN-ARCH-207] 期 1 归属补登，零代码 diff；本域能力为本仓自研，早于本次借鉴）。method 刻意保持 self-developed：ComputerUseTool / ComputerUseAgent 是本仓自研的 GUI Agent 闭环（[DESIGN-ARCH-056] 结构化感知 + KHY_DESKTOP_CONTROL 四级授权 + [DESIGN-ARCH-026] EXEC_APPROVED 不可伪造戳），不是从 Mika 移植而来；若改成 idea 会把自研能力误述为借鉴产物，也踩 B-L4 第 3 条「换实现范式重做已有功能」（method 字段变化即禁项）。本次与 wangzan101/Mika@v0.1.38 的关系只取一条尚未落地的行为结论（hidden background screen / 后台独立屏不占主屏），借鉴方式 idea，登记在 SOURCING-PROVENANCE 对应行与 [DESIGN-ARCH-207] P-02，不构成本域 method 或 canonical 的变更。pattern=Facade（ComputerUseTool 是统一入口，聚合 observe/act/verify）取模式注册表既有值；ownedLayers 只填 L2（runtime/node/backend 后端服务层，与 ai-gateway 同层）。canonical git 状态 2026-11-09 实测 porcelain 空、ls-files 命中。真正未闭合的差距是后台独立屏（[DESIGN-ARCH-200] G5，已裁「不押」，本次只重估不翻案）；Windows 无 VirtualDisplay 等价物，不承诺「完全不占屏」。将来动 GUI 闭环只能在此 canonical 与手机端 AmooLoop/KhyUi 上扩展，禁止新建 MikaAgent/MikaTool（B-U5.1）。"
+    },
+    {
+      "domain": "mobile-floating-execution-console",
+      "summary": "手机端常驻悬浮执行台：BridgeOverlayService 的折叠态三态内容、展开面板随气泡定位、AmooLoop 零 IO 执行态双行播报，以及（期 3）提示词队列与立即发送的归属真源",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BridgeOverlayService.java",
+      "ownedLayers": [
+        "L3"
+      ],
+      "pattern": "Observer",
+      "method": "self-developed",
+      "source": null,
+      "aliases": [
+        "BridgeOverlayService",
+        "悬浮球",
+        "悬浮执行台",
+        "灵动岛",
+        "执行播报",
+        "prompt 队列",
+        "overlay panel"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "登记 2026-11-10（[DESIGN-ARCH-208] 期 1，B-P1 触发 B-P2 后的能力域补登）。归属裁定：本域能力是本仓自研的既有 canonical（BridgeOverlayService + AmooLoop），不是从 Mika 移植；借鉴的只是「常驻胶囊→展开信息卡→就地追加指令」这一交互形状（idea，闭源无版本可钉，见 208 §2 P-01 第 5 字段），按 [DESIGN-ARCH-207] desktop-computer-use 的同型先例，method 刻意保持 self-developed，避免把自研能力误述为借鉴产物（B-L4 第 3 条）。pattern=Observer（悬浮框是 AmooLoop 零 IO 状态的观察者）取 docs/16_设计模式/registry/模式注册表.json 既有值；ownedLayers 只填 L3（端侧交付层，与 mobile-privileged-shell / asset-customer-panel 同层），符合 B-U5 第 1 条单实现层约束。**实施范围**：期 1（2026-11-10）落 L2 面板跟随；期 2 落 L1 折叠态三态 + L3「要做什么」零 IO 读；L4 输入队列被 Q4（输入焦点方案）/ Q5（队列持久化）阻断，仍在期 3，本域先登记其归属以免届时新建并行实现（B-U5.1）。**既有边界的追加式扩展**：DESIGN-UI.md §6.7 第 4 条与 §7.4 声明「触摸/吸边/零 IO 逻辑一律不动」，208 §1.5 已追加式说明本提案要动的正是该部分（面板跟随需要 ACTION_MOVE 同步 updateViewLayout），按 B-L3 不改写 DESIGN-UI.md 原文。真机验证项一律「待验证」，不写「已通过」。前置核实：2026-11-10 git status --porcelain 对 BridgeOverlayService.java / AmooLoop.java 为空，两份 canonical 干净、未被并行车道改动。"
+    },
+    {
+      "domain": "code-editor-workbench",
+      "summary": "内建代码编辑器工作台（文件树 / 多标签 Monaco / 全局搜索，人与 AI 共用一块屏）",
+      "canonical": "apps/khyos-desktop/src/renderer/components/editor/EditorWorkbench.tsx",
+      "ownedLayers": [
+        "L3"
+      ],
+      "pattern": "Facade",
+      "method": "self-developed",
+      "source": null,
+      "aliases": [
+        "EditorWorkbench",
+        "代码编辑器工作台",
+        "内建编辑器"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "2026-11-11 落地（DESIGN-ARCH-210 M1）。正文唯一真源 = Monaco model（editorModels.ts），多标签 / 搜索 / 文件树都只是它上面的视图；禁止再建第二个 Monaco 实例或第二套标签状态。右侧 SidePane 的 CodeEditorPane 是「查看→点编辑」的单文件窄面板，与本工作台不是并行实现（它读同一工作区根、共用 editorLanguages 语言表）。工作台只能经 AppLayout 内联 lazy() 进入，静态 import 或新增 Redux slice 会让 V0 首屏预算直接判红。"
+    },
+    {
+      "domain": "file-write-sink",
+      "summary": "代码文件写盘唯一通道（跨进程锁 + mtime 基线 + 快照/台账 + 待审闸门）",
+      "canonical": "runtime/node/backend/src/services/fileWriteService.js",
+      "ownedLayers": [
+        "L2",
+        "L3"
+      ],
+      "pattern": "Facade",
+      "method": "self-developed",
+      "source": null,
+      "aliases": [
+        "fileWriteService",
+        "统一写通道",
+        "写盘落点"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "2026-11-11 落地（DESIGN-ARCH-210 M2）。人保存（apps/khyos-desktop/src/main/editor/writeFile.ts，actor:'editor'）与 AI 工具写盘（FileWriteTool / FileEditTool / MultiEditTool / ApplyPatchTool / writeFile / editFile / MultiEdit / replaceAtLocation，actor:'tool'）必须走同一条落点：任何一处自行 fs.writeFileSync 内容文件都是并行写通道，会绕过锁与先读后写台账，直接静默互相覆盖。反证：src/services/fileWriteSinkTools.test.js 把 write 换成不落盘的探针，工具磁盘内容不变才算过。M3 起该服务内部挂 setPendingGate：编辑器打开集合内的工具写盘先经人批准（逐 hunk 接受时以 verdict.content 落盘子集，批准期间 mtime 再校验），未批准 / 超时 / 关窗一律不落盘（契约见 DESIGN-ARCH-210 §7；状态机反证见 apps/khyos-desktop/tests/editorPendingGate.test.mjs）。IPC 侧另有 fs:readFile / fs:writeFile 两个无白名单孤儿通道（main/index.ts 注释自述反面先例），禁止新增调用方，新代码一律走 editor:read / editor:write。"
+    },
+    {
+      "domain": "android-ui-ref",
+      "summary": "按元素引用驱动 Android 界面：uiautomator dump → uidref digest → 按 ref 点按/输入 → screendiff 复检效果",
+      "canonical": "runtime/node/backend/src/services/domain/network/phone/androidRef/index.js",
+      "ownedLayers": [
+        "L1",
+        "L2"
+      ],
+      "pattern": "Adapter",
+      "method": "vendored",
+      "source": "android-agent-kit v0.1.0（GitHub 归档，MANIFEST 版本日期 2026-10-27，无具名版权人；Apache-2.0）的 uidref/js 与 screendiff/js 逐字入库到 runtime/node/backend/vendor/android-agent-kit/；本仓只写适配层（adb dump/input + 编排）与工具面",
+      "aliases": [
+        "Android GUI",
+        "安卓界面自动化",
+        "按 ref 点按",
+        "uiautomator 元素引用",
+        "android-ui-ref"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "登记 2026-11-16。ownedLayers 指 canonical：L2 是本仓适配层（services/domain/network/phone/androidRef/），L1 是工具面（src/tools/AndroidUiTool/）；vendored 目录本身不在层册（B-M1 #3）——与既有 vendored 行 software-copyright-materials 的 ownedLayers:[] 不冲突：那一行的 canonical 就是 vendored 文件本身，本行 canonical 是本仓代码。B-M1 #6 偏差如实记：上游归档无 .git、无任何 commit/sha 痕迹，versionPin 只能记「归档快照 zip SHA-256=691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a + MANIFEST 版本日期 2026-10-27」，该偏差与 versionPin 口径须由批准人在 SOURCING-PROVENANCE 的 ledger 行里同时确认（B-P3，批准人 ≠ 实现者）；日后拿到真 commit 必须换钉（B-L3 不得静默变更）。本行不宣称 B-M1 六条件全过。"
     }
   ],
   "rollout": {
@@ -700,7 +827,7 @@
       {
         "id": "repo-hygiene-guard",
         "name": "仓库卫生守卫（垃圾文件名形态回流拦截：.env.tmp 原子写残留 / vite 时间戳 / 调试脚本 / Java 编译产物）",
-        "ssot": "AGENTS.md 工程规则节 LAYOUT-004（仓库整理与巡检）+ 2026-10 事故形态（runtime/node/backend/.env.tmp.<时间戳>×2 与 delivery/web/ai-frontend/vite.config.js.timestamp-*.mjs×5 被跟踪入库）",
+        "ssot": "AGENTS.md 工程规则节 LAYOUT-004（仓库整理与巡检）+ 2026-10 事故形态（runtime/node/backend/.env.tmp.<时间戳>×2 与 delivery/channel/web/ai-frontend/vite.config.js.timestamp-*.mjs×5 被跟踪入库）",
         "rules": [],
         "executor": "scripts/ci/check-repo-hygiene.js",
         "stage": "S1",
@@ -924,7 +1051,9 @@
           "target": 200,
           "source": {
             "script": "scripts/ci/check-repo-layout.js",
-            "args": ["--json"],
+            "args": [
+              "--json"
+            ],
             "key": "counts.domain-direction",
             "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
           },
@@ -948,7 +1077,9 @@
           "target": 200,
           "source": {
             "script": "scripts/ci/check-repo-layout.js",
-            "args": ["--json"],
+            "args": [
+              "--json"
+            ],
             "key": "counts.functional-unit",
             "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
           },
@@ -972,7 +1103,9 @@
           "target": 200,
           "source": {
             "script": "scripts/ci/check-repo-layout.js",
-            "args": ["--json"],
+            "args": [
+              "--json"
+            ],
             "key": "counts.entry-buffer",
             "note": "比对口径是快照 vs 实时：observed 是 2026-09-28 建档快照，实时值变化（合法清理下降 / 新增判据上升）属正常。PP-1/PP-2 一律按实测值判阈值，两个数一起报出、由人确认差异来源；observed 应择机重新快照。"
           },
@@ -1318,6 +1451,76 @@
           "constant": "STAGE",
           "file": "scripts/ci/check-ssot-data.js"
         }
+      },
+      {
+        "id": "core-boundary-guard",
+        "name": "核心职责边界守卫（一核多终端）",
+        "ssot": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-220] CoreHandle 一核多终端双模核心架构设计稿.md",
+        "rules": [],
+        "executor": "scripts/ci/check-core-boundary.js",
+        "stage": "S1",
+        "stageSince": "2026-11-17",
+        "stageAuthority": "scripts/ci/check-core-boundary.js 的 GUARD_STAGE 常量",
+        "samples": {
+          "observed": 15900,
+          "target": 200,
+          "source": {
+            "script": "scripts/ci/check-core-boundary.js",
+            "args": ["--json"],
+            "key": "counts.checks-run"
+          },
+          "note": "S1 观察者。样本键 = 单次运行断言数（健康态恒正、随覆盖面增长）；违规计数键（如 core-boundary-import）只作读数，不当样本键——健康态恒 0 的键当样本量会让 PP-2 毕业通道机械上不可达（[DESIGN-ARCH-219] §11.3 末条）。observed=15900 为 2026-11-17 落盘首跑实测（check-rollout-stage 复算通过）；覆盖面变化时择机重快照。"
+        },
+        "rollback": "删 scripts/ci/check-core-boundary.js + 摘 package.json 的 check:core-boundary 别名与 pr-gate 步骤 + 删本条机制条目（纯新增、零行为变更，不依赖任何未提交代码）",
+        "blockedBy": [],
+        "executorStage": {
+          "file": "scripts/ci/check-core-boundary.js",
+          "constant": "GUARD_STAGE",
+          "note": "阶段权威在执行器源码（const GUARD_STAGE = 'S1'），登记表只是镜像；漂移即报 rollout-stage-authority-drift。"
+        },
+        "previousStage": null,
+        "_rules_note": "rules 留空数组：把 LAYOUT-001 写进本条 rules 会被 PP-3 误判为「S1 机制却在阻断」（照 entry-buffer-guard / domain-direction-guard / functional-unit-guard 三条先例的 _rules_note 手法，三者 key 均为 counts.* 标量）；外挂执行器不在 ruleguard 规则认领链上，故 samples.source.key 指 counts.checks-run。"
+      },
+      {
+      "id": "agent-hygiene-check",
+      "name": "智能体卫生检查器（S1 观察者）",
+      "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.md",
+      "rules": [],
+      "executor": "scripts/ci/check-litter.js",
+      "stage": "S1",
+      "stageSince": "2026-11-18",
+      "executorStage": {
+        "file": "scripts/ci/check-litter.js",
+        "constant": "GUARD_STAGE",
+        "note": "2026-11-19 由 organize.py --check 迁移到 Node 版：本机无可用 Python 解释器（Microsoft Store 残桩 exit 9009），python 版检查器不可运行。organize.py 保留为 LAYOUT-004 巡检执行器（需 Python 环境）。"
+      },
+        "samples": {
+          "observed": 0,
+          "target": 200
+        },
+        "rollback": "从 package.json 摘掉 check:hygiene 即退回纯文字契约",
+        "blockedBy": []
+      },
+      {
+        "id": "structure-lock",
+        "name": "目录结构锁（S1 观察者）",
+        "ssot": "docs/10_规范/registry/STRUCTURE-LOCK.json",
+        "rules": [],
+        "executor": "scripts/ci/check-structure-lock.js",
+        "stage": "S1",
+        "stageSince": "2026-11-20",
+        "executorStage": {
+          "file": "scripts/ci/check-structure-lock.js",
+          "constant": "GUARD_STAGE",
+          "note": "阶段权威在执行器源码的 GUARD_STAGE 常量（当前 S1）。S1 恒 exit 0、只记录不阻断（PP-3）；check-rollout-stage.js 会比对两者，漂移即报 rollout-stage-authority-drift。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "样本 = 单次比对运行报出的 structure-drift 条数（S1 只记录不阻断）。毕业需 ≥200 条跨运行样本且无解释不了的误报；已知噪声面：未装 .claude 的机器会报「已登记条目消失」（.claude 不在 .gitignore 内，故不享工具家豁免），须先分诊再谈升阶。"
+        },
+        "rollback": "从 pre-commit 摘掉该步即退回纯快照比对",
+        "blockedBy": []
       }
     ]
   }

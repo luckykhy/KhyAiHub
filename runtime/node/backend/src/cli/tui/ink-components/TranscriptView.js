@@ -51,6 +51,11 @@ function bodyHeight(rowsHint, total) {
   return avail;
 }
 
+// 提示行把 'q' 与 Esc 并列:本视图吞掉每一个按键(App.js 的 transcript 分支独占输入),
+// 不知道还有第二道退路的人会一直困在里面试。2026-11-12 pty 实测(臂 tview):视图里按 q
+// 确实能关 —— 强制全屏重绘后那个 ⊟ 会话记录 框不再被画出。
+// (这四行刻意放在函数外面:提示行的宽度账由 tests/cli/tui/chatChordsHelpSync.test.js ⑦ 钉住,
+//  而 maxFuncLines 是逐文件棘轮,往组件体内塞注释等于把它撑长。)
 function TranscriptView({ lines, scroll = 0, showAll = false, rows }) {
   const { Box, Text } = inkRuntime.get();
   const h = React.createElement;
@@ -95,10 +100,6 @@ function TranscriptView({ lines, scroll = 0, showAll = false, rows }) {
       { key: 'hint', dimColor: true },
       '↑↓/j k 滚动一行 · Ctrl+U/D 翻半页 · g/G 跳顶/底 · ' +
         (showAll ? 'Ctrl+E 折叠工具输出' : 'Ctrl+E 展开工具输出') +
-        // 'q' joins Esc here: the view swallows every keystroke (App.js's transcript
-        // branch owns input), so a user who doesn't know the second closer is stuck
-        // until they guess. Measured 2026-11-12 (pty arm tview): pressing q in the open
-        // view closes it — a forced full repaint no longer paints the box title.
         ' · Esc/q 关闭视图'
     )
   );

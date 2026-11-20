@@ -38,10 +38,18 @@ const SKIP_DIRS = new Set([
   ".git", "node_modules", "build", "dist", ".venv", "venv", "coverage",
   "__pycache__", ".pytest_cache", ".tox", "muya-embed", "national-exam-site",
   "_archive_已删除孤儿引擎", ".claude", ".khy",
+  // 工具家点目录：AI 编码助手/工具在本机自建的状态目录，全部 gitignore
+  // （.gitignore：.workbuddy/ .zcode/ .cursor/ .opencode/ .mavis/ .qoder/ /.ai/
+  // /.codeartsdoer/）。内容随工具会话生灭，不是本项目文档；2026-11-19 实测
+  // 不排除时它们的 .md 会进「源 Markdown」计数，孪生随每次会话漂移。
+  ".workbuddy", ".zcode", ".cursor", ".opencode", ".codeartsdoer", ".mavis", ".qoder", ".ai",
   // 临时研究材料（外部仓库克隆，非本项目文档）。2026-09-15 实测：不跳过时
   // build 会在其中原地生成数百个文档站 html，污染研究目录。
   ".research-tmp",
 ]);
+// .khy 一族（.khyos/.khyquant/.khy_*/.khy-runtime…）同为 gitignore 本机态
+// （.gitignore:69/83/92），逐个列名会漏，按前缀拦。
+const SKIP_DIR_PREFIXES = [".khy"];
 // 路径片段命中即跳过（bundled 是打包时生成的副本，非源文）
 // `/housekeeping/` 是 [DESIGN-LAY-003] HK-3 的隔离区：其内容是被撤下的文档原文，
 // 保留只为可核对与撤销，不是现行文档。若放行，build 会为其生成 html 并写进
@@ -151,11 +159,18 @@ function htmlRelFor(mdRel) {
 // 背景：html 从「与 md 并排」迁到 docs/html/ 镜像树后，正文里的相对链接若原样保留，
 // 会从更深的目录出发解析而整体错位一级。这里以 md 源位置解析出真实目标，再以 html
 // 落点重新给出相对路径；docs 内的 .md 目标（含手写 HTML 块里的 .html 目标）一并映射进镜像树。
+// 代码区（<code>/<pre>，含围栏代码块与行内代码）里的 `href=`/`src=` 是示例文本不是真链接：
+// 2026-11-19 实测 works/record/ai/audit-khy-os.md:1222 的行内代码
+// `window.location.href = '/login'` 被整体改写成 `"../../../login"`（连引号都被换掉），
+// verify 随即报断链。故按代码区切段，只映射区外。
+// 单个捕获组包住整条 alternation：split 才会把整段代码区作为一个分隔项吐出
+// （两个分组会各自进结果数组，奇偶位错位）。
+const CODE_REGION_RE = /((?:<pre\b[^>]*>[\s\S]*?<\/pre>)|(?:<code\b[^>]*>[\s\S]*?<\/code>))/gi;
 function remapBodyLinks(html, mdRel, htmlRel) {
   const mdDirAbs = path.dirname(path.join(ROOT, mdRel));
   const htmlDirAbs = path.dirname(path.join(ROOT, htmlRel));
   const decodeSafe = (s) => { try { return decodeURIComponent(s); } catch (_) { return s; } };
-  return html.replace(/(\b(?:href|src)\s*=\s*)("([^"]*)"|'([^']*)')/g, (m, attr, _q, dq, sq) => {
+  const remapSegment = (segment) => segment.replace(/(\b(?:href|src)\s*=\s*)("([^"]*)"|'([^']*)')/g, (m, attr, _q, dq, sq) => {
     const raw = dq !== undefined ? dq : sq;
     if (/^(https?:|mailto:|data:|javascript:|#|\/\/)/i.test(raw)) return m;
     const hashIdx = raw.indexOf("#");
@@ -189,6 +204,7 @@ function remapBodyLinks(html, mdRel, htmlRel) {
     out = encodeURI(out).replace(/%5B/g, "[").replace(/%5D/g, "]");
     return attr + '"' + out + anchor + '"';
   });
+  return html.split(CODE_REGION_RE).map((seg, i) => (i % 2 === 1 ? seg : remapSegment(seg))).join("");
 }
 
 // ============================================================
@@ -603,6 +619,7 @@ function walkMarkdown(dir, acc) {
     const rel = path.relative(ROOT, full).split(path.sep).join("/");
     if (e.isDirectory()) {
       if (SKIP_DIRS.has(e.name)) continue;
+      if (SKIP_DIR_PREFIXES.some((p) => e.name.startsWith(p))) continue;
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel + "/").includes(p))) continue;
       walkMarkdown(full, acc);
     } else if (e.isFile() && /\.md$/i.test(e.name)) {

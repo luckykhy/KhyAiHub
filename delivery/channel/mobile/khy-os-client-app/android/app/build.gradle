@@ -1,0 +1,227 @@
+plugins {
+    id("com.android.application")
+    // KGP must be applied by THIS module, not borrowed from a plugin that happens
+    // to apply it (flutter_tts did). Without a direct application the Kotlin
+    // compile task is not wired as a dependency of javac's, so Java sources that
+    // reference Kotlin symbols (AmooLoop -> KhyAccessibilityService.Companion)
+    // fail with "cannot find symbol" on a clean build.
+    id("org.jetbrains.kotlin.android")
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Delivery canary stamp: one unique value per built artifact, written by
+// scripts/release/build-android.ps1 into android/canary.properties. The file
+// is read in preference to the KHY_CANARY env var because a Gradle daemon pins
+// System.getenv() at daemon start — a reused daemon would silently stamp every
+// new artifact with the first build's env value, while the properties file is
+// re-read on every configuration. 'Khy-localbuild' keeps direct gradle
+// invocations (outside the ps1) building and honestly labelled.
+def loadCanary() {
+    def p = new Properties()
+    def f = rootProject.file("canary.properties")
+    if (f.exists()) {
+        f.withInputStream { p.load(it) }
+    }
+    def fromFile = p.getProperty("khy.canary")
+    if (fromFile != null && fromFile.trim() != '') return fromFile.trim()
+    def fromEnv = System.getenv("KHY_CANARY")
+    if (fromEnv != null && fromEnv.trim() != '') return fromEnv.trim()
+    return "Khy-localbuild"
+}
+def khyCanary = loadCanary()
+
+android {
+    namespace = "com.khyos.khy_os_client"
+    compileSdk = 36
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        // The bridge's pure logic carries Chinese comments and Chinese
+        // user-facing strings. Without this, javac falls back to the platform
+        // default charset — GBK on this Chinese Windows host — and every
+        // non-ASCII literal in the source becomes an "unmappable character"
+        // error or, worse, silent mojibake.
+        encoding = "UTF-8"
+    }
+
+    // Align Kotlin's JVM target with the Java toolchain. The host JDK is 17
+    // (see JAVA_HOME); a Kotlin plugin that defaults its jvmTarget to the
+    // running JDK would otherwise mismatch the explicit JavaVersion above and
+    // fail with "Inconsistent JVM Target Compatibility Between Java and Kotlin".
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    // arm + arm64 only. x86_64 was 27.6 MB of native libraries in the 91.8 MB
+    // artifact — 8.6 MB of it Stored (uncompressed) — for an ABI no phone in
+    // this app's use case has. Dropped 2026-11-13 by an explicit distribution
+    // decision (smaller APK over emulator support). arm64-v8a keeps the native
+    // engine; armeabi-v7a keeps 32-bit devices installable, and the Dart layer
+    // still refuses the model there. Enforced at packaging time so a plain
+    // `flutter build apk` cannot reintroduce the ABI.
+    packaging {
+        jniLibs {
+            getExcludes().addAll(["lib/x86_64/**"])
+        }
+    }
+
+    defaultConfig {
+        applicationId = "com.khyos.khy_os_client"
+        minSdk = flutter.minSdkVersion
+        targetSdk = 36
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+
+        // ABI selection lives in `packaging.jniLibs` below, not in `ndk`.
+        // defaultConfig.ndk.abiFilters cannot be used here: the Flutter Gradle
+        // plugin resets that set to its own three-ABI list while it is applied,
+        // and AGP 9.1 exposes only a getter for it, so a value written here is
+        // silently discarded — measured 2026-11-13, x86_64 still shipped.
+
+        // Delivery stamp, three faces so at least one survives R8 + resource
+        // shrinking: resValue lands in resources.arsc (kept by res/raw/keep.xml,
+        // because @string/khy_canary has no code reference), the placeholder is
+        // merged as a LITERAL into the binary manifest (aapt2 keeps meta-data
+        // android:value="@string/..." un-inlined, so a reference here would
+        // weaken the forensic record), and the cmake argument below carries it
+        // into libkhyjs.so.
+        resValue "string", "khy_canary", khyCanary
+        manifestPlaceholders += [khyCanary: khyCanary]
+
+        externalNativeBuild {
+            cmake {
+                // arm64-v8a only, on purpose. A 4B-class vision model needs the
+                // address space and the core count; a 32-bit device cannot run
+                // it usefully. Building the other ABIs would multiply both build
+                // time and APK size for a configuration the Dart layer then has
+                // to refuse at runtime — and it refuses honestly, by checking
+                // Build.SUPPORTED_ABIS, not by letting loadLibrary throw.
+                //
+                // This scopes the ABI list to the CMake build only. Which ABIs
+                // the APK ships is decided by `packaging.jniLibs` above
+                // (everything except lib/x86_64), so a 32-bit device still gets
+                // a working app — it just gets no libkhyllama.so, which is the
+                // correct outcome.
+                abiFilters 'arm64-v8a'
+                // A configuration input, not a compile constant: a changed
+                // stamp value re-triggers the cmake configure step by itself.
+                arguments "-DKHY_CANARY_VALUE=${khyCanary}"
+            }
+        }
+    }
+
+    // Built-in inference engine (llama.cpp). Loaded as a JNI library rather
+    // than spawned as a process because Android blocks exec() from the app's
+    // home directory since API 29 — see android/app/CMakeLists.txt.
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+
+    testOptions {
+        // Framework methods return defaults instead of throwing "not mocked".
+        // KhyConsole.exec now logs under KHYCONSOLE (the witness the acceptance
+        // script greps for), and without this every JVM test that runs a command
+        // died on android.util.Log.i: 8 of 40 in KhyConsoleValidateTest.
+        // The alternative -- try/catch around the Log call -- would hide a real
+        // failure inside the very code whose failures we are trying to see.
+        unitTests.returnDefaultValues = true
+    }
+
+    buildTypes {
+        release {
+            // R8 is on by default in AGP 9.x. That is fine for everything the
+            // app itself reaches — but see proguard-rules.pro: the shell
+            // sidecar is started from OUTSIDE the app by adb, so R8 must be
+            // told it exists. Do not remove the proguardFiles line without
+            // reading that file first.
+            proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+            )
+            // Use the dedicated release signing config when credentials are
+            // available; otherwise fall back to the debug keystore so a
+            // local `flutter build apk --release` never breaks. Production
+            // CI must set KHY_ANDROID_* env vars (or a real key.properties)
+            // to get a real release signature.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+}
+
+// Release signing. Precedence (highest first):
+//   1. KHY_ANDROID_* env vars (CI/CD)
+//   2. android/key.properties (local dev, gitignored)
+//   3. fall back to the debug keystore (local-only; building release
+//      without real credentials still works, but the APK is not
+//      Play-App-Store-ready)
+def loadKeyProps() {
+    def f = rootProject.file("key.properties")
+    if (!f.exists()) return [:]
+    def p = new Properties()
+    f.withInputStream { p.load(it) }
+    return p
+}
+def kp = loadKeyProps()
+def envOr = { String envKey, String propKey, String defVal = '' ->
+    def e = System.getenv(envKey)
+    if (e != null && e.trim() != '') return e
+    def p = kp[propKey]
+    if (p != null && p.toString().trim() != '') return p.toString()
+    return defVal
+}
+def releaseStoreFile = envOr('KHY_ANDROID_STORE_FILE', 'storeFile', '')
+def releaseKeyAlias = envOr('KHY_ANDROID_KEY_ALIAS', 'keyAlias', 'khyos-release')
+def releaseStorePass = envOr('KHY_ANDROID_STORE_PASSWORD', 'storePassword', '')
+def releaseKeyPass = envOr('KHY_ANDROID_KEY_PASSWORD', 'keyPassword', '')
+def hasReleaseSigning = releaseStoreFile.trim() && releaseStorePass && releaseKeyPass
+
+if (hasReleaseSigning) {
+    android {
+        signingConfigs {
+            release {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = releaseStorePass
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPass
+            }
+        }
+        buildTypes {
+            release {
+                signingConfig = signingConfigs.getByName('release')
+            }
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+// Privilege without root comes from khyos' own uid-2000 agent (the sidecar,
+// started by scripts/provision-shell-sidecar.ps1). The official Shizuku app
+// is NOT a dependency: 2026-11-12 the owner decided to remove it entirely
+// (see [DESIGN-ARCH-212] section 11). scripts/ci/check-no-shizuku-dependency.js
+// keeps it out, including the bundled package and the client provider.
+dependencies {
+    // Unit tests for the bridge's pure logic (AmooProtocol / LoopModes /
+    // LoopState / LoopVerify / AmooChatText). These run on the JVM via
+    // `gradlew test` with no device attached — which matters because the phone
+    // has no JVM and the interception loop's decision logic must be provable
+    // without hardware.
+    //
+    // org.json is NOT optional. AGP's MockableJarGenerator rewrites the
+    // platform jar for unit tests and org.json is not on its exemption list
+    // (only java.*, javax.*, junit.*, org.xml.*, org.w3c.*,
+    // org.apache.commons.logging are), so `new JSONObject(...)` would throw
+    // RuntimeException("Stub!") — which every pure-logic class swallows in its
+    // catch(Throwable), silently turning jsonValid into a constant false.
+    // Putting the real implementation first on the test classpath is what makes
+    // the JSON assertions mean anything.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+}

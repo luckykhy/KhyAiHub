@@ -10,6 +10,67 @@ const { QueryTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const logger = require('../utils/logger');
 
+
+// Remove sensitive fields from logged body
+//
+// 此前只对**顶层**的固定字段名做替换，名单也跟实际入参名脱节：newPassword /
+// currentPassword / confirmPassword / securityAnswer / sendKey / refreshToken
+// 这些真正出现在请求体里的字段全部原样入库（明文密码与密保答案落到
+// audit_logs 表）。现在改为**按键名递归脱敏**，名单与 routes 的入参名保持一致。
+//
+// 不做「高熵长串兜底替换」：那会把 commit sha、对象 ID、base64 内容一并抹掉，
+// 审计日志会失去可追溯性。键名匹配足够精确，且新增敏感字段时由测试锁住名单。
+const SENSITIVE_BODY_KEYS = new Set([
+  // 口令类
+  'password',
+  'passwd',
+  'pwd',
+  'passphrase',
+  'newpassword',
+  'currentpassword',
+  'confirmpassword',
+  'oldpassword',
+  // 令牌类
+  'token',
+  'accesstoken',
+  'refreshtoken',
+  'idtoken',
+  'apitoken',
+  'authorization',
+  // 密钥类
+  'secret',
+  'clientsecret',
+  'apikey',
+  'api_key',
+  'key',
+  'credential',
+  'credentials',
+  'privatekey',
+  'sessionkey',
+  'signature',
+  'sendkey',
+  'securitykey',
+  // 密保 / 二次验证
+  'securityanswer',
+  'otp',
+  'totp',
+  'mfa_code',
+]);
+
+function sanitizeValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeValue);
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [key, val] of Object.entries(value)) {
+      out[key] = SENSITIVE_BODY_KEYS.has(String(key).toLowerCase()) ? '[REDACTED]' : sanitizeValue(val);
+    }
+    return out;
+  }
+  return value;
+}
+
 // Ensure audit_logs table exists
 async function ensureAuditTable() {
   if (tableReady) {
@@ -98,19 +159,15 @@ async function insertAuditLog(record) {
   );
 }
 
-// Remove sensitive fields from logged body
 function sanitizeBody(body) {
   if (!body || typeof body !== 'object') {
     return null;
   }
-  const sanitized = { ...body };
-  const sensitive = ['password', 'token', 'secret', 'authorization', 'apiKey', 'api_key'];
-  for (const key of sensitive) {
-    if (sanitized[key]) {
-      sanitized[key] = '[REDACTED]';
-    }
-  }
-  return sanitized;
+  return sanitizeValue(body);
 }
 
 module.exports = auditLog;
+// sanitizeBody 是纯函数，导出以便单测直接锁住脱敏契约（SEC-05）：
+// 请求体里真正出现的字段名（newPassword / securityAnswer / sendKey…）与
+// 嵌套结构都必须被脱敏。
+module.exports.sanitizeBody = sanitizeBody;

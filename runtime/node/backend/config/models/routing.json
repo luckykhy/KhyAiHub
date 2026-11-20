@@ -1,0 +1,10 @@
+{
+  "$comment": "内置模型路由表（[DESIGN-ARCH-218] §3.5）。此前硬编码在 modelRouter.js:239-245。用户配置（env / input.routeMap）优先于本表；替换或增减模型只改这里，不改代码。",
+  "builtinRouteMap": {
+    "sensenova-6.7-flash-lite": { "target": "api:sensenova:sensenova-6.7-flash-lite", "strict": true },
+    "sensenova-u1-fast": { "target": "api:sensenova:sensenova-u1-fast", "strict": true },
+    "deepseek-v4-flash": { "target": "api:sensenova:deepseek-v4-flash", "strict": true },
+    "agnes-2.5-flash": { "target": "api:agnes:agnes-2.5-flash", "strict": false },
+    "agnes-2.0-flash": { "target": "api:agnes:agnes-2.0-flash", "strict": true }
+  }
+}

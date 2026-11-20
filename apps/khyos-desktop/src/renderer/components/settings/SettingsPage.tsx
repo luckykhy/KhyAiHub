@@ -17,6 +17,7 @@ import { SettingsNavIcon, type SettingsNavIconId } from './SettingsNavIcon'
 import { invalidateCodeDisplaySettings } from '../message/useCodeDisplaySettings'
 import { useChatIdentity } from '../../shared/chatIdentity'
 import { useAccountAvatar } from '../../shared/accountAvatar'
+import { errText } from '../../utils/errText'
 
 // ── Nav structure (mirrors ZCode v3.11.2 a11y s-30/s-42, ZC-ALIGN-003 §1-4) ──
 // Full-screen replacement layout: left nav (~240px) + right content scroll area.
@@ -81,7 +82,7 @@ const PAGE_META: Record<string, { title: string; subtitle?: string }> = {
   plugins: { title: '插件', subtitle: '启用或停用已安装的插件。插件可打包技能、命令、Hooks 和 MCP 服务器。' },
   mcp: { title: 'MCP 服务器', subtitle: '管理 MCP 服务器，配置后可在对话中使用其工具。' },
   skills: { title: '技能', subtitle: '管理 Agent 技能，扩展其能力范围。' },
-  commands: { title: '命令', subtitle: '与终端同一批命令：Khy 内置命令只读展示，自定义命令配置后可用 / 触发。' },
+  commands: { title: '命令', subtitle: '与终端同一批命令：Khy 内置命令只读展示，技能命令发送为提示词，命令插件与本机自定义命令可用 / 触发。' },
   hooks: { title: '钩子', subtitle: '配置 Agent 生命周期事件的处理逻辑。' },
   index: { title: '索引库', subtitle: '管理代码索引库，用于增强 Agent 的代码理解能力。' },
   usage: { title: '使用统计', subtitle: '查看模型用量与 Token 消耗趋势。' },
@@ -99,26 +100,53 @@ export function SettingsPage() {
   const { userName: accountName } = useChatIdentity()
   const accountAvatar = useAccountAvatar()
   const [settings, setSettings] = useState<Record<string, unknown>>({})
+  // 读失败与写失败都必须可见：静默的 catch 会让页面拿空配置冒充真实配置、
+  // 让失败的开关看起来像保存成功了——那是比报错更贵的撒谎。
+  const [loadError, setLoadError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   // Load persisted settings on mount (preload IPC: settings:get)
-  useEffect(() => {
+  const loadSettings = useCallback(() => {
     const api = (window as unknown as {
       __KHYOS__?: { getSettings?: () => Promise<Record<string, unknown>> }
     }).__KHYOS__
-    api?.getSettings?.().then((s) => setSettings(s || {})).catch(() => {})
+    if (!api?.getSettings) {
+      setLoadError('设置数据不可用：preload 未注入 __KHYOS__，请重启应用')
+      return
+    }
+    api.getSettings()
+      .then((s) => {
+        setSettings(s || {})
+        setLoadError('')
+      })
+      .catch((err: unknown) => {
+        setLoadError(`设置读取失败：${errText(err)}。请重启应用后重试`)
+      })
   }, [])
+
+  useEffect(() => { loadSettings() }, [loadSettings])
 
   // Persist a single setting key (preload IPC: settings:set)
   const updateSetting = useCallback((key: string, value: unknown) => {
-    setSettings((prev) => ({ ...prev, [key]: value }))
     const api = (window as unknown as {
       __KHYOS__?: { setSetting?: (k: string, v: unknown) => Promise<void> }
     }).__KHYOS__
-    api?.setSetting?.(key, value).then(() => {
-      // 落盘完成后再通知消费方重读：「语法高亮 / 行号显示」两个开关的渲染层
-      // 消费方在 message 区域（模块级缓存），写完立即 invalidate 才不用重开应用。
-      invalidateCodeDisplaySettings()
-    }).catch(() => {})
+    if (!api?.setSetting) {
+      // 没有保存通道：不演「已保存」——界面照常响应（用户此刻正看着这个开关），
+      // 但把「不会持久化」说清楚，重启后恢复原值的事实也讲明。
+      setSaveError('保存失败：preload 未注入 __KHYOS__，该项不会持久化，请重启应用')
+      return
+    }
+    setSettings((p) => ({ ...p, [key]: value }))
+    api.setSetting(key, value)
+      .then(() => {
+        // 落盘完成后再通知消费方重读：「语法高亮 / 行号显示」两个开关的渲染层
+        // 消费方在 message 区域（模块级缓存），写完立即 invalidate 才不用重开应用。
+        invalidateCodeDisplaySettings()
+      })
+      .catch((err: unknown) => {
+        setSaveError(`保存失败：${errText(err)}。该项不会持久化，重启后恢复原值`)
+      })
   }, [])
 
   const handleBack = () => {
@@ -146,6 +174,31 @@ export function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* 读失败 / 写失败都摊在页面最上面：设置页拿空配置冒充真实配置、
+          失败的开关看起来像保存成功，是这个页面最贵的两种撒谎。 */}
+      {loadError && (
+        <div className="mx-4 mt-3 flex items-center justify-between gap-3 px-4 py-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl">
+          <span>{loadError}</span>
+          <button
+            onClick={loadSettings}
+            className="shrink-0 px-2.5 py-1 rounded-lg border border-destructive/30 text-xs hover:bg-destructive/10"
+          >
+            重试
+          </button>
+        </div>
+      )}
+      {saveError && (
+        <div className="mx-4 mt-3 flex items-center justify-between gap-3 px-4 py-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl">
+          <span>{saveError}</span>
+          <button
+            onClick={() => setSaveError('')}
+            className="shrink-0 px-2.5 py-1 rounded-lg border border-destructive/30 text-xs hover:bg-destructive/10"
+          >
+            知道了
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Left navigation ── */}
@@ -267,7 +320,7 @@ export function SettingsPage() {
               <ListSettingsPage
                 kind="command"
                 noun="命令"
-                description="与终端同一批命令：下方同时列出 Khy 终端内置命令（只读，含在输入框敲 / 的执行方式）与本机自定义命令（.claude/commands）；自定义命令新建后终端以 / 前缀调用。"
+                description="与终端同一批命令：下方同时列出 Khy 终端内置命令（只读，含在输入框敲 / 的执行方式）、技能命令（发送为提示词）、命令插件，以及本机自定义命令（.claude/commands）；自定义命令新建后终端以 / 前缀调用。"
                 contentLabel="命令内容"
                 contentPlaceholder="/ 前缀触发的提示词，支持 $ARGUMENTS 占位符"
               />

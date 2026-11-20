@@ -16,7 +16,10 @@
  *   - 每条都要有 owner / dueBy / target / plan；
  *   - target 必须严格小于 measured（只降不升）；
  *   - 逾期必须显式标记为 slipped 并写明理由与修订日期（禁止静默滑动）；
- *   - measuredAt 超过 90 天未更新 → 警告（防止台账变化石）。
+ *   - measuredAt 超过 90 天未更新 → 警告（防止台账变化石）；
+ *   - measured 比上一次记录值上涨而 regression 只写「据实回写」、没给原因 → 警告。
+ *     这一条是**读数不是门**：只摆出「棘轮跟着现实抬了几次」，不改 exit code。
+ *     指标一旦可以随现实抬升，它就不再度量改善（书第 5 章）。
  *
  * 「覆盖完整性」是这套机制的关键：新增一类可豁免指标时，守卫会立刻要求为它
  * 补一条带责任人与期限的台账条目 —— 于是「悄悄加一个没人管的指标」不再可能。
@@ -181,6 +184,55 @@ for (const e of entries) {
     add('warning', 'entry-stale-measurement',
       `${tag}: measuredAt 距今 ${measuredAge} 天（> ${STALE_DAYS}）—— 台账可能已成化石，请重新测量。`);
   }
+}
+
+// ── 据实回写的留痕读数 ────────────────────────────────────────────────────
+//
+// 台账的 regression 反复写着「按 QUAL-1 据实回写基线与实测值，棘轮自该值继续只降不升」。
+// 这句话让「存量涨了就把 measured 抬到新值」成为一次合法编辑 —— 于是 2184 → 2308 → 2390
+// 这样的序列可以无限延长，而 target 原地不动，指标不再度量改善。本段只把这个动作摆出来。
+//
+// 为什么不阻断：当前台账的几次抬升大多是真话（新增文件、度量口径修好后重见真树），
+// 判「涨得对不对」需要人看代码，机器只负责不让它悄悄发生。故 warning，且不改 exit code。
+
+// 文本里的历史序列形如「2184 → 2308」「88→79」，只认箭头配对，避免把日期与差值当读数。
+const ARROW_PAIR_RE = /(\d[\d,]*)\s*(?:→|->|⇒|=>|—>)\s*(\d[\d,]*)/g;
+// 解释性内容的关键词。命中即视为已留痕 —— 宁可漏报，不把有解释的上升误报成「没写原因」。
+const REASON_MARKER_RE = /原因|因为|由于|新增|引入|迁移|搬迁|带动|导致|修复|修正|校正|解盲|来自|归因|根因/;
+
+/** 从 regression 文本的最后一对箭头里取「上一次值」；解析不出返回 null。 */
+function parsePreviousFromRegression(text) {
+  const pairs = [...String(text || '').matchAll(ARROW_PAIR_RE)];
+  if (pairs.length === 0) return null;
+  const prev = Number(pairs[pairs.length - 1][1].replace(/,/g, ''));
+  return Number.isFinite(prev) ? prev : null;
+}
+
+/**
+ * 上一次记录值。优先结构化前值 `measuredHistory`（旧 → 新排列，取末项）；
+ * 当前台账没有这个字段，只有 regression 文本，故实际走回退解析。
+ * 两处都拿不到就返回 null —— 不猜。
+ */
+function previousRecordedValue(e) {
+  if (Array.isArray(e.measuredHistory)) {
+    const nums = e.measuredHistory.map(Number).filter(Number.isFinite);
+    if (nums.length > 0) return nums[nums.length - 1];
+  }
+  return parsePreviousFromRegression(e.regression);
+}
+
+let untracedRewriteCount = 0;
+for (const e of entries) {
+  if (!e || typeof e !== 'object' || typeof e.measured !== 'number' || !Number.isFinite(e.measured)) continue;
+  const prev = previousRecordedValue(e);
+  if (prev === null || !Number.isFinite(prev)) continue;
+  if (e.measured <= prev) continue;
+  if (REASON_MARKER_RE.test(String(e.regression || ''))) continue;
+  untracedRewriteCount++;
+  add('warning', 'debt-ledger-rewrite-untraced',
+    `${e.id}: measured 从 ${prev} 涨到 ${e.measured}（+${e.measured - prev}），未记录原因；`
+    + '棘轮已跟着现实抬高，不再度量改善。请在 regression 里写明上涨原因（新增功能 / 修复 / 口径变化），'
+    + '否则这条指标只记录现实长到哪，读者分不清「改善停了」与「债务变多了」。');
 }
 
 // ── 覆盖完整性：每个门禁指标都必须有台账条目 ──────────────────────────────
@@ -390,6 +442,7 @@ const summary = {
   covered: ledgerMetrics.size,
   requiredCoverage: coverage.length,
   slipped: slippedCount,
+  untracedRewrites: untracedRewriteCount,
   open: entries.filter((e) => e.status === 'open').length,
   closed: entries.filter((e) => e.status === 'closed').length,
   totalMeasured: entries.reduce((n, e) => n + (typeof e.measured === 'number' ? e.measured : 0), 0),
@@ -416,6 +469,9 @@ if (isJson) {
   console.log(`台账条目 ${summary.entries} 条：open ${summary.open} / slipped ${summary.slipped} / closed ${summary.closed}`);
   console.log(`覆盖指标 ${summary.covered} / 应有 ${summary.requiredCoverage}`);
   console.log(`累计实测债务量 ${summary.totalMeasured} 处`);
+  if (summary.untracedRewrites > 0) {
+    console.log(`据实回写未留痕 ${summary.untracedRewrites} 处（advisory，不阻断）`);
+  }
   if (!remeasureMode) {
     console.log('（本次未回调守卫；measured 均为台账自报数。加 --remeasure 拿真实读数对账，约 3 分钟）');
   }

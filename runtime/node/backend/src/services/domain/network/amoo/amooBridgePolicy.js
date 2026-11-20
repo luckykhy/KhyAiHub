@@ -442,16 +442,32 @@ function classifyDeviceList(stdout, serial) {
 
 /**
  * Parse the bridge `status.json` heartbeat file content.
- * @param {string} raw
+ *
+ * <p>`tools` 在新旧两代桥上形状不同：HTTP /status 报数字，status.json 报
+ * 可用名数组（BridgeService.writeStatus）。这里两形都读得对，缺省 null。
+ * `mailbox` 块（S1）带队列深度与 GC 事实：oldest_result_age_ms 是**最老一条**
+ * 结果的年龄（-1 = 没有结果），dropped 是被 24h GC 丢掉的条数——GC 不是消费，
+ * 两个数分开报，读者才不会把「目录空了」当成「回执被取走了」。
+ *
+ * @param {string|object} raw
  * @returns {{running:boolean, pid:number|null, httpPort:number|null,
- *            mode:string|null, canWrite:boolean, tools:number|null, stale:boolean}}
+ *            mode:string|null, canWrite:boolean, tools:number|null,
+ *            mailbox:null|{pending:number|null,processing:number|null,
+ *              results:number|null,tmp:number|null,
+ *              oldest_result_age_ms:number|null,dropped:number|null,
+ *              last_gc_ms?:number|null},
+ *            stale:boolean}}
  */
 function parseBridgeStatus(raw, { nowMs = Date.now(), staleAfterMs = 15000 } = {}) {
   let parsed = null;
-  try {
-    parsed = JSON.parse(String(raw || ''));
-  } catch {
-    parsed = null;
+  if (raw && typeof raw === 'object') {
+    parsed = raw;
+  } else {
+    try {
+      parsed = JSON.parse(String(raw || ''));
+    } catch {
+      parsed = null;
+    }
   }
   if (!parsed || typeof parsed !== 'object') {
     return {
@@ -461,6 +477,7 @@ function parseBridgeStatus(raw, { nowMs = Date.now(), staleAfterMs = 15000 } = {
       mode: null,
       canWrite: false,
       tools: null,
+      mailbox: null,
       stale: true,
     };
   }
@@ -472,8 +489,37 @@ function parseBridgeStatus(raw, { nowMs = Date.now(), staleAfterMs = 15000 } = {
     httpPort: Number.isFinite(Number(parsed.http_port)) ? Number(parsed.http_port) : null,
     mode: typeof parsed.mode === 'string' ? parsed.mode : null,
     canWrite: parsed.canWrite === true,
-    tools: Number.isFinite(Number(parsed.tools)) ? Number(parsed.tools) : null,
+    tools: _toolsCount(parsed.tools),
+    mailbox: _mailboxOf(parsed.mailbox),
     stale: ageMs > staleAfterMs,
+  };
+}
+
+/** status.json 报数组、HTTP /status 报数字：两形都归一成「有几个」。 */
+function _toolsCount(value) {
+  if (Array.isArray(value)) return value.length;
+  if (value === null || value === undefined || value === '') return null;
+  return Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+function _intOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
+  return Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+/** 缺块 → null（旧版桥没上报，不替它编 0）；块内缺字段 → null。 */
+function _mailboxOf(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return {
+    pending: _intOrNull(value.pending),
+    processing: _intOrNull(value.processing),
+    results: _intOrNull(value.results),
+    tmp: _intOrNull(value.tmp),
+    oldest_result_age_ms: _intOrNull(value.oldest_result_age_ms),
+    dropped: _intOrNull(value.dropped),
+    ...(Object.prototype.hasOwnProperty.call(value, 'last_gc_ms')
+      ? { last_gc_ms: _intOrNull(value.last_gc_ms) }
+      : {}),
   };
 }
 

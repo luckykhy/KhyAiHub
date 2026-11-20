@@ -24,10 +24,18 @@ const SKIP_DIRS = new Set([
   ".git", "node_modules", "build", "dist", ".venv", "venv", "coverage",
   "__pycache__", ".pytest_cache", ".tox", "muya-embed", "national-exam-site",
   "_archive_已删除孤儿引擎", ".claude", ".khy",
+  // 工具家点目录：AI 编码助手/工具在本机自建的状态目录，全部 gitignore
+  // （.gitignore：.workbuddy/ .zcode/ .cursor/ .opencode/ .mavis/ .qoder/ /.ai/
+  // /.codeartsdoer/）。内容随工具会话生灭，不是本项目文档；2026-11-19 实测
+  // 不排除时它们的 .md 会进「源 Markdown」计数，孪生随每次会话漂移。
+  ".workbuddy", ".zcode", ".cursor", ".opencode", ".codeartsdoer", ".mavis", ".qoder", ".ai",
   // ⚠️ 必须与 build_docs_site.js 的 SKIP_DIRS 逐项保持一致（两份是各自维护的副本，
   // 只改一处会立刻漂移：2026-09-15 实测只改 build 后，verify 报出 352 处误报）。
   ".research-tmp",
 ]);
+// .khy 一族（.khyos/.khyquant/.khy_*/.khy-runtime…）同为 gitignore 本机态
+// （.gitignore:69/83/92），逐个列名会漏，按前缀拦。
+const SKIP_DIR_PREFIXES = [".khy"];
 // 路径片段命中即跳过（bundled 是打包时生成的副本，非源文；
 // `/housekeeping/` 是 [DESIGN-LAY-003] HK-3 隔离区，见 build_docs_site.js 同处注释）
 // `/_产物/` 是 [DESIGN-LAY-005] §1.4 登记的根级例外「工作产物暂存区」（未跟踪），
@@ -44,6 +52,7 @@ function walkMarkdown(dir, acc) {
     const rel = path.relative(ROOT, full).split(path.sep).join("/");
     if (e.isDirectory()) {
       if (SKIP_DIRS.has(e.name)) continue;
+      if (SKIP_DIR_PREFIXES.some((p) => e.name.startsWith(p))) continue;
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel + "/").includes(p))) continue;
       walkMarkdown(full, acc);
     } else if (e.isFile() && /\.md$/i.test(e.name)) {

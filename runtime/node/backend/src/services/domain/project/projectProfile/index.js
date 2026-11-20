@@ -11,7 +11,7 @@
  * 消费方（fanIn = 2，都在本文件外）：
  *   1. src/services/domain/network/stepneoCloud/agentLoop.js —— PC 侧云模型 loop
  *   2. scripts/project-profile/build-project-profile.js —— 生成 Dart 侧画像与构建元数据，
- *      落进 delivery/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart
+ *      落进 delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart
  *
  * 单一真源放这里而不是 delivery/：node 运行时反向 require 交付面会新增
  * check-repo-layout 的 cross-layer-require 违规。生成脚本是构建期工具，不受该约束

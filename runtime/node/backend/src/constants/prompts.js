@@ -1491,18 +1491,14 @@ function getMemorySection() {
     /* memdir 不可用时降级 */
   }
 
-  // 降级: 直接读取 MEMORY.md 索引
+  // 降级: 直接读取 MEMORY.md 索引(仅 memdir 加载失败时可达)。经 resolveDataPath
+  // 纯映射取址:探测不能带 mkdir 副作用,否则「索引是否存在」永远为真。限制:便携
+  // 安装的 canonical 索引落在项目数据家 memory/(未映射段),与此处不同根。
   try {
     const fs = require('fs');
-    let baseDir;
-    try {
-      const { getProjectDataHome } = require('../utils/dataHome');
-      baseDir = getProjectDataHome();
-    } catch {
-      baseDir = path.join(os.homedir(), '.khy');
-    }
-    const memoryDir = path.join(baseDir, 'memory');
-    const indexPath = path.join(memoryDir, 'MEMORY.md');
+    const { resolveDataPath } = require('../utils/dataHome');
+    const memoryDir = resolveDataPath('memory');
+    const indexPath = resolveDataPath('memory', 'MEMORY.md');
     if (fs.existsSync(indexPath)) {
       const content = fs.readFileSync(indexPath, 'utf-8').trim();
       if (content) {

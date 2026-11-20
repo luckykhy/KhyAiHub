@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RESEARCH-029] amootool四项目调研与khyos-GUI与Amoo集成方案-2026-11-16.md -->
+<title>[RESEARCH-029] amootool 四项目调研与 khy-os GUI / Amoo 集成方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>11_报告<span class="sep">›</span>RESEARCH<span class="sep">›</span>[RESEARCH-029] amootool 四项目调研与 khy-os GUI / Amoo 集成方案</div>
+      <header class="hero reveal"><h1>[RESEARCH-029] amootool 四项目调研与 khy-os GUI / Amoo 集成方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#research-029-amootool-四项目调研与-khy-os-gui-amoo-集成方案">[RESEARCH-029] amootool 四项目调研与 khy-os GUI / Amoo 集成方案</a></li><li class="lvl-2"><a href="#1-结论摘要">1. 结论摘要</a></li><li class="lvl-2"><a href="#2-四个项目是什么">2. 四个项目是什么</a></li><li class="lvl-3"><a href="#2-1-android-agent-kit-子模块-按四层结构">2.1 android-agent-kit 子模块（按四层结构）</a></li><li class="lvl-3"><a href="#2-2-amoo-dsh-phone-dsh-hiao-对外三张面">2.2 amoo-dsh / phone-dsh（hiao）对外三张面</a></li><li class="lvl-3"><a href="#2-3-命名澄清">2.3 命名澄清</a></li><li class="lvl-2"><a href="#3-khy-os-现状与缺口">3. khy-os 现状与缺口</a></li><li class="lvl-2"><a href="#4-集成方案-按优先级">4. 集成方案（按优先级）</a></li><li class="lvl-3"><a href="#p0-用-android-agent-kit-补-android-gui-不动手机-apk-纯桌面侧">P0 — 用 android-agent-kit 补 Android GUI（不动手机 APK，纯桌面侧）</a></li><li class="lvl-3"><a href="#p1-hiao-8898-作为第二手机目标-带治理的执行层">P1 — hiao `:8898` 作为第二手机目标（带治理的执行层）</a></li><li class="lvl-3"><a href="#p1-agentbus-车道体验补齐">P1 — agentbus 车道体验补齐</a></li><li class="lvl-3"><a href="#p2-kit-方法论反哺桌面-cua">P2 — kit 方法论反哺桌面 CUA</a></li><li class="lvl-2"><a href="#5-安全要点">5. 安全要点</a></li><li class="lvl-2"><a href="#6-合规与工程约束">6. 合规与工程约束</a></li><li class="lvl-2"><a href="#7-待决问题">7. 待决问题</a></li><li class="lvl-2"><a href="#8-附录-关键文件索引">8. 附录：关键文件索引</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="research-029-amootool-四项目调研与-khy-os-gui-amoo-集成方案">[RESEARCH-029] amootool 四项目调研与 khy-os GUI / Amoo 集成方案<a class="anchor" href="#research-029-amootool-四项目调研与-khy-os-gui-amoo-集成方案" aria-label="锚点">#</a></h1>
+<blockquote><p>日期：2026-11-16　状态：调研结论（未实施）<br>调研对象：<code>D:\Portable\amootool\</code> 下 4 个下载归档（解压于 <code>D:\Portable\amootool-extract\</code>）<br>对照对象：本仓 <code>apps/khyos-desktop/</code>、<code>runtime/node/backend/</code>、<code>delivery/mobile/</code><br>方法：双路只读调研（归档侧读 README/SPEC/docs；仓内摸 agentbus/amoo/GUI 现状），交叉比对后成文<br>定位：为「khy-os 如何更好地使用 GUI 与 amoo」给出接入点与优先级，不替代任何设计真源</p></blockquote>
+<hr>
+<h2 id="1-结论摘要">1. 结论摘要<a class="anchor" href="#1-结论摘要" aria-label="锚点">#</a></h2>
+<p>四个包里真正对 khy-os 有增量的是两个：</p>
+<ol><li><strong>android-agent-kit</strong>（Apache-2.0）——桌面侧 GUI-agent 算法库套件。<code>uidref</code> 把</li></ol>
+<p>uiautomator dump 从 276KB 压到 8.6KB（32 倍）并给出稳定元素引用；<code>screenpoint</code><br>   做坐标反算；<code>blindspot</code>/<code>imespec</code> 做点击前遮挡预检；<code>screendiff</code> 做点击后效果验证。<br>   其中 <code>uidref/js</code>、<code>screendiff/js</code> 是<strong>零依赖 JS 实现</strong>，可直接内嵌进 khy-os 桌面前后端，<br>   不需要 Python 运行时。这正好补上本仓「Android GUI 能力缺位」——当前手机 APK 是 lite<br>   构建，无无障碍/截图/UI 工具，桌面侧只有零散 adb 原语。</p>
+<ol><li><strong>amoo-dsh / phone-dsh（hiao）</strong>——手机端完整 agent 运行时（v2.8，72 工具），</li></ol>
+<p>HTTP 桥 <code>:8898</code> 兼容 amoobridge 协议，带治理管线（审批卡 → 能力租约 → 执行 →<br>   审计哈希链）与无状态 MCP 端点。可成为 khy-os 的<strong>第二手机接入目标</strong>，<br>   把「裸 adb 点屏、绕过治理」升级为「带人在环审批的执行层」。</p>
+<p>另两个包价值有限：<strong>amoo-bridge-lite</strong> 是 StepBridge 精简版（点按/滑动/截图已移除，<br>只剩只读 UI），协议与 khy-os 已对接的 PhoneBridge（<code>:8896</code>）同族；<strong>android-dsh</strong> 是<br>官方 dsh 引擎宿主，已冻结，内部协议随版本漂移，不推荐接入。</p>
+<p><strong>amoo 本体</strong>是 StepOS 设备内置助手（<code>com.stepos.ailauncher</code> 等），闭源；所有相关项目<br>文档都明令不逆向、不抓包、不伪装。khy-os 的 agentbus 车道（<code>localabstract:agentbus</code>，<br>协议 v3）已经是连它的正门，方向正确，缺的是体验与验证，不是协议。</p>
+<hr>
+<h2 id="2-四个项目是什么">2. 四个项目是什么<a class="anchor" href="#2-四个项目是什么" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项目</th><th>性质</th><th>产物</th><th>对 khy-os 的价值</th></tr></thead><tbody><tr><td><strong>android-agent-kit</strong>（= Android-will-better 的新版快照：10-31 vs 10-28，61 个共同文件有实质差异，新版补 <code>QUICKSTART.md</code>、<code>docs/AUDIT.md</code>、16 份 <code>README.en.md</code>）</td><td>桌面侧 Python/JS 库套件 + 取证方法论文档</td><td>Python 包（源码形态，无 wheel）+ 零依赖 JS 实现 + <code>uidref/http_api.py</code>（<code>:8770</code>）</td><td><strong>补 Android GUI 缺口的主力</strong>；方法论可反哺桌面 CUA</td></tr><tr><td><strong>amoo-dsh / phone-dsh（hiao）</strong></td><td>手机上的自管 agent 运行时（v2.8，72 工具），含治理管线</td><td><code>hiao2.apk</code>（约 197MB，含内嵌引擎）</td><td><strong>带治理的执行层</strong>：审批、租约、审计链、MCP、任务委托</td></tr><tr><td><strong>amoo-bridge-lite</strong></td><td>StepBridge 对外分发精简版（34 工具，点按/滑动/截图返回 <code>NOT_YET</code>）</td><td><code>stepbridge-lite-2.3-lite.4.apk</code></td><td>协议参考；khy-os PhoneBridge 已覆盖同族能力，增量小</td></tr><tr><td><strong>android-dsh</strong></td><td>官方 deepseek-harness 引擎的 Android 宿主（已冻结为参照）</td><td>Gradle APK（<code>runtime.zip</code> 不进 git）</td><td>不推荐接入（内部 RPC 形状随版本漂移）</td></tr></tbody></table>
+<h3 id="2-1-android-agent-kit-子模块-按四层结构">2.1 android-agent-kit 子模块（按四层结构）<a class="anchor" href="#2-1-android-agent-kit-子模块-按四层结构" aria-label="锚点">#</a></h3>
+<p><strong>感知与引用层</strong></p>
+<table><thead><tr><th>模块</th><th>输入 → 输出</th><th>要点</th></tr></thead><tbody><tr><td><code>uidref</code></td><td>uiautomator dump XML → 紧凑 digest + 稳定 ref（<code>e14</code>）</td><td>16 真机界面 276KB→8.6KB（32.3x），可交互召回 100%；ref 过期抛 <code>StaleRefError</code>；唯一 HTTP API <code>:8770</code>（<code>/snapshot</code> <code>/resolve</code> <code>/tap</code>）</td></tr><tr><td><code>scrollkey</code></td><td>Snapshot → 跨滚动稳定键（<code>rid:/lbl:/anon:</code>）</td><td>真机实测：滚动中 83% 共有行 ref 换手、键 0 冲突</td></tr><tr><td><code>fieldstate</code></td><td>dump 节点/无障碍字典 → 输入框四判定</td><td>核心发现：<code>text==&quot;&quot;</code> 判空是错的（hint 会伪装成 text）</td></tr><tr><td><code>imespec</code></td><td>XML + 窗口 JSON → 每元素 reachable/遮挡判定</td><td>真机 38.5% 可点元素被键盘压住；拿不到键盘信息报 <code>unknown</code> 不猜</td></tr><tr><td><code>blindspot</code></td><td>XML + windows JSON + PNG → 幻影可点列表</td><td>「XML 说可点但被键盘盖住」；点幻影会把字符写进输入框</td></tr></tbody></table>
+<p><strong>坐标契约层</strong></p>
+<table><thead><tr><th>模块</th><th>输入 → 输出</th><th>要点</th></tr></thead><tbody><tr><td><code>screenpoint</code></td><td>坐标系 + 点 + 必填 <code>fit</code> → 设备像素</td><td>原则「反算不得委托给模型」；仅 stretch 经 648,000 像素真机逐点验证</td></tr><tr><td><code>pointparse</code></td><td>模型脏输出 → <code>ParsedPoint</code></td><td>支持 10+ 格式；拒答抛 <code>NoPointFound</code>、歧义抛 <code>Ambiguity</code>、空间只给线索</td></tr><tr><td><code>e2e</code></td><td>端到端演示</td><td>截图→模型视图→脏输出→解析→反算→真点→校验</td></tr></tbody></table>
+<p><strong>动作与变化层</strong></p>
+<table><thead><tr><th>模块</th><th>输入 → 输出</th><th>要点</th></tr></thead><tbody><tr><td><code>textin</code></td><td>取证报告（非可 import 库）</td><td><code>adb shell input text</code> 19 类只 4 类干净落地；<strong>反引号会被设备侧 shell 执行 = 注入面</strong>；推荐 <code>ACTION_SET_TEXT</code>（19/19）；附参考 APK</td></tr><tr><td><code>swipefind</code></td><td>坐标四元组 + IME rect + 观测 → 手势有效性</td><td>键盘区起滑会被吸收并写入文本；有效距离非单调</td></tr><tr><td><code>screendiff</code></td><td>两份 Snapshot → ChangeSet</td><td><code>effect_of(ref)</code> 回答「我点的那个起作用了吗」；<code>is_stuck()</code> 止损；<code>is_loading()</code></td></tr><tr><td><code>crosstrack</code></td><td>两个 Snapshot → 跨页信任分级</td><td>只认身份 tier、绝不几何回退；跨页 100% 假匹配实证</td></tr></tbody></table>
+<p><strong>证据方法论层（零设备依赖）</strong></p>
+<table><thead><tr><th>模块</th><th>作用</th></tr></thead><tbody><tr><td><code>claimcheck</code></td><td>声明分级 V0 假设 / V1 同状态复现 / V2 跨状态 / V3 独立通道 / V4 已推翻</td></tr><tr><td><code>claimaudit</code></td><td>分级跑遍全部资产，抓等级虚高（曾抓到 11/16 写高）</td></tr><tr><td><code>capturetrap</code></td><td>uiautomator dump 抓取层四陷阱 + 正确抓取范式</td></tr></tbody></table>
+<h3 id="2-2-amoo-dsh-phone-dsh-hiao-对外三张面">2.2 amoo-dsh / phone-dsh（hiao）对外三张面<a class="anchor" href="#2-2-amoo-dsh-phone-dsh-hiao-对外三张面" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>面</th><th>接入点</th><th>能力</th></tr></thead><tbody><tr><td>HTTP 桥</td><td><code>adb forward tcp:18998 tcp:8898</code> → <code>http://127.0.0.1:18998</code>，Bearer 配对令牌（真源 <code>/sdcard/hiao/token.txt</code>）</td><td><code>POST /call</code>（72 工具）、<code>GET /events</code> SSE、<code>GET /approvals</code> + <code>POST /approve</code>、<code>GET /audit?n=</code>、<code>POST /mcp</code>（无状态 JSON-RPC 2.0，<code>tools/list</code>/<code>tools/call</code>）</td></tr><tr><td>文件信箱</td><td><code>/sdcard/hiao/cmd_&lt;id&gt;.json</code> → <code>result_&lt;id&gt;.json</code></td><td>无 /sdcard 权限时 <code>run-as</code> 兜底</td></tr><tr><td>MCP</td><td><code>POST /mcp</code></td><td>可直接作为 MCP 服务端被 khy-os 消费</td></tr></tbody></table>
+<p>工具面含无障碍 UI 8 项（<code>ui_dump/ui_tap/ui_swipe/ui_click/ui_back/ui_home/ui_recents/shot</code>）<br>与 <code>agent_task</code>（整任务委托，同步/异步）。治理语义：medium 级（clipboard/exec/ui_* 等）<br><strong>阻塞等人在审批卡放行</strong>（socket 600s，超时=拒绝）；high 级还需有效租约，无租约直接<br><code>verdict:&quot;deny&quot;</code>。无人值守自动化需 <code>allowSession:true</code> 或预签租约。</p>
+<h3 id="2-3-命名澄清">2.3 命名澄清<a class="anchor" href="#2-3-命名澄清" aria-label="锚点">#</a></h3>
+<ul><li><strong>amoo</strong> = STEPX Neo 设备内置智能体助手（Step AOS 生态），闭源商业产品。</li><li><strong>amoo-bridge-lite</strong> = 给 amoo 体系提供「手」的轻量能力桥（刻意收敛到只读 UI）。</li><li><strong>amoo-dsh / hiao</strong> = 给 amoo 体系提供「脑 + 手」的自管 agent 运行时，兼容 amoobridge 协议。</li><li><strong>desktop agentbus</strong>（本仓）= 桌面主进程经 adb forward 直连手机 Amoo 特权服务的车道，</li></ul>
+<p>协议 v3（4 字节大端长度 + JSON 信封，<code>chat.send/abort/history</code>、<code>sessions.reset</code>）。</p>
+<ul><li><strong>内核态 AgentBus</strong>（<code>runtime/boot/kernel/src/agentbus.c</code>，COM2 + COBS）与本主题无关。</li></ul>
+<hr>
+<h2 id="3-khy-os-现状与缺口">3. khy-os 现状与缺口<a class="anchor" href="#3-khy-os-现状与缺口" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>缺口</th><th>现状证据</th></tr></thead><tbody><tr><td><strong>Android GUI 能力缺位</strong></td><td>手机 APK lite 无无障碍/截图；<code>runtime/node/backend/src/tools/AmooBridgeTool/index.js</code> 只有散落的 adb 原语（<code>uiautomator dump</code>/<code>input tap</code>），未封装成 agent 工具；<code>PhoneBridgeTool</code> 当前约 32 工具无 GUI 项</td></tr><tr><td>agentbus 车道全靠 env，UI 零配置</td><td><code>apps/khyos-desktop/src/main/agentbus/agentbusProtocol.ts:76-91</code> 只有 <code>KHY_AGENTBUS_*</code>；<code>AgentbusSection.tsx</code> 无串号输入框</td></tr><tr><td>agentbus 结果恒标「未验证」</td><td><code>apps/khyos-desktop/src/main/agentbus/index.ts</code> 结果带 <code>unverified: true</code>，无验证手段</td></tr><tr><td>agentbus 等待期进度不走秒</td><td><code>works/record/ai/audit-khy-os.md:1208</code>（<code>pullResult</code> 只在事件/挂载触发）</td></tr><tr><td>桌面 CUA 有 verify 相位但无具体算法</td><td><code>runtime/node/backend/src/tools/ComputerUseTool</code> + <code>services/domain/desktop/computerUse</code>（observe→think→act→verify，最多 30 轮）</td></tr><tr><td>浏览器未 agent 化</td><td><code>renderer/components/browser/BrowserPane.tsx</code> 是给人用的；无 CDP / <code>webContents.debugger</code> 接线</td></tr></tbody></table>
+<p>桌面 GUI 基础本身完整：<code>runtime/node/backend/src/services/domain/desktop/desktopControl/</code><br>含 screenCapture / inputController / windowController / formFiller / uiInspector /<br>a11yTreeProvider / workflowRecorder / voiceBridge，全部经 <code>safetyGate.js</code> 授权<br>（<code>KHY_DESKTOP_CONTROL</code> 默认 off；<code>ask</code> 会话首次审批、<code>strict</code> 每次审批；<br><code>KHY_DESKTOP_MAX_ACTUATIONS</code> 默认 500 熔断）。缺的是「点得准、点完能验证」的算法层。</p>
+<hr>
+<h2 id="4-集成方案-按优先级">4. 集成方案（按优先级）<a class="anchor" href="#4-集成方案-按优先级" aria-label="锚点">#</a></h2>
+<h3 id="p0-用-android-agent-kit-补-android-gui-不动手机-apk-纯桌面侧">P0 — 用 android-agent-kit 补 Android GUI（不动手机 APK，纯桌面侧）<a class="anchor" href="#p0-用-android-agent-kit-补-android-gui-不动手机-apk-纯桌面侧" aria-label="锚点">#</a></h3>
+<p>照搬 kit 的 e2e 闭环，新建 agent 工具 <code>AndroidUi</code>：</p>
+<pre><code>adb exec-out uiautomator dump
+  → uidref digest（276KB→8.6KB，省 97% 上下文）
+  → 模型选 ref（e14 这类稳定引用，不选坐标）
+  → imespec / blindspot 预检（键盘遮挡？幻影可点？）
+  → screenpoint 反算像素
+  → adb input tap
+  → screendiff effect_of 验证（点了到底有没有用；is_stuck 止损）</code></pre>
+<p>落地要点：</p>
+<ul><li>优先内嵌 <code>uidref/js</code>、<code>screendiff/js</code>（零依赖），避免引入 Python 运行时；</li></ul>
+<p>screenpoint/pointparse 若暂不移植，先跑 <code>uidref/http_api.py</code>（本机回环 <code>:8770</code>）当 sidecar。</p>
+<ul><li>工具落点候选：<code>runtime/node/backend/src/tools/AndroidUiTool/</code>，门控沿用既有风格</li></ul>
+<p>（如 <code>KHY_ANDROID_UI_TOOL</code>），写操作默认回计划、需 <code>confirm</code>。</p>
+<ul><li>端口与 adb 路径走 <code>constants/serviceDefaults.js</code> + env，不硬编码（规则 1）。</li><li>vendored 代码按 <code>[DESIGN-SOURCING-001]</code> 登记借鉴来源，放 <code>vendor/</code> 类目录，</li></ul>
+<p>不进软著登记材料候选（<code>PROCESS-010</code> C-X3）。</p>
+<h3 id="p1-hiao-8898-作为第二手机目标-带治理的执行层">P1 — hiao <code>:8898</code> 作为第二手机目标（带治理的执行层）<a class="anchor" href="#p1-hiao-8898-作为第二手机目标-带治理的执行层" aria-label="锚点">#</a></h3>
+<p><code>runtime/node/backend/src/services/domain/network/phone/phoneBridgeConfig.js</code> 现在只有<br>StepBridge 一个 profile。新增 hiao profile：</p>
+<ul><li><code>adb forward tcp:18998 tcp:8898</code>（具体端口走 serviceDefaults/env）；</li><li>Bearer 令牌来自手机 <code>/sdcard/hiao/token.txt</code>；</li><li>获得 ui_tap / ui_swipe / shot 的<strong>审批 + 租约 + 审计链</strong>能力，替代裸 adb 点屏；</li><li><code>agent_task</code> 可把整任务委托给手机端 agent；</li><li><code>POST /mcp</code> 可让 khy-os 把手机当 MCP 服务端消费。</li></ul>
+<p>接入前先确认与 <code>scripts/ci/check-no-shizuku-dependency.js</code> 无冲突（hiao 不用 Shizuku，<br>预期干净），并按 <code>DESIGN-ARCH-211/212</code> 的授权 broker 口径评估是否需登记。</p>
+<h3 id="p1-agentbus-车道体验补齐">P1 — agentbus 车道体验补齐<a class="anchor" href="#p1-agentbus-车道体验补齐" aria-label="锚点">#</a></h3>
+<ol><li>设置页加串号选择 + 状态展示：复用 <code>agentbusTransport.ts:455-486</code> 已有的设备表只读</li></ol>
+<p>解析，保持「不替用户挑设备」的既有约定；</p>
+<ol><li>修 <code>audit-khy-os.md:1208</code> 的走秒缺陷：round 等待循环内补 phase 广播；</li><li>用 kit 的 <code>claimcheck</code> 给「未验证」结果分级：手机回的声明先 <code>classify()</code>，</li></ol>
+<p>V1（同状态复现）以上才去掉 <code>unverified</code> 标——与本仓规则 5「修复先复现」同构。</p>
+<h3 id="p2-kit-方法论反哺桌面-cua">P2 — kit 方法论反哺桌面 CUA<a class="anchor" href="#p2-kit-方法论反哺桌面-cua" aria-label="锚点">#</a></h3>
+<ul><li><code>screendiff.effect_of</code> / <code>is_stuck</code> → 给 <code>computerUseAgent</code> 的 verify 相位装具体算法，</li></ul>
+<p>在 30 轮上限之外再加止损；</p>
+<ul><li><code>blindspot</code> 的「无障碍树说可点但被盖住=幻影」→ 桌面侧 <code>uiInspector</code> +</li></ul>
+<p><code>a11yTreeProvider</code> 与截图交叉验证；</p>
+<ul><li><code>pointparse</code> → 加固模型指点输出的解析（拒答/歧义分离）。</li></ul>
+<hr>
+<h2 id="5-安全要点">5. 安全要点<a class="anchor" href="#5-安全要点" aria-label="锚点">#</a></h2>
+<ol><li><strong><code>adb shell input text</code> 是注入面</strong>：kit 的 <code>textin</code> 实证反引号会被设备侧 shell 执行。</li></ol>
+<p>khy-os 封装 Android 文本输入必须走 <code>ACTION_SET_TEXT</code> 路径或 base64 转义，<br>   禁止直接拼接 <code>input text</code>。</p>
+<ol><li><strong>hiao 的 medium 级操作会阻塞等人审批</strong>（600s 超时=拒绝）：无人值守场景必须显式</li></ol>
+<p>设计 <code>allowSession</code> 或预签租约，不能把「审批超时」误报成「设备故障」。</p>
+<ol><li><strong>点屏前预检不是可选优化</strong>：键盘遮挡（imespec）与幻影可点（blindspot）在真机上</li></ol>
+<p>比例很高（38.5% / 若干），跳过预检会把字符写进错误控件。</p>
+<ol><li><strong>不逆向 amoo / StepOS</strong>：只通过公开协议面（agentbus、amoobridge、MCP）接入。</li></ol>
+<h2 id="6-合规与工程约束">6. 合规与工程约束<a class="anchor" href="#6-合规与工程约束" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>约束</th><th>内容</th></tr></thead><tbody><tr><td>许可证</td><td>android-agent-kit / amoo-dsh / amoo-bridge-lite 均 Apache-2.0；vendored 保留 LICENSE/NOTICE，修改文件标注改动（bridge-lite 的 NOTICE 明确要求）</td></tr><tr><td>借鉴登记</td><td>按 <code>[DESIGN-SOURCING-001]</code> 登记「借鉴什么 / 怎么借鉴 / 谁实现」</td></tr><tr><td>软著</td><td>第三方代码不得进登记材料候选（<code>PROCESS-010</code> C-X3），vendored 代码隔离在 <code>vendor/</code> 类目录</td></tr><tr><td>零硬编码</td><td>新端口（8898/18998/8770）与 adb 路径走 <code>serviceDefaults.js</code> + env（规则 1）</td></tr><tr><td>通道选择</td><td>GUI 操作仍服从五通道矩阵（<code>[DESIGN-ARCH-071]</code>）：CH-5 是最后手段，结构化通道优先</td></tr><tr><td>不新增无谓机制</td><td>若引入审批/租约类拦截机制，按 <code>PROCESS-008</code> 走 S1 起四阶段</td></tr></tbody></table>
+<h2 id="7-待决问题">7. 待决问题<a class="anchor" href="#7-待决问题" aria-label="锚点">#</a></h2>
+<ol><li><code>uidref/js</code> / <code>screendiff/js</code> 的实际代码量与依赖面清点（决定内嵌还是 sidecar）。</li><li>hiao profile 的令牌管理落点：复用 <code>phoneBridgeCredential</code>，还是新开凭据面。</li><li><code>AndroidUiTool</code> 的风险等级与审批档（是否归入 <code>KHY_DESKTOP_CONTROL</code> 同一总闸，</li></ol>
+<p>还是独立门控）。</p>
+<ol><li>是否同步把 <code>uidref http_api.py</code> 作为可选 sidecar 打包（涉及依赖来源规则 11，</li></ol>
+<p>只能走官方源安装，不可引入镜像）。</p>
+<h2 id="8-附录-关键文件索引">8. 附录：关键文件索引<a class="anchor" href="#8-附录-关键文件索引" aria-label="锚点">#</a></h2>
+<p><strong>归档侧</strong></p>
+<ul><li><code>D:\Portable\amootool-extract\android-agent-kit-main\android-agent-kit-main\README.md</code>（四层结构）、<code>docs\AUDIT.md</code>、<code>uidref\http_api.py</code>、<code>uidref\js\</code>、<code>screendiff\js\</code></li><li><code>D:\Portable\amootool-extract\amoo-dsh-main\amoo-dsh-main\phone-dsh\docs\AMOO-INTEGRATION.md</code>（三张面）、<code>phone-dsh\specs\CONTRACT.md</code>、<code>docs\USER-GUIDE.md</code></li><li><code>D:\Portable\amootool-extract\amoo-bridge-lite-main\amoo-bridge-lite-main\README.md</code>、<code>ROADMAP.md</code></li><li><code>D:\Portable\amootool-extract\amoo-dsh-main\amoo-dsh-main\docs\ARCHITECTURE.md</code>（内部 RPC 形状，仅参考）</li></ul>
+<p><strong>本仓侧</strong></p>
+<ul><li><code>apps/khyos-desktop/src/main/agentbus/</code>（transport / protocol / round / client）</li><li><code>apps/khyos-desktop/src/main/agentbusBridge.ts</code>、<code>src/preload/agentbus.ts</code></li><li><code>apps/khyos-desktop/src/renderer/components/amoon/AgentbusSection.tsx</code>、<code>AmooSecretaryPane.tsx</code></li><li><code>runtime/node/backend/src/tools/AmooBridgeTool/index.js</code>、<code>PhoneBridgeTool/index.js</code></li><li><code>runtime/node/backend/src/services/domain/network/phone/phoneBridgeConfig.js</code></li><li><code>runtime/node/backend/src/services/domain/desktop/desktopControl/safetyGate.js</code></li><li><code>runtime/node/backend/src/tools/ComputerUseTool/</code>、<code>services/domain/desktop/computerUse/</code></li><li><code>docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-200] 对标 stepx 的 amoo 深度配合.md</code></li><li><code>works/record/ai/audit-khy-os.md:1208</code></li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/11_报告/RESEARCH/[RESEARCH-028] 大模型应用开发动手做AIAgent-方法论对khyos的价值-2026-11-04.html"><div class="dir">← 上一篇</div><div class="ttl">[RESEARCH-028] 《大模型应用开发：动手做 AI Agent》方法论对 khyos 的价值</div></a><a class="next" href="../../../../docs/html/11_报告/RESEARCH/00_INDEX_RESEARCH-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">RESEARCH</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/11_报告/RESEARCH/[RESEARCH-029] amootool四项目调研与khyos-GUI与Amoo集成方案-2026-11-16.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

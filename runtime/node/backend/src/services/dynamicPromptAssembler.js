@@ -554,6 +554,8 @@ function _inert(reason, modelId) {
     dynamicParams: null,
     appendix: '',
     meta: { enabled: false, degraded: reason, steps: [] },
+    matchedBy: { family: null, layers: [], known: false },
+    finalSystemPrompt: '',
   };
 }
 
@@ -741,6 +743,16 @@ function assemblePromptForModel(requestContext = {}) {
     };
 
     result.appendix = renderAppendix(result);
+
+    // [DESIGN-ARCH-218] §3.4 外显：只暴露既有适配结果，不改拼装行为。
+    // finalSystemPrompt = 本装配器产出的最终 system 适配段（appendix）；
+    // 完整 system 由调用方组合，本模块从不持有，故不伪造「整段系统提示词」。
+    result.matchedBy = {
+      family: (profile._meta.layers || []).find((layer) => layer.startsWith('pattern:family-')) || null,
+      layers: (profile._meta.layers || []).slice(),
+      known: Boolean(profile._meta.known),
+    };
+    result.finalSystemPrompt = result.appendix;
 
     return result;
   } catch (e) {

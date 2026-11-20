@@ -50,9 +50,15 @@ const MIGRATION_ALIASES = [
   ['extensions/',        'delivery/extension/'],
   ['software/khyquant/', 'delivery/channel/khyquant/'],
   ['packaging/',         'works/ship/'],
-  ['apps/ai-frontend',   'delivery/web/ai-frontend'],
-  ['apps/provider-hub',  'delivery/web/provider-hub'],
+  ['apps/ai-frontend',   'delivery/channel/web/ai-frontend'],
+  ['apps/provider-hub',  'delivery/channel/web/provider-hub'],
   ['docs/06_DEPLOY_部署/', 'docs/06_DEPLOY_部署/其它部署/'],
+  // 2026-11-19 delivery 单轴化（层级轴收敛）：web/mobile 并入 delivery/channel，
+  // brand/market 归工程产物区 works/。from 以 '/' 结尾 = 前缀匹配。
+  ['delivery/web/',      'delivery/channel/web/'],
+  ['delivery/mobile/',   'delivery/channel/mobile/'],
+  ['delivery/brand/',    'works/brand/'],
+  ['delivery/market/',   'works/market/'],
   // 故意不列 'apps/khyos-desktop' → 'delivery/desktop/khyos-desktop'：
   // package.json workspaces 已声明新位置，但该目录**尚未建立**（迁移在途）。
   // 列上会让检查器把它当成"可自愈"，掩盖真实缺口。让它如实报 BROKEN。

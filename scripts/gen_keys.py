@@ -40,7 +40,7 @@ for _stream in (sys.stdout, sys.stderr):
 XK = [0xA3, 0x5F, 0xC2, 0x1B]
 
 DART = (Path(__file__).resolve().parent.parent
-        / 'delivery/mobile/khy-os-client-app/lib/core/config/built_in_keys.dart')
+        / 'delivery/channel/mobile/khy-os-client-app/lib/core/config/built_in_keys.dart')
 
 
 def keys_file() -> Path:

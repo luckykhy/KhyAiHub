@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-LAY-009] 数据单一真源与影子副本归并规范.md -->
+<title>[DESIGN-LAY-009] 数据单一真源与影子副本归并规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-LAY<span class="sep">›</span>[DESIGN-LAY-009] 数据单一真源与影子副本归并规范</div>
+      <header class="hero reveal"><h1>[DESIGN-LAY-009] 数据单一真源与影子副本归并规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-009-数据单一真源与影子副本归并规范">[DESIGN-LAY-009] 数据单一真源与影子副本归并规范</a></li><li class="lvl-2"><a href="#0-病症-这类漂移没有任何一个文件是错的">§0 病症：这类漂移没有任何一个文件是错的</a></li><li class="lvl-2"><a href="#1-四层判据-详见-scripts-lib-ssotdataguard-js">§1 四层判据（详见 `scripts/lib/ssotDataGuard.js`）</a></li><li class="lvl-3"><a href="#1-1-d1-d1b-d2-d3-字段级-同一事实有几处声明">§1.1 D1/D1b/D2/D3 字段级：同一事实有几处声明</a></li><li class="lvl-3"><a href="#1-1b-d1b-补网-为什么标识符锚点不够">§1.1b D1b 补网：为什么标识符锚点不够</a></li><li class="lvl-3"><a href="#1-2-d4-整文件级-登记表被逐字节复制">§1.2 D4 整文件级：登记表被逐字节复制</a></li><li class="lvl-3"><a href="#1-3-d5-判据自身失效-必须报红">§1.3 D5 判据自身失效：必须报红</a></li><li class="lvl-2"><a href="#2-登记表-data-ssot-json-只登记-真源在哪-不登记值">§2 登记表 `DATA-SSOT.json`：只登记「真源在哪」，**不登记值**</a></li><li class="lvl-2"><a href="#3-实测与首轮归并-2026-10-30">§3 实测与首轮归并（2026-10-30）</a></li><li class="lvl-3"><a href="#3-1-规模">§3.1 规模</a></li><li class="lvl-3"><a href="#3-2-首轮命中">§3.2 首轮命中</a></li><li class="lvl-3"><a href="#3-3-归并结果-累计-22-处影子副本-0-涉-15-个文件">§3.3 归并结果（累计 22 处影子副本 → 0，涉 15 个文件）</a></li><li class="lvl-2"><a href="#4-能力边界-明确写出判不出什么">§4 能力边界（明确写出判不出什么）</a></li><li class="lvl-2"><a href="#5-落地阶段-process-006-pp-1-process-008">§5 落地阶段（PROCESS-006 PP-1 / PROCESS-008）</a></li><li class="lvl-2"><a href="#6-与既有规则的关系-不重复造门">§6 与既有规则的关系（不重复造门）</a></li><li class="lvl-2"><a href="#7-复算方式">§7 复算方式</a></li><li class="lvl-2"><a href="#8-变更记录">§8 变更记录</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-LAY-009 | 阶段: 设计 | 原路径: 新建 --&gt;<br>&lt;!-- IMPL-STATUS: active --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：守卫已落地并跑通（<code>scripts/ci/check-ssot-data.js</code>），登记表 <code>docs/10_规范/registry/DATA-SSOT.json</code> 已建，首轮归并已完成。</p></blockquote>
+<h1 id="design-lay-009-数据单一真源与影子副本归并规范">[DESIGN-LAY-009] 数据单一真源与影子副本归并规范<a class="anchor" href="#design-lay-009-数据单一真源与影子副本归并规范" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: LAYOUT-008 -->
+<blockquote><p><strong>强制规范 · 「同一份数据只允许有一个真源」的机械判据</strong> · 回答三个问题：①一条数据事实的<strong>真源在哪</strong>、怎么取；②哪些地方是<strong>允许存在的镜像</strong>、镜像凭什么锁步；③发现同一事实有第二个声明时<strong>往哪归并</strong>。</p>
+<p><strong>定位</strong>：本仓已有大量「单一真源」的<strong>声明</strong>（<code>serviceDefaults.js</code>、<code>providerPresets.js</code>、各登记表都自称真源），但<strong>没有一条规则去核对「这份数据在仓内到底被写了几遍」</strong>。声明属于纪律，纪律不会自己生效。本篇补的就是这一层：把 SSOT 从<strong>口号</strong>变成<strong>可判定的不变式</strong>。</p>
+<p><strong>触发</strong>：用户 2026-10-30 目标——「khyos 中的所有数据必须遵循单一真源 SSOT 原则，做个守卫，归并数据源，避免矛盾」。</p>
+<p><strong>守卫</strong>：<code>scripts/ci/check-ssot-data.js</code>（<code>npm run check:ssot-data</code>，S1 观察者档，恒 exit 0）+ 登记表 <code>docs/10_规范/registry/DATA-SSOT.json</code>。</p>
+<p><strong>谁该读</strong>：要新增/修改任何「多处共用同一份数据」的人与 AI；以及每次想「顺手再写一份默认值」的人。</p></blockquote>
+<hr>
+<h2 id="0-病症-这类漂移没有任何一个文件是错的">§0 病症：这类漂移没有任何一个文件是错的<a class="anchor" href="#0-病症-这类漂移没有任何一个文件是错的" aria-label="锚点">#</a></h2>
+<p>同一份数据写在两个地方时，两处<strong>一开始相同</strong>；改了一处，另一处就成了矛盾。<br>这类漂移的特征决定了它的检查方式：</p>
+<ul><li>没有「错误的文件」——两个文件各自看都没问题；</li><li>只有「两个文件对同一件事说法不同」——所以守卫不能问「这个文件对不对」，只能问「<strong>这件事有几处声明</strong>」；</li><li>它<strong>不会自己暴露</strong>——单元测试两边都能过，评审时两份都「看着对」，直到某天只有一边被改了。</li></ul>
+<p>本仓已有一例真实事故：<code>RULES-REGISTRY.json</code> 的 <code>meta.ruleCount</code> 声明 96，而 <code>rules</code> 数组实有 99 条<br>——<strong>声明与事实同处一个文件</strong>，连「自家人」都不认。2026-10-30 由并行会话修正为 100。<br>本守卫把它列为首条 <code>json-count</code> 事实（D5b 自洽判据）。</p>
+<hr>
+<h2 id="1-四层判据-详见-scripts-lib-ssotdataguard-js">§1 四层判据（详见 <code>scripts/lib/ssotDataGuard.js</code>）<a class="anchor" href="#1-四层判据-详见-scripts-lib-ssotdataguard-js" aria-label="锚点">#</a></h2>
+<h3 id="1-1-d1-d1b-d2-d3-字段级-同一事实有几处声明">§1.1 D1/D1b/D2/D3 字段级：同一事实有几处声明<a class="anchor" href="#1-1-d1-d1b-d2-d3-字段级-同一事实有几处声明" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>判据</th><th>id</th><th>级别</th><th>含义</th></tr></thead><tbody><tr><td><strong>影子副本</strong></td><td><code>ssot-shadow-copy</code></td><td>warning</td><td>真源之外又写了一遍真源的值。值相同 → 此刻还没矛盾，但已是两份真相，改一处必漂移</td></tr><tr><td><strong>未登记别名</strong></td><td><code>ssot-unanchored-literal</code></td><td>warning</td><td>事实的值以<strong>裸字面量</strong>出现在作用域内，却没有任何登记标识符 —— 疑似换个变量名再写一遍</td></tr><tr><td><strong>值矛盾</strong></td><td><code>ssot-value-contradiction</code></td><td><strong>error</strong></td><td>同一事实出现两个不同的值 —— 已经不是漂移，是矛盾，必须当场归并</td></tr><tr><td><strong>镜像失步</strong></td><td><code>ssot-mirror-drift</code></td><td><strong>error</strong></td><td>已登记的<strong>授权镜像</strong>与真源值不再一致</td></tr></tbody></table>
+<p>三者对应三个不同动作，<strong>归并方向不同</strong>：</p>
+<pre><code>影子副本    →  改成从真源取值（能 import 就 import）
+            →  或登记为授权镜像（物理上无法 import 时）并写明理由
+未登记别名  →  同上；或把该别名登记进 detect.identifiers（若它确属同一事实）
+值矛盾     →  改错的那一处，让它从真源取值
+镜像失步   →  改镜像（或改真源），二者必须同时收敛到同一个值</code></pre>
+<h3 id="1-1b-d1b-补网-为什么标识符锚点不够">§1.1b D1b 补网：为什么标识符锚点不够<a class="anchor" href="#1-1b-d1b-补网-为什么标识符锚点不够" aria-label="锚点">#</a></h3>
+<p>标识符锚点有一个<strong>结构性盲区</strong>：<strong>新别名</strong>。同一个事实换个变量名再写一遍，<br>新名字不在任何登记标识符集合里，字段级扫描就看不见它 —— 实测<br><code>ai-manage-daemon.js</code> 的 <code>const DEFAULT_API_PORT = 9090;</code> 正是这样一个漏网之鱼<br>（它就在活跃启动路径 <code>main()</code> 的 <code>parsePortArg(argv, '--api-port', DEFAULT_API_PORT)</code> 上）。</p>
+<p>补网用<strong>值</strong>兜一层，但只认<strong>代码里的裸字面量</strong>：</p>
+<table><thead><tr><th>形态</th><th>是什么</th><th>判不判</th></tr></thead><tbody><tr><td><code>const X = 9090</code></td><td>第二份声明</td><td><strong>判</strong>（<code>ssot-unanchored-literal</code>）</td></tr><tr><td><code>'… [--port 9090] …'</code></td><td>帮助文本里的示例</td><td>不判（是叙述）</td></tr><tr><td><code>'两条路径都绑定 9090 端口'</code></td><td>案例库里的历史记录</td><td>不判（是知识）</td></tr></tbody></table>
+<p>三者长得一样，只有<strong>「在不在引号里」</strong>能分开。实测该口径在当前仓内 <strong>0 条误报</strong>，<br>而「字符串通吃」口径会在 <code>bugCases.js</code> 里捞出 3 条历史记录。</p>
+<p><strong>噪声控制是这层的生死线</strong>：只有<strong>区分度够的值</strong>才启用（默认 ≥ 100）。<br>实测值 10（端口漂移窗口）走补网能捞出 <strong>242 条</strong>噪声 —— 小整数没有区分度，<br>值锚定对它完全无效。故此项按事实<strong>显式开启</strong>（<code>detect.valueAnchor</code>），不开就没有这层网。</p>
+<h3 id="1-2-d4-整文件级-登记表被逐字节复制">§1.2 D4 整文件级：登记表被逐字节复制<a class="anchor" href="#1-2-d4-整文件级-登记表被逐字节复制" aria-label="锚点">#</a></h3>
+<p>字段级扫描看不见「整份文件被复制到第二个地方」——复制的文件路径不同、字段名也可能不同，<br>只有<strong>内容指纹</strong>能看见。判据：对登记在册的真源文件算规范指纹（JSON 按键排序后序列化），<br>在同类文件里找指纹相同者。</p>
+<h3 id="1-3-d5-判据自身失效-必须报红">§1.3 D5 判据自身失效：必须报红<a class="anchor" href="#1-3-d5-判据自身失效-必须报红" aria-label="锚点">#</a></h3>
+<p>真源文件不存在、指针解析不出来、登记的镜像不存在 —— 这三种情况一律 <strong>error</strong>。<br><strong>判据失效时报「通过」等于假绿</strong>：守卫查不到真源，就等于没查。</p>
+<p>还有第四种，更隐蔽：<strong>事实的作用域指向不存在的路径</strong>（<code>ssot-scope-missing</code>）。<br>此时这条事实<strong>永远 0 finding</strong> —— 事实在册、判据在跑、结果恒为零，<br>看起来「全绿」，实则根本没在看。故作用域可达性由守卫自己核（注入 exists 回调，<br>与 <code>check-rules-registry.js</code> 的 <code>findDanglingRegistryPaths</code> 同款做法），<br>不可达即报红。</p>
+<blockquote><p>变异测试证明这条防护有效：把 <code>ai-backend-port</code> 的 <code>detect.paths</code> 指向一个不存在的目录，<br>守卫立刻报 <code>[ERROR] ssot-scope-missing</code>，而其余五类计数仍是 0 ——<br>「全绿」被正确地拦下。</p></blockquote>
+<hr>
+<h2 id="2-登记表-data-ssot-json-只登记-真源在哪-不登记值">§2 登记表 <code>DATA-SSOT.json</code>：只登记「真源在哪」，<strong>不登记值</strong><a class="anchor" href="#2-登记表-data-ssot-json-只登记-真源在哪-不登记值" aria-label="锚点">#</a></h2>
+<p>这是本篇最重要的一条设计约束。</p>
+<pre><code class="language-jsonc"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ai-backend-port&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;ssot&quot;</span><span class="hljs-punctuation">:</span>    <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;…/serviceDefaults.js&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;kind&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;js-const&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;pointer&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;AI_BACKEND_DEFAULT_PORT&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;mirrors&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;…/backendDiscovery.mjs&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;kind&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;js-const&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;pointer&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;DEFAULT_BACKEND_PORT&quot;</span><span class="hljs-punctuation">,</span>
+                 <span class="hljs-attr">&quot;reason&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;前端独立包，不能 require 后端常量&quot;</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;detect&quot;</span><span class="hljs-punctuation">:</span>  <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;identifiers&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;AI_BACKEND_DEFAULT_PORT&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;KHY_DAEMON_PORT&quot;</span><span class="hljs-punctuation">,</span> …<span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+               <span class="hljs-attr">&quot;paths&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;runtime/node/backend/&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;delivery/&quot;</span><span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code></pre>
+<p><strong>登记表里若也存一份值，它自己就��第二真源，本守卫立刻失去意义</strong> ——<br>它要治的病，正是它自己会得的病。故值一律<strong>运行时从真源文件读</strong>。</p>
+<p>字段含义：</p>
+<table><thead><tr><th>字段</th><th>作用</th></tr></thead><tbody><tr><td><code>ssot.kind</code></td><td>取值方式：<code>js-const</code> / <code>py-const</code> / <code>json-pointer</code> / <code>toml-key</code> / <code>json-count</code></td></tr><tr><td><code>ssot.pointer</code></td><td>真源里取哪个值；<code>json-count</code> 取「指针所指数组的长度」</td></tr><tr><td><code>ssot.declaredPointer</code></td><td>（仅 <code>json-count</code>）真源自报的计数 → 用于 §1.1 之外的自洽判据</td></tr><tr><td><code>mirrors[]</code></td><td><strong>授权镜像</strong>：物理上无法 import 的地方，允许存在，但必须锁步且<strong>必须写理由</strong></td></tr><tr><td><code>detect.identifiers</code></td><td>影子副本的锚点：哪些标识符名属于这条事实</td></tr><tr><td><code>detect.paths</code></td><td>事实级作用域：同一标识符在不同目录可能指不同的事，作用域写窄比靠全局排除兜底更准</td></tr><tr><td><code>detect.exclude</code></td><td>事实级排除</td></tr></tbody></table>
+<p><strong>无理由的镜像 = 事实上的第二真源</strong> —— 登记表校验会直接判 <code>ssot-registry-invalid</code>。<br>镜像存在的理由只能是「物理上无法 import」（独立包、跨语言），不能是「懒得 import」。</p>
+<hr>
+<h2 id="3-实测与首轮归并-2026-10-30">§3 实测与首轮归并（2026-10-30）<a class="anchor" href="#3-实测与首轮归并-2026-10-30" aria-label="锚点">#</a></h2>
+<h3 id="3-1-规模">§3.1 规模<a class="anchor" href="#3-1-规模" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>指标</th><th>数值</th></tr></thead><tbody><tr><td>受版本控制文件</td><td>12,122（207 MB）</td></tr><tr><td>登记的真源文件</td><td><strong>24</strong>（18 份 JSON 登记表 + 6 份代码型真源）</td></tr><tr><td>登记的数据事实</td><td><strong>10</strong></td></tr><tr><td>授权镜像</td><td><strong>8</strong></td></tr><tr><td>全量扫描耗时</td><td><strong>约 9 秒</strong></td></tr></tbody></table>
+<blockquote><p>⚠ 耗时这一行是<strong>设计换来的</strong>：首版按「每条事实扫全仓」实现，实测 <strong>87.7 秒</strong>，进不了 CI。<br>改为「<strong>一次</strong> <code>git grep</code> 同时定位含标识符与含可区分值的候选文件 → Node 逐行判定」后降到 9 秒，<br>语料从 5,918 收到 <strong>110</strong> 个文件。<br>（中间试过「7 轮 grep（1 轮标识符 + 6 轮值）」，要 30 秒 —— grep 每轮都要重扫一遍索引，<strong>合成一轮</strong>才是对的。）</p></blockquote>
+<h3 id="3-2-首轮命中">§3.2 首轮命中<a class="anchor" href="#3-2-首轮命中" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>判据</th><th>命中</th><th>性质</th></tr></thead><tbody><tr><td><code>ssot-shadow-copy</code></td><td><strong>11</strong></td><td>全在 <code>runtime/node/backend/</code>（与真源<strong>同一个包</strong>，能 import 却各自写死）：10 处是 AI 后端端口 9090，1 处是手机桥接端口 8896</td></tr><tr><td><code>ssot-value-contradiction</code></td><td>1</td><td>误报（测试文件里的假端口 9876；排除规则的 <code>**/test/**</code> 未按路径段匹配所致，已修）</td></tr><tr><td><code>ssot-self-contradiction</code></td><td>1</td><td><strong>真问题</strong>：<code>meta.ruleCount</code> 96 vs 99（已由并行会话修正）</td></tr><tr><td><code>ssot-source-shadow-copy</code></td><td>0</td><td>全仓<strong>无</strong>登记表的逐字节副本</td></tr><tr><td><code>ssot-mirror-drift</code></td><td>0</td><td>6 个授权镜像<strong>全部锁步</strong></td></tr></tbody></table>
+<p>补网上线后（值锚定）又查出 <strong>5 处</strong>此前看不见的副本 —— 其中 <code>ai-manage-daemon.js:103</code><br>是<strong>别名</strong>（<code>DEFAULT_API_PORT</code>），另 4 处是帮助文本/示例里的端口字面量。</p>
+<p>登记了新事实（Ollama 端口、后端端口）后又查出 <strong>6 处</strong>：</p>
+<table><thead><tr><th>判据</th><th>命中</th><th>性质</th></tr></thead><tbody><tr><td><code>ssot-unanchored-literal</code></td><td>4</td><td>Ollama 端口 11434 的副本：后端 <code>ollamaModelManager.js</code> 两处 `url.port \</td></tr><tr><td><code>ssot-shadow-copy</code></td><td>2</td><td>部署模板 <code>bundleArtifacts.js</code> 里生成的 compose 文本把容器端口写死 3000</td></tr><tr><td><code>ssot-value-contradiction</code></td><td>1</td><td><strong>误报</strong>：<code>&quot;${OLLAMA_HOST}&quot;</code> 是模板插值不是字面量 —— 守卫把插值当值比了（已修）</td></tr></tbody></table>
+<h3 id="3-3-归并结果-累计-22-处影子副本-0-涉-15-个文件">§3.3 归并结果（累计 22 处影子副本 → 0，涉 15 个文件）<a class="anchor" href="#3-3-归并结果-累计-22-处影子副本-0-涉-15-个文件" aria-label="锚点">#</a></h3>
+<p>同一个包内能 import 却各自写死的端口，全部改为从真源取值（<strong>值不变，行为等价</strong>）：</p>
+<table><thead><tr><th>文件</th><th>处数</th><th>改法</th></tr></thead><tbody><tr><td><code>src/services/daemonEntry.js</code></td><td>1</td><td>`process.env.KHY_DAEMON_PORT \</td></tr><tr><td><code>src/services/daemonManager.js</code></td><td>1</td><td>同上</td></tr><tr><td><code>scripts/start-mgmt-server.js</code></td><td>1</td><td>`\</td></tr><tr><td><code>scripts/ai-manage-daemon.js</code></td><td>1</td><td><code>const DEFAULT_API_PORT = require(…).AI_BACKEND_DEFAULT_PORT</code></td></tr><tr><td><code>src/cli/handlers/mobile.js</code></td><td>5</td><td>`\</td></tr><tr><td><code>src/services/aiManagementServer.js</code></td><td>2</td><td>`\</td></tr><tr><td><code>src/cli/handlers/gatewayManageDaemon.js</code></td><td>3</td><td><code>_parsePort(…, AI_BACKEND_DEFAULT_PORT)</code>；帮助文本改用 <code>${AI_BACKEND_DEFAULT_PORT}</code></td></tr><tr><td><code>src/cli/handlers/daemon.js</code></td><td>1</td><td>帮助文本改用 <code>${AI_BACKEND_DEFAULT_PORT}</code></td></tr><tr><td><code>src/services/domain/network/amoo/amooBridgeConfig.js</code></td><td>1</td><td><code>BRIDGE_PORT: PHONE_BRIDGE_DEFAULT_PORT</code>（手机桥接端口 8896）</td></tr><tr><td><code>src/services/ollamaModelManager.js</code></td><td>2</td><td>`url.port \</td></tr><tr><td><code>scripts/domain/deploy/publish/bundleArtifacts.js</code></td><td>2</td><td>生成的 compose 文本里容器端口改用 <code>${BACKEND_PORT}</code></td></tr><tr><td><code>delivery/extension/scripts/khy-diagnostics/model-type-providers.js</code></td><td>1</td><td>本地端点判定的端口片段改为从已解析的 SSOT 派生</td></tr><tr><td><code>delivery/extension/tools/khy-markdown/khyos-md-bridge.js</code></td><td>1</td><td>具名化为 <code>OLLAMA_DEFAULT_PORT</code> 并登记为<strong>授权镜像</strong>（跨层不能 require 后端常量）</td></tr></tbody></table>
+<p>真源侧同步改造：<code>serviceDefaults.js</code> 新增 <code>DEFAULT_OLLAMA_PORT = 11434</code>，<br><code>OLLAMA_HOST</code> 由它派生 —— 此前「端口」只以 URL 片段藏在 host 字符串里，<br>消费方要写「URL 没带端口时用哪个端口」只能把 11434 再抄一遍。</p>
+<blockquote><p>帮助文本那一处尤其值得记：<strong>写死在 usage 里的端口，是最典型的「文档即数据」</strong>——<br>它会随真源改动而静默过期，且没有任何测试会提醒你。</p></blockquote>
+<blockquote><p><strong>口径对齐（非纯重构，须知情）</strong>：<code>daemonEntry</code>（守护进程）读 <code>KHY_DAEMON_PORT</code>，<br><code>aiManagementServer</code>（管理服务）读 <code>AI_MGMT_PORT</code>，而<strong>守护进程跑的就是管理服务</strong><br>（<code>daemonEntry.js</code> 头部自述）。改前：设了 <code>KHY_DAEMON_PORT=29090</code> 而没设 <code>AI_MGMT_PORT</code> 时，<br>守护进程监听 29090、管理服务自己的兜底仍是 9090 —— <strong>同一台服务器有两个端口口径</strong>。<br>改后两者都取 <code>AI_BACKEND_DEFAULT_PORT</code>，口径合一。这正是本篇要治的病，<br>故属<strong>有意的行为收敛</strong>，不是顺手重构。</p></blockquote>
+<p>回归证据：<code>runtime/node/backend</code> 的 <code>npm run test:node:src</code> <strong>6941 测试全绿</strong>；<br>受影响最直接的 jest 套件（<code>serviceDefaults</code> / <code>daemonManager.runtimePort</code> /<br><code>mobilePairingContract</code>）<strong>3 套件 24 测试全绿</strong>。</p>
+<hr>
+<h2 id="4-能力边界-明确写出判不出什么">§4 能力边界（明确写出判不出什么）<a class="anchor" href="#4-能力边界-明确写出判不出什么" aria-label="锚点">#</a></h2>
+<p>一条守卫若让人以为「它管住了一切」，比没有守卫更坏。以下是<strong>本守卫判不出</strong>的：</p>
+<ol><li><strong>字符串里的端口示例与历史记录</strong>。<code>console.log('… [--port 9090] …')</code> 与案例库里的</li></ol>
+<p><code>'两条路径都绑定 9090 端口'</code> 都是<strong>叙述</strong>，补网只认代码里的裸字面量（§1.1b）。<br>   这类副本靠标识符网与人工/文档守卫兜，不靠值锚定。</p>
+<ol><li><strong>区分度不够的值</strong>。小整数（&lt; 100，如端口漂移窗口 10）在代码里太常见，</li></ol>
+<p>值锚定对它无效 —— 实测会捞出 242 条噪声。故只有 ≥ 100 的值才启用补网。</p>
+<ol><li><strong>文档里的数值主张</strong>。由 <code>[DESIGN-DOC-005/006]</code>（DOCS-006/007）负责 —— 两份真源各管一件事，</li></ol>
+<p>比互相覆盖更稳。</p>
+<ol><li><strong>测试目录里的固定值</strong>。测试固定规范值是<strong>防护</strong>不是第二真源，与 AGENTS.md 端点检查豁免同款理由。</li><li><strong>语义不同却同名的事实</strong>。如 <code>BRIDGE_PORT</code> 在协作桥语境下是 9222、在手机桥语境下是 8896 ——</li></ol>
+<p>故 <code>detect.identifiers</code> 必须写准，<code>detect.paths</code> 必须写窄。</p>
+<ol><li><strong>跨包镜像的自动归并</strong>。跨包镜像<strong>只能登记</strong>，不能自动合并 —— 物理上做不到。</li><li><strong>未登记的新事实</strong>。守卫只判<strong>已登记</strong>的事实。新的共用数据事实要往</li></ol>
+<p><code>DATA-SSOT.json</code> 的 <code>facts[]</code> 加一条才会进入判定 —— 登记表是覆盖面清单，不是自动发现器。</p>
+<ol><li><strong>「自动发现未登记事实」这条路走不通（实测否定结论）</strong>。试过两种聚类：<ul><li><strong>按数值聚类</strong>（同一数字出现在 ≥3 个文件）→ 洪水。高频值全是<strong>超时与尺寸常量</strong></li></ul></li></ol>
+<p>（1024=KB、5000/10000/30000/60000=ms），与「同一事实」无关。</p>
+<ul><li><strong>按常量名族聚类</strong>（同值 + 名字共享词根）→ 仍是洪水。共享词若是泛化量词</li></ul>
+<p>（<code>DEFAULT_*</code> / <code>MAX_*</code>），值 10 能聚出 60+ 个无关常量；共享词若换成<strong>域名词</strong><br>     （PORT/HOST/URL），<code>TOKEN</code>/<code>CACHE</code> 一出现整簇又会被带出来。</p>
+<p>结论：<strong>数值相同 ≠ 同一件事</strong>，机器判不出「这两个常量说的是不是一件事」。<br>   登记表必须<strong>人工策展</strong>（它编码的正是「这些标识符指的是同一件事」这一层语义）。<br>   守卫能做的是：把已登记事实的副本看住，并给出<strong>候选线索</strong>供人登记。</p>
+<hr>
+<h2 id="5-落地阶段-process-006-pp-1-process-008">§5 落地阶段（PROCESS-006 PP-1 / PROCESS-008）<a class="anchor" href="#5-落地阶段-process-006-pp-1-process-008" aria-label="锚点">#</a></h2>
+<p><code>STAGE = 'S1'</code>：观察者，只记录不阻断，<strong>恒 exit 0</strong>（<code>--strict</code> 可让 error 阻断，供升档前自测）。</p>
+<p>阶段登记在 <code>FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[]</code>（id=<code>ssot-data-guard</code>）。</p>
+<table><thead><tr><th>阶段</th><th>含义</th><th>门槛</th></tr></thead><tbody><tr><td>S1（当前）</td><td>观察者，只报告</td><td>恒 exit 0；进 PR gate 出报告</td></tr><tr><td>S2</td><td>影子副本转 error</td><td>存量归零后升档</td></tr><tr><td>S3</td><td>进 commit 硬门</td><td>与 R1 红线同级</td></tr></tbody></table>
+<hr>
+<h2 id="6-与既有规则的关系-不重复造门">§6 与既有规则的关系（不重复造门）<a class="anchor" href="#6-与既有规则的关系-不重复造门" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>既有规则</th><th>管什么</th><th>与本篇分工</th></tr></thead><tbody><tr><td><code>RUNTIME-001</code></td><td>端点/生产域名硬编码</td><td>管<strong>端点字符串</strong>；本篇管<strong>端口与数值事实的多处声明</strong></td></tr><tr><td><code>PROCESS-002</code> / <code>check-version-sync</code></td><td>版本号三轨一致</td><td>管<strong>版本</strong>；本篇管版本之外的其它数据事实</td></tr><tr><td><code>LAYOUT-007</code> / <code>check-data-layout</code></td><td>数据<strong>落点</strong>（放哪）</td><td>管<strong>在哪</strong>；本篇管<strong>同一份数据被写了几遍</strong></td></tr><tr><td><code>DOCS-006</code> / <code>DOCS-007</code></td><td>文档里的端点与数值主张</td><td>管<strong>文档怎么说</strong>；本篇管<strong>代码里写了几份</strong></td></tr></tbody></table>
+<hr>
+<h2 id="7-复算方式">§7 复算方式<a class="anchor" href="#7-复算方式" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run check:ssot-data            <span class="hljs-comment"># 全量扫描（约 2.3 秒）</span>
+npm run check:ssot-data -- --json  <span class="hljs-comment"># 机读输出</span>
+npm run check:ssot-data -- --strict <span class="hljs-comment"># error 即 exit 1（升档前自测）</span>
+npm run check:ssot-data -- --list=ssot-shadow-copy</code></pre>
+<p>单测：<code>npm run test:one -- scripts/tests/ssotDataGuard.test.js</code></p>
+<hr>
+<h2 id="8-变更记录">§8 变更记录<a class="anchor" href="#8-变更记录" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>版本</th><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>1.0.0</td><td>2026-10-30</td><td>首版。守卫 <code>check-ssot-data.js</code> + 纯核心 <code>ssotDataGuard.js</code> + 登记表 <code>DATA-SSOT.json</code> 落地；8 条事实 / 6 个授权镜像登记；首轮归并 10 处影子副本（6 文件），修 <code>meta.ruleCount</code> 自相矛盾</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-008] 目录层级重设计执行路线图</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-010] 目录结构唯一原则-位置与语义双射.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-009] 数据单一真源与影子副本归并规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

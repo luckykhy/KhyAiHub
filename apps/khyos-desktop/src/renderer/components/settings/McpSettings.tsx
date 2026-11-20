@@ -1,4 +1,5 @@
 // khy-canary: Khy-20261102-311-XZZZ9X5D
+import { errText } from '../../utils/errText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 // ── MCP 服务器 settings page (ZC-ALIGN-003 §2, a11y s-32) ──
@@ -101,8 +102,8 @@ export function McpSettings() {
       } else {
         setLoadError(mcpRes?.error || pluginRes?.error || 'MCP 列表读取失败：请重启应用后重试')
       }
-    }).catch(() => {
-      setLoadError('MCP 列表读取失败：主进程无响应，请重启应用')
+    }).catch((err: unknown) => {
+      setLoadError(`MCP 列表读取失败：${errText(err)}。若持续失败请重启应用`)
     })
   }, [])
 
@@ -135,8 +136,8 @@ export function McpSettings() {
       } else {
         flash(res?.error || '创建失败：请检查名称与启动命令后重试', true)
       }
-    } catch {
-      flash('创建失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`创建失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -149,8 +150,8 @@ export function McpSettings() {
       const res = await a.mcpSetEnabled?.(id, enabled)
       if (!res?.ok) flash(res?.error || '切换失败：请重试', true)
       else load()
-    } catch {
-      flash('切换失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`切换失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -163,8 +164,8 @@ export function McpSettings() {
       const res = await a.mcpDelete?.(id)
       if (!res?.ok) flash(res?.error || '删除失败：请重试', true)
       else { flash(`已删除 MCP 服务器 ${name}`); load() }
-    } catch {
-      flash('删除失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`删除失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -189,8 +190,8 @@ export function McpSettings() {
       } else {
         flash(res?.error || '导入失败：请检查 JSON 内容后重试', true)
       }
-    } catch {
-      flash('导入失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`导入失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }

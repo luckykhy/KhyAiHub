@@ -7,6 +7,7 @@
 
 import { store } from '../state/store'
 import { addMessage } from '../state/messageSlice'
+import type { CommandGroup } from '../../shared/commandGroup'
 
 export interface SlashRunOutcome {
   ok: boolean
@@ -25,11 +26,17 @@ export interface SlashMenuRowPayload {
   runnable: 'routed' | 'prompt' | 'cc' | 'none'
   source: string
   aliases?: string[]
+  // 分组键，由 main 的 groupKeyFor() 算（设置页与载荷共用那一处口径），配合
+  // SlashListResult.groups 归堆。旧主进程不下发时缺省，消费方自行回落。
+  groupKey?: string
 }
 
 export interface SlashListResult {
   ok: boolean
   commands?: SlashMenuRowPayload[]
+  // 组目录随响应下发：组名真源是后端（终端 / 菜单同一份），桌面复制就是影子副本。
+  // 键序即展示序，渲染层只按它归堆与显示，目录里没有的键回落键名。
+  groups?: CommandGroup[]
   error?: string
 }
 

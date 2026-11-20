@@ -18,6 +18,10 @@ export interface SlashCommandRow {
   route: string | null
   flag: string | null
   category: string
+  // 注册表来源：builtin / user / tool / plugin / mcp（register() 按来源入册，
+  // toSlashCommands 透传；旧后端不带该字段 → undefined）。extras 行没有它，
+  // 与 category 同理在类型层可选。
+  source?: string
   _skillDir?: string | null
   _commandFile?: string | null
 }

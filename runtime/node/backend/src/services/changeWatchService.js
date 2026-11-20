@@ -660,13 +660,11 @@ function _defaultStore(projectDir) {
     if (dir) {
       return dir;
     }
-    let base;
-    try {
-      base = require('../utils/dataHome').getDataHome();
-    } catch {
-      base = path.join(require('os').homedir(), '.khyos');
-    }
-    dir = path.join(base, 'change-watch');
+    // write() 自己 mkdir;读探测不该顺带建目录,故走纯解析。
+    // 这里原先有个 catch 回退拼 ~/.khyos/change-watch,与下方公开契约的
+    // <dataHome>/change-watch/verdict.json 不是同一个根 —— 真落到那一支,写出的
+    // 判定没有任何消费者读得到,故不再保留第二个根。
+    dir = require('../utils/dataHome').resolveDataPath('change-watch');
     return dir;
   }
   return {

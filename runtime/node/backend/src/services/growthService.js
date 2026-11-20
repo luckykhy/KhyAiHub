@@ -1,7 +1,7 @@
 /**
  * Growth Service — Portable growth/learning system.
  *
- * Manages ~/.khyquant/growth/ directory containing all growth data.
+ * Manages the growth/ directory under the khy data home containing all growth data.
  * The entire directory can be copied to another machine to transfer learning.
  *
  * Growth components:
@@ -25,17 +25,11 @@ const pipe = promisify(pipeline);
 
 const atomicWriteJson = require('../utils/atomicWriteJson');
 const { atomicWriteText } = require('../utils/atomicWriteJson');
+const { getDataDir } = require('../utils/dataHome');
 
-// Portable-aware app home resolved at load (legacy const semantics preserved).
-function _appHome() {
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
-  } catch {
-    return path.join(os.homedir(), '.khyquant');
-  }
-}
-const GROWTH_DIR = path.join(_appHome(), 'growth');
+// 'growth' is a registered DATA_PATHS name: getDataDir('growth') creates the
+// directory and lands it on the tiered path, replacing the flat app-home fork.
+const GROWTH_DIR = getDataDir('growth');
 const SNAPSHOTS_DIR = path.join(GROWTH_DIR, 'snapshots');
 
 // ─── Default schemas ────────────────────────────────────────────────────────

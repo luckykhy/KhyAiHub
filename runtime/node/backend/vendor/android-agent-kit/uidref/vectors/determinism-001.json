@@ -1,0 +1,235 @@
+{
+  "id": "determinism-001",
+  "title": "ref 编号必须确定",
+  "why": "同一 XML 必须得到同一组 ref，否则黄金向量无意义、回归测试会假失败。",
+  "cases": [
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"一\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"二\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,100][100,200]\"/><node index=\"0\" text=\"三\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,200][100,300]\"/></hierarchy>",
+      "why": "文档序编号 e1 e2 e3",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "一",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e2",
+            "role": "item",
+            "label": "二",
+            "bounds": [
+              0,
+              100,
+              100,
+              200
+            ],
+            "center": [
+              50,
+              150
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e3",
+            "role": "item",
+            "label": "三",
+            "bounds": [
+              0,
+              200,
+              100,
+              300
+            ],
+            "center": [
+              50,
+              250
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"true\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,2000]\"><node index=\"0\" text=\"外层\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"/><node index=\"0\" text=\"内层\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[10,10][100,100]\"/></node></hierarchy>",
+      "why": "外层先于内层（深度优先）",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "box",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              1080,
+              2000
+            ],
+            "center": [
+              540,
+              1000
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": true,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e2",
+            "role": "item",
+            "label": "外层",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e3",
+            "role": "item",
+            "label": "内层",
+            "bounds": [
+              10,
+              10,
+              100,
+              100
+            ],
+            "center": [
+              55,
+              55
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"一\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"二\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,100][100,200]\"/><node index=\"0\" text=\"三\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,200][100,300]\"/></hierarchy>",
+      "why": "同一份 XML 再跑一次，ref 不变",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "一",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e2",
+            "role": "item",
+            "label": "二",
+            "bounds": [
+              0,
+              100,
+              100,
+              200
+            ],
+            "center": [
+              50,
+              150
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          },
+          {
+            "ref": "e3",
+            "role": "item",
+            "label": "三",
+            "bounds": [
+              0,
+              200,
+              100,
+              300
+            ],
+            "center": [
+              50,
+              250
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    }
+  ]
+}

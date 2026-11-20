@@ -5,6 +5,7 @@
 // 自己的 env（KHY_DESKTOP_CONTROL / KHY_DESKTOP_MAX_ACTUATIONS /
 // KHY_COMPUTER_USE_ALLOWED_APPS）→ 后端 desktopControl/safetyGate 每次
 // 授权调用重读 env，下一次操作立即生效。fail-closed：缺省 off。
+import { errText } from '../../utils/errText'
 import { useState, useEffect, useCallback } from 'react'
 import { SettingSection, ToggleField, SelectField, TextField } from './fields'
 
@@ -104,8 +105,8 @@ export function CuaSettings({ settings, onChange }: SettingsProps) {
         setGateError(res?.error || '安全闸状态读取失败：host 未返回数据，请重启应用')
       }
       setGateLoading(false)
-    }).catch(() => {
-      setGateError('安全闸状态读取失败：host 进程无响应，请重启应用')
+    }).catch((err: unknown) => {
+      setGateError(`安全闸状态读取失败：${errText(err)}。若持续失败请重启应用`)
       setGateLoading(false)
     })
   }, [])

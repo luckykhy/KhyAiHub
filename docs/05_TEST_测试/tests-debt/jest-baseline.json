@@ -1,0 +1,17 @@
+{
+  "//": "后端 jest 采样面（tests/cli + tests/utils）的失败基线。棘轮只降不升：修好一个 suite 就从 failingSuites 删掉，并在同批提交里说明。执行器：scripts/ci/check-test-baseline.js（pr-gate 的 test-baseline job 调用）。",
+  "scope": ["tests/cli", "tests/utils"],
+  "updatedAt": "2026-11-13",
+  "baselineNote": "2026-11-13 首次建立（审计 DEP-11）。此前该 job 整 job continue-on-error，且无基线；现在门只在「新增失败」时红。三条死路径 suite（requireResolution.autoConnect / sharedPortablePaths / deployAgentVersionSources）当批清零，故不在基线内。",
+  "failingSuites": [
+    "tests/cli/qaEchoLines.test.js",
+    "tests/cli/khySettingsLayering.test.js",
+    "tests/cli/handlers/replayHandlerAi.test.js",
+    "tests/utils/dataHome.baseHome.test.js"
+  ],
+  "flakySuites": [
+    "tests/cli/repl.tierA.fallbackMenu.test.js",
+    "tests/cli/formatters.test.js"
+  ],
+  "flakyNote": "这两个 suite 在采样面全量下间歇性失败、单独跑全绿（formatters 单独 39/39）。根因是套件之间的状态污染（@rot），不是断言本身错。修污染之前它们必须留在允许集合里 —— 否则下一次抖动会被棘轮当成「新增失败」误报。"
+}

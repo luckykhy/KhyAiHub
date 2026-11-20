@@ -91,6 +91,57 @@ describe('aiUploadStore.commitUpload + getUpload', () => {
   });
 });
 
+// ── SEC-04：附件的对象级授权（属主） ───────────────────────────────────────
+describe('aiUploadStore 属主校验（SEC-04）', () => {
+  function commitWithOwner(ownerUserId, name = 'owned.txt', content = 'private body') {
+    const src = writeTemp(name, content);
+    return store.commitUpload({
+      tempPath: src,
+      originalName: name,
+      mimeType: 'text/plain',
+      size: fs.statSync(src).size,
+      ownerUserId,
+    });
+  }
+
+  test('manifest 记录属主，属主本人可读', () => {
+    const manifest = commitWithOwner('user-A');
+    expect(manifest.ownerUserId).toBe('user-A');
+    expect(store.getUpload(manifest.id, 'user-A')).not.toBeNull();
+  });
+
+  test('他人读取同一 id 按「不存在」处理（404 语义），不泄露存在性', () => {
+    const manifest = commitWithOwner('user-A', 'cross-user.txt', 'secret for A');
+    expect(store.getUpload(manifest.id, 'user-B')).toBeNull();
+    // 不存在性不泄露：与真正不存在的 id 得到同一种 null
+    expect(store.getUpload('deadbeefdeadbeefdeadbeefdeadbeef', 'user-B')).toBeNull();
+  });
+
+  test('旧 manifest（无属主字段）在带属主过滤时按不存在处理', () => {
+    const src = writeTemp('legacy.txt', 'legacy body');
+    const manifest = store.commitUpload({
+      tempPath: src, originalName: 'legacy.txt', mimeType: 'text/plain', size: fs.statSync(src).size,
+    });
+    expect(manifest.ownerUserId).toBeNull();
+    expect(store.getUpload(manifest.id, 'user-A')).toBeNull();
+    // 不带属主过滤的本机内部路径仍可读（迁移边界）
+    expect(store.getUpload(manifest.id)).not.toBeNull();
+  });
+
+  test('resolveForChat 带属主：他人附件落入 missing，不会进模型上下文', () => {
+    const manifest = commitWithOwner('user-A', 'ctx.txt', 'A-only content');
+    const out = store.resolveForChat([manifest.id], 'user-B');
+    expect(out.missing).toContain(manifest.id);
+    expect(out.promptBlocks.join('\n')).not.toContain('A-only content');
+    expect(out.descriptors).toHaveLength(0);
+
+    // 属主本人解析正常
+    const own = store.resolveForChat([manifest.id], 'user-A');
+    expect(own.missing).toHaveLength(0);
+    expect(own.promptBlocks.join('\n')).toContain('A-only content');
+  });
+});
+
 describe('aiUploadStore.resolveForChat', () => {
   test('image → inline base64 dataUrl in images[]', () => {
     // 1x1 transparent PNG

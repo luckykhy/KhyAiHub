@@ -10,7 +10,7 @@
  *
  * 本模块提供 TUI 侧的**点阵渲染**：字符图与三档明暗都由生成物 `brandPixelArt.js` 提供，
  * 该文件由 `node scripts/brand/build-brand-assets.js` 从几何真源
- * `delivery/brand/khy-brand-geometry.js` 渲染而来 —— 改形状只改真源，不手改点阵。
+ * `works/brand/khy-brand-geometry.js` 渲染而来 —— 改形状只改真源，不手改点阵。
  *
  * 纪律（与 `cli/startupBeats.js` 头部同）：
  *   - **零 IO**：点阵表就是字面量，不读文件、不读 env、不写 console。

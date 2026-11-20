@@ -242,6 +242,9 @@ function monthKey() {
  * @param {number} [costUSD=0] - estimated cost in USD (if available)
  * @param {number} [cacheReadTokens=0] - prompt-cache read (hit) tokens
  * @param {number} [cacheWriteTokens=0] - prompt-cache write (creation) tokens
+ * @param {{costState?:string, estimated?:boolean}} [meta] - cost provenance:
+ *   costState is the modelPricing state (priced/free/flat/assumed/unknown);
+ *   estimated marks token counts that came from estimateTokens(), not upstream.
  */
 function recordUsage(
   provider,
@@ -250,9 +253,13 @@ function recordUsage(
   outputTokens = 0,
   costUSD = 0,
   cacheReadTokens = 0,
-  cacheWriteTokens = 0
+  cacheWriteTokens = 0,
+  meta = {}
 ) {
   const total = inputTokens + outputTokens;
+  const costState =
+    meta && typeof meta.costState === 'string' ? meta.costState.trim().toLowerCase() : '';
+  const estimated = !!(meta && meta.estimated === true);
 
   // Update session
   _sessionUsage.inputTokens += inputTokens;
@@ -262,7 +269,7 @@ function recordUsage(
   _sessionUsage.costUSD += costUSD;
   _sessionUsage.cacheReadTokens += cacheReadTokens;
   _sessionUsage.cacheWriteTokens += cacheWriteTokens;
-  _sessionUsage.records.push({
+  const record = {
     provider,
     model,
     inputTokens,
@@ -272,7 +279,12 @@ function recordUsage(
     cacheReadTokens,
     cacheWriteTokens,
     timestamp: Date.now(),
-  });
+  };
+  // Old ledger rows have neither field. Only write them when meaningful so a
+  // missing field keeps meaning "this row predates provenance", not "priced".
+  if (costState) record.costState = costState;
+  if (estimated) record.estimated = true;
+  _sessionUsage.records.push(record);
 
   // Update in-memory mirror (O(1), no disk) — reads see fresh data instantly.
   const day = todayKey();
@@ -613,6 +625,31 @@ function formatInlineSummary(currentTokens) {
 }
 
 /**
+ * Count records whose numbers were not fully measured: token counts filled in by
+ * estimateTokens(), or costs that fell back to a rough/default rate.
+ * Legacy rows carry neither field, so they count as measured — the old ledger
+ * never claimed otherwise.
+ * @param {Array<object>} [records]
+ * @returns {{total:number, estimated:number, rough:number}}
+ */
+function summarizeCostProvenance(records) {
+  const list = Array.isArray(records) ? records : [];
+  let estimated = 0;
+  let rough = 0;
+  let total = 0;
+  for (const rec of list) {
+    if (!rec || typeof rec !== 'object') continue;
+    const state = typeof rec.costState === 'string' ? rec.costState.trim().toLowerCase() : '';
+    const isEstimated = rec.estimated === true;
+    const isRough = state === 'flat' || state === 'assumed' || state === 'unknown';
+    if (isEstimated) estimated += 1;
+    if (isRough) rough += 1;
+    if (isEstimated || isRough) total += 1;
+  }
+  return { total, estimated, rough };
+}
+
+/**
  * Format full usage report for the `usage` command.
  * @returns {string}
  */
@@ -641,6 +678,10 @@ function formatUsageReport() {
   out += d('    合计: ') + chalk.bold(fmtNum(session.totalTokens)) + '\n';
   if (session.costUSD > 0) {
     out += d('    预估费用: ') + y(`$${session.costUSD.toFixed(4)}`) + '\n';
+  }
+  const prov = summarizeCostProvenance(session.records);
+  if (prov.total > 0) {
+    out += d('    其中 ') + y(`${prov.total} 条为估算 / 回落粗价`) + '\n';
   }
   out += '\n';
 
@@ -976,6 +1017,10 @@ function formatCostReport(opts = {}) {
   out += d('  \u2502 ') + d('输出: ') + w(fmtNum(session.outputTokens)) + d(' tokens') + '\n';
   out += d('  \u2502 ') + d('合计: ') + b(fmtNum(session.totalTokens)) + d(' tokens') + '\n';
   out += d('  \u2502 ') + d('费用: ') + y(fmtCNY(sessionCost.costCNY)) + d(` (${fmtUSD(sessionCost.costUSD)})`) + '\n';
+  const prov = summarizeCostProvenance(session.records);
+  if (prov.total > 0) {
+    out += d('  \u2502 ') + d('其中 ') + y(`${prov.total} 条为估算 / 回落粗价`) + '\n';
+  }
   // \u5200110:\u4f1a\u8bdd\u4ee3\u7801\u6539\u52a8(\u5bf9\u9f50 CC /cost "Total code changes")\u3002\u95e8\u63a7 KHY_CODE_CHANGES
   // \u5173 / \u65e0\u6539\u52a8 \u2192 \u4e0d\u8ffd\u52a0\u6b64\u884c(\u9010\u5b57\u8282\u56de\u9000\u4eca\u65e5\u62a5\u8868)\u3002fail-soft:\u7edd\u4e0d\u5f71\u54cd\u4e3b\u62a5\u8868\u3002
   try {
@@ -1175,6 +1220,7 @@ module.exports = {
   formatInlineSummary,
   formatUsageReport,
   formatCostReport,
+  summarizeCostProvenance,
   calculateCost,
   estimateCost,
   getSessionCost,

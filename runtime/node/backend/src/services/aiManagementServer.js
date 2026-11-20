@@ -28,7 +28,7 @@ const VIRUS_SCAN_ENABLED = process.env.KHY_VIRUS_SCAN_ENABLED === 'true';
 // (env OLLAMA_MODEL still overrides first).
 const { PRIMARY: MODELS } = require('../constants/models');
 const { OLLAMA_HOST: _OLLAMA_HOST_DEFAULT, AI_BACKEND_DEFAULT_PORT } = require('../constants/serviceDefaults');
-const { getDataHome } = require('../utils/dataHome');
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
 const { resolveAnthropicBaseUrl } = require('../utils/proxyBaseUrl');
 
 // ── Protocol registry (lazy, avoid circular deps) ────────────
@@ -72,9 +72,10 @@ const SESSION_IDLE_MS = 30 * 60 * 1000; // 30 min idle timeout
 const AUTH_TIMEOUT_MS = 30 * 1000; // 30s to authenticate
 const GC_INTERVAL_MS = 30 * 1000; // 30s heartbeat / GC sweep
 const MAX_BODY_BYTES = 1 * 1024 * 1024; // 1 MB body limit
-const KHY_DIR = getDataHome();
-const CONVO_DIR = path.join(KHY_DIR, 'conversations');
-const ACCOUNT_CB_FILE = path.join(KHY_DIR, 'account_pool_circuit_breaker.json');
+const CONVO_DIR = getDataDir('conversations');
+// 读探测(fs.existsSync)与写入(原子改名)共用同一条路径:写侧自己 mkdir 父目录,
+// 所以这里走纯解析 —— 末级是文件,交给 getDataDir 会被当成目录建出来。
+const ACCOUNT_CB_FILE = resolveDataPath('account_pool_circuit_breaker.json');
 const AUTO_IMPORT_INTERVAL_MS = Math.max(
   15000,
   parseInt(process.env.AI_GATEWAY_AUTO_IMPORT_INTERVAL_MS || '60000', 10) || 60000
@@ -531,6 +532,8 @@ function getAiUploadApp() {
             originalName: f.originalname,
             mimeType: f.mimetype,
             size: f.size,
+            // SEC-04：记录附件属主，读取侧据此做对象级授权。
+            ownerUserId: req.authUser?.id,
           });
           attachments.push(uploadStore.toDescriptor(manifest));
         } catch (e) {
@@ -547,8 +550,9 @@ function getAiUploadApp() {
   });
 
   // Download / preview a committed attachment by id.
+  // SEC-04：带上请求者身份做属主校验；不一致按「不存在」返回 404（不泄露存在性）。
   a.get('/api/ai/upload/:id', expressAuth, (req, res) => {
-    const manifest = uploadStore.getUpload(req.params.id);
+    const manifest = uploadStore.getUpload(req.params.id, req.authUser?.id);
     if (!manifest) {
       return res.status(404).json({ success: false, message: '附件不存在或已过期' });
     }

@@ -131,12 +131,10 @@ function _auditRoot() {
     const workerId = String(process.env.JEST_WORKER_ID || '0').trim() || '0';
     return path.join(os.tmpdir(), 'khy-audit-jest', `worker-${workerId}`);
   }
-  // Portable-aware data home; fallback to the legacy location.
-  try {
-    return path.join(require('../utils/dataHome').getDataHome(), 'audit');
-  } catch {
-    return path.join(os.homedir(), '.khy', 'audit');
-  }
+  // dataHome resolver is the single source of truth (portable-aware, never
+  // throws); the hand-built ~/.khy/audit fallback forked a second audit root
+  // whenever the resolver require failed.
+  return require('../utils/dataHome').getDataDir('audit');
 }
 
 const AUDIT_ROOT = _auditRoot();

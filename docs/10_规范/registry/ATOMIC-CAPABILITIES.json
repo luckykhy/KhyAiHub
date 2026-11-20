@@ -2,7 +2,7 @@
   "meta": {
     "version": "1.0.0",
     "updated": "2026-10-30",
-    "purpose": "khy-os 原子能力总清单：把 6 个暴露面（后端工具注册表 / PC 侧手机桥目录 / Android 原生 / 手机 Dart / amoon bridge 契约 / amoo 桥策略）上暴露的 351 个工具名，归一到 132 个原子能力，并为每个原子能力登记唯一 canonical 实现。二级能力、三级能力直接复用这里的 canonical，不得再各自实现一份。",
+    "purpose": "khy-os 原子能力总清单：把 6 个暴露面（后端工具注册表 / PC 侧手机桥目录 / Android 原生 / 手机 Dart / amoon bridge 契约 / amoo 桥策略）上暴露的 377 个工具名，归一到 140 个原子能力，并为每个原子能力登记唯一 canonical 实现。二级能力、三级能力直接复用这里的 canonical，不得再各自实现一份。",
     "generator": "scripts/lib/atomicCapabilityRegistry.js",
     "extractor": "scripts/lib/atomicCapabilitySurfaces.js",
     "guard": "scripts/ci/check-atomic-capabilities.js",
@@ -20,8 +20,8 @@
       "label": "后端工具注册表",
       "entry": "runtime/node/backend/src/tools/index.js",
       "available": true,
-      "exposed": 193,
-      "registered": 193,
+      "exposed": 198,
+      "registered": 198,
       "orphanCount": 0,
       "orphans": []
     },
@@ -30,28 +30,28 @@
       "label": "PC 侧手机桥目录",
       "entry": "runtime/node/backend/src/services/domain/network/phone/phoneBridgeCatalog.js",
       "available": true,
-      "exposed": 43,
-      "registered": 43,
+      "exposed": 45,
+      "registered": 45,
       "orphanCount": 0,
       "orphans": []
     },
     {
       "id": "phone-native",
       "label": "Android 原生 Tools.NAMES",
-      "entry": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "entry": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "available": true,
-      "exposed": 48,
-      "registered": 48,
+      "exposed": 66,
+      "registered": 66,
       "orphanCount": 0,
       "orphans": []
     },
     {
       "id": "mobile-dart",
       "label": "手机端 Dart 内置工具",
-      "entry": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "entry": "delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
       "available": true,
-      "exposed": 33,
-      "registered": 33,
+      "exposed": 34,
+      "registered": 34,
       "orphanCount": 0,
       "orphans": []
     },
@@ -2436,7 +2436,7 @@
       "id": "fs.zip",
       "summary": "把手机目录/文件打包成 zip 或解包",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -3144,7 +3144,7 @@
                 }
               ],
               "risk": "",
-              "summary": "执行需要提权的 shell 命令。优先走 Shizuku（免 root）；Shizuku 不可用时"
+              "summary": "执行需要 shell 层的命令（am/pm/dumpsys/settings/input/screencap 等）。"
             }
           },
           "amoo-policy": {
@@ -3368,6 +3368,39 @@
         "severeDivergent": []
       },
       "note": "**与 `exec.shell` 同名异义，故单列一组。** amoo bridge 面的 `phone_exec` 是**只读诊断白名单**（op 枚举：echo / getprop / wm_size / pm_list / dumpsys_battery），契约明写「绝不接受任意 shell 字符串；管道、重定向、;、$()、反引号、换行和未知 op 一律拒绝。不是手机 shell」（contracts.js:448-451）。它是 `PHONE_RESTRICTED_TOOLS` 之一（phone-tools.js:58）——**刻意更窄**，不是重复实现。故不与 `exec.shell` 归组：把它们当同一能力，会让「复用」变成「放宽到任意 shell」，那是降级不是复用。"
+    },
+    {
+      "id": "sys.elevation",
+      "summary": "查询免 root 提权代理是否可用",
+      "layer": "L1",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/lib/core/services/device_control.dart",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "mobile-dart": [
+          "elevation_status"
+        ]
+      },
+      "memberCount": 1,
+      "interface": {
+        "paramCount": 0,
+        "params": [],
+        "perSurface": {
+          "mobile-dart": {
+            "elevation_status": {
+              "params": [],
+              "risk": "",
+              "summary": "查询 shell 提权通道（提权代理 = khy-os 自带的 sidecar，uid 2000）是否就绪。"
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "`exec_shell_elevated`（归 `exec.shell`）的状态面：只读查询提权代理装没装、起没起。与执行能力分开登记——它是「能不能提权」的判据，不是执行本身。"
     },
     {
       "id": "exec.code",
@@ -4176,7 +4209,7 @@
                   }
                 }
               ],
-              "risk": "medium",
+              "risk": "high",
               "summary": "Make a single HTTP/HTTPS request (GET/POST/PUT/DELETE/PATCH/HEAD) and return status, headers and body. Use it to call REST/JSON APIs directly instead of shelling out to curl; use WebFetch to read a we"
             }
           },
@@ -5564,6 +5597,138 @@
         "severeDivergent": []
       },
       "note": "后端独有；与 `net.http` 的差异是「抓取+解析」而非「取回」。"
+    },
+    {
+      "id": "net.capture-rule",
+      "summary": "抓包与改写规则（手机侧调试面）",
+      "layer": "L1",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "phone-native": [
+          "net_capture_export",
+          "net_capture_list",
+          "net_capture_start",
+          "net_capture_status",
+          "net_capture_stop",
+          "net_rule_clear",
+          "net_rule_delete",
+          "net_rule_list",
+          "net_rule_set"
+        ]
+      },
+      "memberCount": 9,
+      "interface": {
+        "paramCount": 4,
+        "params": [
+          {
+            "name": "limit",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/net_capture_list"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "since_seq",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/net_capture_list"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "tls",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/net_capture_start"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "ttl_ms",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/net_capture_start"
+            ],
+            "typedIn": [],
+            "untyped": true
+          }
+        ],
+        "perSurface": {
+          "phone-native": {
+            "net_capture_export": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            },
+            "net_capture_list": {
+              "params": [
+                {
+                  "name": "since_seq",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "limit",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            },
+            "net_capture_start": {
+              "params": [
+                {
+                  "name": "ttl_ms",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "tls",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            },
+            "net_capture_status": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            },
+            "net_capture_stop": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "五个采集入口 + 四个规则入口；规则那四个由 2026-11-17 人工裁决从合并的 net_rule（op 参数）拆回独立工具（工具面棘轮 +3，已批准），九个入口共用 Tools.java 同一道调试解锁门与同一份 netRule() 规则引擎（NetCaptureCore），拆分只改工具名不改规则语义。`net_capture_*` 五个原先也是孤儿（atomic-orphan-exposure），同一次归组，避免孤儿数从 12 涨到 15。"
     },
     {
       "id": "device.ping",
@@ -7213,7 +7378,7 @@
       "id": "device.ui-dump",
       "summary": "读取屏幕上的可交互元素树",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -7315,7 +7480,7 @@
       "id": "device.ui-tap",
       "summary": "点击屏幕元素",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "duplicate-logged",
       "divergenceStatus": "active",
@@ -7446,7 +7611,7 @@
       "id": "device.ui-type",
       "summary": "向输入框写入文本",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -7515,7 +7680,7 @@
       "id": "device.ui-gesture",
       "summary": "滑动、长按与系统导航",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -7609,10 +7774,182 @@
       "note": ""
     },
     {
+      "id": "device.ui-drive",
+      "summary": "按元素引用驱动 Android 界面（dump → digest → 动作 → 复检）",
+      "layer": "L1",
+      "canonical": "runtime/node/backend/src/tools/AndroidUiTool/index.js",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "backend": [
+          "AndroidUi"
+        ]
+      },
+      "memberCount": 1,
+      "interface": {
+        "paramCount": 6,
+        "params": [
+          {
+            "name": "action",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "confirm",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "direction",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "distance",
+            "type": "integer",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "ref",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/AndroidUi"
+            ],
+            "typedIn": [
+              "backend/AndroidUi"
+            ],
+            "untyped": false
+          }
+        ],
+        "perSurface": {
+          "backend": {
+            "AndroidUi": {
+              "params": [
+                {
+                  "name": "action",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {
+                    "enum": [
+                      "snapshot",
+                      "tap",
+                      "longpress",
+                      "swipe",
+                      "back",
+                      "home",
+                      "recents",
+                      "type"
+                    ]
+                  }
+                },
+                {
+                  "name": "ref",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "text",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {
+                    "maxLength": 80
+                  }
+                },
+                {
+                  "name": "direction",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {
+                    "enum": [
+                      "up",
+                      "down",
+                      "left",
+                      "right"
+                    ]
+                  }
+                },
+                {
+                  "name": "distance",
+                  "type": "integer",
+                  "required": false,
+                  "constraints": {
+                    "min": 100,
+                    "max": 1500
+                  }
+                },
+                {
+                  "name": "confirm",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "high",
+              "summary": "- Drive the user's OWN Android screen over adb by element ref: snapshot/tap/longpress/swipe/back/home/recents/type"
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "**聚合工具面**，同 `exec.shell` 里的 `PhoneBridge`：一个工具收进 snapshot/tap/swipe/type 多个动作，不是新的原子能力实现——元素引用与变化判定用 vendored android-agent-kit，适配层在 services/domain/network/phone/androidRef。单成员组，**刻意不并进 `device.ui-tap` / `device.ui-type`**：同名多归是 error，且本工具的参数契约（ref 必填 + confirm 门）与那几组不同，并进去会触发接口分歧误报。"
+    },
+    {
       "id": "device.screenshot",
       "summary": "截屏",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -7632,7 +7969,7 @@
       },
       "memberCount": 5,
       "interface": {
-        "paramCount": 29,
+        "paramCount": 31,
         "params": [
           {
             "name": "action",
@@ -7713,6 +8050,17 @@
           },
           {
             "name": "enabled",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/shot_b64"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "endpoint",
             "type": "unknown",
             "required": false,
             "requiredIn": [],
@@ -7889,6 +8237,17 @@
           },
           {
             "name": "provenance",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/shot_b64"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "seconds",
             "type": "unknown",
             "required": false,
             "requiredIn": [],
@@ -8096,6 +8455,18 @@
                   "constraints": {}
                 },
                 {
+                  "name": "name",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "seconds",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
                   "name": "value",
                   "type": "unknown",
                   "required": false,
@@ -8126,12 +8497,6 @@
                   "constraints": {}
                 },
                 {
-                  "name": "name",
-                  "type": "unknown",
-                  "required": false,
-                  "constraints": {}
-                },
-                {
                   "name": "code",
                   "type": "unknown",
                   "required": false,
@@ -8145,6 +8510,12 @@
                 },
                 {
                   "name": "dest",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "endpoint",
                   "type": "unknown",
                   "required": false,
                   "constraints": {}
@@ -8225,6 +8596,137 @@
       "note": "**与 `device.screenshot` 同名异义，故单列一组。** amoo bridge 面走 `adb exec-out screencap`，默认落盘 24h 并返回 path/sha256，只有 inline=true 且 base64 未超上限时才内联返回——**不内联就拿不到图**，与手机侧直接返回 b64 的形态不同。"
     },
     {
+      "id": "device.media-capture",
+      "summary": "录音与开相机（媒体采集）",
+      "layer": "L1",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "phone-bridge": [
+          "phone_camera_open",
+          "phone_record_audio"
+        ],
+        "phone-native": [
+          "camera_open",
+          "record_audio"
+        ]
+      },
+      "memberCount": 4,
+      "interface": {
+        "paramCount": 3,
+        "params": [
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-bridge/phone_camera_open"
+            ],
+            "typedIn": [
+              "phone-bridge/phone_camera_open"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-bridge/phone_camera_open",
+              "phone-bridge/phone_record_audio"
+            ],
+            "typedIn": [
+              "phone-bridge/phone_camera_open",
+              "phone-bridge/phone_record_audio"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "seconds",
+            "type": "integer",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-bridge/phone_record_audio"
+            ],
+            "typedIn": [
+              "phone-bridge/phone_record_audio"
+            ],
+            "untyped": false
+          }
+        ],
+        "perSurface": {
+          "phone-bridge": {
+            "phone_camera_open": {
+              "params": [
+                {
+                  "name": "mode",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {
+                    "enum": [
+                      "photo",
+                      "video"
+                    ]
+                  }
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "medium",
+              "summary": "打开系统相机拍一张照片（落盘由相机 App 决定，桥只负责开与等）"
+            },
+            "phone_record_audio": {
+              "params": [
+                {
+                  "name": "seconds",
+                  "type": "integer",
+                  "required": false,
+                  "constraints": {
+                    "minimum": 1,
+                    "maximum": 120
+                  }
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "medium",
+              "summary": "录一段手机麦克风的声音存成文件"
+            }
+          },
+          "phone-native": {
+            "camera_open": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            },
+            "record_audio": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "桥面 `phone_*` 前缀名与原生裸名是同一采集能力的两端接入（与 device.screenshot 同构）。"
+    },
+    {
       "id": "device.location",
       "summary": "读取地理位置",
       "layer": "L1",
@@ -8282,7 +8784,7 @@
       "id": "device.install-apk",
       "summary": "安装 APK / 配置提权环境",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8327,16 +8829,6 @@
               ],
               "risk": "",
               "summary": "安装一个本地 APK 文件。只接受 /sdcard/Download 和 /sdcard/khy-os 下的 .apk；"
-            },
-            "install_shizuku": {
-              "params": [],
-              "risk": "",
-              "summary": "自动安装内置的 Shizuku（khyos 随包分发，无需去应用商店）。"
-            },
-            "shizuku_status": {
-              "params": [],
-              "risk": "",
-              "summary": "查询 Shizuku（免 root 提权）是否可用。"
             }
           }
         },
@@ -8350,7 +8842,7 @@
       "id": "device.analysis",
       "summary": "分析当前屏幕内容",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8404,7 +8896,7 @@
       "id": "device.dart-swipe",
       "summary": "Dart 侧无障碍滑动手势",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8542,7 +9034,7 @@
       "id": "bridge.tool-catalog",
       "summary": "桥自述都有什么工具",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8585,7 +9077,7 @@
       "id": "credential.delivery",
       "summary": "凭据投递四件套",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8636,7 +9128,7 @@
       "id": "app.adou-signin",
       "summary": "调用 khy 的 a豆助手",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8666,10 +9158,315 @@
       "note": "实现 `adouSignin` 在 Tools.java:2014-2049：主通道是 ContentProvider.call，广播只作兜底（StepOS 拦「后台应用给第三方 App 发广播」，:2017-2019 记了实测）。**无 PC 调用面**——phoneBridgeCatalog 的 32 项里没有它（本日实测 BRIDGE_TOOLS=32，方案报告 :160 同记此事实）。ADOU_PKG 与 AMOO_PKG 同命名空间不同包，包名一律写显式全名、不按 `com.amoo.` 前缀匹配，否则会连带圈进别的应用（Tools.java:1870-1872）。它依赖 `com.amoo.adousignin`，未装时返回 not_installed（:2029-2033）——检测不到就是不可用，不伪造在线。"
     },
     {
+      "id": "sync.log",
+      "summary": "共享层日志：追加、增量读、校验链、导出（手机本地，两端对读）",
+      "layer": "L1",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/SyncStore.java",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "phone-native": [
+          "sync_append",
+          "sync_delete",
+          "sync_export",
+          "sync_read",
+          "sync_status",
+          "sync_verify"
+        ]
+      },
+      "memberCount": 6,
+      "interface": {
+        "paramCount": 7,
+        "params": [
+          {
+            "name": "content",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_append"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "id",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_delete"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "limit",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_read"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "role",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_append",
+              "phone-native/sync_read",
+              "phone-native/sync_verify"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "session_id",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_append"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "since_cursor",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_read"
+            ],
+            "typedIn": [],
+            "untyped": true
+          },
+          {
+            "name": "since_offset",
+            "type": "unknown",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "phone-native/sync_read"
+            ],
+            "typedIn": [],
+            "untyped": true
+          }
+        ],
+        "perSurface": {
+          "phone-native": {
+            "sync_append": {
+              "params": [
+                {
+                  "name": "session_id",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "role",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "content",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            },
+            "sync_delete": {
+              "params": [
+                {
+                  "name": "id",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            },
+            "sync_export": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            },
+            "sync_read": {
+              "params": [
+                {
+                  "name": "role",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "since_cursor",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "limit",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "since_offset",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            },
+            "sync_status": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            },
+            "sync_verify": {
+              "params": [
+                {
+                  "name": "role",
+                  "type": "unknown",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": ""
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "六个入口的实现体全在 SyncStore.java（append/delete/verify/export/status 各一个 `public static synchronized`，记录落 /sdcard/khyos-sync）。PC 侧没有同名调用面——它是手机本地共享层，不是设备控制能力，所以 `phone-bridge` 面为空是对的。2026-11-17 加工具名时未归组，是 atomic-orphan-exposure 的 6 个孤儿；与 net_capture_* 同批补齐，避免「新工具先说明它复用哪个原子能力」这道闸被绕过。"
+    },
+    {
+      "id": "device.elevate",
+      "summary": "提权自举：与本机 adbd 配对、拉起 uid 2000 提权代理、查/切提权开关",
+      "layer": "L1",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/shell/ElevationBootstrap.kt",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "phone-native": [
+          "elevate"
+        ],
+        "mobile-dart": [
+          "elevate"
+        ]
+      },
+      "memberCount": 2,
+      "interface": {
+        "paramCount": 3,
+        "params": [
+          {
+            "name": "code",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "mobile-dart/elevate"
+            ],
+            "typedIn": [
+              "mobile-dart/elevate"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "endpoint",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "mobile-dart/elevate"
+            ],
+            "typedIn": [
+              "mobile-dart/elevate"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "op",
+            "type": "string",
+            "required": true,
+            "requiredIn": [
+              "mobile-dart/elevate"
+            ],
+            "presentIn": [
+              "mobile-dart/elevate"
+            ],
+            "typedIn": [
+              "mobile-dart/elevate"
+            ],
+            "untyped": false
+          }
+        ],
+        "perSurface": {
+          "phone-native": {
+            "elevate": {
+              "params": [],
+              "risk": "",
+              "summary": ""
+            }
+          },
+          "mobile-dart": {
+            "elevate": {
+              "params": [
+                {
+                  "name": "op",
+                  "type": "string",
+                  "required": true,
+                  "constraints": {}
+                },
+                {
+                  "name": "code",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "endpoint",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": "提权自举：与本机 adbd 配对、拉起 uid 2000 的提权代理、查询或切换提权开关。"
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "两个接入点是同一份实现，不是重复：Dart 侧 builtin_tools.dart:454 走 DeviceControl.elevate → 原生 Tools.java 的 elevate 分支（stopSidecar / pairWithCode / setEndpoint / bootstrap），UI 按钮调的也是同一个 ElevationBootstrap。开关默认关是红线：raise 在开关关着时直接拒绝，没有静默提权的路。"
+    },
+    {
       "id": "mobile.notes",
       "summary": "检索本地笔记",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -8723,17 +9520,20 @@
       "id": "mobile.calc",
       "summary": "计算数学表达式",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+      "canonical": "runtime/node/backend/src/tools/CalculatorTool/index.js",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
       "divergenceNote": "",
       "surfaces": {
+        "backend": [
+          "Calculator"
+        ],
         "mobile-dart": [
           "calculator"
         ]
       },
-      "memberCount": 1,
+      "memberCount": 2,
       "interface": {
         "paramCount": 1,
         "params": [
@@ -8742,18 +9542,35 @@
             "type": "string",
             "required": true,
             "requiredIn": [
+              "backend/Calculator",
               "mobile-dart/calculator"
             ],
             "presentIn": [
+              "backend/Calculator",
               "mobile-dart/calculator"
             ],
             "typedIn": [
+              "backend/Calculator",
               "mobile-dart/calculator"
             ],
             "untyped": false
           }
         ],
         "perSurface": {
+          "backend": {
+            "Calculator": {
+              "params": [
+                {
+                  "name": "expression",
+                  "type": "string",
+                  "required": true,
+                  "constraints": {}
+                }
+              ],
+              "risk": "low",
+              "summary": "数值计算用我，不要口算：任务中途需要算（定价链、汇总、单位换算、百分比、利息）时调用本工具——不要用心算，也不要用 Bash/CodeInterpreter 绕。"
+            }
+          },
           "mobile-dart": {
             "calculator": {
               "params": [
@@ -8773,7 +9590,7 @@
         "divergenceDetail": {},
         "severeDivergent": []
       },
-      "note": "Dart 侧独有。"
+      "note": "两端各一份实现：后端 `Calculator`（CalculatorTool，支持 sqrt/pi 等白名单函数，category=analysis）与 Dart `calculator`（四则+幂）。参数契约同为 `expression:string` 必填，跨面无必填性分歧；按「同一能力的多个接入点」归入同组，canonical 取后端主面。"
     },
     {
       "id": "amoo.dispatch",
@@ -8881,8 +9698,8 @@
       "canonical": "runtime/node/backend/src/services/domain/network/phone/phoneBridgeClient.js",
       "canonicalSource": "declared",
       "status": "active",
-      "divergenceStatus": "active",
-      "divergenceNote": "",
+      "divergenceStatus": "divergence-logged",
+      "divergenceNote": "【接入面校验严格度差异】`prompt`：手机两侧均必填（原生 Tools.java:2177「amoo_ask 需要 prompt」拒绝空值；Dart builtin_tools.dart:996 required 列表），PC 桥面 phoneBridgeCatalog.js:642-647 的 args.prompt 未标 required（可选）。桥侧对缺失 prompt 有自己的拒绝路径，必填性只是各接入面校验严格度不同，不是能力语义分歧；以手机两侧为准，桥面收紧另开任务，不在本轮 driver 化范围。",
       "surfaces": {
         "phone-bridge": [
           "phone_amoo_ask",
@@ -8891,21 +9708,28 @@
         "phone-native": [
           "amoo_ask",
           "amoo_result"
+        ],
+        "mobile-dart": [
+          "amoo_ask"
         ]
       },
-      "memberCount": 4,
+      "memberCount": 5,
       "interface": {
         "paramCount": 2,
         "params": [
           {
             "name": "prompt",
             "type": "string",
-            "required": false,
-            "requiredIn": [],
+            "required": true,
+            "requiredIn": [
+              "mobile-dart/amoo_ask"
+            ],
             "presentIn": [
+              "mobile-dart/amoo_ask",
               "phone-bridge/phone_amoo_ask"
             ],
             "typedIn": [
+              "mobile-dart/amoo_ask",
               "phone-bridge/phone_amoo_ask"
             ],
             "untyped": false
@@ -8916,9 +9740,11 @@
             "required": false,
             "requiredIn": [],
             "presentIn": [
+              "mobile-dart/amoo_ask",
               "phone-bridge/phone_amoo_ask"
             ],
             "typedIn": [
+              "mobile-dart/amoo_ask",
               "phone-bridge/phone_amoo_ask"
             ],
             "untyped": false
@@ -8966,19 +9792,56 @@
               "risk": "",
               "summary": ""
             }
+          },
+          "mobile-dart": {
+            "amoo_ask": {
+              "params": [
+                {
+                  "name": "prompt",
+                  "type": "string",
+                  "required": true,
+                  "constraints": {}
+                },
+                {
+                  "name": "timeout_ms",
+                  "type": "integer",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "",
+              "summary": "向本机的反代助手提问，并拿回它的回复原文。"
+            }
           }
         },
-        "divergent": [],
-        "divergenceDetail": {},
-        "severeDivergent": []
+        "divergent": [
+          "prompt"
+        ],
+        "divergenceDetail": {
+          "prompt": {
+            "kind": "required-mismatch",
+            "types": [
+              "string"
+            ],
+            "requiredIn": [
+              "mobile-dart/amoo_ask"
+            ],
+            "optionalIn": [
+              "phone-bridge/phone_amoo_ask"
+            ]
+          }
+        },
+        "severeDivergent": [
+          "prompt"
+        ]
       },
-      "note": "**与 `amoo.dispatch` 分开登记**：本条是**手机侧反代**——`phone_amoo_ask` 只启动、结果用 `phone_amoo_result` 轮询（异步是必须的：桥 socket 超时 20s，而 amoo 一想约 6 分钟，阻塞调用会在答案出现前被切断，phoneBridgeCatalog.js:612-613）。canonical 指 PC 侧实际消费面 `phoneBridgeClient.js`（PhoneBridgeTool/index.js:179 经 `client.call()` 出栈），**不再是 `amooBridgeClient.js`**——后者属于 PC 驱动派发链，拿它当反代的 canonical，正是在替重复实现打掩护。`amoo_ask`/`amoo_result` 属「整组可关」的助手协同能力：Amoo 没装时桥把它们报为 withheld，PC 侧据此三态判可用，不据此说 Amoo 装没装（phoneBridgeCatalog.js:711-722）。`khy_ask`/`amoon_send` 两个错组成员已拆去 `khyos.ask` 与 `amoo.mailbox`。"
+      "note": "**与 `amoo.dispatch` 分开登记**：本条是**手机侧反代**——`phone_amoo_ask` 只启动、结果用 `phone_amoo_result` 轮询（异步是必须的：桥 socket 超时 20s，而 amoo 一想约 6 分钟，阻塞调用会在答案出现前被切断，phoneBridgeCatalog.js:612-613）。canonical 指 PC 侧实际消费面 `phoneBridgeClient.js`（PhoneBridgeTool/index.js:179 经 `client.call()` 出栈），**不再是 `amooBridgeClient.js`**——后者属于 PC 驱动派发链，拿它当反代的 canonical，正是在替重复实现打掩护。`amoo_ask`/`amoo_result` 属「整组可关」的助手协同能力：Amoo 没装时桥把它们报为 withheld，PC 侧据此三态判可用，不据此说 Amoo 装没装（phoneBridgeCatalog.js:711-722）。`khy_ask`/`amoon_send` 两个错组成员已拆去 `khyos.ask` 与 `amoo.mailbox`。 【接口分歧】【接入面校验严格度差异】`prompt`：手机两侧均必填（原生 Tools.java:2177「amoo_ask 需要 prompt」拒绝空值；Dart builtin_tools.dart:996 required 列表），PC 桥面 phoneBridgeCatalog.js:642-647 的 args.prompt 未标 required（可选）。桥侧对缺失 prompt 有自己的拒绝路径，必填性只是各接入面校验严格度不同，不是能力语义分歧；以手机两侧为准，桥面收紧另开任务，不在本轮 driver 化范围。"
     },
     {
       "id": "amoo.stop",
       "summary": "立即中止进行中的 amoo 反代任务、释放单飞锁",
       "layer": "L1",
-      "canonical": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooLoop.java",
+      "canonical": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooLoop.java",
       "canonicalSource": "declared",
       "status": "active",
       "divergenceStatus": "active",
@@ -9807,6 +10670,223 @@
         "severeDivergent": []
       },
       "note": ""
+    },
+    {
+      "id": "phone.hiao-bridge",
+      "summary": "经 hiao（phone-dsh）治理桥调用手机工具",
+      "layer": "L2",
+      "canonical": "runtime/node/backend/src/services/domain/network/phone/hiaoBridge/hiaoBridgeClient.js",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "backend": [
+          "HiaoBridge"
+        ]
+      },
+      "memberCount": 1,
+      "interface": {
+        "paramCount": 9,
+        "params": [
+          {
+            "name": "action",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "answer",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "approve",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "args",
+            "type": "object",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "confirm",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "n",
+            "type": "number",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "tool",
+            "type": "string",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/HiaoBridge"
+            ],
+            "typedIn": [
+              "backend/HiaoBridge"
+            ],
+            "untyped": false
+          }
+        ],
+        "perSurface": {
+          "backend": {
+            "HiaoBridge": {
+              "params": [
+                {
+                  "name": "action",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {
+                    "enum": [
+                      "ping",
+                      "status",
+                      "tools",
+                      "call",
+                      "approvals",
+                      "approve",
+                      "audit",
+                      "task"
+                    ]
+                  }
+                },
+                {
+                  "name": "tool",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "args",
+                  "type": "object",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "prompt",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "approve",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "answer",
+                  "type": "string",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "n",
+                  "type": "number",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "confirm",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "high",
+              "summary": "- Drive hiao (phone-dsh), the governed agent bridge on the user's OWN Android phone"
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "**单成员组，刻意不并进 `device.ui-*` 四组**：`HiaoBridge` 是桥**门面**（ping/status/tools/call/task/approvals/approve/audit 聚合），不是某一个原子能力——call 的目标由手机端 `/status` 实时决定，逐工具映射要等 hiao 工具表被契约测试钉住后再拆。并进 `device.ui-*` 会让 `atomic-interface-divergent` 因参数必填性不同而红（桥面参数是自由 `args` 对象，原生面是逐字段契约），与 `exec.shell` 里把 `PhoneBridge`记为聚合面而不是新实现是同一条口径。"
     },
     {
       "id": "memory.store",
@@ -13159,6 +14239,128 @@
         "severeDivergent": []
       },
       "note": ""
+    },
+    {
+      "id": "git.branch",
+      "summary": "列出与切换分支",
+      "layer": "L1",
+      "canonical": "runtime/node/backend/src/services/domain/git/gitBranchService.js",
+      "canonicalSource": "declared",
+      "status": "active",
+      "divergenceStatus": "active",
+      "divergenceNote": "",
+      "surfaces": {
+        "backend": [
+          "gitBranch",
+          "gitSwitch"
+        ]
+      },
+      "memberCount": 2,
+      "interface": {
+        "paramCount": 4,
+        "params": [
+          {
+            "name": "branch",
+            "type": "string",
+            "required": true,
+            "requiredIn": [
+              "backend/gitSwitch"
+            ],
+            "presentIn": [
+              "backend/gitSwitch"
+            ],
+            "typedIn": [
+              "backend/gitSwitch"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "create",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/gitSwitch"
+            ],
+            "typedIn": [
+              "backend/gitSwitch"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "force",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/gitSwitch"
+            ],
+            "typedIn": [
+              "backend/gitSwitch"
+            ],
+            "untyped": false
+          },
+          {
+            "name": "include_remote",
+            "type": "boolean",
+            "required": false,
+            "requiredIn": [],
+            "presentIn": [
+              "backend/gitBranch"
+            ],
+            "typedIn": [
+              "backend/gitBranch"
+            ],
+            "untyped": false
+          }
+        ],
+        "perSurface": {
+          "backend": {
+            "gitBranch": {
+              "params": [
+                {
+                  "name": "include_remote",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "safe",
+              "summary": "List the local Git branches of the current repository, marking the current one and each branch's upstream/ahead/behind counts. Read-only; use it before gitSwitch to pick an existing branch name, and t"
+            },
+            "gitSwitch": {
+              "params": [
+                {
+                  "name": "branch",
+                  "type": "string",
+                  "required": true,
+                  "constraints": {
+                    "maxLength": 255
+                  }
+                },
+                {
+                  "name": "create",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                },
+                {
+                  "name": "force",
+                  "type": "boolean",
+                  "required": false,
+                  "constraints": {}
+                }
+              ],
+              "risk": "medium",
+              "summary": "Switch the current working tree to another Git branch, optionally creating that branch first (based on the current HEAD). Refuses to run when local changes would be overwritten, when conflicts are unr"
+            }
+          }
+        },
+        "divergent": [],
+        "divergenceDetail": {},
+        "severeDivergent": []
+      },
+      "note": "读（gitBranch 列分支）与写（gitSwitch 切换，force 时丢弃本地改动）两个工具共用同一 service，故归一组；canonical 指 service 而非两个工具文件——按工具文件拆两组会给「同一能力两处真源」打掩护。"
     },
     {
       "id": "model.list",
@@ -23585,8 +24787,8 @@
     }
   ],
   "coverage": {
-    "totalExposed": 351,
-    "totalRegistered": 351,
+    "totalExposed": 377,
+    "totalRegistered": 377,
     "totalOrphans": 0,
     "complete": true
   }

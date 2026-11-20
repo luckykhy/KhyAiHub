@@ -6,6 +6,7 @@ import { SidePane } from './SidePane'
 import type { PaneTab, PaneTabKind } from './SidePane'
 import { usePanelWidth } from './usePanelWidth'
 import { KhyPet } from '../pet/KhyPet'
+import { KhyosBackground } from '../khyos/KhyosBackground'
 import {
   SESSION_LIST_TIMEOUT_MS,
   nextRetryDelay,
@@ -76,6 +77,14 @@ const SIDEPANE_WIDTH = { default: 300, min: 220, max: 640 }
 // 首次 Ctrl+K 时才挂载 —— 不可见时本来就不渲染任何东西，故行为不变。
 const CommandCenter = lazy(() => import('../message/CommandCenter').then((m) => ({ default: m.CommandCenter })))
 
+// 代码编辑器工作台（DESIGN-ARCH-210）：Monaco 与整棵编辑器树只在首次打开时
+// 加载。CORE-LAYERS 对 App.tsx / AppLayout 的文件数零容差 —— 这里只能是
+// 内联 lazy（同 CommandCenter 形态），不得改成顶层静态 import，也不得新增
+// Redux slice（store.ts 在本文件的可达闭包内，加一个 slice 文件数 +1 即判红）。
+const EditorWorkbench = lazy(() =>
+  import('../editor/EditorWorkbench').then((m) => ({ default: m.EditorWorkbench }))
+)
+
 export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, onNewTask, onTaskSelect, sessionTitle, onReloadSession }: AppLayoutProps) {
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const [sidePaneVisible, setSidePaneVisible] = useState(false)
@@ -101,6 +110,13 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
   // 分组 = 按分组浏览。默认「项目」（ZC-ALIGN-001 P3-2，第八轮）。
   const [viewMode, setViewMode] = useState<'grouped' | 'chronological'>('chronological')
   const [searchQuery, setSearchQuery] = useState('')
+  // 主区视图：聊天 / 代码编辑器工作台。工作台一旦打开就保持挂载（visible 切
+  // 换只改 CSS），否则切回聊天会丢标签、未保存缓冲区与 undo 栈。
+  const [centerView, setCenterView] = useState<'chat' | 'editor'>('chat')
+  const [editorMounted, setEditorMounted] = useState(false)
+  const [editorRequest, setEditorRequest] = useState<{ filePath: string; seq: number } | null>(null)
+  const [editorDirty, setEditorDirty] = useState(false)
+  const editorSeqRef = useRef(0)
 
   // Drag-resizable panel widths (workspaceSidebar.resizeSidebar /
   // sidePane.restoreSize), persisted to settings.json
@@ -181,6 +197,22 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
     })
   }, [])
 
+  // 主区工作台入口（[DESIGN-ARCH-210] M1）。与 side-pane 的 openFileTab 是两条
+  // 并行路径：工作台是主区的宽编辑面，sidePane 保留窄预览。请求用递增 seq 去重，
+  // 同一文件连点两次不会让工作台重复读盘。
+  const openFileInEditor = useCallback((filePath: string) => {
+    if (!filePath) return
+    editorSeqRef.current += 1
+    setEditorRequest({ filePath, seq: editorSeqRef.current })
+    setEditorMounted(true)
+    setCenterView('editor')
+  }, [])
+
+  const toggleEditorWorkbench = useCallback(() => {
+    setEditorMounted(true)
+    setCenterView((v) => (v === 'editor' ? 'chat' : 'editor'))
+  }, [])
+
   // 内置编辑器脏状态 → 打脏点（PaneTab.dirty）。按 filePath 定位标签：
   // 同一文件只开一个标签（openFileTab 去重），filePath 是稳定键。
   // 值没变时原样返回 tabs（同引用）—— 渲染层的 onDirtyChange 箭头每次渲染
@@ -251,9 +283,10 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
       case 'addSelectionChatTab': openPaneTab('selectionChat'); break
       case 'addAmoonTab': openPaneTab('amoon'); break
       case 'openFileTab': openPaneTab('openFile'); break
-      case 'openFile': if (arg) openFileTab(arg); break
+      case 'openFile': if (arg) openFileInEditor(arg); break
+      case 'toggleEditorWorkbench': toggleEditorWorkbench(); break
     }
-  }, [toggleSidePane, toggleTerminal, openPaneTab, openFileTab])
+  }, [toggleSidePane, toggleTerminal, openPaneTab, openFileInEditor, toggleEditorWorkbench])
 
   // 面板快捷键（Ctrl+Alt+B / Ctrl+J）：键位取自 shared/keymap.ts 的单一真源，
   // 副作用留在本组件（它是 side-pane 状态机的主人）。与 App 层的全局链共用同一
@@ -269,11 +302,14 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
       } else if (action === 'toggleTerminal') {
         e.preventDefault()
         toggleTerminal()
+      } else if (action === 'toggleEditorWorkbench') {
+        e.preventDefault()
+        toggleEditorWorkbench()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [toggleSidePane, toggleTerminal])
+  }, [toggleSidePane, toggleTerminal, toggleEditorWorkbench])
 
   // 会话选中/自动首会话同步到 messageSlice.currentSessionId（AppHeader 显示真源）
   const dispatch = useAppDispatch()
@@ -344,24 +380,41 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
     return () => window.removeEventListener('khy:workspace-changed', handleWorkspaceChanged)
   }, [handleWorkspaceChanged])
 
-  // 消息流内「查看文件」/ 空态快捷入口等 → 统一走 side-pane 的 codeViewer 标签
-  // （与磁贴、侧栏文件树、命令面板「打开文件」同一条路径）
+  // 消息流内「查看文件」/ 空态快捷入口 / 侧栏文件树 → 主区工作台
+  // （[DESIGN-ARCH-210] M1）。side-pane 的窄预览仍存在，但「看代码」这件事的
+  // 默认落点改成有标签、能搜索、能保存的宽编辑面。
   useEffect(() => {
     const onOpenFile = (e: Event) => {
       const detail = (e as CustomEvent).detail
-      if (typeof detail === 'string' && detail) openFileTab(detail)
+      if (typeof detail === 'string' && detail) openFileInEditor(detail)
     }
     window.addEventListener('khy:open-file', onOpenFile)
     return () => window.removeEventListener('khy:open-file', onOpenFile)
-  }, [openFileTab])
+  }, [openFileInEditor])
 
-  // 外部编辑器未配置时的回落入口（AppHeader 派发）→ 打开「打开文件」选择器，
-  // 用户从工作区选文件进内置编辑器。不再是报错死路。
+  // 工作台里有未保存内容时，关窗要拦一下 —— 浏览器/Electron 的标准 beforeunload
+  // 提示不接管流程，只让人有机会取消。Ctrl+R 重载同理。
   useEffect(() => {
-    const onOpenPicker = () => openPaneTab('openFile')
+    if (!editorDirty) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [editorDirty])
+
+  // 外部编辑器未配置时的回落入口（AppHeader / TitleBar 派发）→ 主区内置
+  // 代码编辑器工作台。开工作台而不是侧栏窄预览：这里就是「在编辑器中打开」
+  // 的内置替代，工作台自带文件树，选文件即编辑。
+  useEffect(() => {
+    const onOpenPicker = () => {
+      setEditorMounted(true)
+      setCenterView('editor')
+    }
     window.addEventListener('khy:open-file-picker', onOpenPicker)
     return () => window.removeEventListener('khy:open-file-picker', onOpenPicker)
-  }, [openPaneTab])
+  }, [])
 
   // ── 会话列表加载（带自动重试 + 手动重试）─────────────────────────
   //
@@ -466,6 +519,28 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
     }
   }, [])
 
+  // 首轮回复带回的新会话 id（Composer 派发）：侧栏必须马上出现这条任务，否则
+  // 用户接着说的第二轮虽然落在同一会话上，列表里却还是一个看不见的幽灵。
+  useEffect(() => {
+    const onSessionsChanged = (e: Event) => {
+      const id = String((e as CustomEvent).detail || '')
+      if (id) {
+        setActiveTaskId(id)
+        dispatch(setCurrentSession(id))
+      }
+      reloadTasks()
+    }
+    window.addEventListener('khy:sessions-changed', onSessionsChanged)
+    return () => window.removeEventListener('khy:sessions-changed', onSessionsChanged)
+  }, [dispatch, reloadTasks])
+
+  // 工作台的根目录：优先当前会话的 cwd，其次列表里第一个带路径的会话，
+  // 都由会话真源给出（不自造默认路径，RUNTIME-001）。
+  const editorRoot =
+    tasks.find((t) => t.id === activeTaskId)?.workspacePath
+    || tasks.find((t) => t.workspacePath)?.workspacePath
+    || ''
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <TitleBar
@@ -474,6 +549,9 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
         onToggleSidePane={toggleSidePane}
         sidePaneVisible={sidePaneVisible}
         onToggleTerminal={toggleTerminal}
+        onToggleEditor={toggleEditorWorkbench}
+        editorVisible={centerView === 'editor'}
+        editorDirty={editorDirty}
         sessionTitle={sessionTitle}
         onNewTask={handleNewTask}
         onReloadSession={onReloadSession}
@@ -500,7 +578,7 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               width={sidebar.width}
-              onOpenFile={openFileTab}
+              onOpenFile={openFileInEditor}
               workspaceEpoch={workspaceEpoch}
             />
             {/* 右缘拖拽条（workspaceSidebar.resizeSidebar）— 4px 热区 + hover 高亮握把，
@@ -522,7 +600,35 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
             </div>
           </>
         )}
-        <main className="khy-brand-main flex-1 overflow-auto flex flex-col">{children}</main>
+        <main className="khy-brand-main relative flex-1 overflow-auto flex flex-col">
+          {/* khyos 活场景：当前壁纸预设是「khyos 活场景」时挂在 main 背后的
+              实时 3D 世界（webview 托管成品页，sticky 钉在视口顶部）；静态壁纸
+              下整个组件卸载，不占 GPU。 */}
+          <KhyosBackground />
+          {/* 聊天 children 始终挂载，只切 CSS：卸载会丢会话滚动位置与草稿。
+              display:contents 让外层 div 不产生布局盒，聊天布局与改动前等价。 */}
+          <div className={centerView === 'editor' ? 'hidden' : 'contents'}>{children}</div>
+          {/* 工作台全 lazy：Monaco 与标签状态不进首屏 chunk（CORE-LAYERS 文件数
+              零容差的硬约束下，这是唯一被允许的引入方式）。首次打开后保持挂载，
+              visible 只控制 CSS。 */}
+          {editorMounted && (
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center text-sm text-foreground-muted">
+                  装载代码编辑器（本地 Monaco chunk，不发起网络请求）…
+                </div>
+              }
+            >
+              <EditorWorkbench
+                visible={centerView === 'editor'}
+                request={editorRequest}
+                rootPath={editorRoot}
+                onDirtyChange={setEditorDirty}
+                onBackToChat={() => setCenterView('chat')}
+              />
+            </Suspense>
+          )}
+        </main>
         {/* 左缘拖拽条（sidePane.restoreSize；双击恢复默认宽）。SidePane 本身
             始终挂载——其 Ctrl+Alt+B / Ctrl+J 快捷键注册在 visible 闸门之前，
             条件挂载会让隐藏态丢快捷键 */}

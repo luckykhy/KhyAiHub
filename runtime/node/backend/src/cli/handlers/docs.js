@@ -118,8 +118,8 @@ function buildAiFastlaneContextPack() {
     'runtime/node/backend/scripts/ai-manage-daemon.js',
     'runtime/node/backend/src/services/changeRegressionGate.js',
     'runtime/node/backend/src/services/bugfixRegressionGate.js',
-    'delivery/web/ai-frontend/src/main.js',
-    'delivery/web/ai-frontend/src/router/index.js',
+    'delivery/channel/web/ai-frontend/src/main.js',
+    'delivery/channel/web/ai-frontend/src/router/index.js',
     'docs/07_OPS_运维/OPS-MAN/[OPS-MAN-001] ai-快速通道.md',
   ];
 
@@ -142,7 +142,7 @@ function buildAiFastlaneContextPack() {
     '4. AI gateway orchestration: `runtime/node/backend/src/cli/handlers/gateway.js`.',
     '5. Management backend server: `runtime/node/backend/src/services/aiManagementServer.js`.',
     '6. Management daemon/session: `runtime/node/backend/scripts/ai-manage-daemon.js`.',
-    '7. Management frontend: `delivery/web/ai-frontend/` (Vue + Vite).',
+    '7. Management frontend: `delivery/channel/web/ai-frontend/` (Vue + Vite).',
     '8. Project-level constraints: `AGENTS.md` (must read first).',
     '',
     '## Mandatory Read Order',
@@ -154,7 +154,7 @@ function buildAiFastlaneContextPack() {
     '- Admin API or websocket behavior -> `runtime/node/backend/src/services/aiManagementServer.js`',
     '- Management startup/timeout/auto-shutdown -> `runtime/node/backend/scripts/ai-manage-daemon.js`',
     '- Low-tier model change regressions -> `runtime/node/backend/src/services/changeRegressionGate.js` (legacy compatibility: `bugfixRegressionGate.js`)',
-    '- Management page routing/session bridge -> `delivery/web/ai-frontend/src/main.js`, `delivery/web/ai-frontend/src/router/index.js`',
+    '- Management page routing/session bridge -> `delivery/channel/web/ai-frontend/src/main.js`, `delivery/channel/web/ai-frontend/src/router/index.js`',
     '',
     '## Handoff Prompt Template',
     '```text',

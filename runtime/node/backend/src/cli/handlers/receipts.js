@@ -40,7 +40,15 @@ const STATUS_LABEL_ZH = {
   interrupted: '已中断',
   running: '运行中',
 };
-const PERMISSION_LABEL_ZH = { allow: '允许', deny: '拒绝', ask: '询问', auto: '自动', unknown: '未知' };
+const PERMISSION_LABEL_ZH = {
+  allow: '允许',
+  deny: '拒绝',
+  'allow-session': '会话允许',
+  'allow-always': '始终允许',
+  ask: '询问',
+  auto: '自动',
+  unknown: '未知',
+};
 const ACTION_LABEL_ZH = { write: '写入', edit: '编辑', delete: '删除' };
 
 const STATUS_ICON = {
@@ -143,9 +151,11 @@ async function handleReceipts(subCommand, args, options) {
               ? chalk.red('⊘')
               : chalk.red('✗');
         const gate = c.stepType === 'human-gate' ? chalk.red('人闸门') : '';
+        // 放行依据只有新记录才有；老回执缺字段时不加尾巴，也不打 undefined。
+        const rule = c.permissionRule ? chalk.dim(` · 依据 ${c.permissionRule}`) : '';
         console.log(
           `    ${ci} ${String(c.seq).padStart(2)}. ${chalk.cyan(c.tool)} ` +
-            `${_riskTag(c.risk)} ${chalk.dim(`${c.elapsedMs}ms · ${PERMISSION_LABEL_ZH[c.permission] || c.permission}`)}${gate}`
+            `${_riskTag(c.risk)} ${chalk.dim(`${c.elapsedMs}ms · ${PERMISSION_LABEL_ZH[c.permission] || c.permission}`)}${rule}${gate}`
         );
         if (c.error) {
           console.log(chalk.red(`        ↳ ${c.error}`));

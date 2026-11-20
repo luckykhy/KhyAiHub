@@ -14,27 +14,19 @@
  *   Stage 6: Documentation + SKILL.md generation
  *   Stage 7: Packaging + KHY OS registration
  *
- * Each stage saves its output to ~/.khy/cli-anything/generated/<SOFTWARE>/ and
+ * Each stage saves its output to getDataDir('cli-anything', 'generated')/<SOFTWARE>/ and
  * updates a checkpoint file so the pipeline can be resumed after interruption.
  */
 
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const { safeMklink } = require('../tools/platformUtils');
+const { getDataDir } = require('../utils/dataHome');
 
-// Portable-aware data home resolved at load (legacy const semantics preserved).
-function _dataHome() {
-  try {
-    const { getDataHome } = require('../utils/dataHome');
-    return getDataHome();
-  } catch {
-    return path.join(os.homedir(), '.khy');
-  }
-}
-const BASE_DIR = path.join(_dataHome(), 'cli-anything', 'generated');
+// 每阶段产物都要落盘，故走 getDataDir（带 mkdir）。
+const BASE_DIR = getDataDir('cli-anything', 'generated');
 const TEMPLATES_DIR = path.join(__dirname, '..', 'data', 'cliAnythingTemplates');
 
 // URL whitelist: only allow https:// and git@ (SSH) for git clone.

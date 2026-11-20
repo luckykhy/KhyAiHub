@@ -219,7 +219,11 @@ let _ALL_CATEGORIES = {};
 try {
   _ALL_CATEGORIES = require('./commandRegistry').CATEGORIES || {};
 } catch { /* fail-soft: 只用附加标签 + 原始 key */ }
-const _EXTRA_CATEGORY_LABELS = { analysis: '分析', ai: 'AI', trading: '量化交易' };
+// 只放 CATEGORIES 未收录的键。analysis 曾在这里有一份副本，2026-11-12 已由
+// commandRegistry.js:38 收编进 CATEGORIES 末尾后删除 —— 留着的唯一作用是掩蔽
+// 「CATEGORIES 里那个键被回退」：_categoryLabel 的 || 顺序让注册表优先，副本与
+// 注册表改不同步时输出不变，分叉永远不红。要加中文标签请改 CATEGORIES。
+const _EXTRA_CATEGORY_LABELS = { ai: 'AI', trading: '量化交易' };
 // 展示顺序：高频域在前，未知域按字母序追加。
 const _CATEGORY_ORDER = ['model', 'data', 'analysis', 'trading', 'system', 'security', 'dev', 'workflow', 'extension'];
 

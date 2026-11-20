@@ -34,6 +34,22 @@ import { applyProxyMode, applyDirectMode, agentMatrix, revertAgent, _auditBacken
 import { proxyStatus, startProxy } from './proxyStatus.ts'
 import { probeAll, type ProbeTarget } from './health.ts'
 import { PROBE_TIMEOUT_MS } from './types.ts'
+import {
+  listManagedModels,
+  addManagedModel,
+  updateManagedModel,
+  removeManagedModel,
+  applyModelToApp,
+  probeManagedModel,
+  catalogForCard,
+  type ModelsAddInput,
+  type ModelsUpdateInput,
+  type ModelsRemoveInput,
+  type ModelsApplyInput,
+  type ModelsProbeInput,
+  type ModelsCatalogInput
+} from './models.ts'
+import { resolvePoolKeyForCard, routableModelName } from './keyStore.ts'
 
 function ok<T>(data: T): { ok: true; data: T } {
   return { ok: true, data }
@@ -137,7 +153,18 @@ export function registerKeyManagerIpc(ipc: IpcMain, repoRootOverride?: string): 
     const doc = await loadCcDoc()
     const card = doc.cards.find((c) => c.id === cardId)
     if (!card) return err('卡片不存在：cardId 已失效（动作: 刷新卡片列表 目标: 端点预设）')
-    const r = mode === 'proxy' ? await applyProxyMode(app, card) : await applyDirectMode(app, card)
+    // proxy 模式给 Claude Code 写「可路由三名」api:<pool>:<model>（与
+    // models:apply 同口径）：裸 id 进网关走 builtin-family，可能被 IDE 适配器
+    // 级联截走。opencode / qodercli 不读 opts（opts 只被 claude-code 消费），
+    // 老路径行为零变化。
+    const routableModel =
+      mode === 'proxy' && app === 'claude-code'
+        ? routableModelName(await resolvePoolKeyForCard(card), card.defaultModel || card.models[0] || '')
+        : ''
+    const r =
+      mode === 'proxy'
+        ? await applyProxyMode(app, card, { routableModel })
+        : await applyDirectMode(app, card)
     if (!r.ok) return err(r.error || 'apply failed')
     // mode bookkeeping (cc_switch.json agentMode) happens inside the writers
     await appendAudit({ op: 'apply', target: app, detail: `${mode} card=${card.id}` })
@@ -154,6 +181,50 @@ export function registerKeyManagerIpc(ipc: IpcMain, repoRootOverride?: string): 
   ipc.handle('proxy:start', async () => {
     const r = await startProxy()
     return r.ok ? ok({ detail: r.detail }) : err(r.error || 'proxy start failed')
+  })
+
+  // ── models（受管模型列表：Card.models[]/defaultModel 的派生视图）──
+  // 通道名一律 models:<action> 全小写（desktopUiContract D6 正则）。
+  // 严禁命名为 models:list —— 该名字已被 main/index.ts 的 host 转发（模型
+  // 选择器数据）占用，重复注册在 Electron 44.2.0 会抛
+  // 'Attempted to register a second handler'。
+  ipc.handle('models:managed', async () => ok(await listManagedModels()))
+
+  ipc.handle('models:add', async (_e, input: ModelsAddInput) => {
+    const r = await addManagedModel(input || { cardId: '', model: '' })
+    return r.ok ? ok({ model: r.model }) : err(r.error || 'model add failed')
+  })
+
+  ipc.handle('models:update', async (_e, input: ModelsUpdateInput) => {
+    const r = await updateManagedModel(input || { cardId: '', from: '' })
+    return r.ok ? ok({ model: r.model, ccWarning: r.ccWarning }) : err(r.error || 'model update failed')
+  })
+
+  ipc.handle('models:remove', async (_e, input: ModelsRemoveInput) => {
+    const r = await removeManagedModel(input || { cardId: '', model: '' })
+    return r.ok
+      ? ok({ defaultModelCleared: r.defaultModelCleared, ccWarning: r.ccWarning })
+      : err(r.error || 'model remove failed')
+  })
+
+  // 返回体只含 detail/targetPath/model/mode —— 不含任何明文 key（脱敏不变式）
+  ipc.handle('models:apply', async (_e, input: ModelsApplyInput) => {
+    const r = await applyModelToApp(input || { app: 'claude-code', cardId: '', model: '', mode: 'proxy' })
+    return r.ok
+      ? ok({ detail: r.detail, targetPath: r.targetPath, model: r.model, mode: r.mode })
+      : err(r.error || 'model apply failed')
+  })
+
+  ipc.handle('models:probe', async (_e, input: ModelsProbeInput) => {
+    const r = await probeManagedModel(input || { cardId: '', model: '' })
+    return r.ok ? ok(r.data) : err(r.error || 'model probe failed')
+  })
+
+  ipc.handle('models:catalog', async (_e, input: ModelsCatalogInput) => {
+    const r = await catalogForCard(input || { cardId: '' })
+    return r.ok
+      ? ok({ verified: r.verified, models: r.models, error: r.error })
+      : err(r.error || 'model catalog failed')
   })
 
   // ── health / audit (T4) ─────────────────────────────────────────

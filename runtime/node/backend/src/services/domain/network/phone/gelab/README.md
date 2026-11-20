@@ -66,5 +66,5 @@ node --test src/services/domain/network/phone/gelab/*.test.js
 - `check-agent-rules` Rule 3 — deadline 必须是循环内按步检查的墙钟，
   绝不 `setTimeout` 杀进程。
 
-**手机侧零改动**：`delivery/mobile/` 下所有文件对本单元只读。
-`git diff --stat -- delivery/mobile/` 必须为空。
+**手机侧零改动**：`delivery/channel/mobile/` 下所有文件对本单元只读。
+`git diff --stat -- delivery/channel/mobile/` 必须为空。

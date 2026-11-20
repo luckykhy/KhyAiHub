@@ -36,6 +36,7 @@ test('A1: 已知组合解析为对应动作', () => {
   assert.equal(resolveDesktopAction({ key: ',', ctrlKey: true }), 'openSettings')
   assert.equal(resolveDesktopAction({ key: 'j', ctrlKey: true }), 'toggleTerminal')
   assert.equal(resolveDesktopAction({ key: 'b', ctrlKey: true, altKey: true }), 'toggleSidePane')
+  assert.equal(resolveDesktopAction({ key: 'e', ctrlKey: true, shiftKey: true }), 'toggleEditorWorkbench')
 })
 
 test('A2: Ctrl+Shift+K 不被 Ctrl+K 吞掉（精确修饰位）', () => {
@@ -114,8 +115,8 @@ test('B3: keyLabelFor 对未登记动作返回空串（调用方据此不渲染�
 // ── C. 接线闭环（「展示即事实」的机器守卫）────────────────────────────────
 
 const CONSUMER_FILES = {
-  'src/renderer/App.tsx': ['commandCenter', 'newTask', 'openWorkspace', 'openSettings', 'openKeyManager', 'cycleThoughtLevel', 'toggleFullScreen', 'toggleDevTools'],
-  'src/renderer/components/layout/AppLayout.tsx': ['toggleSidePane', 'toggleTerminal'],
+  'src/renderer/App.tsx': ['commandCenter', 'newTask', 'openWorkspace', 'openSettings', 'openKeyManager', 'openModels', 'cycleThoughtLevel', 'toggleFullScreen', 'toggleDevTools'],
+  'src/renderer/components/layout/AppLayout.tsx': ['toggleSidePane', 'toggleTerminal', 'toggleEditorWorkbench'],
 }
 
 test('C1: 每个登记动作在渲染层都有消费点（否则按下没反应 = 展示在骗人）', () => {
@@ -140,6 +141,7 @@ test('C2: 窗口级动作的 IPC 通道在 main 与 preload 双侧存在（闭�
   const preload = read('src/preload/index.ts')
   const pairs = [
     ['keymanager:openWindow', 'openKeyManagerWindow'],
+    ['models:openWindow', 'openModelsWindow'],
     ['window:toggleFullScreen', 'toggleFullScreen'],
     ['devtools:toggle', 'toggleDevTools'],
   ]

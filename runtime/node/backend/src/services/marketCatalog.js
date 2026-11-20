@@ -10,7 +10,7 @@
  * same marketplace therefore reported different ecosystem counts and different
  * freshness depending on where you looked. Assembly lives here once:
  *
- *   static survey (delivery/market) -> khy-market/1 annotation
+ *   static survey (works/market) -> khy-market/1 annotation
  *     -> live sources (StepFun / Open VSX / Kimi / MCP Registry)
  *     -> installed annotation (market-installed.json)
  *

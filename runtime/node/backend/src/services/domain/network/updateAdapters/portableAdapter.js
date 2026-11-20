@@ -39,7 +39,7 @@ function runHealthCheck(options) {
 }
 
 function rootFor(state, opts = {}) {
-  const base = opts.cacheDir || path.join(require('../../../../utils/dataHome').getDataHome(), 'updates', 'cache');
+  const base = opts.cacheDir || require('../../../../utils/dataHome').getDataDir('updates', 'cache');
   const target = state.target && (state.target.version || state.target.commit) || 'unknown';
   return path.join(base, 'portable', String(target).replace(/[^A-Za-z0-9._-]/g, '_'));
 }

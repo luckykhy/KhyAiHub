@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { ToolSpec, ToolResult, ToolCategory, RiskLevel } = require('./toolSpec');
+const { getMemoryDataDir, resolveDataPath } = require('../utils/dataHome');
 
 // ── Memory Types ─────────────────────────────────────────────────────────
 
@@ -36,29 +37,54 @@ const MemoryType = Object.freeze({
   SESSION: 'session',     // Session-scoped ephemeral
 });
 
+// ── Memory Root ───────────────────────────────────────────────────────────
+
+// Pure resolution — no mkdir. Used for reads, probes and for composing file
+// paths, so "does the directory exist" stays a real question. appHome
+// injection (DI / test isolation) wins over the resolver.
+//
+// The old `path.join(appHome || '', 'memory')` degraded to a cwd-RELATIVE path
+// whenever appHome was missing — and the only production caller
+// (systemIntegration) passes none — which made this module create a `memory/`
+// shadow directory at the repo root.
+function _memoryDir(appHome) {
+  if (appHome) {
+    return path.join(appHome, 'memory');
+  }
+  return resolveDataPath('memory');
+}
+
+// Write side: same root as _memoryDir (a probe and a write can never disagree
+// about where memory lives), plus the mkdir the write needs.
+function _memoryWriteDir(appHome, ...segments) {
+  if (appHome) {
+    const dir = path.join(appHome, 'memory', ...segments);
+    fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+  return getMemoryDataDir(...segments);
+}
+
 // ── Memory Tool Factory ──────────────────────────────────────────────────
 
 /**
  * Create ToolSpec-compatible memory tools.
  * @param {object} options
- * @param {string} options.appHome - Application data directory
+ * @param {string} [options.appHome] - Override for the memory root; when omitted
+ *   the dataHome resolver decides (portable installs land under the project
+ *   data home, regular installs under the data home)
  * @param {function} options.llmClient - LLM client for consolidation
  * @returns {ToolSpec[]}
  */
 function createMemoryTools(options = {}) {
   const { appHome } = options;
-  const memoryDir = path.join(appHome || '', 'memory');
+  const memoryDir = _memoryDir(appHome);
 
   // Ensure memory directory exists
   function ensureMemoryDir() {
-    if (!fs.existsSync(memoryDir)) {
-      fs.mkdirSync(memoryDir, { recursive: true });
-    }
+    _memoryWriteDir(appHome);
     for (const sub of ['logs', 'user', 'feedback', 'project', 'reference']) {
-      const dir = path.join(memoryDir, sub);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
+      _memoryWriteDir(appHome, sub);
     }
   }
 
@@ -68,10 +94,7 @@ function createMemoryTools(options = {}) {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const dir = path.join(memoryDir, 'logs', String(year), month);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    const dir = _memoryWriteDir(appHome, 'logs', String(year), month);
     return path.join(dir, `${year}-${month}-${day}.md`);
   }
 
@@ -215,10 +238,7 @@ function createMemoryTools(options = {}) {
       }
 
       ensureMemoryDir();
-      const typeDir = path.join(memoryDir, type);
-      if (!fs.existsSync(typeDir)) {
-        fs.mkdirSync(typeDir, { recursive: true });
-      }
+      const typeDir = _memoryWriteDir(appHome, type);
 
       const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 100);
       const filePath = path.join(typeDir, `${safeName}.md`);
@@ -306,7 +326,7 @@ function createMemoryTools(options = {}) {
 class MemoryBridge {
   /**
    * @param {object} options
-   * @param {string} options.appHome
+   * @param {string} [options.appHome] - Override for the memory root
    * @param {object} options.registry - ToolRegistry instance
    */
   constructor(options = {}) {
@@ -334,7 +354,7 @@ class MemoryBridge {
    * @returns {object}
    */
   getStatus() {
-    const memoryDir = path.join(this._appHome || '', 'memory');
+    const memoryDir = _memoryDir(this._appHome);
     const exists = fs.existsSync(memoryDir);
 
     return {

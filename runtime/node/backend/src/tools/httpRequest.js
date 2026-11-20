@@ -5,6 +5,7 @@ const https = require('https');
 const { URL } = require('url');
 
 const toolErrorCodes = require('../services/toolErrorCodes');
+const { assertPublicHttpUrl, assertPublicHttpUrlResolved } = require('../services/urlSafety');
 
 const { defineTool } = require('./_baseTool');
 
@@ -20,6 +21,9 @@ const { defineTool } = require('./_baseTool');
  *
  * Safety: only http/https schemes are honored; response body is capped to avoid
  * blowing the context window; redirects are followed up to a small bound.
+ * Every hop (including the first) goes through the SSRF guard
+ * (`services/urlSafety`), so cloud metadata / loopback / RFC1918 targets are
+ * rejected — same guard WebFetch and VaultHttpFetch use.
  */
 
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MiB cap on captured response body
@@ -102,9 +106,10 @@ module.exports = defineTool({
   description:
     'Make a single HTTP/HTTPS request (GET/POST/PUT/DELETE/PATCH/HEAD) and return status, headers and body. ' +
     'Use it to call REST/JSON APIs directly instead of shelling out to curl; use WebFetch to read a web PAGE and webSearch to find information. ' +
-    'Constraints: only http/https schemes; response body capped at 1 MiB; redirects followed up to 5 hops.',
+    'Constraints: only http/https schemes; private/loopback/link-local targets (incl. cloud metadata endpoints) are refused by the SSRF guard, ' +
+    'on every redirect hop too; response body capped at 1 MiB; redirects followed up to 5 hops.',
   category: 'data',
-  risk: 'medium',
+  risk: 'high',
   isReadOnly: false,
   isConcurrencySafe: true,
   // `fetch_url` intentionally omitted — it denotes "read a page's content" and is
@@ -156,6 +161,13 @@ module.exports = defineTool({
     if (!input || !input.url || !String(input.url).trim()) {
       return { valid: false, message: 'url is required.' };
     }
+    // 同步档：协议 + IP 字面量判定（不做 DNS），把明显的内网目标挡在执行之前。
+    // 解析后的地址仍由 execute() 逐跳用 assertPublicHttpUrlResolved 兜住。
+    try {
+      assertPublicHttpUrl(String(input.url).trim(), 'httpRequest URL');
+    } catch (err) {
+      return { valid: false, message: err.message };
+    }
     return { valid: true };
   },
 
@@ -185,6 +197,21 @@ module.exports = defineTool({
     let hops = 0;
     // Follow redirects (GET/HEAD only — re-issuing a POST body across hosts is unsafe).
     while (true) {
+      // SSRF 守卫：**每一跳**都要过（含首跳与重定向后的新目标）。本工具此前只校验
+      // 协议，169.254.169.254 / 127.0.0.1 / 10.x 全可打，且重定向不再复查 ——
+      // 公网 URL 302 到内网就被跟踪（AGT-02）。口径与 WebFetch / VaultHttpFetch 同一守卫。
+      try {
+        await assertPublicHttpUrlResolved(url, 'httpRequest URL');
+      } catch (err) {
+        const message = `URL 被 SSRF 守卫拒绝：${err.message}`;
+        return toolErrorCodes.enrich({
+          success: false,
+          code: 'BAD_PARAM',
+          error: message,
+          content: message,
+          meta: { url, method, redirects: hops, ssrfBlocked: true },
+        });
+      }
       res = await _once(url, { method, headers, body, timeoutMs });
       if (res._err) {
         return toolErrorCodes.enrich({

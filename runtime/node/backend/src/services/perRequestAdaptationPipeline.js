@@ -84,7 +84,13 @@ function defaultStyleMatcher(ctx) {
 
 function defaultPromptAssembler(ctx) {
   const assembled = assembler.assemblePromptForModel(ctx);
-  return Object.assign({}, ctx, { adaptation: assembled, appendix: assembled.appendix });
+  return Object.assign({}, ctx, {
+    adaptation: assembled,
+    appendix: assembled.appendix,
+    // [DESIGN-ARCH-218] §3.4：单模型下同样全量外显，供「有无适配」对比验证。
+    matchedBy: assembled.matchedBy || null,
+    finalSystemPrompt: assembled.finalSystemPrompt || '',
+  });
 }
 
 function defaultScaffoldInjector(ctx) {

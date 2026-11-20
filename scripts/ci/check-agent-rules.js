@@ -36,7 +36,7 @@ const CODE_EXTS = new Set([
   // that is not the author's machine. Scanned for Rule 1c.
   '.ps1', '.sh', '.bat', '.cmd',
   // Flutter/Dart 客户端。2026-10-26 补：此前这份清单没有 .dart，于是
-  // delivery/mobile/ 下整个 App——系统提示、文件工具、桥的原生通道、提供商
+  // delivery/channel/mobile/ 下整个 App——系统提示、文件工具、桥的原生通道、提供商
   // 注册表——四条 AI 工程规则一条都没被扫过。不是"扫过没问题"，是"没扫"，
   // 而门读到的是绿灯。
   //
@@ -45,7 +45,7 @@ const CODE_EXTS = new Set([
   // 公网 baseUrl；Rule 4（滚动区）是 TUI 专属，Dart 无从触发。
   '.dart',
   // 移动端原生侧：Kotlin / Java。2026-11-10 补：此前这份清单没有 .kt/.java，
-  // 于是 delivery/mobile/ 的原生层（MainActivity / VfsBridge / VfsCopier /
+  // 于是 delivery/channel/mobile/ 的原生层（MainActivity / VfsBridge / VfsCopier /
   // ShellCommandPolicy / Tools…）**一条 AI 工程规则都没被扫过**。不是「扫过
   // 没问题」，是「没扫」，而门读到的是绿灯。
   //

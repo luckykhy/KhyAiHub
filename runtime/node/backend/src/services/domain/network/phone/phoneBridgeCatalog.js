@@ -24,6 +24,37 @@
 const ACCESS_READ = 'read';
 const ACCESS_ACTUATE = 'actuate';
 
+// ── 能力分级（required_level）：这个工具需要哪一层权限 ────────────────────
+//
+// WHY IT IS HERE AND NOT ONLY ON THE PHONE. The device's `info` and `tools`
+// carry `required_level` per tool (see the app's ToolSchema). This table is the
+// PC-side mirror so a model that only sees the Khy tool definitions still knows
+// which ones stop working when the phone has no shell layer — instead of
+// discovering it by spending a round trip on a refused call.
+//
+// WHAT IT MEANS.
+//   app   = the tool's full capability is delivered under the app's own uid.
+//   shell = part of the tool needs uid 2000; without a shell layer that part is
+//           refused with code=needs_shell. It is NOT silently downgraded.
+//
+// 2026-11-16, measured on PZ261A / Android 16: across the 39 bridge tools and the
+// 11 UI tools, **exec is the only one that needs the shell layer**. Everything
+// else — files, UI, apps, media, relay — runs under the app's own uid. That is
+// the whole payoff of the "move capability down" route: the elevation-dependent
+// surface shrinks to a single tool.
+//
+// The device is the source of truth. This table mirrors it; if the two ever
+// disagree, the device's answer wins (the phone knows what it can actually do).
+const REQUIRED_LEVEL_APP = 'app';
+const REQUIRED_LEVEL_SHELL = 'shell';
+
+const SHELL_LEVEL_TOOLS = Object.freeze(new Set(['exec']));
+
+/** The privilege a bridge tool needs: 'app' or 'shell'. */
+function requiredLevelOf(bridgeName) {
+  return SHELL_LEVEL_TOOLS.has(bridgeName) ? REQUIRED_LEVEL_SHELL : REQUIRED_LEVEL_APP;
+}
+
 // Result bodies from the bridge are echoed straight back into the model's
 // context. exec caps out at 1MB on the phone side; the catalog caps again here
 // so one call can never flood a turn.
@@ -110,7 +141,7 @@ const BRIDGE_TOOLS = Object.freeze([
       },
     },
     summary: '以 shell 特权（uid 2000）在手机上执行 shell 命令；未投放 sidecar 时退回应用自身 uid',
-    note: '提权三级：优先 shell sidecar（adb 投放、uid 2000，见 delivery/mobile/khy-os-client-app/scripts/provision-shell-sidecar.ps1），其次 Shizuku，最后退回 App 自身 uid——结果里的 via 字段标明实际走了哪条，别假设。input / screencap / dumpsys / su / pm 在 App uid 下一律权限拒绝，走了 sidecar 或 Shizuku 就能真跑；LoopModes 在所有模式（含 bypass）仍然拦这些，所以提权不放宽判定、只放大爆炸半径。重启后 sidecar 会消失（无 root 无法常驻），需重跑那个脚本，overlay 的「提权」行会把这件事说出来。',
+    note: '提权只有一层：shell sidecar（uid 2000）。sidecar 可以由 App 自己用手机本机的无线调试连回来拉起（不需要电脑），也可以用电脑侧脚本 provision-shell-sidecar.ps1 兜底；官方 Shizuku 通道已于 2026-11-12 完全移除，不再是三级里的任何一级。结果里的 via 字段标明实际走了哪条，别假设。input / am / pm / settings put / 读写真 /data 这一族在 App uid 下一律被拒（code=needs_shell），不会假装成功；LoopModes 在所有模式（含 bypass）仍然拦危险命令，所以提权不放宽判定、只放大爆炸半径。设备重启后 sidecar 会消失，App 会在下次启动时自动重连拉起；拉不起来时 overlay 的「提权」行会把这件事说出来。',
     resultCapChars: LARGE_RESULT_CAP_CHARS,
   },
   {
@@ -545,6 +576,55 @@ const BRIDGE_TOOLS = Object.freeze([
     resultCapChars: 256,
   },
   {
+    bridgeName: 'record_audio',
+    khyName: 'phone_record_audio',
+    aliases: [],
+    access: ACCESS_ACTUATE,
+    requiresAccessibility: false,
+    args: {
+      seconds: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 120,
+        description: '录制秒数，默认 10，最长 120（可选）。',
+      },
+      name: {
+        type: 'string',
+        description: '文件名（可选，默认 rec_<时间戳>.m4a）；只允许字母数字与 . _ -',
+      },
+    },
+    summary: '录一段手机麦克风的声音存成文件',
+    note: '需要 RECORD_AUDIO 授权（khy phone setup 里有命令）。一次调用录定时长，最长 120s；录完用 khy phone pull 取回。',
+    resultCapChars: 512,
+  },
+  {
+    bridgeName: 'camera_open',
+    khyName: 'phone_camera_open',
+    aliases: [],
+    access: ACCESS_ACTUATE,
+    requiresAccessibility: false,
+    args: {
+      mode: {
+        type: 'string',
+        enum: ['photo', 'video'],
+        description: 'photo 拍照 / video 录像（可选，默认 photo）。',
+      },
+      name: {
+        type: 'string',
+        description: '输出文件名（可选，默认 khy_<时间戳>.<ext>）；只允许字母数字与 . _ -',
+      },
+    },
+    summary: '打开系统相机拍一张照片（落盘由相机 App 决定，桥只负责开与等）',
+    note: '需要 CAMERA 授权（khy phone setup 里有命令；实测 StepOS 相机对裸 IMAGE_CAPTURE 会校验调用方权限）。'
+      + '自带 EXTRA_OUTPUT 指向桥目录 camera/。快门与确认页的「完成」各要点一次（ui_tap 或人工）。'
+      + '**实测（2026-11-19，PZ261A/StepOS，无障碍开启）**：camera_open → ui_tap 快门 → ui_tap「完成」→ '
+      + '照片 727KB 落在 EXTRA_OUTPUT 指定路径，khy phone pull 拉回成功，整条链通。'
+      + '**实测（2026-11-17，同机但无障碍关闭、改用 adb shell input tap 代按）**：快门与「完成」都点了，'
+      + '照片却哪儿都没有——厂商相机多半只认无障碍注入的触摸事件。'
+      + '所以「手机上开着无障碍服务」是这条链能通的必要条件，不是可选项。',
+    resultCapChars: 512,
+  },
+  {
     bridgeName: 'loop_start',
     khyName: 'phone_loop_start',
     aliases: [],
@@ -877,6 +957,9 @@ function toKhyToolDefinition(tool) {
     category: 'system',
     risk: tool.dangerous ? 'critical' : tool.access === ACCESS_ACTUATE ? 'high' : 'medium',
     requiresAccessibility: tool.requiresAccessibility === true,
+    // 能力分级：模型据此知道这个工具在「没有提权」的手机上还剩多少能力。
+    // 有这个字段之前，模型只能在被拒之后才知道要提权——那一次往返是白花的。
+    requiredLevel: requiredLevelOf(tool.bridgeName),
     inputSchema: {
       type: 'object',
       properties,
@@ -892,6 +975,10 @@ function listKhyToolDefinitions() {
 module.exports = {
   ACCESS_READ,
   ACCESS_ACTUATE,
+  REQUIRED_LEVEL_APP,
+  REQUIRED_LEVEL_SHELL,
+  SHELL_LEVEL_TOOLS,
+  requiredLevelOf,
   DEFAULT_RESULT_CAP_CHARS,
   LARGE_RESULT_CAP_CHARS,
   BRIDGE_TOOLS,

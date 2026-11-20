@@ -4,7 +4,7 @@
  * ecoMarkets 路由契约（HTTP 层）。
  *
  * 用真实 express app + ephemeral port 打真请求，数据根经 KHY_ECO_MARKET_DIR 指到
- * tmp 夹具（绝不依赖未入仓的 delivery/market）。鉴权不在这里验——它挂在挂载点，
+ * tmp 夹具（绝不依赖未入仓的 works/market）。鉴权不在这里验——它挂在挂载点，
  * 由 aiManagementServer.apiRouteDispatch.test.js 的 401-not-404 用例看守；这里只验
  * 信封形状、/:eco 未知生态的可读错误、以及编目读不到时的降级分流。
  *

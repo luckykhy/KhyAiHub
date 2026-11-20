@@ -49,9 +49,9 @@ node --test src/services/domain/network/phone/gelab/*.test.js</code></pre>
 <p>只能用 <code>ollamaModelManager.listModels()</code>。</p>
 <ul><li><code>check-model-hardcoding</code> — 模型名只在 <code>gelabConfig.js</code> 出现一次。</li><li><code>check-agent-rules</code> Rule 3 — deadline 必须是循环内按步检查的墙钟，</li></ul>
 <p>绝不 <code>setTimeout</code> 杀进程。</p>
-<p><strong>手机侧零改动</strong>：<code>delivery/mobile/</code> 下所有文件对本单元只读。<br><code>git diff --stat -- delivery/mobile/</code> 必须为空。</p>
+<p><strong>手机侧零改动</strong>：<code>delivery/channel/mobile/</code> 下所有文件对本单元只读。<br><code>git diff --stat -- delivery/channel/mobile/</code> 必须为空。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/externalApps/README.html"><div class="dir">← 上一篇</div><div class="ttl">network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div></a><a class="next" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/phone/README.html"><div class="dir">下一篇 →</div><div class="ttl">phone — 手机桥接单元（khy-os → StepBridge）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/phone/androidRef/README.html"><div class="dir">← 上一篇</div><div class="ttl">androidRef — Android GUI 闭环（桌面侧，不改手机 APK）</div></a><a class="next" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/phone/hiaoBridge/README.html"><div class="dir">下一篇 →</div><div class="ttl">hiaoBridge — 第二个手机桥 profile（khy-os → hiao / phone-dsh）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

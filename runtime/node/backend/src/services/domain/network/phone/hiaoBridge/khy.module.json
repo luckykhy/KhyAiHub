@@ -1,0 +1,24 @@
+{
+  "name": "hiao-bridge",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（4 个非测试源文件全数清点）。**同目录站点**：index.js 取 config、policy 两个叶子与 client 工厂；hiaoBridgeClient.js 取 config 与 policy 两个兄弟——叶子之间零互引（config 不取 policy，policy 零 require 业务模块）。**D2 出边 2 个文件**（config、client）：两者经 `../index.js` 取 phone 单元门面（config 取 resolveAdbExecutableProbed / resolveDeviceSerial / buildLoopbackBaseUrl；client 取 buildForwardArgv / buildStatusReadArgv / buildLoopbackBaseUrl / redactSecrets / defaultExecutableProbe），这是同域复用而不是复制——adb 与 argv 构造器的单一实现在 phone 单元。index.js 只取本目录三个兄弟，**不碰 phone 门面**。**D3 出边 1 个文件**：config 取 constants/serviceDefaults（5 个 HIAO_BRIDGE_* 默认值）。**CORE 2 站点**：node:http / node:child_process（标准库不计域）。**D2→D1 反向边：0**（消费方 src/tools/HiaoBridgeTool 只经本目录 index.js 单点进入；本单元自身不 require 任何 D1 文件，孤立的 adb runner 用 child.kill 而不是 src/tools/platformUtils.safeKill，正是为了不造那条越过域表的边）。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "runtime/node/backend/src/tools/HiaoBridgeTool/index.js（AI 工具面：execute 里经 index 取 getHiaoBridgeClient；本批不设开关，故不再取任何门控函数）"
+  ],
+  "_fanIn_note": "非测试消费者 **1 个文件 / D1**（判据：磁盘全量 grep `network/phone/hiaoBridge`，排除 *.test.js 与本目录内部互取）。仍记 **staged** 不记 stable：消费方与本单元同批落地，未经真实设备使用期检验，且真机全流程（配对 → 审批放行 → verdict → 审计回查）一次都没跑过——测试全部注入假 transport，不连真机。",
+  "tests": [
+    "services/backend/src/services/domain/network/phone/hiaoBridge/hiaoBridgeConfig.test.js",
+    "services/backend/src/services/domain/network/phone/hiaoBridge/hiaoBridgePolicy.test.js",
+    "services/backend/src/services/domain/network/phone/hiaoBridge/hiaoBridgeClient.test.js",
+    "services/backend/src/services/domain/network/phone/hiaoBridge/index.test.js"
+  ],
+  "_tests_note": "4 个 JS 源文件各有同名同目录测试（逐文件核对，非抽样），方言全部 node:test（jest.config.js 的两族拆分会把它们排除在 jest 之外）。隔离方式：runAdb 与 httpTransport 全注入假件（记录 argv/请求、按剧本应答），不 spawn 进程、不开 socket、不读设备上的令牌文件。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-11-16",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：本单元是第二个手机桥 profile（hiao / phone-dsh），消费方 HiaoBridgeTool 与本批同时落地，尚未经过真实使用期的检验；晋级三判据形式已齐（单元 README ✓、4 个源文件全部同名同目录测试 ✓、整数 fanIn=1 可逐名查证 ✓）。出边全部合法：D3 一处（constants/serviceDefaults）、D2 两处（config、client 经 phone 单元门面；index.js 只取本目录兄弟）、CORE 两处（node:http / node:child_process）。**门控**：本 profile 不设 on/off 开关（契约口径：配置键全在 serviceDefaults + env），能力由配对令牌结构性把关——无令牌即 hiao_not_paired、零请求；工具照常注册。**不做清单**见 README：SSE /events、/sdcard 文件信箱、POST /mcp 三面本批未接。"
+}

@@ -6,8 +6,8 @@
  * of the previous edit (not the original content). The operation is all-or-
  * nothing — if any edit fails (no match, ambiguous match, identical strings,
  * etc.) the file is left untouched and a structured error is returned. Only
- * when every edit succeeds is the final content written to disk with a single
- * atomic fs.writeFileSync.
+ * when every edit succeeds is the final content written to disk through the
+ * shared write sink (fileWriteService: lock + mtime baseline + snapshot).
  *
  * This mirrors CC's MultiEdit precisely:
  *  - Sequential cumulative application (edit N sees edit N-1's output).
@@ -204,14 +204,9 @@ When making edits:
         return { success: false, error: staleCheck.reason };
       }
 
+      // 基线在读取之前取：写盘时若磁盘 mtime 已变，fileWriteService 会判 conflict。
+      const baseMtimeMs = fs.statSync(absPath).mtimeMs;
       const original = fs.readFileSync(absPath, 'utf-8');
-
-      // Pre-edit diagnostics baseline (CC beforeFileEdited 口径,门控 KHY_POST_EDIT_DIAGNOSTICS)。
-      try {
-        require('../../services/postEditDiagnostics').captureBaseline(absPath, cwd);
-      } catch {
-        /* diagnostics baseline is best-effort; never blocks the edit */
-      }
 
       // ── Apply every edit in-memory, all-or-nothing ──────────────────
       let working = original;
@@ -293,29 +288,21 @@ When making edits:
         };
       }
 
-      // ── Snapshot the ORIGINAL once, then atomic single write ────────
-      try {
-        const fh = require('../../services/fileHistoryService');
-        fh.takeSnapshot(absPath, { reason: 'MultiEditTool', content: original });
-      } catch {
-        /* non-critical */
+      // 统一写通道（DESIGN-ARCH-210 §6）：快照 / turn 记录 / 诊断基线 / 锁 /
+      // tmp+rename 都在 fileWriteService；这里只负责「结果算完 → 落盘」。
+      const applied = await require('../../services/fileWriteService').write({
+        filePath: absPath,
+        content: working,
+        baseMtimeMs,
+        actor: 'tool',
+        reason: 'MultiEditTool',
+        beforeContent: original,
+        turnId: context && context.traceContext && context.traceContext.turnId,
+        diagCwd: cwd,
+      });
+      if (!applied.ok) {
+        return { success: false, file: absPath, error: applied.error };
       }
-      // Turn-grouped rollback manifest (DESIGN-ARCH-096 §2-A) — fail-soft no-op
-      // when no active turn id reaches this tool.
-      try {
-        const _turnId = context && context.traceContext && context.traceContext.turnId;
-        if (_turnId) {
-          require('../../services/turnCheckpointService').recordMutatedFile(_turnId, absPath, {
-            reason: 'MultiEditTool',
-            content: original,
-          });
-        }
-      } catch {
-        /* non-critical */
-      }
-
-      fs.writeFileSync(absPath, working, 'utf-8');
-      tracker.markRead(absPath);
 
       const result = {
         success: true,

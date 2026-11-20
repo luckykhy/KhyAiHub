@@ -58,7 +58,7 @@
 const path = require('path');
 const { BRAND } = require('../utils/ccBrand');
 const { STATUS_SEPARATOR, inputRenderRows, inputWindow } = require('../utils/ccLayout');
-const { fitBorder, visWidth, wrapCell } = require('../wrapCell');
+const { clipCell, fitBorder, visWidth, wrapCell } = require('../wrapCell');
 const { applyScroll } = require('../scrollActions');
 const { normalizeSelection } = require('../selection');
 
@@ -134,11 +134,35 @@ const PROMPT_MARKER_W = 2;
 const PLACEHOLDERS = Object.freeze({
   default: 'Send a message...',
   shell: 'Run a command...',
-  busy: 'AI is thinking...',
+  busy: '等待回复…（可先输入，回合结束后发送）',
 });
 
-/** CcStreamingMessage 在 CcApp 里被写死的文案（CcApp.js:593）。 */
-const STREAMING_TEXT = '思考中...';
+/**
+ * 流式行的中性回退文案。只说「在等谁、第几轮」，不猜模型在「分析」什么——
+ * 排队、限流、首 token 未到都可能，报「思考中」是把未知说成已知。
+ */
+const STREAMING_TEXT = '等待模型返回 · 第 1 轮';
+
+/**
+ * 流式行动态文案（动作 + 目标 + 进度）。`model` 用展示口径（CcApp 传
+ * formatModelName），`turn` 是本轮用户消息的序号。
+ */
+function buildBusyLabel(o) {
+  const model = _s(o && o.model).trim();
+  const turn = _pos(o && o.turn, 1);
+  return model
+    ? `等待模型 ${model} 返回 · 第 ${turn} 轮`
+    : `等待模型返回 · 第 ${turn} 轮`;
+}
+
+/**
+ * 单行截断（按显示宽度，CJK=2）。流式行/占位符都只有一行，文案必须按 cols
+ * 剪掉尾巴，否则 ink 自己折成两行而账本只记一行（BUG-82）。
+ */
+function clipSingleLine(text, width) {
+  const w = Math.floor(Number(width) || 0);
+  return w > 0 ? clipCell(_s(text), Math.max(1, w)) : _s(text);
+}
 
 /** 窗口化提示（CcApp.js:576-581）。 */
 function windowHint(hidden) {
@@ -603,7 +627,9 @@ function emitPromptInput(b, o) {
     renderRows.push({ text: PROMPT_PREFIX + PLACEHOLDERS.default });
   }
   if (busy) {
-    renderRows.push({ text: PROMPT_PREFIX + PLACEHOLDERS.busy });
+    renderRows.push({
+      text: PROMPT_PREFIX + clipSingleLine(PLACEHOLDERS.busy, Math.max(1, cols - PROMPT_MARKER_W)),
+    });
   }
 
   // 高度窗口化：上限**就是**宿主传下来的 maxRows（= ccLayout.inputMaxHeight）。
@@ -713,6 +739,10 @@ function caretToWrapped(value, offset, cols, avail) {
  * @param {Array}  [scene.subAgents] 并行子 agent
  * @param {boolean}[scene.agentTreeExpanded]
  * @param {boolean}[scene.busy] 是否有流式回复
+ * @param {string} [scene.streamingText] 流式行文案（调用方已按 cols 剪好）；
+ *   缺省由 `modelName` / `turn` 生成中性文案
+ * @param {string} [scene.modelName] 生成流式文案用的模型展示名
+ * @param {number} [scene.turn] 生成流式文案用的回合序号（缺省 1）
  * @param {object} [scene.messageBar]
  * @param {Array}  [scene.toasts]
  * @param {object} [scene.status] 状态栏已格式化好的片段
@@ -738,13 +768,19 @@ function projectCcScene(scene) {
   emitMessages(b, s.messages, cols, chrome.msgGap !== false);
   const msgEnd = b.lines.length;
   if (s.busy) {
-    // CcStreamingMessage：marginTop 1 + 单行「● 思考中...│」。
+    // CcStreamingMessage：marginTop 1 + 单行「● <文案>│」。
     // 光标是可条件 null 的兄弟节点（:65-67），闪烁时这一行少一列 —— 投影恒按
     // 「有光标」记（复制取的是文本；少一列只会让拖选在行尾空一格，不影响行号）。
     if (chrome.busyGap !== false) b.blank();
     const sid = s.streamingId !== undefined ? s.streamingId : '__streaming__';
-    b.msgTexts.set(sid, STREAMING_TEXT);
-    emitMessageRows(b, STREAMING_TEXT + STREAM_CURSOR, {
+    // 组件侧同样剪到 cols-3：● 1 列 + 前导空格 1 列 + 光标位 1 列。文案不剪
+    // 就会被 ink 折成两行，而账本按单行记账（BUG-82）。
+    const streamText = clipSingleLine(
+      _s(s.streamingText) || buildBusyLabel({ model: s.modelName || s.model, turn: s.turn }),
+      Math.max(1, cols - 3)
+    );
+    b.msgTexts.set(sid, streamText);
+    emitMessageRows(b, streamText + STREAM_CURSOR, {
       width: cols,
       msgId: sid,
       isUser: false,
@@ -1002,6 +1038,8 @@ module.exports = {
   ASSIST_PREFIX_W,
   STREAM_CURSOR,
   STREAMING_TEXT,
+  buildBusyLabel,
+  clipSingleLine,
   TOAST_ICONS,
   PLACEHOLDERS,
   PROFILE_TO_SIMPLE_MODE,

@@ -454,7 +454,6 @@ Example patch format:
     const written = [];
     let attempted = null;
     try {
-      let tmpSeq = 0;
       for (const [abs, content] of modified) {
         attempted = abs;
         if (content === null) {
@@ -463,24 +462,20 @@ Example patch format:
             fs.unlinkSync(abs);
           }
         } else {
-          // Ensure directory exists for new files
-          const dir = path.dirname(abs);
-          if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-          }
-          const tmp = path.join(dir, `.${path.basename(abs)}.tmp-${process.pid}-${tmpSeq++}`);
-          try {
-            fs.writeFileSync(tmp, content, 'utf-8');
-            fs.renameSync(tmp, abs);
-          } catch (writeErr) {
-            try {
-              if (fs.existsSync(tmp)) {
-                fs.unlinkSync(tmp);
-              }
-            } catch {
-              /* best-effort temp cleanup */
-            }
-            throw writeErr;
+          // 目录创建 / tmp+rename / 锁 / 台账都交给统一写通道（DESIGN-ARCH-210 §6）。
+          // 审计在 Phase 1 已按批登记，这里 skipAudit 防止同一次补丁重复快照。
+          const sinkResult = await require('../../services/fileWriteService').write({
+            filePath: abs,
+            content,
+            createIfMissing: true,
+            actor: 'tool',
+            reason: 'ApplyPatchTool',
+            turnId: context && context.traceContext && context.traceContext.turnId,
+            diagCwd: root,
+            skipAudit: true,
+          });
+          if (!sinkResult.ok) {
+            throw new Error(sinkResult.error);
           }
         }
         written.push(abs);

@@ -314,7 +314,7 @@ test('M9g: 画布身份跟着渲染路径走（切形态不留上一形态的旧
 // ── M10: 资产管线（真人模型要能自动到位） ───────────────────────
 //
 // 写实真人 GLB 由 scripts/brand/build-pet-realistic.py 归一化后落到
-// delivery/brand/pet/models/，再由 scripts/brand/build-brand-assets.js 分发。
+// works/brand/pet/models/，再由 scripts/brand/build-brand-assets.js 分发。
 // 只扫顶层的分发脚本会**整个漏掉 models/ 目录**（之前的 Q 版模型就是手工拷的），
 // 所以这里锁死「递归分发」这条。
 

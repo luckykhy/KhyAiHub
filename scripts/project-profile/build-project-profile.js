@@ -8,7 +8,7 @@
  * 本脚本只做**确定性落盘**，不新增任何项目知识。
  *
  * 产物：
- *   delivery/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart
+ *   delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart
  *
  * 为什么 Dart 侧不自己渲染：渲染器只有一份（node），Dart 只持有烘好的文本。
  * 两边各写一份渲染逻辑，格式就会漂——而漂了的症状是手机上的 AI 和 PC 上的 AI
@@ -38,7 +38,7 @@ const PROFILE_MODULE = path.join(
 );
 const OUT = path.join(
   REPO,
-  'delivery/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart',
+  'delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart',
 );
 const GUARD_SNAPSHOT = path.join(REPO, 'works/record/ai/GUARD-SNAPSHOT.json');
 

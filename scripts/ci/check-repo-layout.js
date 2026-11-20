@@ -112,7 +112,7 @@ const LAYERS = {
   'runtime/boot/kernel': 'L0 手写 OS 内核（方案 P：顶层 kernel/ → runtime/boot/kernel）',
   'runtime/substrate/platform': 'L1 Python 启动器 + 共享包 + 交付（方案 P：顶层 platform/ → runtime/substrate/platform；substrate 并入 runtime/ 是 P-D 裁决）',
   'runtime/node': 'L2 Node 运行时，全部业务逻辑（方案 P：顶层 services/ → runtime/node）',
-  'apps': 'L3 平台自带管理前端（未搬动；管理前端主体已随方案 P 进 delivery/web/ai-frontend，本目录留桌面端 apps/khyos-desktop）',
+  'apps': 'L3 平台自带管理前端（未搬动；管理前端主体已随方案 P 进 delivery/channel/web/ai-frontend，本目录留桌面端 apps/khyos-desktop）',
   'delivery/channel': 'L4 跑在平台之上的内置应用（方案 P：顶层 software/ → delivery/channel）',
   'delivery/extension': 'L5 内置拓展，随主包分发，契约见 [DESIGN-TOOL-002]（方案 P：顶层 extensions/ → delivery/extension）',
   'delivery/extension/tools': 'L6 独立开发者工具（方案 P：顶层 tools/ → delivery/extension/tools）',
@@ -136,6 +136,10 @@ const CROSSCUTTING = {
   // 规范 [DESIGN-ARCH-117]。
   works: '工程产物区（build/ 下含 git 钩子 works/build/githooks；真源 [DESIGN-LAY-008] §18.3 封闭清单与 §19.3 W10b）',
   entries: '多端入口真源数据（端矩阵 entries.json + 人读地图 + 跨平台入口壳）',
+  // 品牌/吉祥物/壁纸资产（根级例外，[DESIGN-LAY-005] §1.4 登记在册）：出图工具
+  // 直落根目录、9 个 PNG 被 [DESIGN-ARCH-203]/[DESIGN-ARCH-206]/[DESIGN-LAY-008]
+  // 等 5 处已跟踪文件按路径引用，搬走即断链，故登记保留而非迁移。
+  vibe_images: '品牌/吉祥物/壁纸资产（根级例外登记在册，5 处文档按路径引用，禁迁移）',
   // 软著登记底档（真源 [DESIGN-IP-001] C-E4，2026-09-28 由人拍板改为入库；层级登记见
   // [DESIGN-LAY-005] 第 1.2 节）。原登记为根级 `evidence/`，2026-10-02 随 B 档迁入
   // works/record/evidence/ —— 读取方本就横跨 L0（kernel 手写层原创规模）、L1/L2
@@ -164,7 +168,8 @@ const CROSSCUTTING = {
   // 两处待人拍板后同批清理，见本次交付的 risks。
 };
 // 构建/打包工具在仓库根生成的目录，不是源码层。保持封闭集合，新增项须有对应忽略规则。
-const GENERATED_TOP_LEVEL_DIRS = new Set(['build', 'dist', 'dist-electron', 'khy_os.egg-info']);
+// out：electron-builder / vite 的构建产物根（2026-11-20 实测落过空目录，layer-registry 报警）。
+const GENERATED_TOP_LEVEL_DIRS = new Set(['build', 'dist', 'dist-electron', 'out', 'khy_os.egg-info']);
 
 // ── 根目录白名单（真源 [MGMT-STD-001] 第 1.3 条，封闭、严禁扩张）──────────────
 // 说明性文件白名单：README 及其语言变体 + 平台/工具链按根路径强制加载的文件。
@@ -255,8 +260,9 @@ function findRootJunkEntries(entries) {
 // path.join(process.cwd(), '.khy') 从未被修。2026-10-12 修了那 10 处，才有这个
 // 守卫；没有它，第 N 次清理和第 N+1 次复发之间没有任何东西会响。
 //
-// 合法形态：数据家在 works/data/khy，生态基座在其内的 T1-domains/base，
-// works/data/khyos 只是指向那里的兼容联结。仓库根不应出现任何一个。
+// 合法形态：数据家在 works/data/khy，生态基座在其内的 T1-domains/base。
+// （works/data/khyos 兼容联结已于 2026-11-19 摘除——入口脚本不再钉 KHYOS_HOME，
+// getBaseHome() 解析器直落 T1-domains/base。）仓库根不应出现任何一个。
 const ROOT_SHADOW_DIRS = ['.khy', '.khyos', '.khy-runtime'];
 
 function checkRootShadowDirs(findings) {
@@ -310,7 +316,7 @@ function checkRootJunk(findings) {
 const WORKSPACE_ROOTS = [
   'runtime/node/backend',
   'runtime/node/ai-backend',
-  'delivery/web/ai-frontend',
+  'delivery/channel/web/ai-frontend',
   'delivery/channel/khyquant',
   'delivery/channel/khyquant/frontend',
   'runtime/substrate/platform/packages/shared',
@@ -399,7 +405,11 @@ const ROOT_CATALOG = {
   // works/data/khy/T4-transient/tmp/book/，未删）。若日后真的不再需要兜底，
   // 应连同 root-shadow-dir 规则一起删，而不是把它改回 localdata。
   '.khyos': { category: 'pending-retire', reason: 'B8 红线禁止的影子数据家（曾 7 次复发）；2026-11-04 已清空，登记仅为兜底排查，不得改回 localdata', reviewBy: '2026-12-31' },
-  'khy-Trajectory': { category: 'tool-retained', reason: '轨迹子系统留档（裁决保留）', reviewBy: '2026-12-31' },
+  // 2026-11-19 用户裁决：仓库不再使用 junction/symlink，dataHome 的
+  // khy-Trajectory 可见别名机制已整体拆除、不再重建。本条目降级 pending-retire，
+  // 只为兜住存量 junction（本机磁盘上仍有一条指向 works/data/khy）被 root-junk
+  // 误报；人工摘除后可随规则一并删除，不得改回 tool-retained。
+  'khy-Trajectory': { category: 'pending-retire', reason: '2026-11-19 裁决拆除的可见别名（不再重建）；登记仅为兜底存量 junction，不得改回 tool-retained', reviewBy: '2026-12-31' },
   'Dockerfile': { category: 'contract', reason: '镜像构建入口', reviewBy: '2026-12-31' },
   'docker-compose.yml': { category: 'contract', reason: '一键部署编排', reviewBy: '2026-12-31' },
   'fly.staging.toml': { category: 'contract', reason: 'fly.io 预发部署配置', reviewBy: '2026-12-31' },
@@ -442,6 +452,13 @@ const ROOT_CATALOG = {
   // 全部 31 个文件都在 .qoder/tmp/ 下，由 .gitignore:102 的 `tmp/` 规则覆盖，
   // 0 跟踪件；此前 Q-1（root-uncatalogued）一直报它。
   '.qoder': { category: 'tool-retained', reason: 'Qoder 工具本机态（tmp/acc-e2e 验收证据 + tmp/probe-*.cjs 探针；工具按根路径读写，未跟踪面由 .gitignore tmp/ 规则覆盖，同 .opencode 先例）', reviewBy: '2026-12-31' },
+  // 2026-11-18 补登：根级品牌/壁纸资产。9 个 PNG 全部 git 已跟踪、工作区干净，文件名带
+  // 出图工具的时间戳+哈希后缀（khyos-wallpaper-* / khyos-light-* / khy-mascot-* / khy-pet-*），
+  // 是某次出图直接落根目录的产物，没过 [DESIGN-LAY-011] §一 的「交付物落 docs/ 或
+  // works/record/」分流。判 pending-retire 而非 tool-retained：它不是任何工具的本机态，
+  // 是**待归类资产**——要么归进交付面的 assets/ 并登记，要么确认无用后按 HK-3 隔离，
+  // 不许继续以「在根上」当既定事实。
+  'vibe_images': { category: 'pending-retire', reason: '根级品牌/壁纸资产（9 个 PNG，git 已跟踪、工作区干净；出图工具直落根目录，未过 [DESIGN-LAY-011] §一 分流；待归类：归入交付面 assets/ 或按 HK-3 隔离）', reviewBy: '2026-12-31' },
 };
 const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
 

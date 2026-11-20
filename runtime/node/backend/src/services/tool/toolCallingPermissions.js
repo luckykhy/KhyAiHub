@@ -154,6 +154,51 @@ const _ACCEPT_EDITS_TOOLS = new Set([
 
 let _permissions = null;
 
+// ── Permission rule side channel ────────────────────────────────────
+// requestPermission's return value stays a bare string (many callers compare it
+// to 'deny' and the rest just proceed), so "which rule let this through" rides
+// out-of-band. The WeakMap is keyed on the caller's own params object — the same
+// reference toolCalling reuses for the audit line and the receipt — which keeps
+// concurrent calls from overwriting each other. _lastPermissionRule is the
+// fallback for non-object params and for probes that only need the latest call.
+const _permissionRuleByParams = new WeakMap();
+let _lastPermissionRule = null;
+
+function _decide(params, decision, rule) {
+  _lastPermissionRule = rule;
+  if (params && typeof params === 'object') {
+    _permissionRuleByParams.set(params, rule);
+  }
+  return decision;
+}
+
+/**
+ * The rule that produced the most recent permission decision for `params`
+ * (or, without params, the most recent decision in this process).
+ * @param {object} [params] - the same object passed to requestPermission
+ * @returns {string|null}
+ */
+function lastPermissionRule(params) {
+  if (params && typeof params === 'object') {
+    const rule = _permissionRuleByParams.get(params);
+    if (rule) {
+      return rule;
+    }
+  }
+  return _lastPermissionRule;
+}
+
+/** Rule tag for an answer that came from the human (or the host UI channel). */
+function _userRule(decision) {
+  if (decision === 'allow-always') {
+    return 'user-allow-always';
+  }
+  if (decision === 'allow-session') {
+    return 'user-allow-session';
+  }
+  return decision === 'allow' ? 'user-allow' : 'user-deny';
+}
+
 /**
  * Load saved tool permissions.
  */
@@ -350,7 +395,11 @@ function _decisionFromControl(resp) {
 
 /**
  * Request user confirmation for a tool call.
- * Returns: 'allow' | 'allow-always' | 'deny'
+ * Returns: 'allow' | 'allow-always' | 'allow-session' | 'deny'
+ *
+ * The return value is only the decision. Which branch produced it is exposed via
+ * lastPermissionRule(params) — callers should read it with the same params object
+ * they passed in so concurrent calls cannot cross their evidence.
  *
  * Interactive selection (Claude Code style):
  *   1. Yes             — Execute this time only
@@ -401,7 +450,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
   try {
     const { EXEC_APPROVED } = require('../execApproval');
     if (EXEC_APPROVED && params && params[EXEC_APPROVED] === true) {
-      return 'allow';
+      return _decide(params, 'allow', 'exec-approved');
     }
   } catch {
     /* execApproval optional */
@@ -440,7 +489,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
   if (_permissionMode === 'plan') {
     const beh = _resolveToolBehavior(permissionKey, params);
     if (beh.isReadOnly === false) {
-      return 'deny';
+      return _decide(params, 'deny', 'plan-mode');
     }
   }
 
@@ -449,7 +498,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
     _preflightContext &&
     (_preflightContext.has(toolName) || _preflightContext.has(permissionKey))
   ) {
-    return 'allow';
+    return _decide(params, 'allow', 'preflight-batch');
   }
 
   // ── Fine-grained policy middleware (config-driven, opt-in) ──────────
@@ -495,7 +544,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
     }
     if (_decision) {
       if (_decision === 'deny') {
-        return 'deny';
+        return _decide(params, 'deny', 'policy-deny');
       }
       if (_decision === 'confirm') {
         policyConfirm = true;
@@ -537,10 +586,10 @@ async function requestPermission(toolName, params, onControlRequest = null) {
       });
       // A persisted 'allow' rule cannot override the critical red line.
       if (decision === 'allow' && !criticalGate) {
-        return 'allow';
+        return _decide(params, 'allow', 'persisted-allow');
       }
       if (decision === 'deny') {
-        return 'deny';
+        return _decide(params, 'deny', 'persisted-deny');
       }
       // decision === 'ask' → fall through to interactive prompt
     } catch {
@@ -552,14 +601,14 @@ async function requestPermission(toolName, params, onControlRequest = null) {
   // the persisted-deny check so an explicit store 'deny' still wins, and gated
   // by the critical red line which no whitelist can relax.
   if (policyAutoAllow && !criticalGate) {
-    return 'allow';
+    return _decide(params, 'allow', 'policy-whitelist');
   }
 
   // Auto-approve safe and low-risk read-only tools. A policy 'confirm' verdict
   // suppresses these blanket auto-grants so the user's prompt is honored.
   const tool = descriptor?.tool || _findBuiltinTool(permissionKey);
   if (tool && tool.risk === 'safe' && !policyConfirm) {
-    return 'allow';
+    return _decide(params, 'allow', 'risk-safe');
   }
   if (tool && tool.risk === 'low' && !policyConfirm) {
     // Low-risk tools (read_file, glob, grep, etc.) are auto-approved
@@ -575,7 +624,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
       /* registry not available */
     }
     if (!isDestructive) {
-      return 'allow';
+      return _decide(params, 'allow', 'risk-low');
     }
   }
 
@@ -599,7 +648,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
   if (!criticalGate && !policyConfirm && process.env.KHY_AUTO_APPROVE_READONLY !== 'off') {
     const beh = _resolveToolBehavior(permissionKey, params);
     if (beh.isReadOnly === true && beh.isDestructive !== true) {
-      return 'allow';
+      return _decide(params, 'allow', 'read-only-default');
     }
   }
 
@@ -616,19 +665,19 @@ async function requestPermission(toolName, params, onControlRequest = null) {
     if (_ACCEPT_EDITS_TOOLS.has(_norm)) {
       const beh = _resolveToolBehavior(permissionKey, params);
       if (!beh.isDestructive) {
-        return 'allow';
+        return _decide(params, 'allow', 'accept-edits-mode');
       }
     }
   }
   if (_permissionMode === 'bypass' && !criticalGate && !policyConfirm) {
-    return 'allow';
+    return _decide(params, 'allow', 'bypass-mode');
   }
 
   // Previously approved (persisted or session). A prior "remember" does not
   // carry over to a critical-risk call — informed consent must be per-instance.
   // A policy 'confirm' verdict likewise overrides a prior session grant.
   if (!criticalGate && !policyConfirm && (isApproved(toolName) || isApproved(permissionKey))) {
-    return 'allow';
+    return _decide(params, 'allow', 'prior-allow');
   }
 
   // Ink host channel — when the TUI (or any host) provides an interactive
@@ -707,7 +756,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
         /* best effort */
       }
     }
-    return decision;
+    return _decide(params, decision, _userRule(decision));
   }
 
   // Enhanced permission dialog (if not legacy mode)
@@ -795,7 +844,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
           /* best effort */
         }
       }
-      return result;
+      return _decide(params, result, _userRule(result));
     } catch {
       /* dialog not available — fall through to legacy */
     }
@@ -831,7 +880,7 @@ async function requestPermission(toolName, params, onControlRequest = null) {
     case 'y':
     case 'yes':
     case '':
-      return 'allow';
+      return _decide(params, 'allow', 'user-allow');
 
     case '2':
     case 'a':
@@ -839,19 +888,19 @@ async function requestPermission(toolName, params, onControlRequest = null) {
     case 'trust':
       approveTool(toolName, true); // Persist to disk
       console.log(chalk().green(`  ✓ Permanently trusted "${toolName}"`));
-      return 'allow-always';
+      return _decide(params, 'allow-always', 'user-allow-always');
 
     case '3':
     case 'n':
     case 'no':
     case 'deny':
       console.log(chalk().red(`  ✗ Denied "${toolName}"`));
-      return 'deny';
+      return _decide(params, 'deny', 'user-deny');
 
     // Backward-compatible aliases for previous "session trust" input
     case 's':
     case 'session':
-      return 'allow';
+      return _decide(params, 'allow-session', 'user-allow-session');
 
     default: {
       // Before falling back to deny, consult the natural-language reply
@@ -868,21 +917,21 @@ async function requestPermission(toolName, params, onControlRequest = null) {
       }
 
       if (_nlDecision === 'allow') {
-        return 'allow';
+        return _decide(params, 'allow', 'user-allow');
       }
       if (_nlDecision === 'allow-always') {
         approveTool(toolName, true); // Persist to disk
         console.log(chalk().green(`  ✓ Permanently trusted "${toolName}"`));
-        return 'allow-always';
+        return _decide(params, 'allow-always', 'user-allow-always');
       }
       if (_nlDecision === 'deny') {
         console.log(chalk().red(`  ✗ Denied "${toolName}"`));
-        return 'deny';
+        return _decide(params, 'deny', 'user-deny');
       }
 
       // Unknown input = deny for safety
       console.log(chalk().red(`  ✗ Unrecognized input, denied`));
-      return 'deny';
+      return _decide(params, 'deny', 'unrecognized-deny');
     }
   }
 }
@@ -961,6 +1010,7 @@ module.exports = {
   _decisionFromControl,
   _resolveToolBehavior,
   requestPermission,
+  lastPermissionRule,
   _ACCEPT_EDITS_TOOLS,
   // readline / preflight injection
   setPreflightContext,

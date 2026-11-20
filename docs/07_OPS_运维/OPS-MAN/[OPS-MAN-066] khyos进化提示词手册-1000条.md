@@ -393,19 +393,19 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **87.** 如果「projects workspace page is broken」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **88.** 如果「chat sidebar project filter fails」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **89.** 如果「conversations not filed under the right project」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **90.** 如果「/api/ai/projects REST errors」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **91.** 如果「workspace snapshot behavior is wrong」，先读「Workspace, Publish, and Verification Commands」相关文件（见 runtime/node/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Workspace, Publish, and Verification Commands。触发词命中时的第一反应。
@@ -637,35 +637,35 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **148.** 如果「selected proxy node does not route traffic」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **149.** 如果「proxy enable/disable toggle fails」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **150.** 如果「core-required node reports core-missing but no guidance shown」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **151.** 如果「/api/proxy-egress REST errors」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **152.** 如果「HTTP_PROXY env not applied after choosing a node」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **153.** 如果「raw node still asks to set KHY_PROXY_CORE=1 after pip/npm install (env not auto-seeded)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **154.** 如果「mihomo core binary missing and not auto-installed out of the box」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **155.** 如果「web proxy page says 'download mihomo' but never shows where to download it (download URL / dest path missing)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **156.** 如果「a fresh pip/npm install starts up and dies with a raw MODULE_NOT_FOUND stack trace and no explanation of why or how to fix it」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 runtime/node/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。触发词命中时的第一反应。
@@ -1112,15 +1112,15 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **266.** 验证「AI Management UI and API」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run build --prefix delivery/web/ai-frontend`
+  - 验证：`npm run build --prefix delivery/channel/web/ai-frontend`
 
 **267.** 验证「Coding Projects (named workspaces + chat linkage)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **268.** 验证「Coding Projects (named workspaces + chat linkage)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run build --prefix delivery/web/ai-frontend`
+  - 验证：`npm run build --prefix delivery/channel/web/ai-frontend`
 
 **269.** 验证「Workspace, Publish, and Verification Commands」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workspace, Publish, and Verification Commands。
@@ -1188,11 +1188,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **285.** 验证「Proxy Egress Bridge (select node + enable/disable)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **286.** 验证「Proxy Egress Bridge (select node + enable/disable)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。
-  - 验证：`npm run build --prefix delivery/web/ai-frontend`
+  - 验证：`npm run build --prefix delivery/channel/web/ai-frontend`
 
 **287.** 验证「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。
@@ -1640,11 +1640,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **398.** 验证「Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.。
-  - 验证：`npm run test:one -- delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js`
+  - 验证：`npm run test:one -- delivery/channel/web/ai-frontend/src/composables/useWorkflow.wiring.test.js`
 
 **399.** 验证「Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useWorkflow.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useWorkflow.js`
 
 **400.** 验证「缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)。
@@ -1969,17 +1969,17 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：AI Management UI and API。读懂再动。
   - 验证：`node --check runtime/node/ai-backend/src/routes/aiGatewayAdmin.js`
 
-**480.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/src，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**480.** 阅读「AI Management UI and API」的 delivery/channel/web/ai-frontend/src，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**481.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**481.** 阅读「AI Management UI and API」的 delivery/channel/web/ai-frontend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**482.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/vite.config.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**482.** 阅读「AI Management UI and API」的 delivery/channel/web/ai-frontend/vite.config.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/vite.config.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/vite.config.js`
 
 **483.** 阅读「AI Management UI and API」的 runtime/node/backend/src/cli/handlers/gateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
@@ -2021,41 +2021,41 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
   - 验证：`node --check runtime/node/backend/src/services/conversationStore.js`
 
-**493.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**493.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/composables/useProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useProjects.js`
 
-**494.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useChatConversations.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**494.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/composables/useChatConversations.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useChatConversations.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useChatConversations.js`
 
-**495.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/Projects.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**495.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/views/Projects.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**496.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/AIChat.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**496.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/views/AIChat.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**497.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**497.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useRoutePrefetch.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js`
 
-**498.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/router/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**498.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/router/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/router/index.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/router/index.js`
 
-**499.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/Layout.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**499.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/views/Layout.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **500.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/tests/projectStore.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
   - 验证：`node --check runtime/node/backend/tests/projectStore.test.js`
 
-**501.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**501.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **502.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/src/cli/handlers/workspace.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
@@ -2305,13 +2305,13 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
   - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**564.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/composables/useProxies.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**564.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/channel/web/ai-frontend/src/composables/useProxies.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProxies.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useProxies.js`
 
-**565.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/views/ProxyManagement.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**565.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/channel/web/ai-frontend/src/views/ProxyManagement.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **566.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/proxyCoreConfigGen.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
@@ -2329,9 +2329,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
   - 验证：`node --check runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js`
 
-**570.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**570.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js`
 
 **571.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/bootstrap/ensureProxyCoreEnv.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
@@ -2381,17 +2381,17 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
   - 验证：`node --check runtime/node/backend/tests/cli/useCompletionsSlashExtras.test.js`
 
-**583.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**583.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/channel/web/ai-frontend/src/api/unwrap.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/api/unwrap.js`
 
-**584.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**584.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/channel/web/ai-frontend/src/api/unwrap.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.test.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/api/unwrap.test.js`
 
-**585.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**585.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/channel/web/ai-frontend/src/api/unwrap.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.wiring.test.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/api/unwrap.wiring.test.js`
 
 **586.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
@@ -3823,39 +3823,39 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**942.** 为 delivery/web/ai-frontend/src 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**942.** 为 delivery/channel/web/ai-frontend/src 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**943.** 检查 delivery/web/ai-frontend/src 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**943.** 检查 delivery/channel/web/ai-frontend/src 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**944.** 确认 delivery/web/ai-frontend/src 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**944.** 确认 delivery/channel/web/ai-frontend/src 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**945.** 为 delivery/web/ai-frontend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**945.** 为 delivery/channel/web/ai-frontend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**946.** 检查 delivery/web/ai-frontend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**946.** 检查 delivery/channel/web/ai-frontend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**947.** 确认 delivery/web/ai-frontend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**947.** 确认 delivery/channel/web/ai-frontend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**948.** 为 delivery/web/ai-frontend/vite.config.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**948.** 为 delivery/channel/web/ai-frontend/vite.config.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**949.** 检查 delivery/web/ai-frontend/vite.config.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**949.** 检查 delivery/channel/web/ai-frontend/vite.config.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check delivery/web/ai-frontend/vite.config.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/vite.config.js`
 
-**950.** 确认 delivery/web/ai-frontend/vite.config.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**950.** 确认 delivery/channel/web/ai-frontend/vite.config.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
@@ -3897,7 +3897,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **960.** 为 runtime/substrate/platform/packages/shared/src/models/UserProject.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **961.** 检查 runtime/substrate/platform/packages/shared/src/models/UserProject.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3909,7 +3909,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **963.** 为 runtime/substrate/platform/packages/shared/src/models/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **964.** 检查 runtime/substrate/platform/packages/shared/src/models/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3921,7 +3921,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **966.** 为 runtime/node/backend/src/services/projectStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **967.** 检查 runtime/node/backend/src/services/projectStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3933,7 +3933,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **969.** 为 runtime/node/backend/src/services/aiManagementProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **970.** 检查 runtime/node/backend/src/services/aiManagementProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3945,7 +3945,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **972.** 为 runtime/node/backend/src/services/aiManagementServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **973.** 检查 runtime/node/backend/src/services/aiManagementServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3957,7 +3957,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **975.** 为 runtime/substrate/platform/packages/shared/src/models/Conversation.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **976.** 检查 runtime/substrate/platform/packages/shared/src/models/Conversation.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3969,7 +3969,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **978.** 为 runtime/node/backend/src/services/conversationStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **979.** 检查 runtime/node/backend/src/services/conversationStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
@@ -3979,82 +3979,82 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**981.** 为 delivery/web/ai-frontend/src/composables/useProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**981.** 为 delivery/channel/web/ai-frontend/src/composables/useProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**982.** 检查 delivery/web/ai-frontend/src/composables/useProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**982.** 检查 delivery/channel/web/ai-frontend/src/composables/useProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useProjects.js`
 
-**983.** 确认 delivery/web/ai-frontend/src/composables/useProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**983.** 确认 delivery/channel/web/ai-frontend/src/composables/useProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**984.** 为 delivery/web/ai-frontend/src/composables/useChatConversations.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**984.** 为 delivery/channel/web/ai-frontend/src/composables/useChatConversations.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**985.** 检查 delivery/web/ai-frontend/src/composables/useChatConversations.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**985.** 检查 delivery/channel/web/ai-frontend/src/composables/useChatConversations.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useChatConversations.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useChatConversations.js`
 
-**986.** 确认 delivery/web/ai-frontend/src/composables/useChatConversations.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**986.** 确认 delivery/channel/web/ai-frontend/src/composables/useChatConversations.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**987.** 为 delivery/web/ai-frontend/src/views/Projects.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**987.** 为 delivery/channel/web/ai-frontend/src/views/Projects.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**988.** 检查 delivery/web/ai-frontend/src/views/Projects.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**988.** 检查 delivery/channel/web/ai-frontend/src/views/Projects.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**989.** 确认 delivery/web/ai-frontend/src/views/Projects.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**989.** 确认 delivery/channel/web/ai-frontend/src/views/Projects.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**990.** 为 delivery/web/ai-frontend/src/views/AIChat.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**990.** 为 delivery/channel/web/ai-frontend/src/views/AIChat.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**991.** 检查 delivery/web/ai-frontend/src/views/AIChat.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**991.** 检查 delivery/channel/web/ai-frontend/src/views/AIChat.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**992.** 确认 delivery/web/ai-frontend/src/views/AIChat.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**992.** 确认 delivery/channel/web/ai-frontend/src/views/AIChat.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**993.** 为 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**993.** 为 delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**994.** 检查 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**994.** 检查 delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check delivery/web/ai-frontend/src/composables/useRoutePrefetch.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js`
 
-**995.** 确认 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**995.** 确认 delivery/channel/web/ai-frontend/src/composables/useRoutePrefetch.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**996.** 为 delivery/web/ai-frontend/src/router/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**996.** 为 delivery/channel/web/ai-frontend/src/router/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**997.** 检查 delivery/web/ai-frontend/src/router/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**997.** 检查 delivery/channel/web/ai-frontend/src/router/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check delivery/web/ai-frontend/src/router/index.js`
+  - 验证：`node --check delivery/channel/web/ai-frontend/src/router/index.js`
 
-**998.** 确认 delivery/web/ai-frontend/src/router/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**998.** 确认 delivery/channel/web/ai-frontend/src/router/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**999.** 为 delivery/web/ai-frontend/src/views/Layout.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**999.** 为 delivery/channel/web/ai-frontend/src/views/Layout.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**1000.** 检查 delivery/web/ai-frontend/src/views/Layout.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**1000.** 检查 delivery/channel/web/ai-frontend/src/views/Layout.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/channel/web/ai-frontend/src/composables/useProjects.wiring.test.js`

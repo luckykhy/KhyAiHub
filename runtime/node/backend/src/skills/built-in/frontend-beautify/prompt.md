@@ -21,9 +21,9 @@
 
 ## 两端速查
 
-- **ai-frontend** (`delivery/web/ai-frontend/`)：主 UI。全局样式 `src/styles/newapi-theme.css`，暗色 `src/composables/useTheme.js`。
+- **ai-frontend** (`delivery/channel/web/ai-frontend/`)：主 UI。全局样式 `src/styles/newapi-theme.css`，暗色 `src/composables/useTheme.js`。
 - **khyquant** (`delivery/channel/khyquant/frontend/`)：交易终端。EP 全量引入，数据密集（行情/回测）。
-- **khy-mobile**：已退役删除；现存移动端为 Flutter 客户端 `delivery/mobile/khy-os-client-app/`，不在本技能范围。
+- **khy-mobile**：已退役删除；现存移动端为 Flutter 客户端 `delivery/channel/mobile/khy-os-client-app/`，不在本技能范围。
 
 ## 完工要求
 

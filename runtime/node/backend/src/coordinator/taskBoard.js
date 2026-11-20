@@ -179,13 +179,32 @@ function _initDb() {
 
     _stmts.get = _db.prepare('SELECT * FROM tasks WHERE id = ?');
 
-    _stmts.update = _db.prepare(`
+    // DB-02：更新的 CAS 版本 —— 以「读到的当前状态」为条件写回。并发方改了状态
+    // 时 changes===0，调用方重读后重试，绝不把别人刚写的状态回滚（旧版是全列
+    // 读-改-写、WHERE 只有主键，会把并发写入的 status/result/claim_lock 一起覆盖）。
+    _stmts.updateGuarded = _db.prepare(`
       UPDATE tasks SET title=@title, description=@description, status=@status,
         assignee=@assignee, priority=@priority, dependencies=@dependencies,
         result=@result, updated_at=@updatedAt, completed_at=@completedAt,
         started_at=@startedAt, claim_lock=@claimLock, claim_expires=@claimExpires,
         consecutive_failures=@consecutiveFailures
-      WHERE id = @id
+      WHERE id = @id AND status = @expectedStatus
+    `);
+
+    // DB-02：终态迁移只允许从活动态进入。旧版 complete/fail 走全列读-改-写、
+    // 没有状态守卫 —— done 被 requeue 改回 ready（重复执行）、blocked 被改回
+    // ready（绕过重试预算）、done 被 dead_letter 覆盖（产出丢弃）。
+    _stmts.complete = _db.prepare(`
+      UPDATE tasks
+      SET status='done', result=@result, completed_at=@completedAt, updated_at=@now
+      WHERE id=@id AND status='running'
+    `);
+    _stmts.fail = _db.prepare(`
+      UPDATE tasks
+      SET status=@status, claim_lock=NULL, claim_expires=NULL,
+          result=@result, completed_at=@completedAt,
+          consecutive_failures=@consecutiveFailures, updated_at=@now
+      WHERE id=@id AND status IN ('running','ready')
     `);
 
     // CAS 认领: BEGIN IMMEDIATE + WHERE status='ready' AND claim_lock IS NULL
@@ -200,20 +219,23 @@ function _initDb() {
     `);
 
     // Zombie reap → 重新入队 (retry_count+1，retry_after 抖动窗口)
+    // DB-02：只允许 running → ready。没有这条守卫时，已 done 的任务会被僵尸
+    // 回收改回 ready 并重复执行，blocked 的任务会被改回 ready 绕过重试预算。
     _stmts.requeue = _db.prepare(`
       UPDATE tasks
       SET status='ready', claim_lock=NULL, claim_expires=NULL, assignee=NULL,
           retry_count=COALESCE(retry_count,0)+1, retry_after=@retryAfter,
           result=@result, completed_at=NULL, updated_at=@now
-      WHERE id=@id
+      WHERE id=@id AND status='running'
     `);
 
     // 放弃任务 (重试次数耗尽) → dead_letter 终态
+    // DB-02：只允许 running/ready → dead_letter，绝不覆盖 done 的产出。
     _stmts.deadLetterOne = _db.prepare(`
       UPDATE tasks
       SET status='dead_letter', claim_lock=NULL, claim_expires=NULL,
           result=@result, completed_at=@now, updated_at=@now
-      WHERE id=@id
+      WHERE id=@id AND status IN ('running','ready')
     `);
 
     _stmts.insertRun = _db.prepare(`
@@ -404,41 +426,51 @@ function updateTask(id, updates) {
     return _updateTaskFile(id, updates);
   }
 
-  const existing = _stmts.get.get(id);
-  if (!existing) {
-    return null;
+  // DB-02：以读到的状态为 CAS 条件写回；并发改动导致 changes===0 时重读重试
+  // （有界），绝不把别人刚写的状态/结果回滚。
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const existing = _stmts.get.get(id);
+    if (!existing) {
+      return null;
+    }
+
+    const now = Date.now();
+    // 将 legacy status 映射为 canonical
+    let status = updates.status || existing.status;
+    if (LEGACY_TO_CANONICAL[status]) {
+      status = LEGACY_TO_CANONICAL[status];
+    }
+
+    const info = _stmts.updateGuarded.run({
+      id,
+      expectedStatus: existing.status,
+      title: updates.title || existing.title,
+      description: updates.description || existing.description,
+      status,
+      assignee: updates.assignee !== undefined ? updates.assignee : existing.assignee,
+      priority: updates.priority || existing.priority,
+      dependencies: updates.dependencies
+        ? JSON.stringify(updates.dependencies)
+        : existing.dependencies,
+      result: updates.result !== undefined ? updates.result : existing.result,
+      updatedAt: now,
+      completedAt: updates.completedAt || existing.completed_at,
+      startedAt: updates.startedAt || existing.started_at,
+      claimLock: updates.claimLock !== undefined ? updates.claimLock : existing.claim_lock,
+      claimExpires:
+        updates.claimExpires !== undefined ? updates.claimExpires : existing.claim_expires,
+      consecutiveFailures:
+        updates.consecutiveFailures !== undefined
+          ? updates.consecutiveFailures
+          : existing.consecutive_failures,
+    });
+    if (info.changes === 1) {
+      return _toRecord(_stmts.get.get(id));
+    }
+    // 状态在读出后被别人改了：重读后按新的当前状态重放这次更新
   }
 
-  const now = Date.now();
-  // 将 legacy status 映射为 canonical
-  let status = updates.status || existing.status;
-  if (LEGACY_TO_CANONICAL[status]) {
-    status = LEGACY_TO_CANONICAL[status];
-  }
-
-  _stmts.update.run({
-    id,
-    title: updates.title || existing.title,
-    description: updates.description || existing.description,
-    status,
-    assignee: updates.assignee !== undefined ? updates.assignee : existing.assignee,
-    priority: updates.priority || existing.priority,
-    dependencies: updates.dependencies
-      ? JSON.stringify(updates.dependencies)
-      : existing.dependencies,
-    result: updates.result !== undefined ? updates.result : existing.result,
-    updatedAt: now,
-    completedAt: updates.completedAt || existing.completed_at,
-    startedAt: updates.startedAt || existing.started_at,
-    claimLock: updates.claimLock !== undefined ? updates.claimLock : existing.claim_lock,
-    claimExpires:
-      updates.claimExpires !== undefined ? updates.claimExpires : existing.claim_expires,
-    consecutiveFailures:
-      updates.consecutiveFailures !== undefined
-        ? updates.consecutiveFailures
-        : existing.consecutive_failures,
-  });
-
+  // 三次都撞车：返回最新行（本次更新未生效，调用方可据此判断）
   return _toRecord(_stmts.get.get(id));
 }
 
@@ -584,17 +616,56 @@ function completeTask(id, result, opts = {}) {
     _emitTaskEvent('task.complete_rejected', { id, reason: gate.reason });
     return null;
   }
-  const rec = updateTask(id, {
-    status: STATUS.DONE,
-    result,
-    completedAt: Date.now(),
-  });
+
+  if (!_initDb()) {
+    const existing = _getTaskFile(id);
+    if (!existing) {
+      return null;
+    }
+    const current = LEGACY_TO_CANONICAL[existing.status] || existing.status;
+    if (current !== STATUS.RUNNING) {
+      // DB-02：JSON 回退路径同样只允许 running → done
+      _emitTaskEvent('task.complete_rejected', {
+        id,
+        reason: `任务不在 running 状态（当前 ${current}），拒绝标记完成`,
+      });
+      return null;
+    }
+    const rec = _updateTaskFile(id, { status: STATUS.DONE, result, completedAt: Date.now() });
+    _emitTaskEvent('task.completed', rec || { id, result });
+    return rec;
+  }
+
+  const now = Date.now();
+  // DB-02：CAS —— 只允许 running → done；0 行意味着任务已结束/未认领，不得覆盖
+  const info = _stmts.complete.run({ id, result, completedAt: now, now });
+  if (info.changes !== 1) {
+    _emitTaskEvent('task.complete_rejected', {
+      id,
+      reason: '任务不在 running 状态（可能已结束或未被认领），拒绝标记完成',
+    });
+    return null;
+  }
+  const rec = _toRecord(_stmts.get.get(id));
   _emitTaskEvent('task.completed', rec || { id, result });
   return rec;
 }
 
 function failTask(id, error) {
   if (!_initDb()) {
+    const existing = _getTaskFile(id);
+    if (!existing) {
+      return null;
+    }
+    const current = LEGACY_TO_CANONICAL[existing.status] || existing.status;
+    if (current === STATUS.DONE || current === STATUS.DEAD_LETTER || current === STATUS.BLOCKED) {
+      // DB-02：终态不得被失败路径逆转
+      _emitTaskEvent('task.failed_rejected', {
+        id,
+        reason: `任务已在终态（${current}），拒绝改写`,
+      });
+      return null;
+    }
     const rec = _updateTaskFile(id, { status: 'failed', result: error, completedAt: Date.now() });
     _emitTaskEvent('task.failed', rec || { id, error });
     return rec;
@@ -608,15 +679,27 @@ function failTask(id, error) {
   const failures = (existing.consecutive_failures || 0) + 1;
   const status =
     failures >= (existing.max_retries || DEFAULT_MAX_RETRIES) ? STATUS.BLOCKED : STATUS.READY;
+  const now = Date.now();
 
-  const rec = updateTask(id, {
+  // DB-02：CAS —— 只允许 running/ready → ready|blocked；终态（done/blocked/
+  // dead_letter）一律 0 行，不会被失败路径改写。
+  const info = _stmts.fail.run({
+    id,
     status,
-    result: error,
-    completedAt: status === STATUS.BLOCKED ? Date.now() : null,
-    claimLock: null,
-    claimExpires: null,
+    result: error || null,
+    completedAt: status === STATUS.BLOCKED ? now : null,
     consecutiveFailures: failures,
+    now,
   });
+  if (info.changes !== 1) {
+    _emitTaskEvent('task.failed_rejected', {
+      id,
+      reason: `任务不在活动态（当前 ${existing.status}），拒绝改写`,
+    });
+    return null;
+  }
+
+  const rec = _toRecord(_stmts.get.get(id));
   _emitTaskEvent('task.failed', rec || { id, error, status });
   return rec;
 }
@@ -642,6 +725,15 @@ function requeueTask(id, opts = {}) {
     if (!task) {
       return null;
     }
+    const current = LEGACY_TO_CANONICAL[task.status] || task.status;
+    // DB-02：JSON 回退路径同样只允许 running → pending
+    if (current !== STATUS.RUNNING) {
+      _emitTaskEvent('task.requeue_rejected', {
+        id,
+        reason: `任务不在 running 状态（当前 ${current}），拒绝重排队`,
+      });
+      return null;
+    }
     const rec = _updateTaskFile(id, {
       status: 'pending',
       assignee: null,
@@ -657,7 +749,16 @@ function requeueTask(id, opts = {}) {
   if (!_stmts.get.get(id)) {
     return null;
   }
-  _stmts.requeue.run({ id, retryAfter, result: opts.reason || null, now });
+  // DB-02：CAS —— 只允许 running → ready。0 行意味着任务已结束（done）或已被
+  // 封锁（blocked），不得逆转权威状态。
+  const info = _stmts.requeue.run({ id, retryAfter, result: opts.reason || null, now });
+  if (info.changes !== 1) {
+    _emitTaskEvent('task.requeue_rejected', {
+      id,
+      reason: '任务不在 running 状态（可能已完成或已封锁），拒绝重排队',
+    });
+    return null;
+  }
 
   const rec = _toRecord(_stmts.get.get(id));
   _emitTaskEvent('task.requeued', rec || { id, retryAfter });
@@ -678,6 +779,15 @@ function deadLetterTask(id, reason) {
     if (!task) {
       return null;
     }
+    const current = LEGACY_TO_CANONICAL[task.status] || task.status;
+    // DB-02：终态不得被改写（done 的产出不许被 dead_letter 覆盖丢弃）
+    if (current === STATUS.DONE || current === STATUS.DEAD_LETTER) {
+      _emitTaskEvent('task.dead_letter_rejected', {
+        id,
+        reason: `任务已在终态（${current}），拒绝改写`,
+      });
+      return null;
+    }
     const rec = _updateTaskFile(id, {
       status: STATUS.DEAD_LETTER,
       result: reason || null,
@@ -690,7 +800,15 @@ function deadLetterTask(id, reason) {
   if (!_stmts.get.get(id)) {
     return null;
   }
-  _stmts.deadLetterOne.run({ id, result: reason || null, now });
+  // DB-02：CAS —— 只允许 running/ready → dead_letter
+  const info = _stmts.deadLetterOne.run({ id, result: reason || null, now });
+  if (info.changes !== 1) {
+    _emitTaskEvent('task.dead_letter_rejected', {
+      id,
+      reason: '任务不在 running/ready 状态（可能已完成），拒绝改写成 dead_letter',
+    });
+    return null;
+  }
 
   const rec = _toRecord(_stmts.get.get(id));
   _emitTaskEvent('task.dead_letter', rec || { id, reason });

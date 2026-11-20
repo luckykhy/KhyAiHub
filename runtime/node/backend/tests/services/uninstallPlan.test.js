@@ -39,23 +39,32 @@ test('坏输入 fail-soft → []', () => {
   assert.deepEqual(buildUninstallTargets({ homedir: 42 }, {}), []);
 });
 
-test('默认位置：三大数据家 + 运行时 + 别名 + 指针均在清单', () => {
+// 目标路径由模块侧 path.resolve 归一化；POSIX 家目录字面量在 Windows 上会带上
+// 当前盘符，断言必须同样 resolve 后才比得上（否则本套件在 Windows 上恒红）。
+const P = (...seg) => path.resolve(HOME, ...seg);
+
+test('默认位置：三大数据家 + 运行时 + 指针均在清单', () => {
   const out = buildUninstallTargets({ homedir: HOME }, {});
   const paths = out.map((t) => t.path);
-  assert.ok(paths.includes(path.join(HOME, '.khy')), '~/.khy');
-  assert.ok(paths.includes(path.join(HOME, '.khyquant')), '~/.khyquant');
-  assert.ok(paths.includes(path.join(HOME, '.khyos')), '~/.khyos');
-  assert.ok(paths.includes(path.join(HOME, '.khy-runtime')), '~/.khy-runtime');
-  assert.ok(paths.includes(path.join(HOME, 'khy-Trajectory')), '可见别名');
-  assert.ok(paths.includes(path.join(HOME, '.khy', '.location.json')), '指针');
+  assert.ok(paths.includes(P('.khy')), '~/.khy');
+  assert.ok(paths.includes(P('.khyquant')), '~/.khyquant');
+  assert.ok(paths.includes(P('.khyos')), '~/.khyos');
+  assert.ok(paths.includes(P('.khy-runtime')), '~/.khy-runtime');
+  assert.ok(paths.includes(P('.khy', '.location.json')), '指针');
 });
 
-test('数据家标记为不可逆，运行时/别名/指针可重建', () => {
+test('可见别名不再枚举（2026-11-19 裁决拆除 alias 机制，名单只列本程序生成的位置）', () => {
+  const out = buildUninstallTargets({ homedir: HOME }, {});
+  const paths = out.map((t) => t.path);
+  assert.ok(!paths.includes(path.join(HOME, 'khy-Trajectory')), 'khy-Trajectory 不应在清单');
+  assert.ok(!out.some((t) => t.kind === 'alias'), 'alias kind 已退役');
+});
+
+test('数据家标记为不可逆，运行时/指针可重建', () => {
   const out = buildUninstallTargets({ homedir: HOME }, {});
   assert.equal(byId(out, 'data-home').reversible, false);
   assert.equal(byId(out, 'base-home').reversible, false);
   assert.equal(byId(out, 'runtime-home').reversible, true);
-  assert.equal(byId(out, 'visible-alias-home').reversible, true);
   assert.equal(byId(out, 'location-pointer').reversible, true);
   assert.equal(byId(out, 'runtime-home').kind, KIND.RUNTIME);
   assert.equal(byId(out, 'data-home').kind, KIND.DATA);
@@ -66,7 +75,7 @@ test('去重：默认位置与解析器位置一致时不重复', () => {
     homedir: HOME,
     homes: { dataHome: path.join(HOME, '.khy') }, // 与默认相同
   }, {});
-  const dataHomePaths = out.filter((t) => t.path === path.join(HOME, '.khy'));
+  const dataHomePaths = out.filter((t) => t.path === P('.khy'));
   assert.equal(dataHomePaths.length, 1, '同一路径只应出现一次');
 });
 
@@ -77,8 +86,8 @@ test('env 覆盖的数据家（KHY_DATA_HOME 指到别处）单列出来', () =>
     homes: { dataHome: custom },
   }, {});
   const paths = out.map((t) => t.path);
-  assert.ok(paths.includes(custom), '自定义数据家应在清单');
-  assert.ok(paths.includes(path.join(HOME, '.khy')), '默认位置仍列出（异盘迁移不漏）');
+  assert.ok(paths.includes(path.resolve(custom)), '自定义数据家应在清单');
+  assert.ok(paths.includes(P('.khy')), '默认位置仍列出（异盘迁移不漏）');
 });
 
 test('异盘迁移：pointer 记录的迁移位置纳入清单', () => {

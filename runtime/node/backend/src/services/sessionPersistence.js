@@ -1085,6 +1085,12 @@ function _buildSessionMeta(file, data, root) {
     firstUserMessage,
     sourceType: source && typeof source.type === 'string' ? source.type : '',
     sourceId: source && source.id !== undefined && source.id !== null ? String(source.id) : '',
+    // AGT-03：列表投影带上会话属主（迁移前落盘的旧会话为空串）。
+    // 只加字段、不改既有字段；读取方按「空串 = 无属主」处理。
+    ownerUserId:
+      data.metadata && data.metadata.ownerUserId != null
+        ? String(data.metadata.ownerUserId)
+        : '',
   };
 }
 

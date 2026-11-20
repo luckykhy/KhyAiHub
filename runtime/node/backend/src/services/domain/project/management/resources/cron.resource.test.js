@@ -68,7 +68,7 @@ function installCronStub() {
   };
 }
 
-const dataHomeStub = { getDataHome: () => TMP };
+const dataHomeStub = { resolveDataPath: (...segments) => path.join(TMP, ...segments) };
 
 let contract = null;
 
@@ -134,7 +134,7 @@ describe('management/resources/cron.resource', () => {
     assert.deepEqual(validateContract(contract), { ok: true, errors: [] });
   });
 
-  it('sourceDetail 默认为 getDataHome()/growth/cron_jobs.json', () => {
+  it('sourceDetail 默认为 resolveDataPath(\'growth\')/cron_jobs.json', () => {
     assert.equal(contract.sourceDetail, path.join(TMP, 'growth', 'cron_jobs.json'));
   });
 

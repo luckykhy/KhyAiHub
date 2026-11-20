@@ -58,10 +58,11 @@ services:
       - khy_home:/home/khy/.khy
       - khy_data:/app/runtime/node/backend/data
     healthcheck:
-      # 容器内部探活：127.0.0.1 是容器内回环，3000 是容器内固定端口
-      # （同 docker-entrypoint.js 钉死的 PORT），对外端口由 ports 映射变量控制。
-      # khy-allow-RUNTIME-001: 容器内部 healthcheck 回环地址与容器内固定端口，对外端口走 ports 映射变量
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1"]
+      # 容器内部探活：127.0.0.1 是容器内回环，端口取容器自己的 PORT（同上面
+      # environment 与 docker-entrypoint.js 钉死的值），对外端口由 ports 映射变量控制。
+      # $$ 是 compose 的转义：原样交出 ${PORT}，由容器内 shell 展开 —— 探活目标跟着
+      # 容器实际监听端口走，编排层不必再钉一个端口字面量。
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT}/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -87,37 +88,42 @@ services:
     volumes:
       - ai_backend_data:/app/data
     healthcheck:
-      # 容器内部探活：9090 是 ai-backend 容器内固定端口，对外 19090 由 ports 映射变量控制。
-      # khy-allow-RUNTIME-001: 同 backend，容器内部 healthcheck，回环地址与容器内固定端口
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/api/health >/dev/null || exit 1"]
+      # 容器内部探活：端口取容器自己的 PORT（见上面 environment），对外 19090 由 ports 映射变量控制。
+      # $$ 转义同 backend：${PORT} 原样进容器，由容器内 shell 展开。
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${PORT}/api/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
   # ── 扩展：AI 前端静态站（profile: web）────────────────────────────────────
-  # nginx 把 /api 与 /ws 反代到 ai-backend:9090（见 delivery/web/ai-frontend/nginx.conf），
+  # nginx 把 /api 与 /ws 反代到 ai-backend:9090（见 delivery/channel/web/ai-frontend/nginx.conf），
   # 所以构建期的 VITE_AI_API_BASE_URL 必须留空 = 同源（前端调用路径本身就以 /api 开头）。
   web:
     profiles: ["web"]
     build:
       context: .
-      dockerfile: delivery/web/ai-frontend/Dockerfile
+      dockerfile: delivery/channel/web/ai-frontend/Dockerfile
       args:
         VITE_AI_API_BASE_URL: ""
     image: ${KHY_WEB_IMAGE:-khy-ai-frontend:local}
     restart: unless-stopped
     ports:
       - "${KHY_WEB_PORT:-8080}:80"
+    environment:
+      # nginx 容器内监听端口（nginx.conf: listen 80）。healthcheck 的探活目标取此值，
+      # 与 backend / ai-backend 同一约定：容器内端口在编排层显式声明一次。
+      PORT: "80"
     depends_on:
       ai-backend:
         condition: service_healthy
     # 显式声明而非依赖镜像内的 HEALTHCHECK：`depends_on: service_healthy`
     # 在编排层的可读性依赖这里能直接看到判据。
     healthcheck:
-      # nginx 静态站在容器内回环 80 端口答，对外端口由 ports 映射变量控制。
-      # khy-allow-RUNTIME-001: 同 backend，容器内部 healthcheck，回环地址与容器内固定端口
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      # nginx 静态站在容器内回环答，端口取上面 environment 的 PORT（= nginx.conf 的
+      # listen 80），对外端口由 ports 映射变量控制。$$ 转义同 backend：${PORT}
+      # 原样进容器，由容器内 shell 展开。
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:$${PORT}/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

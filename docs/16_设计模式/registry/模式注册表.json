@@ -140,83 +140,83 @@
   "runtime/node/ai-backend/src/utils/pythonPath.js": [
     "Strategy"
   ],
-  "delivery/web/ai-frontend/src/App.vue": [
+  "delivery/channel/web/ai-frontend/src/App.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/api/request.js": [
+  "delivery/channel/web/ai-frontend/src/api/request.js": [
     "Proxy"
   ],
-  "delivery/web/ai-frontend/src/composables/useAIMonitor.js": [
+  "delivery/channel/web/ai-frontend/src/composables/useAIMonitor.js": [
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/composables/useAccountPool.js": [
+  "delivery/channel/web/ai-frontend/src/composables/useAccountPool.js": [
     "Observer",
     "State"
   ],
-  "delivery/web/ai-frontend/src/composables/useAssetCustomer.js": [
+  "delivery/channel/web/ai-frontend/src/composables/useAssetCustomer.js": [
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/composables/useGateway.js": [
+  "delivery/channel/web/ai-frontend/src/composables/useGateway.js": [
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/main.js": [
+  "delivery/channel/web/ai-frontend/src/main.js": [
     "Facade"
   ],
-  "delivery/web/ai-frontend/src/router/index.js": [
+  "delivery/channel/web/ai-frontend/src/router/index.js": [
     "Strategy"
   ],
-  "delivery/web/ai-frontend/src/stores/user.js": [
+  "delivery/channel/web/ai-frontend/src/stores/user.js": [
     "Memento",
     "Singleton"
   ],
-  "delivery/web/ai-frontend/src/styles/newapi-theme.css": [
+  "delivery/channel/web/ai-frontend/src/styles/newapi-theme.css": [
     "Flyweight"
   ],
-  "delivery/web/ai-frontend/src/views/admin/AIAssetsCustomers.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/AIAssetsCustomers.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/AIChat.vue": [
+  "delivery/channel/web/ai-frontend/src/views/AIChat.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/admin/AIDashboard.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/AIDashboard.vue": [
     "Composite",
     "Facade",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/admin/AIGateway.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/AIGateway.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/admin/AIMonitor.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/AIMonitor.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/admin/AccountPool.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/AccountPool.vue": [
     "Composite",
     "Observer",
     "State"
   ],
-  "delivery/web/ai-frontend/src/views/admin/BridgeChannels.vue": [
+  "delivery/channel/web/ai-frontend/src/views/admin/BridgeChannels.vue": [
     "Bridge",
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/Layout.vue": [
+  "delivery/channel/web/ai-frontend/src/views/Layout.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/Login.vue": [
+  "delivery/channel/web/ai-frontend/src/views/Login.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/src/views/UserHome.vue": [
+  "delivery/channel/web/ai-frontend/src/views/UserHome.vue": [
     "Composite",
     "Observer"
   ],
-  "delivery/web/ai-frontend/vite.config.js": [
+  "delivery/channel/web/ai-frontend/vite.config.js": [
     "Builder"
   ],
   "runtime/node/backend/akshare_scripts/akshare_data.py": [

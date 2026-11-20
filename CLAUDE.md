@@ -32,7 +32,7 @@
 | --- | --- | --- |
 | **G1 主 khy-os 包**（4 源） | `pyproject.toml`（pip）、`works/ship/npm/package.json`（npm 渠道清单）、`runtime/node/backend/package.json`（`khy --version`）、`works/ship/modules/modules.json`（模块化打包清单） | 1.1.15 |
 | **G2 ai-backend 生态**（3 源） | `runtime/node/ai-backend/package.json`、`runtime/substrate/platform/packages/shared/package.json`（`@khy/shared`）、`runtime/substrate/platform/packages/plugin-sdk/package.json`（`@khy/plugin-sdk`） | 1.6.5 |
-| **G3 浏览器 UI 包**（3 源） | `runtime/substrate/platform/packages/ui-shared/package.json`、`delivery/web/ai-frontend/package.json`（其 `@khy/ui-shared` 依赖声明）、`delivery/channel/khyquant/frontend/package.json`（其 `@khy/ui-shared` 依赖声明） | 0.1.0 |
+| **G3 浏览器 UI 包**（3 源） | `runtime/substrate/platform/packages/ui-shared/package.json`、`delivery/channel/web/ai-frontend/package.json`（其 `@khy/ui-shared` 依赖声明）、`delivery/channel/khyquant/frontend/package.json`（其 `@khy/ui-shared` 依赖声明） | 0.1.0 |
 
 - `runtime/substrate/platform/khy_platform/__init__.py` 的 `__version__` **运行时动态解析**（从 `pyproject.toml` /
   已安装元数据），**不得硬编码字面量**——`check-version-sync.js` 会故意让硬编码回归失败。
@@ -183,6 +183,8 @@ heal 审计——`khy doctor` 的结论也随你从哪个目录敲而变。前�
 
 > 与 B7 同一思路：B7 说「对外可见的判断归人」，这条说「路径解析归解析器，不归 cwd」。
 > cwd 是调用方的偶然状态，拿它当数据家的锚点，等于让同一份代码在不同目录下写成不同结果。
+
+收工清理义务（落位、收工三问、定期清理）见 `AGENTS.md` §智能体卫生契约；操作规程真源 `[DESIGN-LAY-011]`。
 
 ---
 

@@ -1,0 +1,336 @@
+{
+ "id": "addremove-001",
+ "title": "新增与消失：插入、删除、身份不认",
+ "cases": [
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/b",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙"
+     }
+    ],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 1,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "底部插入新元素 → 1 added，原元素不得被误判为 changed"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/b",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙"
+     }
+    ],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 1,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "顶部删除元素 → 1 removed"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/b",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": [
+       "label_changed"
+      ]
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 1
+    }
+   },
+   "why": "rid 不同 → 不匹配，1 added + 1 removed（宁可说不认识，不可错认）"
+  },
+  {
+   "in": {
+    "prev": [],
+    "cur": []
+   },
+   "out": {
+    "matched": [],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 0,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "两帧皆空 → is_identical = true"
+  },
+  {
+   "in": {
+    "prev": [],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [],
+    "added": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲"
+     }
+    ],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 0,
+     "added": 1,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "空 → 一个元素 → 1 added，is_identical = false"
+  }
+ ]
+}

@@ -205,8 +205,8 @@ test('catalog entry: an explicit khyCommand wins over command synthesis', () => 
   );
 });
 
-test('delivery/market catalogs: compat values and blocked lists stay in sync', () => {
-  const root = path.resolve(__dirname, '../../../../delivery/market');
+test('works/market catalogs: compat values and blocked lists stay in sync', () => {
+  const root = path.resolve(__dirname, '../../../../works/market');
   const indexPath = path.join(root, 'index.json');
   // The catalog is not part of the published package, so a shipped install has
   // nothing to check here; only an in-repo run asserts the catalog contract.

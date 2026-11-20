@@ -32,8 +32,9 @@ interface ModelCatalogState {
 }
 
 // 选中模型持久化键（settingsStore，主进程 settings.json 原子写，P3-7②）。
-// 存选项 id（`<provider>` 或 `<provider>/<model>`）——跨重启恢复时若该
-// provider 已从 presets 消失，调用方回退到首个可用选项，永不写死模型名。
+// 存选项 id（`<provider>` 或 `<provider>/<model>`）。跨重启恢复时若该 id 已不在
+// 当前选项表里，保留原值等下一次采集（见 reconcileModelSelection），不回退到
+// 首项——那会把「探测抖动」误判成「用户改选」。
 const SETTING_KEY = 'selectedModel'
 
 // 从全量选项表（终端同源采集叶，或采集为空时的 presets 静态目录）解析某
@@ -50,6 +51,53 @@ export function getModelOptionLabel(id: string, options: ModelOption[]): string 
     if (provider) return provider.label
   }
   return null
+}
+
+// 选中态对账：选项表是本次实时采集结果，持久化 id 来自上一次运行，两者可能
+// 对不上——上游改名/下架，或本次采集为空而 host 回退到 providerPresets 静态
+// 目录（两套 id 命名空间互不相交：采集是 `<adapter>/<model>`，静态目录是
+// `<presetId>[/<model>]`）。
+//
+// 这里只回答「还在不在」，**绝不替用户改选**。自动落到 options[0] 会把选中态
+// 钉在一个「碰巧排第一」的条目上（静态目录首项是 openai，采集首项常是未配置
+// 的 Claude Code / CLI 桥接），并写回 settings.json；下一次启动若采集结果又
+// 变了，就再跳一次。用户的抱怨「下次跳到其他不可用的模型」正是这条链。
+export interface ModelSelectionState {
+  id: string
+  known: boolean
+}
+
+export function reconcileModelSelection(
+  persistedId: string,
+  options: ModelOption[]
+): ModelSelectionState {
+  if (!persistedId) return { id: '', known: false }
+  return { id: persistedId, known: options.some((o) => o.id === persistedId) }
+}
+
+// 把选中态翻译成网关钉选参数。只在选项表里查得到时才钉：持久化 id 属于上一次
+// 运行，本次采集可能已经没有它，从 id 字符串反推 model 会把一个已消失的模型钉
+// 进请求（网关报 model_not_found），界面却只显示「选择模型」。
+export interface ModelPins {
+  preferredAdapter?: string
+  preferredModel?: string
+}
+
+export function resolveModelPins(selectionId: string, options: ModelOption[]): ModelPins {
+  if (!selectionId) return {}
+  // Auto 是「让网关按任务选」的哨兵，不是具体模型：只钉通道，绝不带 model。
+  // 带上 model='auto' 会被网关当成真实模型名发给上游（model_not_found）。
+  if (selectionId === 'auto') return { preferredAdapter: 'auto' }
+  const current = options.find((o) => o.id === selectionId)
+  const slash = selectionId.indexOf('/')
+  const providerId = slash > 0 ? selectionId.slice(0, slash) : ''
+  // 模型级 id 的 provider 级条目还在时，至少钉住通道；模型名只认选项表里的
+  // model 字段，不从 id 里切。
+  const provider = current ?? (providerId ? options.find((o) => o.id === providerId) : undefined)
+  const pins: ModelPins = {}
+  if (provider?.channel && provider.channelKnown !== false) pins.preferredAdapter = provider.channel
+  if (current?.model) pins.preferredModel = current.model
+  return pins
 }
 
 // 持久化模型选中态（P3-7②）：经 settingsStore（main 进程 settings.json）

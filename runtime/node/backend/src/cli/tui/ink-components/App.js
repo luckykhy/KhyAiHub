@@ -662,9 +662,14 @@ function _resolveBannerProps(footer = {}, overrides = {}) {
     const pkg = overrides.pkg || require('../../../../package.json');
     let bannerModel = footer.model;
     try {
-      if (FooterBar && FooterBar.formatModelLabel) {
-        bannerModel = FooterBar.formatModelLabel(footer.model);
-      }
+      // 与页脚同一口径：Auto 是模式名，不是模型 id，不该被当成未知 slug 原样上屏。
+      const raw = String(footer.model == null ? '' : footer.model).trim();
+      bannerModel =
+        raw.toLowerCase() === 'auto'
+          ? '★ Auto'
+          : FooterBar && FooterBar.formatModelLabel
+            ? FooterBar.formatModelLabel(footer.model)
+            : footer.model;
     } catch {
       bannerModel = footer.model;
     }
@@ -693,6 +698,25 @@ function _resolveBannerProps(footer = {}, overrides = {}) {
     /* bannerProps 组装失败不影响 App 主体 */
   }
   return props;
+}
+
+/**
+ * ModelPicker 的起始光标。Auto 偏好只写 ADAPTER=auto（MODEL 被清空），而 Auto 行
+ * 的 value 是 {adapter:'auto', model:'auto'} —— 直接传 env 里的 model=undefined，
+ * sameValue 恒假，选择器打开时光标落不到用户上次选的 Auto 上。
+ */
+function _resolvePickerDefault(env = process.env) {
+  const adapter = env.GATEWAY_PREFERRED_ADAPTER || undefined;
+  const model = env.GATEWAY_PREFERRED_MODEL || undefined;
+  try {
+    const autoSelect = require('../../../services/gateway/autoModelSelect');
+    if (autoSelect.isEnabled() && autoSelect.isAutoSelection({ adapter, model })) {
+      return { adapter: 'auto', model: 'auto' };
+    }
+  } catch {
+    /* fail-soft: 叶子不可用 → 按 env 原样回退 */
+  }
+  return { adapter, model };
 }
 
 /**
@@ -964,7 +988,26 @@ function App({ options = {} }) {
       const aiMod = require('../../ai');
       const gateway = require('../../../services/gateway/aiGateway');
       const active = gateway.getActiveAdapter ? gateway.getActiveAdapter() : null;
-      const activeModel = active?.activeModel || process.env.GATEWAY_PREFERRED_MODEL || 'auto';
+      // Auto 意图 × getActiveAdapter 的解析结果：后者是「当前能用的具体通道」，不是
+      // 用户的偏好。直接取 activeModel 会让页脚把 Auto 显示成上一次成功的模型，
+      // 用户下次启动看到另一个模型名，以为选择被改掉了（偏好仍是 auto）。
+      let autoIntent = false;
+      try {
+        const autoSelect = require('../../../services/gateway/autoModelSelect');
+        autoIntent =
+          autoSelect.isEnabled() &&
+          autoSelect.isAutoSelection({
+            adapter: process.env.GATEWAY_PREFERRED_ADAPTER,
+            model: process.env.GATEWAY_PREFERRED_MODEL,
+          });
+      } catch {
+        /* fail-soft: 叶子不可用 → 保持旧口径 */
+      }
+      const activeModel = require('../../footerModelIntent').resolveFooterModel({
+        activeModel: active?.activeModel,
+        preferredModel: process.env.GATEWAY_PREFERRED_MODEL,
+        autoIntent,
+      });
       // 钉选通道被跳过（2026-09-17「页脚 agnes / 报错 windsurf」事故）：
       // getActiveAdapter() 在 Tier1 不可用时静默回落到可用通道，页脚因此显示
       // agnes-3.0-flash，而请求会被 GATEWAY_PREFERRED_STRICT 硬钉在 windsurf 上
@@ -1009,7 +1052,11 @@ function App({ options = {} }) {
           model: activeModel,
           // 实际优先、声明兜底（原实现反了：env 优先会让页脚把「声明」当「实际」显示）。
           // active.key 是网关真正解析出的通道；env 只在拿不到 active 时才作为退化信息。
-          adapter: active?.key || process.env.GATEWAY_PREFERRED_ADAPTER || f.adapter || 'auto',
+          // Auto 例外：由 autoIntent 保持「auto」而不是解析出的具体通道 —— 成对显示，
+          // 否则 model=Auto / adapter=claude 看起来像「选了 Auto 又被改到 claude」。
+          adapter: autoIntent
+            ? 'auto'
+            : active?.key || process.env.GATEWAY_PREFERRED_ADAPTER || f.adapter || 'auto',
           // 意图 ≠ 实际时，把被跳过的钉选通道一并带上，页脚据此渲染「windsurf→api」这类
           // 双段标签，而不是二选一（二选一正是事故的成因）。
           pinnedSkip,
@@ -2466,10 +2513,7 @@ const [paramPanel, setParamPanel] = React.useState(null);
     const liveRecent = pruneRecentAgainst(built.modelChoices);
     setModelPicker({
       choices: built.modelChoices,
-      defaultValue: {
-        adapter: process.env.GATEWAY_PREFERRED_ADAPTER || undefined,
-        model: process.env.GATEWAY_PREFERRED_MODEL || undefined,
-      },
+      defaultValue: _resolvePickerDefault(),
       recent: liveRecent,
     });
   }, [query, recentModels, pruneRecentAgainst]);
@@ -2642,10 +2686,7 @@ const [paramPanel, setParamPanel] = React.useState(null);
       const liveVendorRecent = pruneRecentAgainst(built.modelChoices);
       setModelPicker({
         choices: built.modelChoices,
-        defaultValue: {
-          adapter: process.env.GATEWAY_PREFERRED_ADAPTER || undefined,
-          model: process.env.GATEWAY_PREFERRED_MODEL || undefined,
-        },
+        defaultValue: _resolvePickerDefault(),
         recent: liveVendorRecent,
       });
     },

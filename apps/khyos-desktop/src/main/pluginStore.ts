@@ -112,7 +112,7 @@ export async function checkPluginUpdates(): Promise<{ ok: boolean; count: number
   }
 }
 
-// 发现 tab — the surveyed multi-ecosystem catalog (delivery/market) plus the
+// 发现 tab — the surveyed multi-ecosystem catalog (works/market) plus the
 // live StepFun marketplace, read through the same CH-2 services. `force`
 // bypasses both the static catalog's 30-minute TTL and StepFun's 5-minute TTL.
 export async function getEcoMarketCatalog(force = false): Promise<{

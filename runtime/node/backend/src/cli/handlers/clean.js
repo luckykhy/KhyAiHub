@@ -86,9 +86,9 @@ const BUILD_TARGETS = [
     rebuild: 'npm run assemble --prefix works/ship/npm',
   },
   {
-    rel: 'delivery/web/ai-frontend/dist',
+    rel: 'delivery/channel/web/ai-frontend/dist',
     why: 'AI 管理前端的 Vite 产物',
-    rebuild: 'npm run build --prefix delivery/web/ai-frontend',
+    rebuild: 'npm run build --prefix delivery/channel/web/ai-frontend',
   },
   {
     rel: 'delivery/channel/khyquant/frontend/dist',
@@ -152,6 +152,10 @@ const BUILD_GLOBS = [
  * credentials/、permissions.json、memory/、sessions/、conversations/、receipts/、
  * goals/ 等八十多份配置与用户状态。黑名单模式下漏写一条就等于删掉用户的凭据，
  * 而白名单漏写一条只是少回收几 MB。两种漏法的代价差着量级。
+ *
+ * `rel` 是 dataHome 解析器的**逻辑名**（走 DATA_PATHS 档位表，如 logs →
+ * T3-archives/logs、audit → T1-domains/telemetry/audit），不是数据家根下的平铺
+ * 目录名——平铺那层在盘上只剩 junction 残骸，拼上去会被 _measure 当符号链接跳过。
  */
 const TOOLS_TARGETS = [{ rel: 'tools/deepseek-eyes/.venv', why: 'DeepSeek Eyes 独立 Python 工具环境（可选）', rebuild: 'python -m venv tools/deepseek-eyes/.venv 后 pip install -e tools/deepseek-eyes' }];
 
@@ -171,16 +175,17 @@ const RUNTIME_TARGETS = [
 /**
  * 运行时目标里**必须保留的子项**（按名字前缀匹配，不写死日期）。
  *
- * 为什么需要它：`.khy/tmp/quarantine-*` 是 housekeeping 的隔离区，而
- * `[DESIGN-LAY-003] 仓库整理与巡检规范` 的红线 HK-3 明文规定「**只隔离不删除**；
- * 淘汰一律进隔离区人工确认」，同规范 §3 更把 L3 删除定为「**永不执行，一律人工确认**」。
- * 而 `tmp` 目标此前是整目录 `rmSync` —— 跑一次 `khy clean --runtime --yes` 就会把
- * 待人工确认的隔离件一起销毁。**那是绕过机制，不叫清理。**
+ * 为什么需要它：`tmp` 经解析器落到 T4-transient/tmp，其下的 `housekeeping/<日期>/`
+ * 正是 scripts/maintenance/organize.py 的隔离区（OUT_ROOT，实测 144 MB 待人工确认的
+ * 隔离件，每期带 manifest 与 ROLLBACK.txt），而 `[DESIGN-LAY-003] 仓库整理与巡检规范`
+ * 的红线 HK-3 明文规定「**只隔离不删除**；淘汰一律进隔离区人工确认」，同规范 §3 更把
+ * L3 删除定为「**永不执行，一律人工确认**」。整目录 `rmSync` 会把这些件一起销毁 ——
+ * **那是绕过机制，不叫清理。**
  *
- * 这里按前缀保留（`quarantine*`），并把「保留了多少」记进 `held`,让用户在预览里
- * 看得到这块没被碰；去向仍由人决定。
+ * 这里按前缀保留（`housekeeping`，外加遗留布局直挂在 tmp 下的 `quarantine*`），
+ * 并把「保留了多少」记进 `held`，让用户在预览里看得到这块没被碰；去向仍由人决定。
  */
-const RUNTIME_KEEP_PREFIXES = { tmp: ['quarantine'] };
+const RUNTIME_KEEP_PREFIXES = { tmp: ['quarantine', 'housekeeping'] };
 
 /**
  * 工作区快照：连 --runtime 都不碰，需要 --checkpoints 显式点名。
@@ -193,6 +198,9 @@ const RUNTIME_KEEP_PREFIXES = { tmp: ['quarantine'] };
  *
  * 另外 .khy/audit-trajectory 也故意不在本文件的任何白名单里：那条通道是外部质检
  * 要逐行解析的审计记录，契约规定不压缩不裁剪，删除它必须是用户自己的显式动作。
+ *
+ * `rel` 同 RUNTIME_TARGETS：解析器逻辑名（checkpoints →
+ * T1-domains/sessions/checkpoints），不在代码里拼数据家根。
  */
 const CHECKPOINT_TARGET = {
   rel: 'checkpoints',
@@ -202,7 +210,7 @@ const CHECKPOINT_TARGET = {
 
 // ── 纯发现与规划（不写任何东西，--dry-run 与单测都走这条路） ──
 
-/** 把绝对路径转成相对仓库根的 posix 形式，只用于显示。 */
+/** 把绝对路径转成相对给定根（仓库根或数据家）的 posix 形式，只用于显示。 */
 function _rel(root, abs) {
   const r = path.relative(root, abs);
   return (r || '.').split(path.sep).join('/');
@@ -448,14 +456,11 @@ function _discoverDeps(root, fsImpl = fs) {
 function buildCleanPlan(opts = {}) {
   const fsImpl = opts.fsImpl || fs;
   const root = opts.root || REPO_ROOT;
-  let dataHome = opts.dataHome;
-  if (!dataHome) {
-    try {
-      dataHome = dh.getProjectDataHome();
-    } catch {
-      dataHome = path.join(root, 'works', 'data', 'khy');
-    }
-  }
+  // 解析器是单一真源，且自身永不失败（指针缺失/损坏、选盘异常都在其内部收敛到
+  // 系统盘默认值）—— 这里不再留一份 `root + works/data/khy` 的手写兜底：解析器
+  // 换址时那份兜底会把目标静默指回旧的仓库内路径，正是 organize.py 注释里 B8
+  // 复发过 8 次的那类影子目录制造者。
+  const dataHome = opts.dataHome || dh.getProjectDataHome();
   const tiers = (Array.isArray(opts.tiers) ? opts.tiers : []).filter((t) => TIERS.includes(t));
   const roots = [root, dataHome];
   const items = [];
@@ -538,18 +543,26 @@ function buildCleanPlan(opts = {}) {
   }
 
   if (tiers.includes('runtime')) {
+    // 运行时目标全部经解析器取址：rel 是 DATA_PATHS 逻辑名，解析器负责落到档位真目录
+    // （logs → T3-archives/logs、checkpoints → T1-domains/sessions/checkpoints…）。
+    // 解析器的家（getDataHome）与项目数据家在便携部署下同根、非便携下分居 ~/.khy，
+    // 两种都要进安全闸门的白名单，否则运行时档会被自己家门口的校验拒掉。
+    const runtimeHome = dh.getDataHome();
+    roots.push(runtimeHome);
     for (const t of RUNTIME_TARGETS) {
+      const abs = dh.resolveDataPath(t.rel);
       push(
         'runtime',
-        path.join(dataHome, t.rel),
-        '.khy/' + t.rel,
+        abs,
+        _rel(runtimeHome, abs),
         t.why,
         t.rebuild,
         RUNTIME_KEEP_PREFIXES[t.rel] || []
       );
     }
     // 会话存档单独处理：不点名就只报「保留了多少」，让用户知道这块没被碰。
-    const cpAbs = path.join(dataHome, CHECKPOINT_TARGET.rel);
+    const cpAbs = dh.resolveDataPath(CHECKPOINT_TARGET.rel);
+    const cpRel = _rel(runtimeHome, cpAbs);
     if (opts.checkpoints) {
       let checkpointPlan;
       try {
@@ -559,14 +572,14 @@ function buildCleanPlan(opts = {}) {
       }
       if (checkpointPlan && checkpointPlan.selected && checkpointPlan.selected.length > 0) {
         const bytes = checkpointPlan.selected.reduce((sum, item) => sum + item.bytes, 0);
-        items.push({ tier: 'runtime', rel: '.khy/checkpoints', abs: cpAbs, bytes, files: checkpointPlan.selected.length, why: '检查点配额保留：全局按时间从旧到新回收', rebuild: CHECKPOINT_TARGET.rebuild, checkpointPlan });
+        items.push({ tier: 'runtime', rel: cpRel, abs: cpAbs, bytes, files: checkpointPlan.selected.length, why: '检查点配额保留：全局按时间从旧到新回收', rebuild: CHECKPOINT_TARGET.rebuild, checkpointPlan });
       }
       if (checkpointPlan && checkpointPlan.held) {
-        held.push(...checkpointPlan.held.map((item) => ({ rel: '.khy/checkpoints/' + item.rel, bytes: item.bytes, files: 0, reason: item.reason })));
+        held.push(...checkpointPlan.held.map((item) => ({ rel: cpRel + '/' + item.rel, bytes: item.bytes, files: 0, reason: item.reason })));
       }
     } else {
       const stats = _measure(cpAbs, fsImpl);
-      if (stats) held.push({ rel: '.khy/checkpoints', bytes: stats.bytes, files: stats.files, reason: '工作区快照（未提交的改动），--runtime 不清；确实要清用 khy clean --runtime --checkpoints' });
+      if (stats) held.push({ rel: cpRel, bytes: stats.bytes, files: stats.files, reason: '工作区快照（未提交的改动），--runtime 不清；确实要清用 khy clean --runtime --checkpoints' });
     }
   }
 
@@ -658,7 +671,9 @@ function _printPlan(plan, opts = {}) {
   _printTier('build', plan.items, '构建产物');
   _printTier('deps', plan.items, '可重装依赖');
   _printTier('tools', plan.items, '可选工具环境');
-  _printTier('runtime', plan.items, '运行时状态');
+  // 运行时档的行是数据家相对路径（logs 已解析到 T3-archives/logs 一类档位真目录），
+  // 不带上家路径用户无从判断这些行落在哪棵树里。
+  _printTier('runtime', plan.items, '运行时状态（数据家 ' + dh.getDataHome() + '）');
 
   if (plan.held.length > 0) {
     console.log('');
@@ -682,7 +697,7 @@ function _printInventory() {
   printInfo('清点可回收空间：build / deps / runtime 三档全扫，本次不删除任何文件');
   _printTier('build', plan.items, '构建产物');
   _printTier('deps', plan.items, '可重装依赖');
-  _printTier('runtime', plan.items, '运行时状态');
+  _printTier('runtime', plan.items, '运行时状态（数据家 ' + dh.getDataHome() + '）');
   for (const h of plan.held) {
     printWarn('保留 ' + h.rel + '：' + _fmtBytes(h.bytes) + ' / ' + h.files + ' 文件 —— ' + h.reason);
   }

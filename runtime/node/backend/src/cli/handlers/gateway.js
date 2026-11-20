@@ -34,7 +34,7 @@ const {
   joinFeatureKey,
 } = require('../../services/featureKeyBuilder');
 const _envFile = require('../../services/gatewayEnvFile');
-const { getDataHome, getLegacyDataHome } = require('../../utils/dataHome');
+const { resolveDataPath, getLegacyDataHome } = require('../../utils/dataHome');
 const _sleep = require('../../utils/sleep'); // single-source sleep ([MGMT-RPT-020] REQ-2026-010)
 const {
   printSuccess,
@@ -204,7 +204,7 @@ setGatewayModelChoicesDeps({
   persistGatewayPreference,
   STRICT_OPERATIONAL_ADAPTERS,
 });
-const AI_MANAGE_RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
+const AI_MANAGE_RUNTIME_FILE = resolveDataPath('ai_manage_runtime.json');
 const AI_MANAGE_RUNTIME_FILE_LEGACY = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
 const AI_MANAGE_READY_TIMEOUT_MS = Math.max(
   20000,
@@ -219,8 +219,7 @@ const AI_MANAGE_HEALTH_POLL_MS = Math.max(
   parseInt(process.env.AI_MANAGE_HEALTH_POLL_MS || '600', 10) || 600
 );
 const AI_MANAGE_DAEMON_SCRIPT = path.resolve(__dirname, '../../../scripts/ai-manage-daemon.js');
-const KHY_GATEWAY_DEBUG_PROMPT_DEFAULT_FILE = path.join(
-  getDataHome(),
+const KHY_GATEWAY_DEBUG_PROMPT_DEFAULT_FILE = resolveDataPath(
   'logs',
   'khy_gateway_prompt_debug.log'
 );

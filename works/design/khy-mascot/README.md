@@ -2,7 +2,7 @@
 
 > 生成日期：2026-11-03（v2 更新：Lucky 好运主题 + 真商标压印 + 三端落地）
 > 状态：**设计参考稿（定名待人拍板）**
-> 产物目录：`works/design/khy-mascot/`（母版）＋ `delivery/brand/pet/`（分发真源）
+> 产物目录：`works/design/khy-mascot/`（母版）＋ `works/brand/pet/`（分发真源）
 > 生成方式：AI 图像模型（minimax image），**人类指定方向**——角色气质、性别、人设、用途、交付颗粒度、好运元素、商标呈现方式、桌宠形态与互动深度均由人拍板后出图与落地（见下方「人的意愿记录」）。
 > 版权口径：本目录是**社区形象参考稿**，不进入软著登记材料（依据 `[DESIGN-IP-001]` 四条硬线之一「非登记候选不进登记材料」）。
 
@@ -36,7 +36,7 @@
 
 | 需求 | 落地 |
 | --- | --- |
-| 带上 Khy OS 商标并突出 | **真商标压印进美术**：御守面 / 胸章的金盘留白，由 `scripts/brand/build-pet-assets.ps1` 用品牌几何真源（`delivery/brand/png/khy-os-mark-256.png`）压成墨色刻印——不是模型画的仿制品；运行期卡片头部再叠一层**矢量真商标**（网页 `KhyMark` / 桌面 `BrandMark` / 手机 `KhyBrandMark`） |
+| 带上 Khy OS 商标并突出 | **真商标压印进美术**：御守面 / 胸章的金盘留白，由 `scripts/brand/build-pet-assets.ps1` 用品牌几何真源（`works/brand/png/khy-os-mark-256.png`）压成墨色刻印——不是模型画的仿制品；运行期卡片头部再叠一层**矢量真商标**（网页 `KhyMark` / 桌面 `BrandMark` / 手机 `KhyBrandMark`） |
 | Lucky 好运主题 | 红金御守 + 锦鲤 + 金币 + 四叶草 + 琥珀底座；**每日运势抽签**（同一天结果固定） |
 | 三端显示桌宠且不影响显示 | 桌面端 / 网页端 / APK 端统一为**应用内悬浮卡片**：左下角、132px 级、`pointer-events` 只作用在卡片自身、可拖拽、可收起 |
 | 可以互动 | 拖拽移动、点击角色说话、点御守抽签、切换角色、收起/唤出——全部本地逻辑，不依赖模型 |
@@ -64,7 +64,7 @@
 
 ## 二、配色基线（三条线，互不越界）
 
-**品牌真源**：`delivery/brand/khy-brand-tokens.json` + `delivery/brand/khy-brand-geometry.js`；
+**品牌真源**：`works/brand/khy-brand-tokens.json` + `works/brand/khy-brand-geometry.js`；
 应用内令牌：桌面 `src/renderer/theme/globals.css`（`--color-brand: #f0a868`、`--brand-from: #ffc078`、`--brand-to: #e2703a`）、
 网页 `src/styles/newapi-theme.css`（`--khy-primary` 族）、手机 `lib/ui/theme/app_colors.dart`（`AppColors.primary = 0xFFF0A868`）。
 
@@ -112,25 +112,25 @@
 | `pet/_contact-sheet.jpg` | 1400×1400 | 2×2 压印校验图 |
 
 **真商标压印**：美术里的御守面 / 胸章是**留白金盘**，由
-`scripts/brand/build-pet-assets.ps1` 把品牌几何真源（`delivery/brand/png/khy-os-mark-256.png`）
+`scripts/brand/build-pet-assets.ps1` 把品牌几何真源（`works/brand/png/khy-os-mark-256.png`）
 经 ColorMatrix 转成墨色 `#14110E` 刻印压进盘心，并叠一层暖色压印暗边。
 **为什么不让模型直接画商标**：生成模型会把标识画歪成「似是而非」的图案；商标必须逐像素来自几何真源。
 压印后请看 `pet/_contact-sheet.jpg` 复核落位。
 
 ### 3.2 分发（三端同源）
 
-`delivery/brand/pet/` 是分发真源，`scripts/brand/build-brand-assets.js` 第 9 节把它复制到：
+`works/brand/pet/` 是分发真源，`scripts/brand/build-brand-assets.js` 第 9 节把它复制到：
 
 | 端 | 路径 | 引用方式 |
 | --- | --- | --- |
-| 网页 | `delivery/web/ai-frontend/public/brand/pet/*.png` | URL `/brand/pet/xxx.png` |
-| 网页（数据） | `delivery/web/ai-frontend/src/data/pet-fortune.json` | Vite `import` |
+| 网页 | `delivery/channel/web/ai-frontend/public/brand/pet/*.png` | URL `/brand/pet/xxx.png` |
+| 网页（数据） | `delivery/channel/web/ai-frontend/src/data/pet-fortune.json` | Vite `import` |
 | 桌面 | `apps/khyos-desktop/src/renderer/assets/pet/*` | ES `import` |
-| 手机 | `delivery/mobile/khy-os-client-app/assets/brand/pet/*` | `Image.asset` + `rootBundle.loadString` |
+| 手机 | `delivery/channel/mobile/khy-os-client-app/assets/brand/pet/*` | `Image.asset` + `rootBundle.loadString` |
 
 ### 3.3 抽签数据源（单一真源）
 
-`delivery/brand/pet/pet-fortune.json`：等级（大吉/吉/小吉/平稳，各带权重与提示）、
+`works/brand/pet/pet-fortune.json`：等级（大吉/吉/小吉/平稳，各带权重与提示）、
 12 条工程向好运提示、5 个幸运色、两位角色各自的 idle/lucky 台词、动作按钮文案。
 
 **算法（三端必须逐位一致）**：
@@ -187,7 +187,7 @@ color   = luckyColors[(seed >>> 16) % luckyColors.length]
 | 桌面 | `src/renderer/components/layout/AppLayout.tsx` 根容器内 | `src/renderer/components/pet/KhyPet.tsx` | `npm test` 403 全绿（新增 19 条）；typecheck 无新增错误；electron-vite 构建通过 ✅ |
 | APK | `lib/main.dart` 的 `Scaffold.body` → `Stack` 内 `Positioned` | `lib/ui/widgets/khy_pet.dart` | **未验证**：本机无 Flutter SDK，`flutter test` / `flutter analyze` 均未运行 ⚠️ |
 
-三端共用同一份数据与同一套算法（`delivery/brand/pet/pet-fortune.json` + fnv1a32 播种），
+三端共用同一份数据与同一套算法（`works/brand/pet/pet-fortune.json` + fnv1a32 播种），
 因此同一天同一角色在三个端抽到的签**逐位相同**——锚点已写进 `apps/khyos-desktop/tests/petFortune.test.mjs`。
 
 **桌面端顺带修的一处**：仓库里别人**未提交、写到一半**的 `src/renderer/components/viewer/CodeViewerPane.tsx`
@@ -207,8 +207,8 @@ color   = luckyColors[(seed >>> 16) % luckyColors.length]
 
 | 文件 | 内容 |
 | --- | --- |
-| `delivery/brand/pet/models/khy-pet-female.glb` | 澪的 3D 模型（1.11MB，含护身符真商标贴图） |
-| `delivery/brand/pet/models/khy-pet-male.glb` | 凯的 3D 模型（1.09MB，含胸章真商标贴图） |
+| `works/brand/pet/models/khy-pet-female.glb` | 澪的 3D 模型（1.11MB，含护身符真商标贴图） |
+| `works/brand/pet/models/khy-pet-male.glb` | 凯的 3D 模型（1.09MB，含胸章真商标贴图） |
 | `scripts/brand/build-pet-model.py` | Blender 建模脚本（真源，改造型改这里） |
 | `works/design/khy-mascot/model/*-preview-*.png` | 四视角渲染预览（正 / 四分之三 / 侧 / 背） |
 
@@ -224,7 +224,7 @@ color   = luckyColors[(seed >>> 16) % luckyColors.length]
   WebGL 直接写进画布会整体偏暗（深藏青变近黑）。着色器里 `pow(color, 1/2.2)` 一步不能少。
 - **光要跟着相机走**（着色器里传头灯方向）：写死光方向的话，模型一转、背对光就黑成剪影。
 - 材质：Principled BSDF（baseColor / metallic / roughness），品牌色按「三条线」取。
-- **商标**：护身符/胸章上的 Khy OS 标记是**贴图**，像素来自 `delivery/brand/png/khy-os-mark-256.png`
+- **商标**：护身符/胸章上的 Khy OS 标记是**贴图**，像素来自 `works/brand/png/khy-os-mark-256.png`
   （几何真源导出物）。几何复刻只会得到「像商标的商标」，所以这里坚持用贴图。
 - 底座与金币是独立几何件，抽签时可以让它们动。
 
@@ -279,17 +279,17 @@ Q 版圆头、大蓝眼、浅蓝发，和 AI 定妆照（尖耳、浅蓝长发�
 
 | 形态 | 真源 | 说明 |
 | --- | --- | --- |
-| **立绘浮雕**（默认） | `scripts/brand/build-pet-relief.py` → `delivery/brand/pet/models/khy-pet-*-relief.glb` | 把定妆照烘成**带厚度的 2.5D 网格**（1.0MB / 1.06MB） |
-| **真 3D 模型** | `scripts/brand/build-pet-model.py` → `delivery/brand/pet/models/khy-pet-*.glb` | 程序化 Q 版造型，可整圈转（1.54MB / 1.04MB） |
+| **立绘浮雕**（默认） | `scripts/brand/build-pet-relief.py` → `works/brand/pet/models/khy-pet-*-relief.glb` | 把定妆照烘成**带厚度的 2.5D 网格**（1.0MB / 1.06MB） |
+| **真 3D 模型** | `scripts/brand/build-pet-model.py` → `works/brand/pet/models/khy-pet-*.glb` | 程序化 Q 版造型，可整圈转（1.54MB / 1.04MB） |
 
 **形态开关的唯一真源**是 `settings.json` 的 `desktopPetForm`（`'relief' | 'model'`，默认 `'relief'`），
 与角色开关 `desktopPetCharacter` 同一条规矩：设置页与桌宠卡片同写同键，**不另开 localStorage**
 （那是第二个真源）。卡片头部的「立绘 / 3D」按钮即切换开关。
 
-**抠图产物也是独立资产**：`delivery/brand/pet/khy-pet-{female,male}-idle-cutout.png`
+**抠图产物也是独立资产**：`works/brand/pet/khy-pet-{female,male}-idle-cutout.png`
 （透明底立绘，413KB / 391KB）。桌面端的**2D 兜底**与**设置页形象预览**改用它——
 原始定妆照带奶白底，放在深色卡片上会露出一块方框。三端分发脚本
-（`scripts/brand/build-brand-assets.js` §9）会把 `delivery/brand/pet/` 下的
+（`scripts/brand/build-brand-assets.js` §9）会把 `works/brand/pet/` 下的
 png/json/glb 各端各拷一份，所以新增资产自动到位。
 
 > 网页端与手机端仍用**带底**的原图（网页端 idle/lucky 两张图要成套换，
@@ -609,7 +609,7 @@ v7 的判断是「既然唯一可达的镜像站 `hf-mirror.com` 能下权重，
 
 **槽位名与实现方式解耦**（这是 v8 的关键设计）：
 
-- 槽位文件 = `delivery/brand/pet/models/khy-pet-{female,male}-realistic.glb`
+- 槽位文件 = `works/brand/pet/models/khy-pet-{female,male}-realistic.glb`
   —— 名字里**不带** relief / relief 不带进名字，因为 relief 只是**当前这一版的实现方式**；
 - 渲染端 `petRealisticAssets.ts` 的 glob 认 `*-realistic.glb`，**只认槽位名**；
 - 外部服务一旦给出真扫描网格，`build-pet-realistic.py` 会用**同名文件覆盖**，
@@ -639,7 +639,7 @@ v7 的判断是「既然唯一可达的镜像站 `hf-mirror.com` 能下权重，
 1. **单主体、全身、正面、纯灰背景** —— 多主体/侧身/复杂背景会被反推成一团糊；
 2. **真人比例（约 7.5 头身）** —— 现有资产是二次元 Q 版，直接反推只会得到 Q 版 3D；
 3. **护身符/胸章是**空白金牌**，不画任何图案** —— 商标必须像素级来自
-   `delivery/brand/png/khy-os-mark-256.png`，**绝不能让模型画近似商标**。
+   `works/brand/png/khy-os-mark-256.png`，**绝不能让模型画近似商标**。
 
 产出（`works/design/khy-mascot/model/inbox/`）：
 
@@ -679,7 +679,7 @@ AI 画的商标**不是商标**——哪怕形状像，也和品牌几何真源�
 ### 第三形态已落地：槽位、形状判定与终验（v8）
 
 真人形态不再是「待生成」了。第三形态的**模型槽位**是
-`delivery/brand/pet/models/khy-pet-{female,male}-realistic.glb`，
+`works/brand/pet/models/khy-pet-{female,male}-realistic.glb`，
 由 `scripts/brand/build-pet-realistic-relief.py` 从上面那张真人立绘烘出：
 
 | 产物 | 大小 | 说明 |
@@ -739,7 +739,7 @@ AI 画的商标**不是商标**——哪怕形状像，也和品牌几何真源�
 | --- | --- | --- |
 | 真人底图（两角色） | ✅ | `works/design/khy-mascot/model/inbox/khy-pet-*-realistic-source.png`（本仓图像管线产出） |
 | 真商标压进空白金牌 | ✅ | `stamp-pet-realistic-mark.js`；御守 24px / 胸章 46px（占短边 88%），目视复核环形 + 菱形 K 字清晰 |
-| 真人 3D 模型（槽位） | ✅ | `delivery/brand/pet/models/khy-pet-*-realistic.glb`，已分发到桌面端 `assets/pet/models/` |
+| 真人 3D 模型（槽位） | ✅ | `works/brand/pet/models/khy-pet-*-realistic.glb`，已分发到桌面端 `assets/pet/models/` |
 | 36 帧转盘兜底 | ✅ | `*-realistic-turntable.png`；与单帧**逐像素一致**（0 差异通道） |
 | 形状判定单测 | ✅ | `tests/petAssetShape.test.mjs`（跑真 GLB）5 项 |
 | 形态契约测试 | ✅ | `tests/khyPetModel.contract.test.cjs` 23 项（M9d 改为「按形状判」、新增 M9h / M11） |

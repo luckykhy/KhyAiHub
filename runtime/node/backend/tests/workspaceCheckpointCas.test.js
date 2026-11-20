@@ -130,10 +130,17 @@ test('checkpoint quota sweep evicts manifest entries and keeps referenced CAS ob
     git(['commit', '-m', 'base'], project);
 
     process.env.KHY_CHECKPOINT_STORAGE_MODE = 'cas';
-    process.env.KHY_APP_HOME = appHome;
+    // cleanupService.cleanCheckpointStorage 自 2026-11-19 起经
+    // resolveDataPath('checkpoints') 取址（DATA_PATHS → T1-domains/sessions/checkpoints）。
+    // 把应用家钉到那个登记父目录,检查点服务写出的树才与清理扫描的树同一棵。
+    // CHECKPOINT_ROOT 是惰性 getter（checkpointService.js:905）,所以加载清理服务时
+    // 也必须把同一个父目录传进去,否则 KHY_APP_HOME 被重置回 appHome,服务后续的
+    // listCheckpoints/restoreCheckpoint 会改读平铺的空树。
+    const ckptParent = path.join(appHome, 'T1-domains', 'sessions');
+    process.env.KHY_APP_HOME = ckptParent;
     const service = loadCheckpointService(appHome);
     const checkpointRoot = service.CHECKPOINT_ROOT;
-    assert.equal(checkpointRoot, path.join(appHome, 'checkpoints'));
+    assert.equal(checkpointRoot, path.join(ckptParent, 'checkpoints'));
 
     // Incompressible payload so the gzipped CAS object stays over the quota.
     const bulk = require('crypto').randomBytes(1024 * 1024).toString('hex');
@@ -155,7 +162,7 @@ test('checkpoint quota sweep evicts manifest entries and keeps referenced CAS ob
     assert.equal(fs.existsSync(bulkyObject), true);
     assert.equal(fs.existsSync(sharedObject), true);
 
-    const cleanup = loadCleanupService(appHome);
+    const cleanup = loadCleanupService(ckptParent);
     const swept = cleanup.cleanCheckpointStorage(1);
     assert.ok(swept.removed >= 1);
     assert.ok(swept.bytes > 0);

@@ -179,7 +179,7 @@
       },
       "mirrors": [
         {
-          "path": "delivery/web/ai-frontend/backendDiscovery.mjs",
+          "path": "delivery/channel/web/ai-frontend/backendDiscovery.mjs",
           "kind": "js-const",
           "pointer": "DEFAULT_BACKEND_PORT",
           "reason": "前端是独立 npm 包，不能 require 后端常量；该文件自身注释也承认这是镜像。镜像须与真源锁步。"
@@ -230,7 +230,7 @@
           "reason": "前端独立包，不能 import 后端常量；基准端口允许漂移但基准值必须一致。"
         },
         {
-          "path": "delivery/web/ai-frontend/frontendRuntime.mjs",
+          "path": "delivery/channel/web/ai-frontend/frontendRuntime.mjs",
           "kind": "js-const",
           "pointer": "DEFAULT_FRONTEND_PORT",
           "reason": "前端独立包的 dev-server 解析器，与 backendDiscovery.mjs 同属不可 import 的一侧。"
@@ -420,7 +420,7 @@
       },
       "mirrors": [
         {
-          "path": "delivery/mobile/khy-os-client-app/lib/core/config/endpoint_defaults.dart",
+          "path": "delivery/channel/mobile/khy-os-client-app/lib/core/config/endpoint_defaults.dart",
           "kind": "text-const",
           "pointer": "kDefaultOllamaBaseUrl",
           "reason": "手机端 Dart 包无法 import 后端常量；该文件自述是「第三方服务默认端点的单一真源」，镜像须与后端端口锁步。"

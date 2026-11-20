@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-199] 金丝雀标记与分发溯源机制.md -->
+<title>[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-199-金丝雀标记与分发溯源机制">[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制</a></li><li class="lvl-2"><a href="#〇-背景与目标-动机与威胁模型">〇、背景与目标：动机与威胁模型</a></li><li class="lvl-3"><a href="#0-1-人的意愿">0.1 人的意愿</a></li><li class="lvl-3"><a href="#0-2-威胁模型">0.2 威胁模型</a></li><li class="lvl-3"><a href="#0-3-目标与非目标的一句话切分">0.3 目标与非目标的一句话切分</a></li><li class="lvl-2"><a href="#一-非目标与不拦截声明-硬边界">一、非目标与不拦截声明（硬边界）</a></li><li class="lvl-2"><a href="#二-标记格式真源">二、标记格式真源</a></li><li class="lvl-3"><a href="#2-1-源码层-四段-release-无连字符">2.1 源码层（四段，release 无连字符）</a></li><li class="lvl-3"><a href="#2-2-apk-层-release-段-versionname-versioncode-ymmddhhmm-内含">2.2 APK 层（release 段 = versionName+versionCode-yMMddHHmm，内含 `.`/`+`/`-`）</a></li><li class="lvl-3"><a href="#2-3-全值字符集硬约束">2.3 全值字符集硬约束</a></li><li class="lvl-3"><a href="#2-4-唯一性与幂等">2.4 唯一性与幂等</a></li><li class="lvl-2"><a href="#三-双层载体设计">三、双层载体设计</a></li><li class="lvl-3"><a href="#3-1-层-1-源码注释信封">3.1 层 1：源码注释信封</a></li><li class="lvl-3"><a href="#3-2-层-2-apk-注入面">3.2 层 2：APK 注入面</a></li><li class="lvl-2"><a href="#四-工具-cli-与清单-schema">四、工具 CLI 与清单 schema</a></li><li class="lvl-3"><a href="#4-1-三子命令">4.1 三子命令</a></li><li class="lvl-3"><a href="#4-2-amoo-冻结表文本锚点重同步">4.2 amoo 冻结表文本锚点重同步</a></li><li class="lvl-3"><a href="#4-3-undo-与-beforesha256-安全阀">4.3 `--undo` 与 beforeSha256 安全阀</a></li><li class="lvl-3"><a href="#4-4-清单-schema-scripts-release-canary-manifest-json">4.4 清单 schema（`scripts/release/canary-manifest.json`）</a></li><li class="lvl-2"><a href="#五-取证流程-拿清单比对疑似抄袭品">五、取证流程：拿清单比对疑似抄袭品</a></li><li class="lvl-2"><a href="#六-台账与对账-三者分工">六、台账与对账：三者分工</a></li><li class="lvl-2"><a href="#七-所有权与施工顺序">七、所有权与施工顺序</a></li><li class="lvl-3"><a href="#7-1-三施工员路径互斥">7.1 三施工员路径互斥</a></li><li class="lvl-3"><a href="#7-2-施工顺序-硬约束-钉死">7.2 施工顺序（硬约束，钉死）</a></li><li class="lvl-3"><a href="#7-3-前置基线步骤-含-gitignore-交互-评审第-4-条吸收的订正">7.3 前置基线步骤（含 .gitignore 交互，评审第 4 条吸收的订正）</a></li><li class="lvl-2"><a href="#八-守卫影响分析-修正版-逐条">八、守卫影响分析（修正版，逐条）</a></li><li class="lvl-2"><a href="#九-隐私与合规边界">九、隐私与合规边界</a></li><li class="lvl-2"><a href="#十-回滚">十、回滚</a></li><li class="lvl-2"><a href="#十一-验证手段与盲区">十一、验证手段与盲区</a></li><li class="lvl-3"><a href="#11-1-本会话实测-本文作者跑过-命令与读数">11.1 本会话实测（本文作者跑过，命令与读数）</a></li><li class="lvl-3"><a href="#11-2-评审实测-本文引述-本会话未复跑">11.2 评审实测（本文引述，本会话未复跑）</a></li><li class="lvl-3"><a href="#11-3-未实测-如实标注-按-会坏-处理">11.3 未实测（如实标注，按「会坏」处理）</a></li><li class="lvl-3"><a href="#11-4-机制自身盲区-不假装覆盖">11.4 机制自身盲区（不假装覆盖）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- 文档分类: DESIGN-ARCH-199 | 阶段: 设计 --&gt;</p>
+<h1 id="design-arch-199-金丝雀标记与分发溯源机制">[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制<a class="anchor" href="#design-arch-199-金丝雀标记与分发溯源机制" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>本文回答两个问题</strong>：①软著申请在途、APK 已经被解包抄袭，在「不能改产品名、不能等批文」<br>的约束下，怎么让每一份流出的源码与 APK 都带着<strong>可递交的溯源证据</strong>；<br>②这套标记怎么做到<strong>纯取证、零拦截</strong>——不挂任何门、不占任何流程、不触发升阶机制。</p>
+<p><strong>结论卡</strong>：双层金丝雀。<strong>层 1 源码</strong>——<code>khy-canary:</code> 注释信封打进<br>T1 移动端 134 文件（可标全量：原始池 135 减 1 个生成物<br>project_profile.g.dart，见 §3.1 排除类③）+ T2 后端核心 120 文件（cap）+ T3 桌面端<br>103 文件（2026-11-02 增，可标全量：在册 104 减 1 个 tracked 已删；electron-vite<br>main/preload 包不压缩、注释随 out/ 进 asar——桌面源码层即发行层），marker 值<br><code>Khy-&lt;批次&gt;-&lt;序号&gt;-&lt;随机段&gt;</code> 全局唯一，台账 <code>scripts/release/canary-manifest.json</code><br>逐文件记 sha256；<strong>层 2 APK</strong>——构建脚本生成逐接收人唯一值<br><code>Khy-&lt;versionName&gt;+&lt;versionCode&gt;-&lt;yyyyMMddHHmm&gt;-&lt;rand8&gt;</code>，经<br>canary.properties / resValue / manifest placeholder / cmake 宏 / --dart-define<br>七个注入面落进 arsc、binary manifest、dex、libkhyjs.so 永久层，台账<br><code>works/data/khy/canary/ledger.jsonl</code>（gitignore 区，不入仓）。<br>工具 <code>node scripts/release/canary-mark.js</code> 三个子命令 stamp / verify / report，<br><strong>恒不拦任何流程</strong>：不挂 git hook、不进 CI、不进 npm script、不接 khy CLI、<br>verify/report 恒 exit 0、不登记 FEATURE-OWNERSHIP、<strong>不触发 <code>PROCESS-008</code> 四阶段</strong>。</p>
+<p><strong>诚实边界先说清</strong>：信封是明文注释，<code>grep</code> 得到就可以剥离。本机制不防「决心剥干净<br>的对手」，防的是三件更常见的事：<strong>漏剥</strong>（357 处注释 + 四个产物面，剥一处漏一处）、<br><strong>清洗成本</strong>（同形标识逐处手剥，漏一处即钉死来源）、<strong>唯一指纹</strong><br>（批次内随机段 + APK 逐接收人唯一，命中一个 marker 就把疑似品钉到具体批次/具体接收人）。<br>它是取证手段，不是防盗门。</p></blockquote>
+<hr>
+<h2 id="〇-背景与目标-动机与威胁模型">〇、背景与目标：动机与威胁模型<a class="anchor" href="#〇-背景与目标-动机与威胁模型" aria-label="锚点">#</a></h2>
+<h3 id="0-1-人的意愿">0.1 人的意愿<a class="anchor" href="#0-1-人的意愿" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>时间</th><th>谁</th><th>要什么</th></tr></thead><tbody><tr><td>2026-11-01</td><td>用户</td><td>软著申请材料在途未批，APK 已被第三方解包抄袭；要求建立可递交的分发溯源证据链（本方案即其施工裁决的产物，三施工员 A/B/C 并行，本文是 C 的交付）</td></tr></tbody></table>
+<h3 id="0-2-威胁模型">0.2 威胁模型<a class="anchor" href="#0-2-威胁模型" aria-label="锚点">#</a></h3>
+<p><strong>对手</strong>：拿到本仓源码副本或 APK 产物的第三方，将其改名再分发（去品牌、去注释、换包名）。</p>
+<p><strong>对手做不到/不划算的事</strong>：</p>
+<table><thead><tr><th>对手的动作</th><th>本机制的效果</th></tr></thead><tbody><tr><td>原样或轻度改名再分发源码/APK</td><td>marker 原样命中，清单/台账直指批次与接收人</td></tr><tr><td>逐处清洗 marker</td><td>254 处源码注释 + arsc / manifest / dex / so 四个产物面都要剥；漏一处即钉死来源；清洗痕迹本身是恶意性证据</td></tr><tr><td>彻底重写（不抄结构只抄思路）</td><td>本机制无能为力——那是思想表达的边界问题，归软著/法律手段，不是水印能解决的</td></tr></tbody></table>
+<p><strong>取证面分工</strong>（两层各答一个问题）：</p>
+<table><thead><tr><th>层</th><th>回答的问题</th><th>证据载体</th></tr></thead><tbody><tr><td>层 1 源码</td><td>「这份源码是不是从本仓某批次流出的」</td><td>源码注释信封 + <code>canary-manifest.json</code>（file → marker → sha256 链）</td></tr><tr><td>层 2 APK</td><td>「这份 APK 是哪次构建发给谁的」</td><td>四个产物注入面 + <code>ledger.jsonl</code> 逐接收人映射 + <code>SHA256SUMS.txt</code> 对账行</td></tr></tbody></table>
+<p>两层<strong>值不相通</strong>（格式与正则各自独立，见 §二），清单只收源码层值——APK 层值含接收人<br>语义，落在 gitignore 区的 ledger，不进可递交到公开渠道的 manifest 文件。</p>
+<h3 id="0-3-目标与非目标的一句话切分">0.3 目标与非目标的一句话切分<a class="anchor" href="#0-3-目标与非目标的一句话切分" aria-label="锚点">#</a></h3>
+<p><strong>目标</strong>：流出物可溯源、证据可递交（清单 + sha256 + 时序）、打标过程对工作区安全（dirty<br>树不破坏、可精确撤销）。</p>
+<p><strong>非目标</strong>：防剥离（做不到，见结论卡）、拦截任何流程（明令禁止，见 §一）、替代软著登记<br>（软著判据真源 <code>[DESIGN-IP-001]</code>，本机制与其不交叉——marker 不进登记材料候选，见 §九）。</p>
+<hr>
+<h2 id="一-非目标与不拦截声明-硬边界">一、非目标与不拦截声明（硬边界）<a class="anchor" href="#一-非目标与不拦截声明-硬边界" aria-label="锚点">#</a></h2>
+<blockquote><p>本节是<strong>硬边界</strong>，不是姿态。三施工员交付门槛里凡是与拦截沾边的做法，一律越界。</p></blockquote>
+<table><thead><tr><th>不发生的事</th><th>为什么</th></tr></thead><tbody><tr><td>不挂 git hook（pre-commit / pre-push / commit-msg 一概不接）</td><td>打标与取证是离线人工动作，不是提交流程的一部分</td></tr><tr><td>不进 CI（pr-gate.yml 零改动）</td><td>marker 丢失不该拦 PR——有人在编辑器里删一行注释是合法编辑，不是违规</td></tr><tr><td>不新增 npm script、不新增 khy CLI 命令</td><td>唯一入口是 <code>node scripts/release/canary-mark.js …</code>（直接调脚本，与 <code>hygiene-allowlist</code> 同类）；避免命令面棘轮（<code>[DESIGN-DELIV-002]</code> 任务面只降不升）</td></tr><tr><td>verify / report <strong>恒 exit 0</strong></td><td>它们是盘点工具不是门；drift/stripped/missing 是<strong>线索</strong>不是<strong>违规</strong></td></tr><tr><td>不登记 <code>FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[]</code></td><td>该表管「拦截型机制」的升阶候选；本机制不拦任何东西，登记它等于谎报门第</td></tr><tr><td><strong>不触发 <code>PROCESS-008</code> 四阶段</strong></td><td><code>PROCESS-008</code> 的前提是「会阻断 AI 或 CI 的钩子/检查器/门禁」——本机制没有阻断面，S1 观察期、样本量毕业、升阶裁决全部不适用。这不是规避，是<strong>不满足触发条件本身</strong></td></tr><tr><td>不改任何既有代码行为</td><td>stamp 只在被标文件插入一行注释；工具自身无网络、无凭据、无子进程写操作（git ls-files / git status 只读）</td></tr></tbody></table>
+<p><strong>判据</strong>：今后任何人想给这套机制加「自动校验 marker 是否还在」的门，那是<strong>新机制</strong>，<br>按 <code>PROCESS-008</code> 从 S1 起步另行立项——本方案不预埋那个口子。</p>
+<hr>
+<h2 id="二-标记格式真源">二、标记格式真源<a class="anchor" href="#二-标记格式真源" aria-label="锚点">#</a></h2>
+<blockquote><p>本节是格式的单一真源。两层<strong>各自</strong>有一条解析正则——评审第 8 条吸收：APK 层的 release<br>段内含 <code>.</code> / <code>+</code> / <code>-</code>，若与源码层共用「按固定段数切分」会错位。</p></blockquote>
+<h3 id="2-1-源码层-四段-release-无连字符">2.1 源码层（四段，release 无连字符）<a class="anchor" href="#2-1-源码层-四段-release-无连字符" aria-label="锚点">#</a></h3>
+<pre><code>Khy-20261101-007-K4QX9M2P
+ │    │        │    └ rand：8 位 Crockford Base32（去 I/L/O/U）
+ │    │        └ seq：清单内全局单调序号，3 位起，跨批次累计
+ │    └ release：批次号，默认 yyyymmdd，--release 可改
+ └ 固定前缀 Khy-</code></pre>
+<p>解析正则（唯一）：</p>
+<pre><code>^Khy-(?&lt;release&gt;\d{8})-(?&lt;seq&gt;\d{3,})-(?&lt;rand&gt;[0-9ABCDEFGHJKMNPQRSTVWXYZ]{8})$</code></pre>
+<p>逐字注释行（信封固定小写 <code>khy-canary:</code>，值固定大写 <code>Khy-</code> 开头）：</p>
+<pre><code>// khy-canary: Khy-20261101-007-K4QX9M2P      ← // 族
+# khy-canary: Khy-20261101-007-K4QX9M2P       ← # 族
+&lt;!-- khy-canary: Khy-20261101-007-K4QX9M2P --&gt; ← XML 族</code></pre>
+<h3 id="2-2-apk-层-release-段-versionname-versioncode-ymmddhhmm-内含">2.2 APK 层（release 段 = versionName+versionCode-yMMddHHmm，内含 <code>.</code>/<code>+</code>/<code>-</code>）<a class="anchor" href="#2-2-apk-层-release-段-versionname-versioncode-ymmddhhmm-内含" aria-label="锚点">#</a></h3>
+<pre><code>Khy-1.1.17+2-202611011430-Q7XB2M9K
+ │    │          │           └ rand：同字符集 8 位
+ │    │          └ ts：12 位纯数字时间戳 yyyyMMddHHmm（分钟级）
+ │    └ release：pubspec versionName+versionCode（1.1.17+2，实测值）
+ └ 固定前缀 Khy-</code></pre>
+<p>解析正则（唯一，与源码层不同）：</p>
+<pre><code>^Khy-(?&lt;release&gt;.+)-(?&lt;ts&gt;\d{12})-(?&lt;rand&gt;[0-9ABCDEFGHJKMNPQRSTVWXYZ]{8})$</code></pre>
+<p>贪婪 <code>release</code> + 12 位纯数字时间戳锚定：release 段里的 <code>.</code>/<code>+</code>/<code>-</code> 不会与段分隔符<br>混淆，两层各自无歧义。<strong>为什么 APK 层不按四段切</strong>：<code>Khy-1.1.17+2-202611011430-…</code><br>按 <code>-</code> 切出 5 段（release 自己含 <code>-</code> 的版本号还会更多），固定段数切分必错位。</p>
+<p><strong><code>canary-manifest.json</code> 只收源码层值，不收 APK 层值</strong>——APK 层台账在<br><code>works/data/khy/canary/ledger.jsonl</code> 与 <code>SHA256SUMS.txt</code> 对账行（§六）。两层载体分离，<br>工具不存在「解析 APK 层值」的场景，两套正则各守各的面。</p>
+<h3 id="2-3-全值字符集硬约束">2.3 全值字符集硬约束<a class="anchor" href="#2-3-全值字符集硬约束" aria-label="锚点">#</a></h3>
+<p><code>[A-Za-z0-9+.\-]</code>——无空格、无引号、无反斜杠、无 CR/LF。这一个约束同时保证：</p>
+<table><thead><tr><th>穿越面</th><th>为什么安全</th></tr></thead><tbody><tr><td>XML 属性</td><td>无引号字符，placeholder 替换后不破属性语法</td></tr><tr><td>HTTP 响应头</td><td>无 CR/LF = 结构性防头注入（HttpBridge 的 <code>Server:</code> 面）</td></tr><tr><td>C 预处理宏串接</td><td>无引号直传 <code>-DKHY_CANARY=Khy-1.1.17+2-…</code>，串接宏逐字节还原（NDK 28.2 clang 实测，§十一）</td></tr><tr><td>.properties</td><td>无需转义的字符</td></tr><tr><td><code>--dart-define=KHY_CANARY=…</code></td><td>shell 参数安全</td></tr></tbody></table>
+<h3 id="2-4-唯一性与幂等">2.4 唯一性与幂等<a class="anchor" href="#2-4-唯一性与幂等" aria-label="锚点">#</a></h3>
+<ul><li><strong>清单内 marker 全局唯一</strong>：stamp 生成时查重，命中即重掷 rand；</li><li><strong>APK 层逐接收人唯一</strong>：分钟级时间戳 + 随机段；接收人映射只在 ledger（gitignore 区），</li></ul>
+<p>APK 值本身不携带身份信息（§九）；</p>
+<ul><li><strong>源码层幂等</strong>：以信封 <code>khy-canary:</code> 探测，已标即跳过——重复 stamp 不产生第二条；</li><li><strong>APK 层幂等</strong>：每次构建覆盖重写 <code>android/canary.properties</code>。</li></ul>
+<hr>
+<h2 id="三-双层载体设计">三、双层载体设计<a class="anchor" href="#三-双层载体设计" aria-label="锚点">#</a></h2>
+<h3 id="3-1-层-1-源码注释信封">3.1 层 1：源码注释信封<a class="anchor" href="#3-1-层-1-源码注释信封" aria-label="锚点">#</a></h3>
+<p><strong>插入位总规则</strong>：文件首行（有 shebang 则其后一行），保留 BOM 与原 EOL。<br><strong>XML 特例</strong>：有 <code>&lt;?xml … ?&gt;</code> 声明行时插到<strong>声明行之后</strong>，无声明才插文件首。</p>
+<blockquote><p><strong>XML 声明行规则是实测裁定，不是风格偏好</strong>（评审阶段以本机 aapt2，build-tools<br>36.0.0 复跑两组对照实验；本文档作者会话未复跑，引评审实测）：注释置于声明<strong>前</strong>，<br><code>aapt2 compile --dir</code> 报 <code>XML or text declaration not at start of entity.</code> +<br>compile fail；置于声明<strong>后</strong>编译通过。T1 池 7 个 tracked res XML 首行全部是声明<br>（逐一打印核实）——不写这条规则，7 个 res 文件会被一次打标全部打坏。</p></blockquote>
+<p><strong>语法表</strong>：</p>
+<table><thead><tr><th>族</th><th>扩展名</th><th>信封形态</th></tr></thead><tbody><tr><td><code>//</code> 族</td><td>.js .cjs .mjs .ts .dart .kt .java .gradle .kts .cpp .h .c</td><td><code>// khy-canary: &lt;marker&gt;</code></td></tr><tr><td><code>#</code> 族</td><td>.py .ps1 .sh .cmake .pro .properties（CMakeLists.txt 按文件名识别）</td><td><code># khy-canary: &lt;marker&gt;</code></td></tr><tr><td>XML 族</td><td>.xml .vue</td><td><code>&lt;!-- khy-canary: &lt;marker&gt; --&gt;</code></td></tr></tbody></table>
+<p>khy_platform 17 个在册 .py 实测<strong>全部无 shebang、无 coding cookie</strong>（本会话逐一读首两行<br>核实）——文件首插行不破坏 Python 解释器语义。</p>
+<p><strong>打标范围三级优先，总上限 400，目标 357（T1 134 + T2 120 + T3 桌面 103）</strong>（全部为<br>git 在册口径，<code>git ls-files</code> 取池；本会话复现命令与读数见 §十一）：</p>
+<table><thead><tr><th>级</th><th>池</th><th>数量</th><th>说明</th></tr></thead><tbody><tr><td>T1 移动端</td><td>lib dart 81 + main 层 kt/java 27 + test 层 kt/java 25 + res xml 7 = 140，减 B 独占 5 = 135，再减生成物 project_profile.g.dart（*.g.dart 命中排除类③）</td><td><strong>134，可标全量</strong></td><td>最可能被抄的代码；B 独占 5 = MainActivity.kt / HttpBridge.java / BridgeService.java / app_logger.dart / network_diagnostic.dart</td></tr><tr><td>T2 后端核心</td><td>gateway 全树 229 + services 根层 705 + cli 三件 3 + khy_platform 17 = <strong>954 原始池</strong></td><td><strong>cap 120</strong></td><td>候选远超上限——AGENTS.md「关键入口点」表内文件优先，余下按路径字典序确定性补足；排除 COPYRIGHT-MATERIALS 候选与 khy_platform 深层 <code>_resources/</code></td></tr><tr><td>T3 桌面端</td><td><code>apps/khyos-desktop/src/</code> 在册 ts 47 + tsx 57 = <strong>104 可标</strong></td><td><strong>103</strong>（2026-11-02 增）</td><td>electron-vite main/preload 包默认不压缩（out/main/index.js 162KB 注释逐字存活，实测）——源码层标记直接进 asar 发行层；1 个 tracked 文件已从磁盘删除（ContextUsage.tsx，skip missing-on-disk）；48 个未在册盲区按「只标在册」不标；桌面 typecheck 基线按 file\</td></tr><tr><td>T4 其他</td><td>—</td><td><strong>默认关闭</strong></td><td><code>--tier all</code> 才启用，本轮不标</td></tr></tbody></table>
+<blockquote><p>两个口径注解（防读偏）：<br>① <strong>「services 根层」= <code>src/services/</code> 目录直下（严格深度 1）</strong>，不是 services 全树<br>——全树 JS 2216 = 根层 705 + 子树 1511；<code>services/domain/**</code> 深层（含<br>amooBridgeConfig.js、phoneBridgeCatalog.js、trajectoryProvenance 全部）本轮<strong>不入池</strong><br>（这是既定选择，不是遗漏；深层面将来扩池时经 COPYRIGHT 运行时排除兜住）。由此<br>T2 池<strong>无冻结条目</strong>——amoo 守卫的 backend 侧两条冻结线都不在池内，A 的重同步范围<br>实际只在 T1 的 5 个文件（B 若先动 MainActivity 则加第 6 个，见 §七）。<br>② khy_platform 的 17 = 根层 16 + <code>_resources/__init__.py</code> 1。方案初稿按根层 16<br>求和得 953，评审订正为按 17 算 <strong>954</strong>——cap 120 吸收，无行为影响。</p></blockquote>
+<p><strong>不可打标七类</strong>（<code>--plan</code> 输出列为 excluded-with-reason，不报错）：</p>
+<ol><li><code>*.json</code> 及一切无注释语法文件；</li><li>二进制（<em>.ico / </em>.png / <em>.apk / </em>.aab / <em>.db / </em>.keystore）；</li><li>生成/压缩物（<em>.min.</em>、<em>_gen.</em>、<em>_blob.h、<code>Generated*</code>、</em>.g.dart / *.freezed.dart /</li></ol>
+<p>*.mocks.dart、docs/html/ 孪生）；</p>
+<ol><li>取证/证据区：<code>works/record/evidence/**</code>、<code>scripts/copyright/vendor/**</code>、</li></ol>
+<p>MD5 钉死的 app_functions_schema.xsd、KhyAppFunctionsTest 实钉 function_id 的<br>   app_functions*.xml；</p>
+<ol><li>指令文件 AGENTS.md / CLAUDE.md / README.md——运行时读取有 8000 字符/文件静默截断</li></ol>
+<p>（<code>MAX_FILE_CHARS</code>，守卫规则 DOCS-003），头部插行可能把关键规则顶出截断点；</p>
+<ol><li><strong>COPYRIGHT-MATERIALS.json 候选</strong>——工具<strong>运行时</strong> require 该 registry JSON 抽取</li></ol>
+<p>路径（实测 21 个代码候选），不把清单硬编码进工具：清单将来扩面时排除自动跟随，<br>   且软著 60 页选材面永远干净（<code>PROCESS-010</code> 判据 C-TOOL / C-X3）；</p>
+<ol><li>B 独占的 12 个接线文件（§七）。</li></ol>
+<p>新增注释一律英文；既有中文注释不动。</p>
+<h3 id="3-2-层-2-apk-注入面">3.2 层 2：APK 注入面<a class="anchor" href="#3-2-层-2-apk-注入面" aria-label="锚点">#</a></h3>
+<p><strong>值唯一生成点 = <code>scripts/release/build-android.ps1</code></strong>。构建段新增 canary 段：<br>读 pubspec 版本 → 拼值 → 三通道分发 → 收尾对账：</p>
+<pre><code>pubspec (1.1.17+2)
+   │
+   ▼
+$canary = &quot;Khy-$ver-$ts-$rand8&quot;
+   ├─① 覆盖写 android/canary.properties（khy.canary=…）      ← gradle 侧主通道
+   ├─② $env:KHY_CANARY = $canary                              ← 次级通道
+   └─③ 两条 flutter build 追加 --dart-define=KHY_CANARY=$canary ← dart 侧通道
+   ▼
+SHA256SUMS.txt 追加 &quot;# khy-canary: &lt;stamp&gt;&quot; 对账行
+works/data/khy/canary/ledger.jsonl 追加 {ts, canary, apkSha256, aabSha256}</code></pre>
+<p><code>android/.gitignore</code> 在 key.properties 行旁加 <code>/canary.properties</code>（构建期生成、逐接收人<br>不同、不入仓）。</p>
+<p><strong>build.gradle 接线</strong>：<code>android { }</code> 之前定义 <code>loadCanary()</code>（照既有 <code>loadKeyProps</code> 的<br>Properties 模式）：<strong>canary.properties 优先 → env 次级 → 兜底 <code>Khy-localbuild</code></strong>。</p>
+<blockquote><p><strong>properties 优先是防 Gradle daemon 陷阱</strong>：daemon 常驻时 <code>System.getenv</code> 被<strong>固化在<br>daemon 启动时刻</strong>——daemon 复用期间 env 通道静默用旧值，逐接收人 stamp 直接失效且<br>无任何报错。canary.properties 每次构建覆盖重写，文件读数是当场值。</p></blockquote>
+<p><code>defaultConfig</code> 三面：</p>
+<table><thead><tr><th>面</th><th>写法</th><th>落点</th></tr></thead><tbody><tr><td>resValue</td><td><code>resValue &quot;string&quot;, &quot;khy_canary&quot;, khyCanary</code></td><td>resources.arsc</td></tr><tr><td>manifest placeholder</td><td><code>manifestPlaceholders += [khyCanary: khyCanary]</code></td><td>binary manifest（经 AndroidManifest.xml 的 <code>&lt;meta-data android:name=&quot;khy.build&quot; android:value=&quot;${khyCanary}&quot;/&gt;</code>，与仓内 <code>${applicationId}</code> fileprovider 同机制）</td></tr><tr><td>cmake</td><td>externalNativeBuild 块 <code>arguments &quot;-DKHY_CANARY_VALUE=${khyCanary}&quot;</code></td><td>编译宏（cmake arguments 是配置输入，值变自动重配置）</td></tr></tbody></table>
+<p><strong>资源收缩存活——三件套裁定</strong>（AGP 9.1 release 默认 R8 + 资源收缩双开）：</p>
+<blockquote><p>评审曾提修法 (a)：manifest 里写 <code>android:value=&quot;@string/khy_canary&quot;</code> 引用 resValue。<br><strong>实测否决</strong>（aapt2 compile+link+dump xmltree，本机 build-tools 36.0.0；本文档作者<br>会话未复跑，引评审实测）：meta-data 存 <code>@string/</code> 引用时，binary manifest 落的是<br><code>@0x7f010000</code> <strong>资源引用而非内联字面值</strong>——修法 (a) 会把 manifest 取证面弱化成<br>一个查不到值的指针。故裁定三件套：</p>
+<ol><li><strong>placeholder 字面值</strong>（上表第 2 面）→ manifest 逐字面值取证面；</li><li><strong>resValue</strong> → resources.arsc 取证面；</li><li><strong><code>android/app/src/main/res/raw/keep.xml</code></strong>：<code>tools:keep=&quot;@string/khy_canary&quot;</code></li></ol>
+<p>——官方收缩豁免机制，保证零引用的 resValue 不被默认资源收缩剥除。</p>
+<p>「R8 不碰资源」的旧前提<strong>作废</strong>，改述为：资源面存活靠 manifest 可达性 + keep.xml。<br>gradle 资源收缩端到端两轮均未实测（§十一如实标注），按「会坏」处理并以 keep.xml 兜底。</p></blockquote>
+<p><strong>其余注入点</strong>（引用一律「文件 + 符号名」，不写行号——行号会漂，符号名不会）：</p>
+<table><thead><tr><th>#</th><th>文件 · 符号</th><th>注入形态</th><th>存活机制</th></tr></thead><tbody><tr><td>1</td><td>build-android.ps1 · canary 段</td><td>值生成 + canary.properties + --dart-define + 对账</td><td>唯一生成点</td></tr><tr><td>2</td><td>MainActivity.kt · <code>getDeviceInfo()</code> 表 + 新增 <code>khyBuildStamp()</code></td><td>设备信息表加 <code>khyBuild</code> 键；khyBuildStamp() 读同一 meta-data（placeholder 直写，Bundle.getString 直接命中字面值）</td><td>一面注入两面取证；被执行路径，R8 不裁</td></tr><tr><td>3</td><td>HttpBridge.java · 静态 <code>khyBuild()</code> + 响应头</td><td><code>Server: khy-os-bridge (&lt;stamp&gt;)</code></td><td>值字符集硬约束防头注入；读 Tools 的 ctxRef</td></tr><tr><td>4</td><td>BridgeService.java · <code>onCreate()</code></td><td><code>Tools.init</code> 后一条含 stamp 的 <code>Log.i</code></td><td>App 启动 / 开机 / PC 唤醒三路必经；比 KhyAppFunctions.onCreate（仅 API36 系统绑定才建）覆盖实</td></tr><tr><td>5</td><td>CMakeLists.txt</td><td><code>if(NOT DEFINED …) set(… &quot;Khy-localbuild&quot;) endif()</code> + <code>target_compile_definitions(khyjs PRIVATE KHY_CANARY=${KHY_CANARY_VALUE})</code></td><td>宏缺省兜底（IDE 直接编译也能过）</td></tr><tr><td>6</td><td>khy_js_jni.cpp · 宏区 + <code>JNI_OnLoad</code></td><td><code>#ifndef/#define KHY_CANARY Khy-localbuild</code> + KHY_STR2/KHY_STR 双层串接宏 + <code>static const char kKhyCanary[]</code>；<code>JNI_OnLoad</code> 内 <code>LOGI(&quot;canary %s&quot;, kKhyCanary)</code></td><td><strong>引用必须放在 JNI_OnLoad 里</strong>——<code>used</code> 属性挡不住 <code>--gc-sections</code> 链接期段回收，被执行路径的引用才扛得住；标记进 libkhyjs.so（arm64-v8a 单 ABI），<code>strings</code> 即取证</td></tr><tr><td>7</td><td>app_logger.dart · 常量 + <code>init()</code> details</td><td><code>const String kKhyCanary = String.fromEnvironment('KHY_CANARY');</code> + init details 加 <code>canary</code> 键（info 级）</td><td>值进 AOT 池并随分析包自足导出；不污染错误投影</td></tr><tr><td>8</td><td>network_diagnostic.dart · UA</td><td>非空时 <code>khy-os/1.0 (Khy-&lt;stamp&gt;)</code></td><td>仅诊断路径外发（§九）</td></tr></tbody></table>
+<p><strong>明确不做</strong>：strings.xml（resValue 同面，重复）、伪装 UA 的功能性 UA 面、<br>app_functions*.xml / xsd（测试 + MD5 钉死）、libkhyllama.so（khyjs 已覆盖同一 APK）、<br>android_build.py（Flutter 主链不经它）。</p>
+<p><strong>R8 存活总纲</strong>：Kotlin/Java 侧标记只挂<strong>被执行路径</strong>（JNI_OnLoad、onCreate、getDeviceInfo、<br>HttpBridge 响应）或 <strong>R8 不管的面</strong>（manifest 字面值、arsc、so 内字符串），<strong>不依赖<br><code>-keep</code> 规则</strong>——keep 规则是对手最爱删的配置。</p>
+<hr>
+<h2 id="四-工具-cli-与清单-schema">四、工具 CLI 与清单 schema<a class="anchor" href="#四-工具-cli-与清单-schema" aria-label="锚点">#</a></h2>
+<h3 id="4-1-三子命令">4.1 三子命令<a class="anchor" href="#4-1-三子命令" aria-label="锚点">#</a></h3>
+<p><code>scripts/release/canary-mark.js</code>——Node 标准库、零第三方依赖。<strong>保持三个子命令</strong>；<br>撤销做成 <code>stamp</code> 的 <code>--undo</code> 开关而非第四子命令（对「三子命令」字面要求的偏离如实声明，<br>理由：撤销是打标的逆操作，分开写会鼓励「只 undo 不 verify」的用法）。</p>
+<pre><code>node scripts/release/canary-mark.js stamp [--release &lt;批次号&gt;] [--max &lt;n&gt;]
+                                          [--tier mobile|backend|desktop|all]
+                                          [--only &lt;路径&gt;...] [--plan]
+                                          [--resync-only] [--undo [--batch &lt;release&gt;]]
+node scripts/release/canary-mark.js verify [--manifest &lt;path&gt;] [--json]
+node scripts/release/canary-mark.js report [--manifest &lt;path&gt;] [--json]</code></pre>
+<p><strong>使用方法速查</strong>（都是直接调脚本，无 npm script、无 khy 子命令）：</p>
+<pre><code class="language-bash"><span class="hljs-comment"># ① 干跑：看将标/跳过/dirty/盲区/excluded 全清单，人工审阅</span>
+node scripts/release/canary-mark.js stamp --plan
+
+<span class="hljs-comment"># ② 真打标（T1 全量 + T2 cap 120 + T3 桌面全量，默认批次号 = 今天）</span>
+node scripts/release/canary-mark.js stamp
+
+<span class="hljs-comment"># ③ 核对：清单条目 vs 磁盘现状</span>
+node scripts/release/canary-mark.js verify
+
+<span class="hljs-comment"># ④ 盘点报告（可贴进取证记录）</span>
+node scripts/release/canary-mark.js report --json
+
+<span class="hljs-comment"># ⑤ 撤销（整单或按批次）</span>
+node scripts/release/canary-mark.js stamp --undo
+node scripts/release/canary-mark.js stamp --undo --batch 20261101
+
+<span class="hljs-comment"># ⑥ 冻结表重同步（只重定位坐标写回表，不打标、不插行）</span>
+<span class="hljs-comment">#    用途：B 后动接线文件致冻结坐标漂移时由 A 补跑（§7.2 顺序倒置补救）</span>
+node scripts/release/canary-mark.js stamp --resync-only</code></pre>
+<p><strong>stamp 真跑逐文件</strong>：含 <code>khy-canary:</code> → skip(already)；否则生成唯一 marker → 按语法表<br>插入（XML 声明行感知）→ 写回 → 记 beforeSha256（打标前）与 afterSha256（打标后）→<br>清单原子写（tmp + rename）。<strong>绝不自动 commit / push</strong>（红线 <code>PROCESS-001</code>）。</p>
+<p><strong>verify</strong>：逐条目核对「文件在 / marker 逐字在 / sha256 现值 vs afterSha256」，四态分类<br><code>ok / drift / stripped / missing</code> + 全清单唯一性审计。<strong>恒 exit 0</strong>——四态是线索不是门。</p>
+<p><strong>report</strong>：层级/目录计数、批次时间线、四态分布、首尾 marker 样例、唯一性结论。</p>
+<h3 id="4-2-amoo-冻结表文本锚点重同步">4.2 amoo 冻结表文本锚点重同步<a class="anchor" href="#4-2-amoo-冻结表文本锚点重同步" aria-label="锚点">#</a></h3>
+<p><code>scripts/ci/check-amoo-package-literals.cjs</code> 的 <code>FROZEN</code> 表按 <strong><code>file:line</code> 坐标 + 整行<br>文本双匹配</strong>（<code>scanLiterals()</code> 引擎 + 逐条比对），文件首插行使冻结坐标全体下移 →<br><code>frozen-line-missing</code> 与 <code>unregistered-literal</code> 双红，而它是 pr-gate 的<strong>硬步</strong>。<br>消解机制（工具的 stamp 前置两步）：</p>
+<ol><li><strong>文本锚点重同步</strong>：FROZEN 每条存整行文本（<code>{file, line, text, why}</code>），工具按逐字</li></ol>
+<p>文本在现行文件里重定位坐标并更新表——覆盖 B 并行改动造成的漂移（B 永不碰该 .cjs）；<br>   <strong>匹配前对行尾 <code>\r</code> 做与守卫相同的归一化</strong>（守卫对 git grep 命中行只剥行尾 <code>\r</code>、<br>   表文本按 LF 撰写；本仓 Windows 下 CRLF 广泛，拿原始行文本去等值匹配会全部失配<br>   ——后果是 fail-safe 的：5 个含冻结条目的 T1 文件全被跳过并响亮列出，amoo 面整体<br>   漏标但不会静默坏）；</p>
+<ol><li>对本轮<strong>实际被打标</strong>的每个文件，其表内条目 line 增加插入行数；每次改表记录日志。</li></ol>
+<p>两步在每次 stamp 运行时执行；同一重同步另有<strong>独立入口</strong> <code>stamp --resync-only</code>——只重定位<br>坐标不打标、不插行，全表已锚定时连表都不写（§7.2 顺序倒置补救专用）。</p>
+<p><strong>防呆边界</strong>：无法锚定的条目（行被删/文本被改）→ <strong>跳过该文件</strong>（不打标）并在结尾响亮<br>列出交人裁决——这是工具对自身危险动作的防呆，不是对人的门。表提取方式：从 .cjs 文本<br>切片 <code>const FROZEN = [</code> 到 <code>];</code> 求值（该文件顶层有副作用且置 <code>process.exitCode</code>，<br>不能 require）。</p>
+<p><strong>受影响条目实测</strong>（本会话读全表逐条核对）：T1 池内 <strong>12 条 / 5 文件</strong><br>（AmooChatText.java 1、AmooLoop.java 1、AmooSafe.java 5、Tools.java 1、amoo_service.dart 4；<br>方案初稿写 11 条是漏数）、MainActivity.kt 4 条（B 独占文件，坐标漂移同样被重同步吸收）、<br>KhyAppFunctions.java 1 条（untracked 不在池；将来收编后重同步同样覆盖）。</p>
+<h3 id="4-3-undo-与-beforesha256-安全阀">4.3 <code>--undo</code> 与 beforeSha256 安全阀<a class="anchor" href="#4-3-undo-与-beforesha256-安全阀" aria-label="锚点">#</a></h3>
+<p>按清单（file + line + lang）逐文件<strong>只删工具自己插入的那一行</strong> → 删后算 sha256 与<br><code>beforeSha256</code> 比对——相等才落盘并移除清单条目；不等（打标后文件另有演化）则<strong>拒删</strong><br>该文件并列出。dirty 工作区安全：<strong>回滚永不触碰未暂存的他人工作</strong>（本树 T1 池 21 个、<br>T2 池 17 个文件带未暂存改动——评审实测，本会话同口径复现同值；<code>git restore</code> 会抹掉<br>它们，故 undo 是首选，git 还原降为辅路，见 §十）。</p>
+<h3 id="4-4-清单-schema-scripts-release-canary-manifest-json">4.4 清单 schema（<code>scripts/release/canary-manifest.json</code>）<a class="anchor" href="#4-4-清单-schema-scripts-release-canary-manifest-json" aria-label="锚点">#</a></h3>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;schema&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;khy-canary-manifest/1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;marker&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;prefix&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Khy-&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;envelope&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;khy-canary&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;randLen&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">8</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;randCharset&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;0123456789ABCDEFGHJKMNPQRSTVWXYZ&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;batches&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;release&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;20261101&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;stampedAt&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&lt;ISO8601&gt;&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;by&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;canary-mark.js stamp&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;entries&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;file&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;…&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;marker&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Khy-20261101-001-K4QX9M2P&quot;</span><span class="hljs-punctuation">,</span>
+                   <span class="hljs-attr">&quot;beforeSha256&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&lt;64hex&gt;&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;afterSha256&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&lt;64hex&gt;&quot;</span><span class="hljs-punctuation">,</span>
+                   <span class="hljs-attr">&quot;lang&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;//&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;line&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span></code></pre>
+<p><code>batches</code> 追加式。<strong>beforeSha256 是 <code>--undo</code> 的安全阀，afterSha256 是 verify 的 drift<br>判据</strong>——两个哈希各管一头，缺一不可。该文件与工具同目录（<code>scripts/release/</code>，<br>hygiene-allowlist 先例），刻意不落 <code>docs/10_规范/registry/</code>（守卫判据真源区，不稀释<br>语义）；数据落点登记见 §八（DATA-SSOT）。</p>
+<hr>
+<h2 id="五-取证流程-拿清单比对疑似抄袭品">五、取证流程：拿清单比对疑似抄袭品<a class="anchor" href="#五-取证流程-拿清单比对疑似抄袭品" aria-label="锚点">#</a></h2>
+<blockquote><p>前提：<code>canary-manifest.json</code> 在仓（可递交）；<code>ledger.jsonl</code> 在 gitignore 区（<strong>记得<br>归档</strong>——它不在 git 里，机器坏了就没了）。</p></blockquote>
+<p><strong>第 1 步 · 提取疑似品里的 marker</strong>：</p>
+<table><thead><tr><th>载体</th><th>提取手段</th></tr></thead><tbody><tr><td>源码副本</td><td><code>grep -r &quot;khy-canary&quot;</code>（信封固定字面，跨语言统一）</td></tr><tr><td>binary manifest</td><td><code>aapt2 dump xmltree badging.apk --file AndroidManifest.xml</code> 找 <code>khy.build</code> meta-data 字面值</td></tr><tr><td>resources.arsc</td><td><code>aapt2 dump resources</code> 找 <code>khy_canary</code></td></tr><tr><td>libkhyjs.so</td><td>`strings libkhyjs.so</td></tr><tr><td>运行中设备</td><td><code>adb logcat</code>（BridgeService 的 Log.i / JNI_OnLoad 的 LOGI）或应用日志导出（app_logger details 键 <code>canary</code>）</td></tr><tr><td>HTTP</td><td>请求桥的任意端点看 <code>Server:</code> 响应头</td></tr><tr><td>Flutter AOT</td><td>日志导出分析包内的 canary 值（String.fromEnvironment 编译期常量）</td></tr></tbody></table>
+<p><strong>第 2 步 · 源码层比对</strong>：拿提取值对 <code>canary-manifest.json</code> 全 batches 的 <code>entries[].marker</code><br>查：</p>
+<ul><li><strong>命中</strong> → 得到 <code>file</code> + 批次 <code>release</code> + <code>afterSha256</code>。此时：① 被抄的<strong>具体文件</strong>直接</li></ul>
+<p>得知（marker 反查到文件 + 批次）；② <code>afterSha256</code> 与疑似品对应文件哈希比对可证「逐字节<br>  同源」或「改过但同源」；③ 跑 <code>node scripts/release/canary-mark.js verify</code> 固化「本仓清单<br>  现状与打标时一致」的陈述；</p>
+<ul><li><strong>未命中</strong> → 对手剥了这条，或值被改。转<strong>同形检测</strong>：按批次在疑似品全量 grep <code>Khy-</code></li></ul>
+<p>前缀与 <code>khy-canary</code> 信封；再不行，用清单里该批次文件的 sha256 逐文件比对疑似品结构<br>  （改名的表结构、同序的常量表都是证据）。</p>
+<p><strong>第 3 步 · APK 层比对</strong>：拿 APK 层值（正则 §2.2）查 <code>ledger.jsonl</code> 的 <code>canary</code> 字段：</p>
+<ul><li><strong>命中</strong> → 该行 <code>ts</code> + 接收人映射 = <strong>这份 APK 发给了谁、什么时候构建的</strong>——泄露源头</li></ul>
+<p>直接定位（这正是逐接收人唯一值存在的目的）；</p>
+<ul><li><strong>未命中</strong> → 台账批次之外（对方拿旧包重建、或 ledger 未归档丢失）——退回源码层面取证。</li></ul>
+<p><strong>第 4 步 · 证据固化</strong>：<code>node scripts/release/canary-mark.js report --json</code> 输出 + 提取的<br>marker 逐字值 + sha256 链 + <code>SHA256SUMS.txt</code> 对账行，一并归档进取证记录。<strong>不裁剪、<br>不摆拍</strong>（<code>PROCESS-010</code> 证据纪律 C-MAT1 同款）。</p>
+<hr>
+<h2 id="六-台账与对账-三者分工">六、台账与对账：三者分工<a class="anchor" href="#六-台账与对账-三者分工" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>台账</th><th>位置</th><th>收什么</th><th>入仓？</th><th>消费方</th></tr></thead><tbody><tr><td>源码层清单</td><td><code>scripts/release/canary-manifest.json</code></td><td>file → marker → before/afterSha256，按批次追加</td><td><strong>入仓</strong>（可递交）</td><td>stamp / verify / report；取证第 2 步</td></tr><tr><td>出包对账行</td><td><code>works/…/SHA256SUMS.txt</code> 追加行</td><td><code># khy-canary: &lt;APK层值&gt;</code></td><td>随产物分发</td><td>把「某 APK 文件」与「某 canary 值」锁死</td></tr><tr><td>接收人台账</td><td><code>works/data/khy/canary/ledger.jsonl</code></td><td><code>{ts, canary, apkSha256, aabSha256}</code> 逐次追加</td><td><strong>不入仓</strong>（gitignore 区）</td><td>取证第 3 步的逐接收人定位</td></tr></tbody></table>
+<p><strong>为什么 APK 层值不进 manifest</strong>：manifest 是要能递交、可能公开的文件；接收人映射是<br>敏感语义。两层分离后，公开面只暴露「批次 + 序号 + 随机段」，身份语义锁在本地台账。<br><strong>数据落点登记</strong>：<code>works/data/khy/canary/</code> 已登记进 <code>DATA-LOCATIONS.json</code>（T3-archives<br>语义：只追加、永不裁剪）；<code>canary-manifest.json</code> 作为 marker 台账真源登记进<br><code>DATA-SSOT.json</code>（规则 <code>LAYOUT-007</code> / <code>LAYOUT-008</code>，§八）。</p>
+<hr>
+<h2 id="七-所有权与施工顺序">七、所有权与施工顺序<a class="anchor" href="#七-所有权与施工顺序" aria-label="锚点">#</a></h2>
+<h3 id="7-1-三施工员路径互斥">7.1 三施工员路径互斥<a class="anchor" href="#7-1-三施工员路径互斥" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>施工员</th><th>拥有</th><th>禁碰</th></tr></thead><tbody><tr><td><strong>A</strong> 工具+源码打标+清单+冻结表</td><td><code>scripts/release/canary-mark.js</code>（新增）、<code>canary-manifest.json</code>（新增）、T1/T2/T3 池内源码（目标 357）、<code>scripts/ci/check-amoo-package-literals.cjs</code>（FROZEN 坐标，A 独占）、桌面 <code>tsconfig.check-baseline.json</code>（打标行号重锚定，与 amoo 冻结表同一「文本/坐标随行号漂移重锚定」纪律）</td><td>B 的 12 文件、build-android.ps1 以外的一切接线、docs/**、CHANGELOG.md、根 .gitignore、DATA-LOCATIONS / DATA-SSOT 登记表</td></tr><tr><td><strong>B</strong> 端上标记与构建接线</td><td>12 文件封闭清单：build.gradle、AndroidManifest.xml、keep.xml（新增）、MainActivity.kt、HttpBridge.java、BridgeService.java、CMakeLists.txt、khy_js_jni.cpp、app_logger.dart、network_diagnostic.dart、build-android.ps1、android/.gitignore；运行时落盘 canary.properties 与 ledger.jsonl</td><td>check-amoo-package-literals.cjs（A 独占）；docs/**；登记表</td></tr><tr><td><strong>C</strong> 设计文档+CHANGELOG+数据落点登记</td><td>本文、DESIGN-ARCH 总目录索引、CHANGELOG.md（Unreleased）、DATA-LOCATIONS.json、DATA-SSOT.json</td><td><strong>一切代码与脚本</strong></td></tr></tbody></table>
+<p>冲突消解：A 的排除契约 = B 的 12 文件清单 + §3.1 第七类 + C 的 registry 文件；<br>越界即停、经人裁决、不得互改。</p>
+<h3 id="7-2-施工顺序-硬约束-钉死">7.2 施工顺序（硬约束，钉死）<a class="anchor" href="#7-2-施工顺序-硬约束-钉死" aria-label="锚点">#</a></h3>
+<blockquote><p>这一条来自评审实测的失效推演：B 的 MainActivity.kt 接线（<code>getDeviceInfo()</code> 表加<br><code>khyBuild</code> 键 + 新增 <code>khyBuildStamp()</code>）<strong>两处插入都发生在冻结四条之前</strong>，坐标全体<br>下移 → <code>frozen-line-missing</code> ×4 + <code>unregistered-literal</code> ×4 → pr-gate 硬步红，而<br><strong>B 无权修 .cjs</strong>。顺序不钉死，结局就是「A 交付后守卫全绿收工，B 一落 MainActivity<br>门就红、且无人有权修」。</p></blockquote>
+<p><strong>钉死的顺序</strong>：</p>
+<ol><li><strong>前置（人）</strong>：把 mobile 未入库核心源码与 B 的三个 untracked 接线文件提交入基线</li></ol>
+<p>（细目与 .gitignore 交互见 7.3）；</p>
+<ol><li><strong>B 先行</strong>：12 文件接线改动落盘（MainActivity 的两处插入在内）；</li><li><strong>A 后跑</strong>：<code>node scripts/release/canary-mark.js stamp --plan</code> 人工审阅 → 真跑 stamp</li></ol>
+<p>——文本锚点重同步在<strong>每次 stamp 运行时</strong>执行，B 造成的坐标漂移在这一步被吸收；</p>
+<ol><li><strong>收口核验</strong>（A 与 B 各自交付门槛都含）：</li></ol>
+<p><code>node scripts/ci/check-amoo-package-literals.cjs</code> → <strong>0 error</strong>（本会话实测当前基线<br>   冻结 26 / 实测 26 / 0 error / exit 0；打标与接线后必须仍绿）；<br>   A 另有 <code>node --check</code>、verify 全 ok、report 存档；B 另有 flutter release 出包五面抽查<br>   （§十一）。</p>
+<p><strong>顺序倒置的补救</strong>：若 A 已先 stamp 而 B 后动 MainActivity → B 落盘后<strong>必须由 A 补跑<br>一次 <code>node scripts/release/canary-mark.js stamp --resync-only</code></strong>——该开关只按整行文本<br>重定位冻结坐标并写回冻结表，<strong>不打任何标、不插任何行</strong>（有漂移则报<br><code>freeze table resynced: N coordinate(s) updated</code>，无漂移报 <code>freeze table already<br>anchored</code> 且不写文件，无法锚定的条目响亮列出后 exit 0）；补跑后核验 0 error。<br><strong>B 自己不修表、A 收工前不得假定 B 不会动</strong>——这个约束写死在这里，ownership 文本与<br>本文以本文为准。（首轮本文把补救命令误写成 <code>stamp --plan</code>——那是纯干跑、从不写表，<br>已订正。）</p>
+<h3 id="7-3-前置基线步骤-含-gitignore-交互-评审第-4-条吸收的订正">7.3 前置基线步骤（含 .gitignore 交互，评审第 4 条吸收的订正）<a class="anchor" href="#7-3-前置基线步骤-含-gitignore-交互-评审第-4-条吸收的订正" aria-label="锚点">#</a></h3>
+<p>AndroidManifest.xml、CMakeLists.txt、khy_js_jni.cpp 当前 <strong>untracked</strong>（本会话实测：<br><code>git ls-files</code> 三者皆空；AndroidManifest.xml 另经 <code>git cat-file -e HEAD:&lt;path&gt;</code> 确认<br>不在 HEAD、<code>git log</code> 该路径零输出）。不落基线就没有回滚基线——<strong>动工前必须先处置</strong>：</p>
+<table><thead><tr><th>文件</th><th>处置</th><th>为什么</th></tr></thead><tbody><tr><td>CMakeLists.txt、khy_js_jni.cpp</td><td>普通 <code>git add</code> 即可</td><td>不被任何 ignore 规则命中（本会话 <code>git check-ignore -v</code> 无输出）</td></tr><tr><td><strong>AndroidManifest.xml</strong></td><td><strong>普通 <code>git add</code> 会被静默拒绝</strong>——根 <code>.gitignore:40</code> 的 <code>AndroidManifest.xml</code> 是<strong>无前导斜杠的全局模式</strong>，把 <code>delivery/mobile/…/src/main/AndroidManifest.xml</code> 一起忽略（本会话 <code>git check-ignore -v</code> 实证命中 <code>.gitignore:40</code>）。两个合规选项：<strong><code>git add -f &lt;该文件&gt;</code></strong>（一次性强制入库，零仓库文件改动，推荐）或根 <code>.gitignore</code> 加例外行 <code>!delivery/mobile/khy-os-client-app/android/app/src/main/AndroidManifest.xml</code></td><td><code>.gitignore:37-38</code> 的注释自己承认这类缺斜杠模式曾把 MainActivity.kt 坑得无法入库——同型事故复发点。<strong>例外行方案涉及根 .gitignore，而 ownership 三方都无权碰它（A 禁碰、B 只有 android/.gitignore、C 只碰登记表）→ 若选例外行，属人裁决</strong>；<code>git add -f</code> 可由 B（或人）直接执行，推荐后者</td></tr><tr><td>兜底</td><td>逐字节备份（.bak）并登记路径</td><td>三件都适用；备份是「不落基线」时的最低保障，此时该三件只能靠备份还原</td></tr></tbody></table>
+<p>同时顺带完成「mobile 未入库核心源码入基线」：untracked 盲区 29 个源码条目（构成见<br>§十一）里恰含最可能被抄的桥/引擎核心（KhyAppFunctions.java、SandboxVault.java、<br>VaultEnvelope.java、ProvisioningCode.java 等）。人提交入基线后池自然收编；<strong>人不上提<br>交则按「只标在册」走，盲区清单如实落 <code>--plan</code> 输出与本文 §十一，不假装覆盖</strong>。</p>
+<hr>
+<h2 id="八-守卫影响分析-修正版-逐条">八、守卫影响分析（修正版，逐条）<a class="anchor" href="#八-守卫影响分析-修正版-逐条" aria-label="锚点">#</a></h2>
+<blockquote><p>方案初稿对本节的三个断言被评审实测推翻过，本节是修正后的最终口径；每条给本会话<br>实测出处。</p></blockquote>
+<table><thead><tr><th>守卫</th><th>影响与裁定</th></tr></thead><tbody><tr><td><code>check-agent-rules.js</code></td><td><strong>按扩展名全量扫描、不读 registry paths 裁剪</strong>。<code>CODE_EXTS</code> 含 <code>.dart</code>（自 2026-10-26 起，源码注释明示补 .dart 的动机即 delivery/mobile 此前完全没被扫过），<strong>不含</strong> .kt/.java/.xml。合成实验 <code>node scripts/ci/check-agent-rules.js &lt;tmpdir&gt; --strict-warnings</code> → &quot;no violations found&quot;——mobile dart 在扫描面内且<strong>标记注释文本实测清洁</strong>（规则 1–4 的模式都不命中注释信封）</td></tr><tr><td><code>check-amoo-package-literals.cjs</code></td><td>pr-gate <strong>硬步</strong>（无 continue-on-error）。当前基线冻结 26 / 实测 26 / 0 error（本会话实跑）。坐标+整行双匹配 → 打标靠 §4.2 文本锚点重同步吸收；<strong>A 交付门槛与 B 交付门槛都含 0 error 核验</strong>（§7.2 第 4 步）</td></tr><tr><td><code>check-node-syntax.js</code></td><td>默认目标含 <code>scripts</code>（源码默认 targets 数组）→ canary-mark.js 必须过 <code>node --check</code>，已列 A 门槛</td></tr><tr><td><code>check-wiring.js</code></td><td><strong>不适用</strong>——全文 190 行无一引用 <code>scripts/release/</code>（本会话 grep 零命中）；本机制不新增 npm script，也无「孤儿检查器」问题（canary-mark 不是 check-*，不需要门引用）</td></tr><tr><td><code>check-repo-layout.js</code></td><td>① 本文已登记进 DESIGN-ARCH 总目录索引（计数 190→191），docs-index 完备性不退化；② <code>dangling-task</code> 判据<strong>只查 <code>npm run &lt;token&gt;</code> 字面</strong>（git grep 正则提取）——本文与 CHANGELOG 的调用一律写 <code>node scripts/release/canary-mark.js …</code>，不产生悬空任务</td></tr><tr><td><code>check-copyright-readiness.js</code></td><td>COPYRIGHT-MATERIALS 候选<strong>运行时</strong>从 registry JSON 排除（实测 21 个代码候选；∩T2 仅 sessionPersistence.js 与 sessionSearchIndex.js，均排除）。守卫自身 S1 恒 exit 0；打标不改产品名/版本串/模块清单，<code>PROCESS-010</code> 五处一致性不触发；60 页选材面因排除 ⑥ 而零接触</td></tr><tr><td><code>check:data-layout</code>（<code>DATA-LOCATIONS.json</code>）</td><td><code>works/data/khy/canary/</code> 已登记 seedEntries（ledger.jsonl，T3-archives）。<strong>如实记录</strong>：<code>works/data/khy</code> 顶层预算 6（五档 + 索引），<code>canary/</code> 目录落盘后将被 S1 观察者记一条 <code>L-1/unregistered</code>（目录尚未落盘时无此 finding——本会话实测守卫 EXIT=0、输出零 canary 命中）——与本根现存未归位条目同属既有观察口径债，S1 只记录不阻断；将来若做 tier 前缀迁移一并收编</td></tr><tr><td><code>check:ssot-data</code>（<code>DATA-SSOT.json</code>）</td><td><code>canary-manifest.json</code> 已登记为 marker 台账真源（sources[]）。登记理由：marker→文件映射是本工具自产的新数据事实、真源唯一无镜像——<strong>先登记防将来</strong>：有人再写一份 marker 映射时，守卫按影子副本报，而不是因为「没登记」而看不见。<strong>窗口期如实记录</strong>：登记后、A 交付 manifest 文件前，守卫记一条 <code>ssot-source-missing</code>（查不到真源必须报红、不许假绿——本会话实测）；pr-gate 跑的是无 <code>--strict</code> 档（pr-gate.yml 的 <code>check-ssot-data.js</code> 步），S1 观察者恒 exit 0，CI 不红；A 交付文件后该 finding 自然归零</td></tr><tr><td><code>check-version-sync.js</code></td><td><strong>不触发、不 bump</strong>：内部工具 + 注释行不改对外行为（<code>PROCESS-005</code> 第 1 条「仅 Fixed / 不改对外行为不 bump」；本条目按 Added 记 CHANGELOG 但不递增版本，不涉 R-2a 人批 MINOR/MAJOR）</td></tr></tbody></table>
+<hr>
+<h2 id="九-隐私与合规边界">九、隐私与合规边界<a class="anchor" href="#九-隐私与合规边界" aria-label="锚点">#</a></h2>
+<ul><li><strong>逐接收人可区分是溯源目的本身</strong>，不是副作用——APK 值若不逐接收人唯一，第 3 步取证</li></ul>
+<p>就退化为「只知批次不知去向」。因此每份 APK 的 canary 值必然可区分。</p>
+<ul><li><strong>但值本身不含身份</strong>：源码层值 = 批次号 + 序号 + 随机段，APK 层值 = 版本号 + 构建时间<ul><li>随机段；「哪个值对应哪个接收人」<strong>只存在本地 ledger</strong>（gitignore 区、不入仓、不随</li></ul></li></ul>
+<p>APK 分发、不上传）。APK 落到第三方手里，第三方能看到的只是「我是第 N 份」的能力，<br>  看不到名单。</p>
+<ul><li><strong>UA 外发面只有一处</strong>：network_diagnostic.dart 的诊断请求 UA，且仅非空时拼接；其余</li></ul>
+<p>七面全部本地留存（arsc/manifest/dex/so/日志/HTTP 响应头/分析包）。</p>
+<ul><li><strong>与 <code>PROCESS-010</code> 的关系</strong>：marker 文件与工具<strong>不进</strong>软著登记材料候选（§3.1 排除 ⑥</li></ul>
+<p>的运行时排除保证 60 页选材面零接触）；marker 是维权取证手段，不是登记材料。</p>
+<ul><li><strong>不拦截声明</strong>（§一）本身就是合规边界：本机制对贡献者零摩擦——删掉一行 canary 注释</li></ul>
+<p>不会触发任何门，verify 只会在下次盘点时把它报成 stripped 供人知晓。</p>
+<hr>
+<h2 id="十-回滚">十、回滚<a class="anchor" href="#十-回滚" aria-label="锚点">#</a></h2>
+<blockquote><p>原则：<strong>工具逆操作为主、git 还原为辅</strong>。本树 T1 池 21 / T2 池 17 个文件带未暂存改动<br>（§4.3 实测），<code>git restore</code> 会抹掉未暂存的他人工作——「restore 后逐字节一致」只对<br>干净文件成立，不能当首选。</p></blockquote>
+<ol><li><strong>首选：<code>node scripts/release/canary-mark.js stamp --undo</code></strong>（整单或</li></ol>
+<p><code>--batch &lt;release&gt;</code>）：按清单（file + line + lang）逐文件只删工具自己插入的标记行 →<br>   删后 sha256 对比 beforeSha256，相等才落盘并移除清单条目；不等（打标后文件另有演化）<br>   拒删并列出交人。全程不触碰未暂存改动、不需工作区干净。amoo 冻结表坐标由<strong>同一次<br>   <code>--undo</code> 同步回退</strong>（重定位回插入前的坐标）。undo 后重跑 stamp = 全新打标（新随机段、<br>   序号续计）——幂等语义：对未标 / 半标 / 已标状态都收敛到「清单与文件一致」。</p>
+<ol><li><strong>辅路：git 还原</strong>仅限干净文件或已提交批次（<code>git revert</code>）；<strong>禁止</strong>对含未暂存改动的</li></ol>
+<p>打标文件整树 restore。</p>
+<ol><li><strong>APK 层</strong>：git 还原 B 的 12 个接线文件即移除全部注入点；**但三个 untracked 接线</li></ol>
+<p>文件（AndroidManifest.xml / CMakeLists.txt / khy_js_jni.cpp）必须先按 §7.3 落基线，<br>   否则只能靠备份还原<strong>——其中 AndroidManifest.xml 落基线须 <code>git add -f</code> 或根<br>   .gitignore 例外行（普通 add 被静默拒绝，见 7.3 表格）。<code>android/canary.properties</code><br>   与 <code>works/data/khy/canary/ledger.jsonl</code> 手工删除即可。</strong>已发出的 APK 收不回<strong>；stamp<br>   与 ledger 记录不受回滚影响、永久有效——</strong>回滚前先归档 ledger.jsonl**（它不在 git<br>   里，删了就没了）。</p>
+<ol><li><strong>不触碰</strong>：<code>works/record/evidence/**</code>、COPYRIGHT-MATERIALS 候选（本就未标）；已推送</li></ol>
+<p>后的回滚走人工 revert（红线 <code>PROCESS-001</code>，AI 不自动 push）。部分回滚：只撤 APK 层 =<br>   还原 B 12 文件；只撤源码层 = <code>--undo</code>；两层路径互不相交，可独立撤销。</p>
+<hr>
+<h2 id="十一-验证手段与盲区">十一、验证手段与盲区<a class="anchor" href="#十一-验证手段与盲区" aria-label="锚点">#</a></h2>
+<h3 id="11-1-本会话实测-本文作者跑过-命令与读数">11.1 本会话实测（本文作者跑过，命令与读数）<a class="anchor" href="#11-1-本会话实测-本文作者跑过-命令与读数" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>事实</th><th>命令 → 读数</th></tr></thead><tbody><tr><td>T1 池</td><td><code>git ls-files</code>（lib dart / main kt+java / test kt+java / res xml 四组 glob，<strong>根层文件须单独 <code>dir/*.ext</code> 匹配——git pathspec 的 <code>**</code> 不匹配零层目录</strong>，首轮 80/71/1511 的偏差全部由此而来）→ 81+27+25+7−5(B 独占) = 135，其中 <code>lib/core/config/project_profile.g.dart</code> 命中生成物排除（canary-mark.js <code>GENERATED_RE</code> 的 <code>*.g.dart</code>，§3.1 类③）→ <strong>可标 134</strong></td></tr><tr><td>T2 原始池</td><td>同法 → gateway 229 + services 根层 705 + cli 三件 3 + khy_platform 17 = <strong>954</strong>（services 全树 2216 = 根层 705 + 子树 1511，根层=目录直下深度 1）</td></tr><tr><td>T3 桌面池（2026-11-02 扩）</td><td><code>git ls-files apps/khyos-desktop/src</code> 按扩展名 → ts 47 + tsx 57 + json 1 + html 1 + css 1 = <strong>107 在册</strong>，可标语法 <strong>104</strong>（工具 SLASH_EXT 补 .tsx/.jsx 后 tsx 入池）；electron.vite.config.ts 无 minify 配置，out/main/index.js（162KB）实测非压缩、注释逐字存活 → 桌面源码层标记随构建进 asar 发行层（main/preload 两面）；renderer 走 vite 默认压缩，产物注释存活<strong>未实测</strong>，按「会坏」处理</td></tr><tr><td>打标结果（T3 扩池 2026-11-02）</td><td><code>stamp</code> → 103 文件入批次 20261102（missing-on-disk 1：ContextUsage.tsx；未在册盲区 48 不标）；<code>verify</code> → <code>357 entr(y/ies) across 2 batch(es)</code>，<code>states: {&quot;ok&quot;:357}</code>，uniqueness 全过；<code>report</code> → <code>by tier: {&quot;mobile&quot;:134,&quot;backend&quot;:120,&quot;desktop&quot;:103}</code>；<code>check-amoo</code> → 26/26/0 error（桌面打标与冻结表零交集，无需重同步）；桌面 <code>typecheck-baseline</code> 打标后先红（行号 +1，4 条既有错误重记为「新增」）→ 重生成基线（4 条重锚定）→「无新增错误」；桌面测试套件 194/194 pass；<code>check-agent-rules --changed</code> → 0 error / 7 warning（warning 均为既有代码，非金丝雀注释引入）</td></tr><tr><td>打标结果（修补轮 2026-11-01 复测）</td><td><code>node scripts/release/canary-mark.js verify</code> → <code>254 entr(y/ies) across 1 batch(es)</code>，<code>states: {&quot;ok&quot;:254}</code>，uniqueness 全过；<code>report</code> → <code>by tier: {&quot;mobile&quot;:134,&quot;backend&quot;:120}</code>。首轮文档口径 135/255 即漏减上述生成物所致，已订正</td></tr><tr><td>dirty</td><td><code>git diff --name-only</code> ∩ 池 → T1 <strong>21</strong>、T2(954 池) <strong>17</strong></td></tr><tr><td>amoo 基线</td><td><code>node scripts/ci/check-amoo-package-literals.cjs</code> → 冻结 26 / 实测 26 / 0 error / exit 0</td></tr><tr><td>冻结表结构</td><td>读 <code>check-amoo-package-literals.cjs</code> 全表 → <code>{file,line,text,why}</code>，T1 池内 12 条 / 5 文件 + MainActivity 4 条 + KhyAppFunctions 1 条(untracked)；CRLF 归一化在 <code>scanLiterals()</code>（命中行剥行尾 <code>\r</code>，表文本 LF）</td></tr><tr><td>.gitignore 交互</td><td><code>git check-ignore -v</code> → AndroidManifest.xml 命中 <code>.gitignore:40</code>（无前导斜杠全局模式）；CMakeLists/khy_js_jni 不命中</td></tr><tr><td>盲区 29</td><td><code>git ls-files --others --exclude-standard</code> 分类 → lib dart 3 + flutter test dart 6 + android src/main 20（19 个未忽略未入库 + AndroidManifest.xml 被忽略但在盘）＝ <strong>29 个源码条目</strong>（方案初稿写 31，评审订正采纳）</td></tr><tr><td>khy_platform</td><td>17 个在册 .py（根层 16 + <code>_resources/__init__.py</code>），首两行逐一读 → <strong>0 shebang、0 coding cookie</strong></td></tr><tr><td>CODE_EXTS</td><td>读 <code>check-agent-rules.js</code> 扩展名清单 → 含 .dart（2026-10-26 补），不含 .kt/.java/.xml</td></tr><tr><td>守卫接线</td><td>check-wiring.js 全文 190 行零 <code>scripts/release</code> 引用；check-repo-layout 的 dangling-task 只 grep <code>npm run &lt;token&gt;</code> 字面；check-node-syntax 默认 targets 含 <code>scripts</code></td></tr><tr><td>版本锚点</td><td>pubspec.yaml → <code>1.1.17+2</code></td></tr><tr><td>索引完备</td><td>DESIGN-ARCH 目录 190 个 .md = 索引 190 条 → 本文登记后 191/191</td></tr></tbody></table>
+<h3 id="11-2-评审实测-本文引述-本会话未复跑">11.2 评审实测（本文引述，本会话未复跑）<a class="anchor" href="#11-2-评审实测-本文引述-本会话未复跑" aria-label="锚点">#</a></h3>
+<ul><li>aapt2（build-tools 36.0.0）两组对照：XML 声明前注释 compile fail / 声明后通过；</li></ul>
+<p>meta-data <code>@string</code> 引用在 binary manifest 存 <code>@0x7f010000</code> 引用不内联、placeholder<br>  字面值逐字入库——三件套裁定（§3.2）的依据；</p>
+<ul><li>NDK 28.2 clang 以无引号 <code>-DKHY_CANARY=Khy-1.1.17+2-…</code> 编译，串接宏产物逐字节还原</li></ul>
+<p>35 字节 + NUL（§3.2 第 6 面的依据）；</p>
+<ul><li>两层解析正则合成实验：源码层值不被 APK 正则命中、APK 值（含全数字 rand、release 尾随</li></ul>
+<p>数字）唯一切分；禁 I/L/O/U 与引号注入均被拒。</p>
+<h3 id="11-3-未实测-如实标注-按-会坏-处理">11.3 未实测（如实标注，按「会坏」处理）<a class="anchor" href="#11-3-未实测-如实标注-按-会坏-处理" aria-label="锚点">#</a></h3>
+<ul><li><strong>gradle 资源收缩端到端</strong>：评审与本文会话均未跑完整 gradle 构建——AGP 9.1 默认双开的</li></ul>
+<p>资源收缩是否会剥掉 resValue 未实证；兜底 = keep.xml（§3.2 三件套）+ B 交付门槛的解包<br>  五面抽查（见下）。</p>
+<ul><li><strong>flutter build apk --release 出包</strong>：未跑；落在 B 交付门槛——出包后解包五面抽查</li></ul>
+<p>（aapt2 dump xmltree 查 manifest 字面值、aapt2 dump resources 查 khy_canary、dex 字符串、<br>  libkhyjs.so strings、logcat）。</p>
+<h3 id="11-4-机制自身盲区-不假装覆盖">11.4 机制自身盲区（不假装覆盖）<a class="anchor" href="#11-4-机制自身盲区-不假装覆盖" aria-label="锚点">#</a></h3>
+<ul><li><strong>untracked 盲区 29（移动端）+ 48（桌面端）</strong>：处置 = §7.3 前置入基线；人不提交则不标</li></ul>
+<p>（只标在册），<code>--plan</code> 输出与本文如实记录；</p>
+<ul><li><strong>T3 桌面层已启用（2026-11-02，103 文件入账）</strong>；T4 其他仍默认关闭（<code>--tier all</code> 才扩）；</li></ul>
+<p>桌面 renderer 产物（vite 默认压缩）注释是否存活未实测，按「会坏」处理——main/preload<br>  两面已实测存活；</p>
+<ul><li><strong>信封可剥离</strong>（结论卡已述）：机制价值 = 漏剥概率 × 清洗成本 × 唯一指纹，不承诺对抗</li></ul>
+<p>彻底清洗；</p>
+<ul><li><strong>ledger 在 gitignore 区</strong>：不入仓 = 有丢失风险；归档义务在 §五/§十两处点名。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-198] khyos对话错误族-历史轨迹复盘与修复计划.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-200] 对标 stepx 的 amoo 深度配合.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-200] 对标 stepx 的 amoo 深度配合</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

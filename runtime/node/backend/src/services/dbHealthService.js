@@ -14,6 +14,7 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const { hotCopySqlite, restoreSqliteInPlace } = require('./domain/backup/backup/sqliteHotCopy');
@@ -207,12 +208,12 @@ function _discoverDatabases() {
   const databases = [];
 
   try {
-    const { getDataDir, getProjectDataPath } = require('../utils/dataHome');
+    const { getProjectDataPath, resolveDataPath } = require('../utils/dataHome');
 
     // Main databases
-    // 文件路径走 getProjectDataPath / getDataDir 之外的解析方式：getProjectDataDir
-    // 会把末级当目录建出来（拿文件路径当目录用）。这里保持与 sessionSearchIndex
-    // 同一条路径真源，避免健康检查报出的路径与实际打开的库不是一个。
+    // 文件路径走纯解析器（getProjectDataPath / resolveDataPath）：getDataDir 一族
+    // 会把末级当目录建出来（拿文件路径当目录用）。这里保持与 sessionSearchIndex /
+    // coordinator/taskBoard 同一条路径真源，避免健康检查报出的路径与实际打开的库不是一个。
     databases.push({
       name: 'sessions.db',
       path: getProjectDataPath('sessions.db'),
@@ -221,19 +222,9 @@ function _discoverDatabases() {
 
     databases.push({
       name: 'taskboard.db',
-      path: getDataDir('taskboard.db'),
+      path: resolveDataPath('taskboard.db'),
       critical: true,
     });
-
-    // khy-Trajectory database (if it exists)
-    const trajectoryPath = path.join(process.cwd(), 'khy-Trajectory', 'sessions.db');
-    if (fs.existsSync(trajectoryPath)) {
-      databases.push({
-        name: 'khy-Trajectory/sessions.db',
-        path: trajectoryPath,
-        critical: false,
-      });
-    }
   } catch (err) {
     _logHealAudit({
       level: 'warn',
@@ -241,13 +232,15 @@ function _discoverDatabases() {
       meta: { error: err.message },
     });
 
-    // Fallback to the data home (was process.cwd() + '.khy', which forked a
-    // second database tree whenever the caller's cwd was the repo root).
+    // Fallback to the data home. Was process.cwd() + '.khy', which forked a
+    // second database tree whenever the caller's cwd was the repo root; the
+    // resolver is the only legitimate source, and its documented system-drive
+    // default is the last resort when the module itself cannot be loaded.
     const khyDir = (() => {
       try {
         return require('../utils/dataHome').getDataHome();
       } catch {
-        return path.join(process.cwd(), '.khy');
+        return path.join(os.homedir(), '.khy');
       }
     })();
     databases.push({
@@ -268,10 +261,10 @@ function _discoverDatabases() {
 /**
  * Drop entries that resolve to the SAME physical file.
  *
- * `khy-Trajectory` is a visible alias (junction/symlink) of the data home that
- * `utils/dataHome._ensureVisibleAlias` recreates on every startup, so
- * `khy-Trajectory/sessions.db` is the very same inode as `.khy/sessions.db`.
- * Both entries were opened and `PRAGMA quick_check`ed independently: on a 28MB
+ * One database can be reachable through more than one path string (Windows
+ * case variants, a relocated home recorded in the pointer; the khy-Trajectory
+ * visible alias that used to add a second path was removed 2026-11-19). Both
+ * entries were opened and `PRAGMA quick_check`ed independently: on a 28MB
  * sessions.db that is ~450ms of duplicated work in a row, plus a second
  * open/close of the same file (WAL contention) during startup.
  *
@@ -963,7 +956,8 @@ function _tryRecoverViaCli(dbPath) {
 
 /**
  * Use a filesystem-safe stem for backup names. Known database labels may carry
- * a relative prefix (for example `khy-Trajectory/sessions.db`).
+ * a directory prefix (for example a label resolved through a non-canonical
+ * path to the same database).
  */
 function _backupStem(dbName) {
   return path.basename(dbName, path.extname(dbName));
@@ -975,17 +969,19 @@ function _backupStem(dbName) {
 function _tryRestoreFromBackup(dbPath, dbName) {
   try {
     // Recovery checkpoints and clean-shutdown backups are separate stores. Scan
-    // both so step C honours the data-home `checkpoints` dir while retaining
+    // both so step C honours the data-home `db_backup` dir while retaining
     // compatibility with the shutdown snapshots written beside each database.
-    // The second entry was process.cwd() + '.khy/checkpoints'; resolved through
-    // dataHome now so it does not fork a second tree per cwd.
+    // Probe only: resolveDataPath, not getDataDir — the latter would mkdir the
+    // very directory this list is about to test for existence.
     const candidateDirs = [
       path.join(path.dirname(dbPath), 'checkpoints'),
       (() => {
         try {
-          return require('../utils/dataHome').getDataDir('db_backup');
+          return require('../utils/dataHome').resolveDataPath('db_backup');
         } catch {
-          return path.join(process.cwd(), '.khy', 'checkpoints');
+          // Legacy pre-tiering layout, anchored on the home dir — never on the
+          // caller's cwd, which forked a second tree per working directory.
+          return path.join(os.homedir(), '.khy', 'db_backup');
         }
       })(),
       path.join(path.dirname(dbPath), 'db_backup'),
@@ -1503,17 +1499,22 @@ function scanOrphanedWalArtifacts() {
   const findings = [];
   const dirs = [];
 
+  // Legacy project data home: <install root>/.khy — the location
+  // getProjectDataHome still pins in place when it is established. Was
+  // process.cwd() + '.khy', so the sweep followed the caller's working
+  // directory instead of the install: the same command run from two cwds
+  // scanned two different trees. Read-only forensic scan, forks no state.
+  let legacyRootDir = null;
   try {
-    const { getDataDir, getProjectDataDir } = require('../utils/dataHome');
+    const { getDataDir, getProjectDataDir, getAppRoot } = require('../utils/dataHome');
     dirs.push(getProjectDataDir(), getDataDir());
+    legacyRootDir = path.join(getAppRoot(), '.khy');
   } catch {
-    /* dataHome unavailable: fall back to the cwd-relative dir below */
+    /* dataHome unavailable: no resolved or legacy location to sweep */
   }
-  // Was unconditional. Kept only as a compatibility sweep for installs whose
-  // orphaned WAL artifacts predate the resolver (i.e. were written by the old
-  // cwd-relative path) — it is a read-only forensic scan, so this cannot fork
-  // any new state.
-  dirs.push(path.join(process.cwd(), '.khy'));
+  if (legacyRootDir) {
+    dirs.push(legacyRootDir);
+  }
 
   const seenDirs = new Set();
   for (const dir of dirs) {
@@ -1660,6 +1661,6 @@ module.exports = {
   _retryFsOperation,
   _releaseKhyDbLocks,
   _tryResetSidecars,
-  // 内部(真实路径去重,导出仅供测试:锁 `khy-Trajectory` 别名不重复体检同一文件)
+  // 内部(真实路径去重,导出仅供测试:锁同一物理文件不重复体检)
   _dedupeByRealPath,
 };

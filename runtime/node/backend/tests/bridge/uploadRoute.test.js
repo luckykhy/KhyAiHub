@@ -117,3 +117,37 @@ test('POST /api/upload with bearer → commits + returns descriptor; GET streams
   // Non-string ids are filtered out before forwarding.
   assert.deepEqual(events[0].attachments, [desc.id]);
 });
+
+// ── SEC-04：附件下载的对象级授权 ────────────────────────────────────────────
+test('GET /api/upload/:id 取他人附件 → 404（属主校验，不泄露存在性）', { skip: !depsOk && 'deps unavailable' }, async () => {
+  // A（默认管理员）上传一个附件
+  const fd = new FormData();
+  fd.append('file', new Blob(['A private body'], { type: 'text/plain' }), 'a-only.txt');
+  const up = await fetch(`${base}/api/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${jwt}` },
+    body: fd,
+  });
+  assert.equal(up.status, 200);
+  const upData = await up.json();
+  const id = upData.attachments[0].id;
+
+  // 注册并登录用户 B
+  const reg = auth.registerUser('bridge_bob', 'bob-secret-123');
+  assert.ok(reg.ok || /已存在/.test(reg.error || ''), 'user B registered');
+  const loginB = auth.loginUser('bridge_bob', 'bob-secret-123');
+  assert.ok(loginB.ok && loginB.token, 'user B logs in');
+
+  // B 用自己的 token 取 A 的附件 → 404（不是 403，避免泄露「该 id 存在」）
+  const cross = await fetch(`${base}/api/upload/${id}`, {
+    headers: { Authorization: `Bearer ${loginB.token}` },
+  });
+  assert.equal(cross.status, 404);
+
+  // A 自己取 → 200，内容完整
+  const own = await fetch(`${base}/api/upload/${id}`, {
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+  assert.equal(own.status, 200);
+  assert.equal(await own.text(), 'A private body');
+});

@@ -1,5 +1,5 @@
 {
-  "total": 81,
+  "total": 148,
   "items": [
     {
       "from": ".github/CONTRIBUTING.html",
@@ -17,199 +17,224 @@
       "href": "CHANGELOG.html"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L367-L388"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L254-L274"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L280-L295"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L176-L194"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L196-L200"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L202-L210"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L212-L217"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L301-L361"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat.cpp#L1280-L1310"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser-helpers.h#L68"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "common/chat-auto-parser.h#L28-L37"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/autoparser.html",
       "type": "a",
       "href": "tests/test-chat.cpp#L947-L1043"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/OPENCL.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/OPENCL.html",
       "type": "a",
-      "href": "../../../../../../../docs/backend/SYCL.html"
+      "href": "../../../../../../../../docs/backend/SYCL.html"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/SYCL.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/SYCL.html",
       "type": "a",
-      "href": "../../../../../../../docs/backend/OPENCL.html"
+      "href": "../../../../../../../../docs/backend/OPENCL.html"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
-      "type": "a",
-      "href": "../../../ggml/src/ggml-hexagon/htp/act-ops.c"
-    },
-    {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
       "type": "a",
       "href": "../../../ggml/src/ggml-hexagon/htp/act-ops.c"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/backend/snapdragon/developer.html",
       "type": "a",
-      "href": "../../../../../../../tools/cli"
+      "href": "../../../ggml/src/ggml-hexagon/htp/act-ops.c"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../tools/completion"
+      "href": "../../../../../../../../tools/cli"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../tools/imatrix"
+      "href": "../../../../../../../../tools/completion"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../tools/quantize"
+      "href": "../../../../../../../../tools/imatrix"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../tools/server"
+      "href": "../../../../../../../../tools/quantize"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../convert_hf_to_gguf.py"
+      "href": "../../../../../../../../tools/server"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../examples/convert_legacy_llama.py"
+      "href": "../../../../../../../../convert_hf_to_gguf.py"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../conversion"
+      "href": "../../../../../../../../examples/convert_legacy_llama.py"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../gguf-py/gguf/constants.py"
+      "href": "../../../../../../../../conversion"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../gguf-py/gguf/tensor_mapping.py"
+      "href": "../../../../../../../../gguf-py/gguf/constants.py"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
-      "href": "../../../../../../../examples/eval-callback"
+      "href": "../../../../../../../../gguf-py/gguf/tensor_mapping.py"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
+      "type": "a",
+      "href": "../../../../../../../../examples/eval-callback"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/HOWTO-add-model.html",
       "type": "a",
       "href": "tools/mtmd/debug/mtmd-debug.cpp"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
       "type": "a",
-      "href": "../../../../../../../tests/test-chat-peg-parser.cpp"
+      "href": "../../../../../../../../tests/test-chat-peg-parser.cpp"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/parsing.html",
       "type": "a",
-      "href": "../../../../../../../common/chat-peg-parser.h"
+      "href": "../../../../../../../../common/chat-peg-parser.h"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/token_generation_performance_tips.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/development/token_generation_performance_tips.html",
       "type": "a",
-      "href": "../../../../../../../docs/build.html#cuda"
+      "href": "../../../../../../../../docs/build.html#cuda"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/docs/release.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/docs/release.html",
       "type": "a",
       "href": ".github/workflows/make-release.yml"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/grammars/README.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/grammars/README.html",
       "type": "a",
       "href": "../examples/gbnf-validator/gbnf-validator.cpp"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README-dev.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README-dev.html",
       "type": "a",
       "href": "../ui/docs"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
       "type": "a",
       "href": "../embedding"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
       "type": "a",
       "href": "chat.mjs"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
       "type": "a",
       "href": "chat.sh"
     },
     {
-      "from": "delivery/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/llama.cpp/tools/server/README.html",
       "type": "a",
       "href": "../ui/src/lib/constants/settings-keys.ts"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/quickjs/docs/docs/building.html",
+      "type": "a",
+      "href": "cli"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/quickjs/docs/docs/installation.html",
+      "type": "a",
+      "href": "building"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/quickjs/docs/docs/intro.html",
+      "type": "a",
+      "href": "diff"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/quickjs/docs/docs/intro.html",
+      "type": "a",
+      "href": "building"
+    },
+    {
+      "from": "delivery/channel/mobile/khy-os-client-app/third_party/quickjs/docs/docs/intro.html",
+      "type": "a",
+      "href": "installation"
     },
     {
       "from": "docs/html/00_INDEX_仓库根.html",
@@ -235,6 +260,276 @@
       "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-043] khy-agent-sdk-Claude对齐与D1-D6融合规范.html",
       "type": "a",
       "href": "../../../platform/packages/agent-sdk/docs/llms.txt"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/ui/screens/chat_screen_new.dart#L506"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart#L198"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/ui/widgets/local_model_section.dart#L133"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/tools/tool_engine.dart#L133"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/shell/ShellSidecar.java#L160"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BridgeToken.java#L24"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/services/conversation_db.dart#L19"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/ScreenCaptureService.kt#L192"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/vfs/VfsBridge.kt#L1565"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/services/local_model_store.dart#L289"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/engine/LocalVisionServer.kt#L149"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/build.gradle#L136"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/services/update_check_service.dart#L340"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BootReceiver.java#L49"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-215] khyos安卓统一方案-人工基座与智能执行闭环.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/build.gradle#L64"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216-附1] 授权风险档分类草案与P0复现规格.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/test/tool_engine_test.dart#L150"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216-附1] 授权风险档分类草案与P0复现规格.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/test/tool_engine_test.dart#L7"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216-附1] 授权风险档分类草案与P0复现规格.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart#L131"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216-附1] 授权风险档分类草案与P0复现规格.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart#L131"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/tools/tool_engine.dart#L150"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/ui/screens/chat_screen_new.dart#L810"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart#L131"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/LoopModes.java#L42"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/tools/vision_tools.dart#L96"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../../delivery/mobile/khy-os-client-app/lib/core/config/permission_mode.dart#L32"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/toolhost/tool_host_client.dart#L58"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/agent_screen_new.dart#L38"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/longcat_chat_screen.dart#L58"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/wechat/wechat_approval_bridge.dart#L208"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/authz/dialog_approval_channel.dart#L14"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/build/app/outputs/flutter-apk/app-release.apk"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/agent/tool_verdict.dart#L5"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/test/authz_residual_gate_test.dart"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/test/authz_agentloop_gate_test.dart"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/gateway/zen_gate.dart#L476"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/chat_screen_new.dart#L837"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/agent_screen_new.dart#L437"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/longcat_chat_screen.dart#L359"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart#L131"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/wechat/wechat_task_runner.dart#L337"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/toolhost/tool_host_client.dart#L58"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/ui/screens/tools_hub_screen.dart#L43"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/wechat/wechat_task_runner.dart#L207"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/tools/tool_engine.dart#L55"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/tools/vision_tools.dart#L104"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/config/permission_mode.dart#L32"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/LoopModes.java#L42"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/test/permission_mode_test.dart#L29"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java#L1748"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/MainActivity.kt#L2158"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/vfs/VfsBridge.kt#L190"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/MainActivity.kt#L418"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/lib/core/vfs/ai_safety.dart#L81"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-216] 手机端统一授权broker-单一执行chokepoint与策略单一真源.html",
+      "type": "a",
+      "href": "../../../03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/file:/D:/Portable/khy-os/delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/KhyAppFunctions.java"
     },
     {
       "from": "docs/html/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
@@ -390,6 +685,46 @@
       "from": "docs/html/10_规范/其它规范/FILE-FORMAT-PROTOCOL.html",
       "type": "a",
       "href": "../../../10_%E8%A7%84%E8%8C%83/%E5%85%B6%E5%AE%83%E8%A7%84%E8%8C%83/COMMUNICATION-PROTOCOL.html"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "a",
+      "href": "../../releases"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/breach.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/archer.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/release.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/whales.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/maw.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/wave.jpg"
+    },
+    {
+      "from": "entries/research/leviathan-readme.html",
+      "type": "img",
+      "href": "docs/pierce.jpg"
     },
     {
       "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",

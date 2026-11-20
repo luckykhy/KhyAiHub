@@ -31,7 +31,7 @@
 <h1 id="design-lay-003-仓库整理与巡检规范">[DESIGN-LAY-003] 仓库整理与巡检规范<a class="anchor" href="#design-lay-003-仓库整理与巡检规范" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: LAYOUT-004 -->
 <blockquote><p><strong>定位</strong>：管「存量杂物怎么清、每日怎么巡检」。新文件该放哪个目录、该怎么命名、谁能依赖，真源是 <code>[DESIGN-LAY-002]</code>（LAYOUT-001）与 <code>[DESIGN-LAY-005]</code>，本文<strong>不重复、不覆盖、不裁决</strong>，只补它们没管的下半段：已存在的生成物、临时物、产物如何回收。</p>
-<p><strong>结论</strong>：① 整理对象只有<strong>生成物 / 临时物 / 产物</strong>三类，源码、配置、运行时数据<strong>零触碰</strong>；② <strong>只隔离、不删除</strong>，隔离区 <code>.khyos/housekeeping/&lt;日期&gt;/</code>，凭 manifest 原路撤回；③ 全仓 687 个 <code>.html</code> 孪生是 <strong>LAY-5 强制要求</strong>的合法产出，<strong>不是孤儿文件，不得清理</strong>——这是本规范最容易被误判的一条。</p></blockquote>
+<p><strong>结论</strong>：① 整理对象只有<strong>生成物 / 临时物 / 产物</strong>三类，源码、配置、运行时数据<strong>零触碰</strong>；② <strong>只隔离、不删除</strong>，隔离区 <code>works/data/khy/T4-transient/tmp/housekeeping/&lt;日期&gt;/</code>，凭 manifest 原路撤回；③ 全仓 687 个 <code>.html</code> 孪生是 <strong>LAY-5 强制要求</strong>的合法产出，<strong>不是孤儿文件，不得清理</strong>——这是本规范最容易被误判的一条。</p></blockquote>
 <hr>
 <h2 id="1-红线">1. 红线<a class="anchor" href="#1-红线" aria-label="锚点">#</a></h2>
 <blockquote><p>每行均可写成守卫断言或评审 checklist 项。守卫列写「人工」表示暂无机械检查。</p></blockquote>
@@ -39,11 +39,12 @@
 <hr>
 <h2 id="2-整理对象白名单">2. 整理对象白名单<a class="anchor" href="#2-整理对象白名单" aria-label="锚点">#</a></h2>
 <blockquote><p>只有下表三处允许纳入整理范围；其余一律只读。</p></blockquote>
-<table><thead><tr><th><strong>区域</strong></th><th><strong>性质</strong></th><th><strong>判定口径</strong></th><th><strong>处理方式</strong></th></tr></thead><tbody><tr><td><code>.research-tmp/</code></td><td>研究过程临时碎片</td><td>未跟踪、非构建产物</td><td>超 7 天 → 隔离</td></tr><tr><td><code>_产物/</code></td><td>人工成果堆放区（语义：产出即冻结、不再维护，见 LAY-002 §3）</td><td>未跟踪</td><td>只报告，去向由人决定</td></tr><tr><td>根目录 <code>.html</code> 镜像</td><td><code>docs:build</code> 生成物</td><td>未跟踪、有同名 <code>.md</code></td><td>只报告；若生成器可配置输出路径，统一收 <code>docs/_generated/</code></td></tr></tbody></table>
+<table><thead><tr><th><strong>区域</strong></th><th><strong>性质</strong></th><th><strong>判定口径</strong></th><th><strong>处理方式</strong></th></tr></thead><tbody><tr><td><code>.research-tmp/</code></td><td>研究过程临时碎片</td><td>未跟踪、非构建产物</td><td>超 7 天 → 隔离</td></tr><tr><td><code>_产物/</code>（已废止 2026-09-27，落点见 [DESIGN-LAY-011] §二）</td><td>人工成果堆放区（语义：产出即冻结、不再维护，见 LAY-002 §3）</td><td>未跟踪</td><td>只报告，去向由人决定</td></tr><tr><td>根目录 <code>.html</code> 镜像</td><td><code>docs:build</code> 生成物</td><td>未跟踪、有同名 <code>.md</code></td><td>只报告；若生成器可配置输出路径，统一收 <code>docs/_generated/</code></td></tr></tbody></table>
 <p><strong>明确排除</strong>：<code>docs/</code>、<code>kernel/</code>、<code>scripts/</code>、<code>tests/</code>、<code>.ai/</code> 下的 <code>.html</code> —— 它们是 LAY-5 孪生或 Vite/Electron 入口（如 <code>apps/*/index.html</code>），<strong>不是垃圾</strong>。</p>
 <hr>
 <h2 id="3-风险分级">3. 风险分级<a class="anchor" href="#3-风险分级" aria-label="锚点">#</a></h2>
-<table><thead><tr><th><strong>级别</strong></th><th><strong>动作</strong></th><th><strong>权限</strong></th></tr></thead><tbody><tr><td>L1 报告</td><td>生成清单与建议，零改动</td><td>默认，每次运行都做</td></tr><tr><td>L2 隔离</td><td>移入 <code>.khyos/housekeeping/&lt;日期&gt;/</code>，保留 manifest</td><td>需显式 <code>--apply</code>，且仅限白名单</td></tr><tr><td>L3 删除</td><td>——</td><td><strong>永不执行</strong>，一律人工确认</td></tr></tbody></table>
+<table><thead><tr><th><strong>级别</strong></th><th><strong>动作</strong></th><th><strong>权限</strong></th></tr></thead><tbody><tr><td>L1 报告</td><td>生成清单与建议，零改动</td><td>默认，每次运行都做</td></tr><tr><td>L2 隔离</td><td>移入 <code>works/data/khy/T4-transient/tmp/housekeeping/&lt;日期&gt;/</code>，保留 manifest</td><td>需显式 <code>--apply</code>，且仅限白名单</td></tr><tr><td>L3 删除</td><td>——</td><td><strong>永不执行</strong>，一律人工确认</td></tr></tbody></table>
+<blockquote><p><strong>落点订正（2026-11-18）</strong>：隔离区原写 <code>.khyos/housekeeping/&lt;日期&gt;/</code>。2026-10-24 起 <code>organize.py</code> 的实际落点已迁至<br><code>works/data/khy/T4-transient/tmp/housekeeping/&lt;日期&gt;/</code>——根级 <code>.khyos</code> 是 <code>CLAUDE.md</code> §B8 判定的影子数据家，<br><code>check-repo-layout.js</code> 的 <code>root-shadow-dir</code> 会判 error。本文档此前未同步，现订正；<br>新文件如何落位见 <code>[DESIGN-LAY-011]</code> §二。历史批次记录（§6）中的 <code>.khyos/...</code> 路径保持原样，不追溯改写。</p></blockquote>
 <hr>
 <h2 id="4-每日巡检流程">4. 每日巡检流程<a class="anchor" href="#4-每日巡检流程" aria-label="锚点">#</a></h2>
 <pre><code>06:00  organize.py --report   基线报告（零改动）

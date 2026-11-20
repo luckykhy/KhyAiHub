@@ -14,12 +14,6 @@ const { detectFile } = require('../services/domain/structured/formatInspect/file
 const { replaceAtLocation, locateWord } = require('../services/domain/structured/formatInspect/textAddress.js');
 
 const { defineTool } = require('./_baseTool');
-let _fileHistory;
-try {
-  _fileHistory = require('../services/fileHistoryService');
-} catch {
-  _fileHistory = null;
-}
 
 module.exports = defineTool({
   name: 'replaceAtLocation',
@@ -148,6 +142,8 @@ module.exports = defineTool({
         };
       }
 
+      // 基线在读取之前取：写盘时磁盘 mtime 已变 → fileWriteService 判 conflict。
+      const baseMtimeMs = fs.statSync(absPath).mtimeMs;
       const original = fs.readFileSync(absPath, 'utf-8');
 
       // 预览模式：只报告坐标，不写盘。
@@ -184,14 +180,18 @@ module.exports = defineTool({
         return { success: false, error: '替换后内容无变化（word 与 replacement 可能相同）。' };
       }
 
-      if (_fileHistory) {
-        try {
-          _fileHistory.takeSnapshot(absPath, { reason: 'replaceAtLocation', content: original });
-        } catch {
-          /* non-critical */
-        }
+      const applied = await require('../services/fileWriteService').write({
+        filePath: absPath,
+        content: result.text,
+        baseMtimeMs,
+        actor: 'tool',
+        reason: 'replaceAtLocation',
+        beforeContent: original,
+        diagCwd: cwd,
+      });
+      if (!applied.ok) {
+        return { success: false, error: applied.error, file: absPath };
       }
-      fs.writeFileSync(absPath, result.text, 'utf-8');
 
       return {
         success: true,

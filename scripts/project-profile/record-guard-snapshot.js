@@ -31,7 +31,7 @@ const OUT = path.join(REPO, 'works/record/ai/GUARD-SNAPSHOT.json');
  * 新增文件时要跟着补——漏一个不会报错，只会让那条守卫少查一个文件，
  * 而快照上看起来还是一盏绿灯。
  *
- * 2026-10-26：`delivery/mobile/khy-os-client-app` 整个带上，不再只列改过的子目录。
+ * 2026-10-26：`delivery/channel/mobile/khy-os-client-app` 整个带上，不再只列改过的子目录。
  * 补 .dart 进 CODE_EXTS 之后这半边 App 第一次真正进入扫描范围，只列子目录会让
  * 快照声称的覆盖比实际小——而读者无法从快照上看出来。
  */
@@ -41,7 +41,7 @@ const AGENT_RULE_TARGETS = [
   'runtime/node/backend/src/tools',
   'runtime/node/backend/src/cli/handlers/stepneo.js',
   'scripts/project-profile',
-  'delivery/mobile/khy-os-client-app',
+  'delivery/channel/mobile/khy-os-client-app',
 ];
 
 /**

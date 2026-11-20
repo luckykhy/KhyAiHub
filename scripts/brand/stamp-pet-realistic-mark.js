@@ -8,7 +8,7 @@
  * The base art for the "realistic" pet form is AI generated. The prompt
  * deliberately asks for a BLANK gold plate (no symbol, no mark) because an
  * AI model must never draw an approximation of the Khy OS trademark: the
- * trademark pixels must come from delivery/brand/png/khy-os-mark-256.png,
+ * trademark pixels must come from works/brand/png/khy-os-mark-256.png,
  * byte for byte, or they are not the trademark at all.
  *
  * This script is the second half of that contract: it composites the real
@@ -37,7 +37,7 @@ const { PNG } = require(path.join(__dirname, '..', '..', 'node_modules', 'pngjs'
 
 const REPO = path.resolve(__dirname, '..', '..');
 const INBOX = path.join(REPO, 'works', 'design', 'khy-mascot', 'model', 'inbox');
-const MARK = path.join(REPO, 'delivery', 'brand', 'png', 'khy-os-mark-256.png');
+const MARK = path.join(REPO, 'works', 'brand', 'png', 'khy-os-mark-256.png');
 const DRY_RUN = process.argv.includes('--dry-run');
 
 /** Ink colour of the engraved seal (matches build-pet-assets.ps1). */

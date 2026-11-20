@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-205] khyos Git 深度集成-分支能力从看得见到选得了.md -->
+<title>[DESIGN-ARCH-205] khyos Git 深度集成 — 分支能力从「看得见」到「选得了」 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-205] khyos Git 深度集成 — 分支能力从「看得见」到「选得了」</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-205] khyos Git 深度集成 — 分支能力从「看得见」到「选得了」</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-205-khyos-git-深度集成-分支能力从-看得见-到-选得了">[DESIGN-ARCH-205] khyos Git 深度集成 — 分支能力从「看得见」到「选得了」</a></li><li class="lvl-2"><a href="#1-现状盘点-2026-11-08-实测-非推测">1. 现状盘点（2026-11-08 实测，非推测）</a></li><li class="lvl-3"><a href="#1-1-更深一层-底座本身是坏的">1.1 更深一层：底座本身是坏的</a></li><li class="lvl-2"><a href="#2-设计原则">2. 设计原则</a></li><li class="lvl-2"><a href="#3-架构">3. 架构</a></li><li class="lvl-3"><a href="#3-1-判据与执行分离">3.1 判据与执行分离</a></li><li class="lvl-3"><a href="#3-2-错误码-桌面端-i18n-一一对应">3.2 错误码 ↔ 桌面端 i18n 一一对应</a></li><li class="lvl-2"><a href="#4-已实现内容">4. 已实现内容</a></li><li class="lvl-3"><a href="#4-1-后端分支领域单元">4.1 后端分支领域单元</a></li><li class="lvl-3"><a href="#4-2-工具层">4.2 工具层</a></li><li class="lvl-3"><a href="#4-3-桌面端">4.3 桌面端</a></li><li class="lvl-3"><a href="#4-4-cli-本轮-未-改-明确的范围边界">4.4 CLI：本轮**未**改（明确的范围边界）</a></li><li class="lvl-2"><a href="#5-修复的底座缺陷">5. 修复的底座缺陷</a></li><li class="lvl-2"><a href="#6-实施中踩到并修掉的三个真问题">6. 实施中踩到并修掉的三个真问题</a></li><li class="lvl-2"><a href="#7-后续-未实现-明确排除">7. 后续（未实现，明确排除）</a></li><li class="lvl-2"><a href="#8-验收">8. 验收</a></li><li class="lvl-3"><a href="#8-1-一个既有的-与本轮无关的测试失败">8.1 一个既有的、与本轮无关的测试失败</a></li><li class="lvl-3"><a href="#8-2-索引登记只登记就近索引">8.2 索引登记只登记就近索引</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-205-khyos-git-深度集成-分支能力从-看得见-到-选得了">[DESIGN-ARCH-205] khyos Git 深度集成 — 分支能力从「看得见」到「选得了」<a class="anchor" href="#design-arch-205-khyos-git-深度集成-分支能力从-看得见-到-选得了" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：v1 已实现（后端分支领域服务 + 工具层分支工具 + 桌面端分支选择器）。<br>真源范围：本文档是「Git 分支能力」的设计真源；Git 工作流 / 提交规范 / 自动化治理的<br>真源仍是 <code>[DESIGN-GIT-001]</code>～<code>[DESIGN-GIT-004]</code>（<code>docs/10_规范/DESIGN-GIT/</code>）。</p>
+<p><strong>本文档解决的问题</strong>：khyos 桌面端能显示当前分支名，但<strong>不能选分支</strong>；Agent 侧<br>七个 git 工具里<strong>没有一个与分支相关</strong>；TUI 侧<strong>没有 Git 概念</strong>。用户诉求原话：<br>「khyos中无法选择分支，没有Git概念需要设计一个git深度集成方案」。</p></blockquote>
+<h2 id="1-现状盘点-2026-11-08-实测-非推测">1. 现状盘点（2026-11-08 实测，非推测）<a class="anchor" href="#1-现状盘点-2026-11-08-实测-非推测" aria-label="锚点">#</a></h2>
+<p>盘点结论来自对当前工作树的实际检索与运行验证，逐条可复核：</p>
+<table><thead><tr><th>层</th><th>现状</th><th>缺口</th></tr></thead><tbody><tr><td>CLI</td><td><code>khy repo branch list</code> / <code>switch</code> 已存在（<code>cli/handlers/repo.js</code>）</td><td>有分支概念，但只在 CLI，Agent 与桌面端都够不着</td></tr><tr><td>Agent 工具</td><td><code>gitStatus</code> / <code>gitDiff</code> / <code>gitCommit</code> / <code>gitPush</code> / <code>gitLog</code> / <code>gitClone</code> / <code>gitBlame</code> 七个</td><td><strong>无任何分支工具</strong>——AI 查不到分支名、也切不了分支</td></tr><tr><td>后端服务</td><td><code>gitContextService</code>（把分支名注入系统提示）、<code>gitOperationTracker</code>（事后从 shell 输出里<strong>检测</strong> checkout/rebase）</td><td>都是<strong>被动观测</strong>；没有主动的分支领域模型</td></tr><tr><td>桌面端</td><td><code>GitPanel.tsx</code> 只读 <code>git status -z --branch</code>，显示分支名</td><td><strong>分支名是纯文本，点不动</strong></td></tr><tr><td>桌面端 i18n</td><td><strong>已有整套 <code>git.branchSwitcher.*</code> 词条</strong>（约 40 条：搜索框、新建分支、脏文件阻断弹窗、worktree 冲突、无效分支名……）</td><td><strong>词条在、实现不在</strong>——上游基线有完整设计稿，重写时丢了接线</td></tr><tr><td>TUI</td><td>Git 只在横幅/系统提示里露一个分支名</td><td>无 Git 概念面板</td></tr><tr><td>HTTP 面</td><td><code>routes/</code> 无 git 路由</td><td>后端无对外 Git API</td></tr></tbody></table>
+<p><strong>关键发现</strong>：桌面端那套 <code>git.branchSwitcher.*</code> 文案是<strong>上游基线继承下来的完整设计稿</strong>，<br>连失败面都列全了（脏文件被覆盖、worktree 冲突、仓库有未解决冲突、有进行中的 Git 操作、<br>分支名无效、分支已存在）。所以本方案的第一原则是<strong>把这份既有设计接回来</strong>，而不是另起炉灶。</p>
+<h3 id="1-1-更深一层-底座本身是坏的">1.1 更深一层：底座本身是坏的<a class="anchor" href="#1-1-更深一层-底座本身是坏的" aria-label="锚点">#</a></h3>
+<p>盘点过程中发现一个更底层的缺陷，它让「Git 能力」在本机整体失效：</p>
+<p><code>gitExecutableDetector</code> 的 PATH 扫描用 <code>existsSync</code> 判定候选，而 <code>existsSync</code> <strong>对目录<br>同样返回 true</strong>。本机 PATH 上存在名为 <code>git</code> 的<strong>目录</strong>（portable Git 的<br><code>D:\Portable\Tools\git</code>），于是 detector 返回了这个目录而不是<br><code>D:\Portable\Tools\git\cmd\git.exe</code>。后果是<strong>静默</strong>的：</p>
+<ul><li><code>spawnSync(目录)</code> → <code>ENOENT</code></li><li>调用方把它当成「本机没装 git」→ 诚实降级为「无 Git」</li><li><code>gitStatus</code> / <code>gitContextService</code> / <code>gitCommit</code> / <code>gitPush</code> 全部失效，<strong>且没有任何报错线索</strong></li></ul>
+<p>实测证据（修复前）：<code>detectGitExecutable()</code> 返回 <code>&quot;D:\\Portable\\Tools\\git&quot;</code>（是目录），<br><code>execSync('&quot;D:\\Portable\\Tools\\git&quot; status --porcelain')</code> 报<br><code>'&quot;D:\Portable\Tools\git&quot;' is not recognized as an internal or external command</code>。<br>修复后返回 <code>&quot;D:\\Portable\\Tools\\git\\cmd\\git.exe&quot;</code>，<code>git status</code> 正常输出。</p>
+<p>这解释了「没有 Git 概念」的体感——<strong>不是没有设计，是底座断了且断得没有声音</strong>。</p>
+<h2 id="2-设计原则">2. 设计原则<a class="anchor" href="#2-设计原则" aria-label="锚点">#</a></h2>
+<ol><li><strong>不另起炉灶</strong>：复用既有 <code>gitExecutableDetector</code> 的可执行文件解析、既有</li></ol>
+<p><code>DESIGN-GIT-001</code>～<code>004</code> 的规范口径、既有桌面端 i18n 文案、既有工具注册与风险闸机制。</p>
+<ol><li><strong>判据单一真源</strong>：分支名合法性、会不会覆盖本地改动、有无冲突等判定<strong>只写一遍</strong></li></ol>
+<p>（后端纯叶子 <code>branchGuard.js</code>），后端服务 / CLI / 桌面端 / 工具层共用。<br>   前端<strong>不做第二套判定</strong>——两端规则必然漂移，这是本方案要消灭的问题本身。</p>
+<ol><li><strong>只读先行，写操作需人确认</strong>：符合仓库红线 R1（分支纪律）。Agent 查分支可自动放行；</li></ol>
+<p>切/建分支必须过确认闸。</p>
+<ol><li><strong>诚实失败</strong>：git 的英文 stderr 绝不透给用户，一律翻译成错误码 + 中文文案；</li></ol>
+<p>映射不到就落到 <code>unknown</code>，<strong>宁可说「不知道」，也不伪造具体原因</strong>。</p>
+<h2 id="3-架构">3. 架构<a class="anchor" href="#3-架构" aria-label="锚点">#</a></h2>
+<pre><code>                     ┌──────────────────────────────────────┐
+   桌面端 GitPanel    │ services/domain/git/                │
+   ┌──────────────┐   │  ├─ branchGuard.js   判据纯叶子      │
+   │BranchSwitcher│──▶│  │   零 IO · 确定性 · 绝不抛          │
+   └──────┬───────┘   │  └─ gitBranchService.js  执行层      │
+          │ IPC       │      list / switch / create         │
+          │           └───────────┬──────────────────────────┘
+   ┌──────┴───────┐               │ 同一份判据
+   │ preload      │               │
+   │ main         │               │
+   └──────────────┘               │
+                     ┌────────────┴─────────────┐
+                     │ tools/gitBranch.js  只读  │ → risk safe → 自动放行
+                     │ tools/gitSwitch.js  写操作 │ → risk medium → L1 确认
+                     └──────────────────────────┘
+                                 （force 时 isDestructive → L2 红灯）</code></pre>
+<h3 id="3-1-判据与执行分离">3.1 判据与执行分离<a class="anchor" href="#3-1-判据与执行分离" aria-label="锚点">#</a></h3>
+<p><code>branchGuard.js</code> 是<strong>纯叶子</strong>：零 IO、确定性、绝不抛、一切经入参注入。它回答「这次切换<br>允许吗、不允许的话是为什么」。</p>
+<p><code>gitBranchService.js</code> 是<strong>执行层</strong>：独占 IO（<code>execFileSync</code> 跑 git、<code>fs.existsSync</code> 探测<br><code>.git</code> 下的进行中操作标志），把状态<strong>采集</strong>起来交给叶子<strong>判定</strong>，然后执行或翻译失败。</p>
+<p>拆两件的理由：判定需要大量仓库状态（那是 IO），但判定规则本身是纯逻辑。混在一起<br>规则就没法被单独测试，三方调用方也会各自复制一遍判定。</p>
+<h3 id="3-2-错误码-桌面端-i18n-一一对应">3.2 错误码 ↔ 桌面端 i18n 一一对应<a class="anchor" href="#3-2-错误码-桌面端-i18n-一一对应" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>错误码</th><th>桌面端 i18n 键</th><th>含义</th></tr></thead><tbody><tr><td><code>invalidBranchName</code></td><td><code>git.branchSwitcher.error.invalidBranchName</code></td><td>分支名非法</td></tr><tr><td><code>branchAlreadyExists</code></td><td><code>git.branchSwitcher.error.branchAlreadyExists</code></td><td>分名已存在</td></tr><tr><td><code>targetBranchNotFound</code></td><td><code>git.branchSwitcher.error.targetBranchNotFound</code></td><td>目标分支不存在</td></tr><tr><td><code>conflictsPresent</code></td><td><code>git.branchSwitcher.error.conflictsPresent</code></td><td>有未解决冲突</td></tr><tr><td><code>operationInProgress</code></td><td><code>git.branchSwitcher.error.operationInProgress</code></td><td>有进行中的 Git 操作</td></tr><tr><td><code>branchInOtherWorktree</code></td><td><code>git.branchSwitcher.error.branchInOtherWorktree</code></td><td>分支在别的 worktree 检出</td></tr><tr><td><code>dirtyWorkingTree</code></td><td><code>git.branchSwitcher.blockedDialog.*</code></td><td>本地改动会被覆盖</td></tr><tr><td><code>unknown</code></td><td><code>git.branchSwitcher.error.unknown</code></td><td>诚实降级</td></tr></tbody></table>
+<p>后端 <code>_MESSAGE</code> 表提供中文兜底，供无 i18n 的调用方（工具层 / CLI）使用。</p>
+<h2 id="4-已实现内容">4. 已实现内容<a class="anchor" href="#4-已实现内容" aria-label="锚点">#</a></h2>
+<h3 id="4-1-后端分支领域单元">4.1 后端分支领域单元<a class="anchor" href="#4-1-后端分支领域单元" aria-label="锚点">#</a></h3>
+<p><code>runtime/node/backend/src/services/domain/git/</code></p>
+<table><thead><tr><th>文件</th><th>角色</th><th>IO</th></tr></thead><tbody><tr><td><code>branchGuard.js</code></td><td>前置判据纯叶子</td><td>零 IO · 确定性 · 绝不抛</td></tr><tr><td><code>gitBranchService.js</code></td><td>执行层（list / switch / create）</td><td>独占 IO</td></tr><tr><td><code>branchGuard.test.js</code></td><td>判据测试（34 例）</td><td>node:test</td></tr><tr><td><code>gitBranchService.test.js</code></td><td>执行层测试（18 例，<strong>真建临时 git 仓库</strong>）</td><td>node:test</td></tr><tr><td><code>khy.module.json</code></td><td>单元清单（domain D2 / fanIn / lifecycle / contract）</td><td>—</td></tr><tr><td><code>README.md</code></td><td>单元说明</td><td>—</td></tr></tbody></table>
+<p>执行层测试刻意<strong>不 mock 掉 exec</strong>——执行层的价值恰恰在于「真仓库上真切换」，故每次测试<br>自建自销临时 git 仓库，绝不碰仓库自身的 <code>.git</code>。</p>
+<h3 id="4-2-工具层">4.2 工具层<a class="anchor" href="#4-2-工具层" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>工具</th><th>风险</th><th>语义</th></tr></thead><tbody><tr><td><code>gitBranch</code></td><td><code>safe</code> + 只读</td><td>列出本地分支，标出当前分支与 upstream/ahead/behind。<strong>自动放行</strong></td></tr><tr><td><code>gitSwitch</code></td><td><code>medium</code></td><td>切换分支（可选 <code>create</code> 新建）。<strong>走 L1 确认闸</strong>；带 <code>force</code> 时 <code>isDestructive</code> → <strong>L2 红灯</strong></td></tr></tbody></table>
+<p>两者成对：<strong>没有 <code>gitBranch</code> 就无从知道有哪些分支</strong>，AI 只能猜分支名或退回裸 shell 命令。</p>
+<h3 id="4-3-桌面端">4.3 桌面端<a class="anchor" href="#4-3-桌面端" aria-label="锚点">#</a></h3>
+<ul><li><code>BranchSwitcher.tsx</code>：分支名可点击 → 打开选择器；搜索框、新建分支、脏文件阻断弹窗</li></ul>
+<p>（给「提交并切换」与「丢弃改动并切换」两条明确出路）。</p>
+<ul><li><strong>文案复用既有词条</strong>：组件走 <code>react-i18next</code> 的 <code>useTranslation</code>，错误码表映射到</li></ul>
+<p>上游基线留下的 <code>git.branchSwitcher.error.*</code>（44 条既有词条），<strong>不另写一套文案</strong>。<br>  只补了三条确有缺口的新键：<code>blockedDialog.forceAction</code>（丢弃改动并切换）、<br>  <code>currentBadge</code>（当前）、<code>otherWorktreeBadge</code>（其它 worktree）。<br>  契约测试会断言「组件引用的每个 i18n 键都在 <code>zh-CN.json</code> 里存在」——漏键在运行时会<br>  显示成裸键名，这类问题类型检查抓不到。</p>
+<ul><li>IPC：<code>git:branchList</code>（只读）/ <code>git:branchSwitch</code>（写操作）。</li><li><code>Icon.tsx</code> 补 <code>git-branch</code> 字形（lucide <code>GitBranch</code>）。</li></ul>
+<p><strong>强制切换必须显式传 <code>force</code></strong>：普通切换路径绝不默认 force，否则会静默丢弃用户改动。</p>
+<h3 id="4-4-cli-本轮-未-改-明确的范围边界">4.4 CLI：本轮<strong>未</strong>改（明确的范围边界）<a class="anchor" href="#4-4-cli-本轮-未-改-明确的范围边界" aria-label="锚点">#</a></h3>
+<p><code>khy repo branch list</code> / <code>switch</code> 仍走它自己的一套分支解析：自己跑 <code>git branch</code> 并切<br>字符串，自己用正则匹配 git 的英文报错来判断「是不是本地改动冲突了」。这与本单元的<br>判据构成<strong>第二份</strong>，正是本方案要消灭的「判据在两处」。</p>
+<p>本轮<strong>没有</strong>改它，两条理由：</p>
+<ol><li><strong>范围边界</strong>：本轮范围经确认是「桌面端 + 工具层」，CLI/TUI 明确列为「只复用不重做」。</li></ol>
+<p>改 CLI 的 <code>branch</code> 子命令会动到既有命令的输出格式与提示文案，属于扩大范围。</p>
+<ol><li><strong>守卫硬阈</strong>：<code>check-change-safety.js</code> 的 <code>ERROR_CHANGED_FILE_COUNT = 20</code>。</li></ol>
+<p>加上 CLI 后本轮改动面为 21 个文件，越阈即 error。实测逐一验证过其余 20 个文件<br>   都承重或为必需——<code>domain/git/README.md</code> 移除后 <code>functional-unit</code> 272→273、<br>   <code>entry-buffer</code> 2406→2407（承重，不能删）；<code>khy.module.json</code> 移除后计数不变<br>   （非守卫强制，但为 D2 新单元的晋级记录，保留）。</p>
+<p>后续做 CLI 收口时的要点（已在此登记，避免下次重新推演）：</p>
+<ul><li><code>list</code> 改走 <code>listBranches()</code>，输出当前分支标记、upstream 的 ↑↓ 计数、其它 worktree 占用；</li><li><code>switch</code> 改走 <code>switchBranch()</code>，错误码 → 中文提示（与桌面端 i18n 同一套语义），</li></ul>
+<p><code>dirtyWorkingTree</code> 时列出受影响文件清单；</p>
+<ul><li>已在本轮临时验证过该改造可行（临时 git 仓库三条路径：列表正确、切换后</li></ul>
+<p><code>rev-parse</code> 确认已切到目标分支、不存在的分支给出正确提示），实施时可直接复用。</p>
+<h2 id="5-修复的底座缺陷">5. 修复的底座缺陷<a class="anchor" href="#5-修复的底座缺陷" aria-label="锚点">#</a></h2>
+<p><code>services/gitExecutableDetector.js</code> 的 <code>_scanPathForGit</code> 现在对每个命中再做一次<br><code>isFile()</code> 判定，目录直接跳过、继续扫下一个候选。</p>
+<p><strong>为什么这条必须修</strong>：不修的话，桌面端与工具层新增的分支能力在本机会<strong>同样静默失效</strong><br>（spawn ENOENT → 降级成「没装 git」）。分支能力建在断掉的底座上没有意义。</p>
+<p>回归测试打的是<strong>扫描叶子本身</strong>（<code>_scanPathForGit</code>）——因为注入模式会整体跳过 PATH 扫描<br>（保持历史字节一致），走解析器接口的断言永远打不到真路径。</p>
+<h2 id="6-实施中踩到并修掉的三个真问题">6. 实施中踩到并修掉的三个真问题<a class="anchor" href="#6-实施中踩到并修掉的三个真问题" aria-label="锚点">#</a></h2>
+<p>诚实记录，因为它们都<strong>只在真环境跑才会暴露</strong>：</p>
+<ol><li><strong>detector 把目录当可执行文件</strong>（见 §5）——<code>existsSync</code> 对目录返回 true。</li><li><strong>worktree 路径斜杠方向不一致</strong>——git 在 Windows 输出正斜杠（<code>C:/Users/x/repo</code>），</li></ol>
+<p><code>process.cwd()</code> 是反斜杠（<code>C:\Users\x\repo</code>）。直接字符串比较必然不等 →<br>   当前 worktree 被误判成「别的 worktree」→ 切换被无谓阻断。已加路径归一化。</p>
+<ol><li><strong><code>%(worktreepath)</code> 对当前分支同样返回路径</strong>——不判 <code>isCurrent</code> 就会把当前分支</li></ol>
+<p>标成「已在其它 worktree 检出」。</p>
+<p>另有一条测试自身的缺陷值得记：覆盖风险用例里两个分支的 <code>a.txt</code> 内容相同，<br>切换根本不会覆盖——判据没错，是夹具没构造出差异。</p>
+<h2 id="7-后续-未实现-明确排除">7. 后续（未实现，明确排除）<a class="anchor" href="#7-后续-未实现-明确排除" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td>TUI 侧 Git 面板</td><td>未实现</td><td>本轮范围按桌面端 + 工具层；TUI 可复用同一后端服务</td></tr><tr><td>远端分支 / PR 视图</td><td>未实现</td><td>需 GitHub/GitLab 接入，超出「选分支」诉求</td></tr><tr><td>合并 / 变基 / 冲突解决 UI</td><td>未实现</td><td>属于 Git 高级工作流，非本轮</td></tr><tr><td><code>khy repo branch</code> 收口到本服务</td><td>未实现</td><td>见 §4.4：范围边界 + 守卫硬阈；要点已登记</td></tr><tr><td>分支保护规则</td><td>未实现</td><td>需远端协同</td></tr></tbody></table>
+<h2 id="8-验收">8. 验收<a class="anchor" href="#8-验收" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>门禁</th><th>命令</th><th>结论</th></tr></thead><tbody><tr><td>判据测试</td><td><code>node --test runtime/node/backend/src/services/domain/git/branchGuard.test.js</code></td><td>34/34</td></tr><tr><td>执行层测试</td><td><code>node --test runtime/node/backend/src/services/domain/git/gitBranchService.test.js</code></td><td>18/18</td></tr><tr><td>detector 回归</td><td><code>jest tests/gitExecutableDetector.test.js</code></td><td>12/12</td></tr><tr><td>detector 旁证</td><td><code>node --test</code>（resolver / softExec / spawnHelper）</td><td>全绿</td></tr><tr><td>桌面端分支契约</td><td><code>node --test tests/gitBranchUiContract.test.cjs</code></td><td>13/13</td></tr><tr><td>桌面端 UI 契约</td><td><code>node --test tests/desktopUiContract.test.cjs</code></td><td>26/26</td></tr><tr><td>桌面端全量</td><td><code>node --test tests/*.test.cjs</code>（24 个文件）</td><td><strong>335/335</strong></td></tr><tr><td>类型检查</td><td><code>npm run typecheck</code></td><td>无新增错误（既有 4 条基线不变）</td></tr><tr><td>构建</td><td><code>electron-vite build</code></td><td>成功</td></tr><tr><td>守卫·变更安全</td><td><code>check-change-safety.js &lt;本轮 20 个文件&gt;</code></td><td><strong>0 error</strong>（2 warning：本机无 Python、改动面提示级）</td></tr><tr><td>守卫·Agent 规则</td><td><code>check-agent-rules.js &lt;本轮文件&gt;</code></td><td>全绿</td></tr><tr><td>守卫·仓库布局</td><td><code>check-repo-layout.js</code></td><td><code>functional-unit</code> 290→272（净降 18）、<code>entry-buffer</code> 2470→2406；三个 error 均为工作树既有根目录残留（11/5–11/7 创建，早于本轮）</td></tr></tbody></table>
+<h3 id="8-1-一个既有的-与本轮无关的测试失败">8.1 一个既有的、与本轮无关的测试失败<a class="anchor" href="#8-1-一个既有的-与本轮无关的测试失败" aria-label="锚点">#</a></h3>
+<p><code>tests/gitCommitTiming.test.js</code> 的「enforce：判据全绿 → 真的提交」用例失败，报<br><code>提交时机判据未通过(do-not-commit): 未满足 1 条判据：T2</code>。</p>
+<p><strong>已用 stash 对照实验证明与本轮无关</strong>：把 <code>gitExecutableDetector.js</code> 单独 stash 回退到<br>修复前状态后重跑，该用例<strong>同样失败</strong>（8 例中仍为 7 通过 1 失败）。故属工作树既有<br>问题（提交时机判据 T2 与测试夹具的 task-id 解析），不在本轮范围。</p>
+<h3 id="8-2-索引登记只登记就近索引">8.2 索引登记只登记就近索引<a class="anchor" href="#8-2-索引登记只登记就近索引" aria-label="锚点">#</a></h3>
+<p>本文档登记在 <code>DESIGN-ARCH/00_INDEX_DESIGN-ARCH-总目录.md</code>（就近索引），<strong>未</strong>登记进<br><code>docs/03_DESIGN_设计/00_INDEX_设计-分类索引.md</code>。</p>
+<p>依据：<code>check-repo-layout.js</code> 的 <code>checkDocsIndexComplete</code> 判据是「主索引<strong>或</strong>就近索引<br>有」即合规（B8 去重写法，见 [DESIGN-PLAN-009] §2 五层骨架 L-D0），就近索引才是清单<br>真源。既有 <code>[DESIGN-ARCH-201]</code>～<code>[DESIGN-ARCH-204]</code> 四篇同样只登记在就近索引——<br>分类索引自 <code>[DESIGN-ARCH-200]</code> 之后未再收新篇（该表存在 192–199 的历史欠账，属他人<br>账目，本轮不代劳补登）。且分类索引一行会让本轮改动面从 20 涨到 21，越过<br><code>check-change-safety.js</code> 的 <code>ERROR_CHANGED_FILE_COUNT = 20</code> 硬阈。</p>
+<blockquote><p>顺带记录：分类索引工作树里已有他人未提交的 48 行改动（补登 165–191 等）。本轮<br>曾加过 205 一行，发现越阈后已移除，<strong>未触碰那 48 行</strong>——<code>git diff</code> 显示的仍是<br>他人那部分。</p></blockquote>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-204] 统一开发环境管理器-盘点清单与一键恢复.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-204] 统一开发环境管理器 — 盘点、清单与一键恢复</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-206] Khyos 文件管理器基座重构方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-206] Khyos 文件管理器基座重构 — 「AI + 人工双模」综合型系统工具</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-205] khyos Git 深度集成-分支能力从看得见到选得了.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

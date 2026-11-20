@@ -72,7 +72,7 @@ const VERSION_SPECS = [
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'delivery/web/ai-frontend/package.json',
+    file: 'delivery/channel/web/ai-frontend/package.json',
     regex: /"@khy\/ui-shared"\s*:\s*"([^"]+)"/m,
   },
   {
@@ -113,7 +113,7 @@ const VERSION_GROUPS = [
     label: 'Browser UI shared package version',
     files: [
       'runtime/substrate/platform/packages/ui-shared/package.json',
-      'delivery/web/ai-frontend/package.json',
+      'delivery/channel/web/ai-frontend/package.json',
       'delivery/channel/khyquant/frontend/package.json',
     ],
   },

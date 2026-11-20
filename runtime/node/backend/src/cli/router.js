@@ -117,6 +117,12 @@ function _findClosestCommands(input, maxDist = 2) {
 
 let _fmt, _chalk, _aliases, _symbolResolver, _plugins;
 let _slashCommandInFlight = false; // S3: 斜杠命令并发锁,防止慢命令重入
+// Which command holds the lock and for how long. The refusal line has to name its target and
+// show progress (AGENTS.md 规则 2 / RUNTIME-002): a bare "请稍候…" is the banned shape and it
+// fires exactly when the user is blocked and informed least. Saved/restored with the same
+// nesting discipline as the lock itself, so a delegated inner route cannot clear the outer stamp.
+let _slashInFlightLabel = '';
+let _slashInFlightSince = 0;
 const fmt = () => (_fmt ??= require('./formatters'));
 const chk = () => {
   if (_chalk) {
@@ -1159,11 +1165,26 @@ async function route(parsed, context = {}) {
       // 外层 dispatchSlash 持锁期间重入必命中本锁,曾让 `onboarding theme|mcp`
       // 永远打 ⚠ 并静默跳过步骤(rc=0 假成功)。委托方显式声明,锁只拦真实并发。
       if (_slashCommandInFlight && !context.delegated) {
-        printWarn('另一个命令正在执行中,请稍候...');
+        const _waited = Math.max(0, Date.now() - _slashInFlightSince);
+        // "3 毫秒" is a true number and a useless one; sub-second waits read as "just started".
+        const _waitedText = _waited < 1000 ? '不到 1 秒' : `${(_waited / 1000).toFixed(1)} 秒`;
+        printWarn(
+          `斜杠命令「${_slashInFlightLabel || '未知命令'}」仍在执行（已等 ${_waitedText}），` +
+          '这条先不接，等它跑完再输下一条'
+        );
         return true;
       }
       const _wasInFlight = _slashCommandInFlight;
+      const _wasLabel = _slashInFlightLabel;
+      const _wasSince = _slashInFlightSince;
       _slashCommandInFlight = true;
+      // Name the whole invocation, not just the verb: "「/gateway」仍在执行" leaves the user
+      // guessing whether it is a probe, a config write or a restart.
+      _slashInFlightLabel = [String(rawCommandToken || command || '').trim(), String(subCommand || '').trim()]
+        .filter(Boolean)
+        .join(' ');
+      // Only the outermost acquirer stamps the clock, so a nested delegate cannot reset it.
+      if (!_wasInFlight) _slashInFlightSince = Date.now();
       let __slash;
       try {
         __slash = await dispatchSlashCommand(command, {
@@ -1185,6 +1206,8 @@ async function route(parsed, context = {}) {
       } finally {
         // 嵌套委托结束时恢复外层持有者的锁状态,不得无条件清零(否则会提前释放外层锁)。
         _slashCommandInFlight = _wasInFlight;
+        _slashInFlightLabel = _wasLabel;
+        _slashInFlightSince = _wasSince;
       }
       if (__slash !== SLASH_NOT_HANDLED) {
         return __slash;

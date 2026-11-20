@@ -3,7 +3,7 @@
  *
  * 三条渲染路径，同一个模型：
  *   ① WebGL 路径 —— 原生 WebGL 加载 GLB，真 3D（可任意角度、可呼吸感的光照）。
- *      仓库不引 three.js（见 delivery/web/ai-frontend/src/webgl/khyAura3d.js 的约定）。
+ *      仓库不引 three.js（见 delivery/channel/web/ai-frontend/src/webgl/khyAura3d.js 的约定）。
  *   ② 转盘序列路径 —— 没有任何 WebGL 上下文时（虚拟机 / 无显卡 / 被 GPU 开关关掉），
  *      用 Blender 预先渲好的 36 帧旋转序列逐帧贴图。**每一帧都是这个 3D 模型本身的
  *      渲染**，不是另一套图片素材，所以没 GPU 的机器上桌宠照样转得起来。

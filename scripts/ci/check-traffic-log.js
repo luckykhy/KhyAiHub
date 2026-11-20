@@ -80,12 +80,12 @@ check('CLI handler traffic.js 存在', () => {
 
 // ── 检查 5: 前端面板 ────────────────────────────────────────────
 check('前端 TrafficMonitor 面板存在', () => {
-  assertFile('delivery/web/ai-frontend/src/views/TrafficMonitor/index.vue');
+  assertFile('delivery/channel/web/ai-frontend/src/views/TrafficMonitor/index.vue');
 });
 
 // ── 检查 6: 路由注册 ────────────────────────────────────────────
 check('路由注册包含 traffic', () => {
-  const routerFile = assertFile('delivery/web/ai-frontend/src/router/index.js');
+  const routerFile = assertFile('delivery/channel/web/ai-frontend/src/router/index.js');
   const content = fs.readFileSync(routerFile, 'utf8');
   if (!content.includes("'traffic'")) {
     throw new Error("路由中未找到 'traffic'");

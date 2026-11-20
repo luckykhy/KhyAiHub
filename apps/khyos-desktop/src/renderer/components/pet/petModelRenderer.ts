@@ -1,7 +1,7 @@
 /**
  * petModelRenderer —— 原生 WebGL 的桌宠渲染器（零依赖）。
  *
- * 本仓的 3D 约定是手写 WebGL（见 delivery/web/ai-frontend/src/webgl/khyAura3d.js：
+ * 本仓的 3D 约定是手写 WebGL（见 delivery/channel/web/ai-frontend/src/webgl/khyAura3d.js：
  * 「no three.js, native WebGL only」），这里沿用同一手法：GLSL ES 1.00，
  * WebGL2 优先、回落 WebGL1。
  *

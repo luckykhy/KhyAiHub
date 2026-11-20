@@ -18,10 +18,10 @@ category: frontend
 
 | 项目 | 路径 | 技术栈 | 说明 |
 |---|---|---|---|
-| AI 平台前端 | `delivery/web/ai-frontend/` | Vue 3 + Element Plus（按需加载）+ `src/styles/newapi-theme.css` + `useTheme` 暗色单例 | 主管理 UI，38+ 页面，覆盖网关/模型/用量/工作流/监控 |
+| AI 平台前端 | `delivery/channel/web/ai-frontend/` | Vue 3 + Element Plus（按需加载）+ `src/styles/newapi-theme.css` + `useTheme` 暗色单例 | 主管理 UI，38+ 页面，覆盖网关/模型/用量/工作流/监控 |
 | 量化交易前端 | `delivery/channel/khyquant/frontend/` | Vue 3 + Element Plus（全量）+ @element-plus/icons-vue + zhCn | 交易终端，27+ 页面，数据密集（行情/回测/策略） |
 
-> 原 `apps/khy-mobile/`（Vue 3 + Capacitor 移动端）已退役删除；现存移动端为 Flutter 客户端 `delivery/mobile/khy-os-client-app/`，不在本技能的 Vue 美化范围。
+> 原 `apps/khy-mobile/`（Vue 3 + Capacitor 移动端）已退役删除；现存移动端为 Flutter 客户端 `delivery/channel/mobile/khy-os-client-app/`，不在本技能的 Vue 美化范围。
 
 共享包：`runtime/substrate/platform/packages/ui-shared/`（@khy/ui-shared，auth/http 工具，非样式库）、`runtime/substrate/platform/packages/shared/`（@khy/shared，后端生态）。
 
@@ -101,7 +101,7 @@ category: frontend
 
 ## 两端特定指引
 
-### ai-frontend（`delivery/web/ai-frontend/`）
+### ai-frontend（`delivery/channel/web/ai-frontend/`）
 - 主题入口：`src/styles/newapi-theme.css`（全局）、`src/composables/useTheme`（暗色单例）。改全局配色优先动这里，让所有页面跟随。
 - Element Plus 按需加载：新增 `<el-*>` 组件时组件样式会自动引入（unplugin-vue-components），但**命令式 API**（ElMessage / ElMessageBox / ElMessage）要手动在 main.js 引样式。
 - 新增页面：`src/composables/useRoutePrefetch.js`（viewLoaders）+ `src/router/index.js` + `src/views/X.vue`。
@@ -113,7 +113,7 @@ category: frontend
 - 移动优先的布局直接在本项目内做（原 khy-mobile 已退役），不要外溢到别的仓。
 
 ### 已退役的 khy-mobile
-- 原 `apps/khy-mobile/`（Vue 3 + Capacitor）已删除；现存移动端为 Flutter 客户端 `delivery/mobile/khy-os-client-app/`，原生 Flutter 界面不适用本技能的 Element Plus 改造流程。
+- 原 `apps/khy-mobile/`（Vue 3 + Capacitor）已删除；现存移动端为 Flutter 客户端 `delivery/channel/mobile/khy-os-client-app/`，原生 Flutter 界面不适用本技能的 Element Plus 改造流程。
 
 ## 完工要求
 

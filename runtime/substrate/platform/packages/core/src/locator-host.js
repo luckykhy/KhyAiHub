@@ -227,6 +227,7 @@ async function obtainCoreNode(opts) {
     heartbeatAt: Date.now(),
   };
 
+  if (opts.security && !dataHome) throw new CoreError('CORE_INVALID_ARGUMENT', '安全核心需要 dataHome 与独占核心锁');
   const lock = dataHome ? await acquireLock(dataHome, self, opts.lockOptions) : self;
   let server = null;
   try {
@@ -234,24 +235,42 @@ async function obtainCoreNode(opts) {
       dataHome,
       bindHost: opts.bindHost || DEFAULT_BIND_HOST,
       lock,
+      // 宿主注入的成员实现（core 永不 import backend）：网关经 B1 的 createGateway() 传入。
+      members: opts.members,
+      coreVersion: opts.coreVersion || self.coreVersion,
+      enginesKhy: opts.enginesKhy,
+      security: opts.security,
     });
     await server.start();
-  } catch (err) {
-    if (dataHome) releaseLock(dataHome, lock);
-    throw err;
-  }
+    if (opts.security && typeof opts.onSecurity === 'function') await opts.onSecurity(server.security);
 
   if (dataHome) {
+    // 端口回填：锁在 server 绑定前创建（port=0），start() 成功后把真实端口写回锁文件。
+    const bound = typeof server.getPort === 'function' ? server.getPort() : server.port;
+    if (bound) {
+      const current = readLock(dataHome);
+      if (current && current.coreId === lock.coreId) {
+        fs.writeFileSync(lockPath(dataHome), JSON.stringify({ ...current, port: bound }, null, 2));
+      }
+    }
     writeLocatorFile(dataHome, {
       coreId: lock.coreId,
       protocolVersion: lock.protocolVersion,
       pid: lock.pid,
-      endpoint: `http://${lock.host}:${server.port || 0}`,
+      endpoint: `http://${lock.host}:${bound || 0}`,
       tokenHash: lock.tokenHash,
       epoch: lock.epoch,
       coreVersion: lock.coreVersion,
       heartbeatAt: lock.heartbeatAt,
     });
+  }
+
+  } catch (err) {
+    const errors = [err];
+    try { if (server) await server.close(); } catch (cleanup) { errors.push(cleanup); }
+    try { if (dataHome) releaseLock(dataHome, lock); } catch (cleanup) { errors.push(cleanup); }
+    if (errors.length > 1) throw new AggregateError(errors, '核心启动失败且清理未完成');
+    throw err;
   }
 
   const heartbeat = dataHome
@@ -260,25 +279,34 @@ async function obtainCoreNode(opts) {
           heartbeatLock(dataHome, lock);
         } catch (err) {
           clearInterval(heartbeat);
-          if (typeof opts.onTakenOver === 'function') opts.onTakenOver(err);
+          server.close().then(
+            () => { if (typeof opts.onTakenOver === 'function') opts.onTakenOver(err); },
+            (cleanup) => {
+              const failure = new AggregateError([err, cleanup], '核心失去锁且关闭失败');
+              if (typeof opts.onTakenOver === 'function') opts.onTakenOver(failure);
+              else console.error(failure);
+            },
+          ).catch((failure) => console.error(failure));
         }
       }, HEARTBEAT_MS)
     : null;
   if (heartbeat) heartbeat.unref();
 
-  // 六成员通道在 S5 逐块迁移；本刀起的是零业务骨架 server，成员调用如实报未接线。
+  // embedded：成员走进程内直调（server.members 里注入了的直接用，没注入的报 member-pending）。
+  // attached 的 HTTP 成员通道随 S5 落地——届时同一批成员经 /core/* 端点暴露。
+  const memberOf = (key) => (server && server.members && server.members[key]) || pendingMember(key);
   const handle = {
     mode: 'embedded',
     coreId: lock.coreId,
     epoch: lock.epoch,
     version: { core: lock.coreVersion, protocol: lock.protocolVersion, enginesKhy: opts.enginesKhy || '>=1.0.0 <2.0.0' },
     paths: opts.paths || {},
-    gateway: pendingMember('gateway'),
-    events: pendingMember('events'),
-    storage: pendingMember('storage'),
-    session: pendingMember('session'),
-    capabilities: pendingMember('capabilities'),
-    plugins: pendingMember('plugins'),
+    gateway: memberOf('gateway'),
+    events: memberOf('events'),
+    storage: memberOf('storage'),
+    session: memberOf('session'),
+    capabilities: memberOf('capabilities'),
+    plugins: memberOf('plugins'),
     async close() {
       if (heartbeat) clearInterval(heartbeat);
       if (server && typeof server.close === 'function') await server.close();

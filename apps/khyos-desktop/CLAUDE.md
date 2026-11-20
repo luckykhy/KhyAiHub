@@ -98,6 +98,22 @@ node scripts/ci/check-version-sync.js
 |---|---|---|---|
 | `settings.messageStreamShowReasoningDescription` | 「在消息流中展示完整的模型思考内容；**关闭时每轮仍展示第一次思考**。」 | 「在消息流中展示模型的思考内容；**关闭后思考块不再显示**。」 | 真源描述的「仍展示第一次思考」这个语义在 khy-os 任何一层都不存在（全仓 grep `第一次思考\|首次思考\|firstThinking` = 0 命中）。照抄等于对用户作无法兑现的承诺，故按实现改写。 |
 
+### 目录结构决策与偏差登记（2026-11-19 重组）
+
+2026-11-19 目录重组的落地形态与设计草图的差异，逐条登记；**没有登记的偏离视为漂移，应修**。
+
+| 项 | 草图 | 实际 | 理由 / 状态 |
+|---|---|---|---|
+| `scripts/` 四层分类 | `dev/build/check/ci` | 同左 | `scripts/build`（generate-icon.cjs 等源码）曾被 `check-build-root` 按目录名误判为构建产物；已在 `scripts/lib/buildRootGuard.js` 的 `SOURCE_DIR_ALLOWLIST` 补登并附理由（该名单本就是「源码目录恰好叫产物名」的正规逃生口）。**规则已修，偏差消除。** |
+| 设计文档位置 | `docs/design/` 子目录 | 留 `docs/` 根 | `zcode-analysis/check-structure.cjs` 硬编码读 `docs/[DESIGN-ARCH-092]….md`；移目录即断该脚本，而改它违反上文「不修改 zcode-analysis」红线。 |
+| `zcode-analysis/` 分层 | `tools/`+`truth/`+`unpacked/` | 保持平铺 | 同上：该目录整体只读，且设计文档真源表写死其内部路径（`tokens.txt` / `i18n-zh.json` 等）。 |
+| 构建产物位置 | app 内 `build/` | **打包输出 `entries/electron/dist-electron`；Vite 产物 `out/` 留 app 目录内（legacy/migrating，目标实测不可达）** | 两者分治，理由都有源码依据：**打包输出**（纯输出、无运行时解析语义）迁 `entries/` 成立，electron-builder 日志实锤接受目录外 `appOutDir`；**`out/`** 必须留 app 内——package.json 的 `main` 在开发态（`electron .`）与打包态（asar 内解析）须指向同一处，且 electron-builder 的 `files` 匹配走不出 app 目录（`filter.js` 的 `createFilter` 只算「相对 appDir」路径，`../` 字符串 pattern 静默零匹配）。2026-11-19 曾试迁 `out/`，实跑打包前读源码发现会静默产出空 asar，已全量回退；三个 vite 配置头部留了警告注释。语义上正对口 parasitic（工具强制路径），但 `parasiticBudget=6` 已满、棘轮只降不升，故维持 `BUILD-OUTPUTS.json` 的 migrating + 未来 sunset（warning 级）；**要改判 parasitic 需人先拍板升预算**。 |
+| `tests/` 按域分组 | `agentbus/amoon/editor/…` | 保持平铺 | 43 个测试文件用 `__dirname`/`import.meta.url` 相对定位项目根，分组即全部断链；且 `node --test` 对缺失路径**静默跳过**（status 0），少跑测试无人知晓。 |
+| `src/main` 根文件 / `src/renderer/components/` 重组 | 按领域分组 | 原样冻结 | 契约测试硬编码路径：`agentbusPanel`/`amooSecretary`/`khyPet` 读 `src/main` 根文件；10 个 `*UiContract.test.cjs` 读 `components/<域>/<文件>.tsx`。 |
+| Vue 时代死件 | — | 已删 | `vite.config.js`（Vue 插件配置）、根 `index.html`（引不存在的 `/src/main.js`）、`dist/`，无任何现行构建链引用。 |
+
+**另记一枚 2026-11-19 事故**：`scripts/ci/brand-replace.cjs` 无 dry-run，执行即从 ZCode 真源**全量重生** `src/renderer/i18n/zh-CN.json`——会静默删除真源没有的手加键（`codeEditor.*` 全族）并冲掉上表登记的有意分歧。脚本头已加警告注释；**别随手跑**，跑前先 `git diff` 该文件。
+
 ## 品牌规则
 
 本项目复刻 ZCode 的**布局、结构、尺寸、交互、信息层级**，但**不复用品牌资产**：

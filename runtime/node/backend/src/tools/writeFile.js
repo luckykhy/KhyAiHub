@@ -2,31 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const { defineTool } = require('./_baseTool');
-let _fileHistory;
-try {
-  _fileHistory = require('../services/fileHistoryService');
-} catch {
-  _fileHistory = null;
-}
-
-/**
- * Record a pre-overwrite snapshot into the current turn's rollback manifest
- * (DESIGN-ARCH-096 §2-A). Fail-soft no-op when no active turn is known.
- */
-function _recordTurnMutation(context, absPath, preContent, reason) {
-  const turnId = context && context.traceContext && context.traceContext.turnId;
-  if (!turnId) {
-    return;
-  }
-  try {
-    require('../services/turnCheckpointService').recordMutatedFile(turnId, absPath, {
-      reason,
-      content: preContent,
-    });
-  } catch {
-    /* non-critical */
-  }
-}
 
 module.exports = defineTool({
   name: 'writeFile',
@@ -134,7 +109,6 @@ module.exports = defineTool({
       }
 
       const filePath = path.resolve(cwd, rawPath);
-      const dir = path.dirname(filePath);
 
       // 读后写门（与 FileWriteTool 同款）：覆盖一个**既有**文件前必须先读过它。
       // 否则模型可以在没看过内容的情况下整file覆写，把用户没预期丢掉的段落一起清掉
@@ -153,25 +127,21 @@ module.exports = defineTool({
         }
       }
 
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      // 统一写通道（DESIGN-ARCH-210 §6）：锁 / 快照 / turn 记录 / 诊断基线 /
+      // tmp+rename 全部在 fileWriteService 内，人手保存与工具写盘走同一条路。
+      const written = await require('../services/fileWriteService').write({
+        filePath,
+        content: params.content,
+        createIfMissing: true,
+        actor: 'tool',
+        reason: 'writeFile',
+        turnId: context && context.traceContext && context.traceContext.turnId,
+        diagCwd: cwd,
+      });
+      if (!written.ok) {
+        return { success: false, error: written.error };
       }
-
-      // Take snapshot before overwrite
-      if (_fileHistory && fs.existsSync(filePath)) {
-        try {
-          _fileHistory.takeSnapshot(filePath, { reason: 'writeFile' });
-        } catch {
-          /* non-critical */
-        }
-      }
-      if (fs.existsSync(filePath)) {
-        _recordTurnMutation(context, filePath, undefined, 'writeFile');
-      }
-
-      fs.writeFileSync(filePath, params.content, 'utf-8');
-      const bytes = Buffer.byteLength(params.content, 'utf-8');
-      return { success: true, path: filePath, bytes };
+      return { success: true, path: filePath, bytes: written.bytes };
     } catch (err) {
       return { success: false, error: err.message };
     }

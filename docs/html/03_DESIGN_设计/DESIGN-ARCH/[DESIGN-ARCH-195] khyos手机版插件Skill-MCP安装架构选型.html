@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-195] khyos手机版插件Skill-MCP安装架构选型.md -->
+<title>[DESIGN-ARCH-195] khyos 手机版插件 / Skill / MCP 安装架构选型 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-195] khyos 手机版插件 / Skill / MCP 安装架构选型</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-195] khyos 手机版插件 / Skill / MCP 安装架构选型</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-195-khyos-手机版插件-skill-mcp-安装架构选型">[DESIGN-ARCH-195] khyos 手机版插件 / Skill / MCP 安装架构选型</a></li><li class="lvl-2"><a href="#〇-人的意愿-b6-1-可追溯">〇、人的意愿（B6-1 可追溯）</a></li><li class="lvl-2"><a href="#一-结论">一、结论</a></li><li class="lvl-2"><a href="#二-已核实的事实">二、已核实的事实</a></li><li class="lvl-3"><a href="#2-1-该-url-的产物">2.1 该 URL 的产物</a></li><li class="lvl-3"><a href="#2-2-插件清单-assets-ai-app-manifest-json">2.2 插件清单（`assets/ai-app/manifest.json`）</a></li><li class="lvl-3"><a href="#2-3-容器运行时">2.3 容器运行时</a></li><li class="lvl-3"><a href="#2-4-js-引擎">2.4 JS 引擎</a></li><li class="lvl-3"><a href="#2-5-插件侧-sdk-assets-sdk-capsule-js">2.5 插件侧 SDK（`assets/sdk/capsule.js`）</a></li><li class="lvl-3"><a href="#2-6-设备侧事实">2.6 设备侧事实</a></li><li class="lvl-3"><a href="#2-7-现有代码基线-选型要接的东西">2.7 现有代码基线（选型要接的东西）</a></li><li class="lvl-3"><a href="#2-8-一条安全观察-不照抄">2.8 一条安全观察（不照抄）</a></li><li class="lvl-2"><a href="#三-三个诉求必须拆开">三、三个诉求必须拆开</a></li><li class="lvl-3"><a href="#3-1-skill-安装-与架构选型无关-可立即做">3.1 Skill 安装 —— 与架构选型无关，可立即做</a></li><li class="lvl-3"><a href="#3-2-mcp-传输方式决定可行性">3.2 MCP —— 传输方式决定可行性</a></li><li class="lvl-3"><a href="#3-3-插件-唯一的架构分岔">3.3 插件 —— 唯一的架构分岔</a></li><li class="lvl-2"><a href="#四-三条候选架构">四、三条候选架构</a></li><li class="lvl-3"><a href="#a-兼容-stepx-ai-app-格式">A｜兼容 StepX AI App 格式</a></li><li class="lvl-3"><a href="#b-进程内-jvm-插件">B｜进程内 JVM 插件</a></li><li class="lvl-3"><a href="#c-进程内-quickjs-插件">C｜进程内 QuickJS 插件</a></li><li class="lvl-2"><a href="#五-对比矩阵">五、对比矩阵</a></li><li class="lvl-2"><a href="#六-为什么推荐-c">六、为什么推荐 C</a></li><li class="lvl-2"><a href="#七-明确不做">七、明确不做</a></li><li class="lvl-2"><a href="#八-待验证项与已验证项">八、待验证项与已验证项</a></li><li class="lvl-3"><a href="#8-1-已验证">8.1 已验证</a></li><li class="lvl-3"><a href="#8-2-仍未验证">8.2 仍未验证</a></li><li class="lvl-3"><a href="#8-3-t3-最小绑定表-已定案-安全内核已实现并可测">8.3 T3：最小绑定表（已定案，安全内核已实现并可测）</a></li><li class="lvl-2"><a href="#九-边界-r1-r2-b7-b8">九、边界（R1 / R2 / B7 / B8）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;</p>
+<h1 id="design-arch-195-khyos-手机版插件-skill-mcp-安装架构选型">[DESIGN-ARCH-195] khyos 手机版插件 / Skill / MCP 安装架构选型<a class="anchor" href="#design-arch-195-khyos-手机版插件-skill-mcp-安装架构选型" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>本文是选型记录，不是实施计划。</strong> 只回答「走哪条架构、凭什么」，<br>不回答「分几片、每片怎么验」——后者等架构定了再出。</p>
+<p>决策依据的真源在本文（B6-1 / <code>PROCESS-010</code>）。<strong>引用本文结论前，<br>先看 §2 的证据表、§8.2 的仍未验证项</strong>：其中 T1 至今未验证，<br>而它恰好是候选 B 的成立前提。候选 C 的两项前提都已落地：<br><strong>T2（引擎可编可链）2026-10-29 真机 7/7 验证通过</strong>（§8.1），<br><strong>T3（最小绑定表）已定案、安全内核已实现并可测</strong>（§8.3）。</p></blockquote>
+<hr>
+<h2 id="〇-人的意愿-b6-1-可追溯">〇、人的意愿（B6-1 可追溯）<a class="anchor" href="#〇-人的意愿-b6-1-可追溯" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>时间</th><th>谁</th><th>要什么</th></tr></thead><tbody><tr><td>2026-10-28</td><td>用户</td><td>「悬浮窗打开了，另外希望 khyos 手机版也支持<strong>插件、skill、mcp 的安装</strong>」</td></tr><tr><td>2026-10-28</td><td>用户</td><td>安装来源：<strong>URL + 本地文件</strong>，并「<strong>蹭用 dsh / zcode / claude code / opencode 的市场</strong>」；插件形态：「<strong>就要 Dart 工具插件</strong>」</td></tr><tr><td>2026-10-29</td><td>用户</td><td>在「按声明式方案开工」与「仍要任意代码插件」之间选 <strong>后者</strong></td></tr><tr><td>2026-10-29</td><td>用户</td><td>提供 <code>https://studio.stepx.com/api/projects/p_c242ff2715642f47/releases/latest/download</code></td></tr><tr><td>2026-10-29</td><td>用户</td><td>读完三架构对比后选择「<strong>先只出设计文档</strong>」</td></tr></tbody></table>
+<p><strong>最后一条选择之后，架构未定</strong>，本文即为此而写。</p>
+<p>用户的原话诉求里有两项在技术上被证明不可达，须在此明确记下，避免后来者重复尝试：</p>
+<ul><li><strong>「Dart 工具插件」字面不可行</strong>。Flutter 应用产物中不含 Dart 源码或内核镜像，</li></ul>
+<p>运行期无法加载未编译的 Dart。可编译分发的 Dart 插件等于重新发版，不是插件。</p>
+<ul><li><strong>「蹭 claude code / opencode 的市场」只对其中一部分成立</strong>。那些市场分发的是</li></ul>
+<p>npm 包与 MCP server，运行期需要 Node；本机没有任何系统脚本解释器（见 §2）。<br>  能蹭的是<strong>描述性资产</strong>（skill 的 markdown、MCP 的声明配置），不是可执行载荷。</p>
+<hr>
+<h2 id="一-结论">一、结论<a class="anchor" href="#一-结论" aria-label="锚点">#</a></h2>
+<p><strong>推荐 C（进程内 QuickJS）</strong>，A 作为中期目标，<strong>B 不推荐</strong>。</p>
+<p>一句话理由：<strong>C 是唯一同时满足「用户能装真插件」与「攻击面可审计」的选项</strong>，<br>而且它与 StepX 平台自己选的路是同一条——这不是我们发明的架构，是这台设备上<br>已经跑通了的架构（证据见 §2）。</p>
+<p>三条候选的定义：</p>
+<ul><li><strong>A｜兼容 StepX AI App 格式</strong>：每个插件是一个独立 APK，内含 web/JS 载荷，</li></ul>
+<p>自带 uid，因此获得 Android 真沙箱。</p>
+<ul><li><strong>B｜进程内 JVM 插件</strong>：插件是 jar/dex，落在 App 私有目录，由 App 用</li></ul>
+<p><code>app_process</code> 拉起，走 socket IPC。</p>
+<ul><li><strong>C｜进程内 QuickJS 插件</strong>：把 JS 引擎编进我们自己的 APK（照 StepX 的做法），</li></ul>
+<p>插件是 App 私有目录下的 js 文件。</p>
+<hr>
+<h2 id="二-已核实的事实">二、已核实的事实<a class="anchor" href="#二-已核实的事实" aria-label="锚点">#</a></h2>
+<p><strong>取证方式</strong>：URL 产物落盘至<br><code>works/data/khy/T4-transient/tmp/stepx-apk-probe-20261029/</code>（B8：临时文件不进仓库根），<br>按未信任数据处置——独立空目录、只解包检查、不执行。<br>工具为 <code>aapt2 dump badging</code> / <code>aapt2 dump xmltree</code> / <code>unzip -l</code> / <code>grep -a</code>。<br>本机<strong>没有 <code>strings</code></strong>，早期所有靠 <code>strings</code> 得到的「0」都是命令失败被 <code>&gt;/dev/null</code><br>吞掉后的假读数；本文全部 dex 结论均改用 <code>grep -a</code> 并带正反控制。</p>
+<h3 id="2-1-该-url-的产物">2.1 该 URL 的产物<a class="anchor" href="#2-1-该-url-的产物" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>值</th></tr></thead><tbody><tr><td>包名</td><td><code>com.stepx.aiapp.pc242ff271564</code></td></tr><tr><td>应用名</td><td>灵感接力</td></tr><tr><td>版本</td><td>versionName <code>4.0.0</code>，versionCode <code>40000</code></td></tr><tr><td>SDK</td><td>compileSdk / targetSdk 均 36，platformBuildVersionCode 36</td></tr><tr><td>体积</td><td>5,881,750 字节</td></tr><tr><td>dex</td><td><code>classes.dex</code> 9,251,172 + <code>classes2.dex</code> 2,277,512</td></tr><tr><td>native</td><td><code>lib/arm64-v8a/libquickjs.so</code> 924,936；<code>lib/arm64-v8a/libEncryptorP.so</code> 83,928</td></tr><tr><td>签名</td><td>有 APK Signing Block，Gradle 产物（<code>META-INF/com/android/build/gradle/app-metadata.properties</code>）</td></tr></tbody></table>
+<p><strong>注意该 URL 的一个坑</strong>：<code>curl -I</code> 返回 <strong>403 Forbidden</strong>，但 <code>curl</code> 带 body 的<br>GET 返回 <strong>200 + <code>application/vnd.android.package-archive</code> + 完整 APK</strong>。<br>即 WAF 拦了请求行、没拦 body。<strong>用 HEAD 探测这个端点会得到「不可下载」的错误结论。</strong></p>
+<h3 id="2-2-插件清单-assets-ai-app-manifest-json">2.2 插件清单（<code>assets/ai-app/manifest.json</code>）<a class="anchor" href="#2-2-插件清单-assets-ai-app-manifest-json" aria-label="锚点">#</a></h3>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;entry&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;web/index.html&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;fullscreen&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;orientation&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;portrait&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;version&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;4.0.0&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;versionCode&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">40000</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;permissions&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;album&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;record&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;network&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;domains&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;https://…supabase…&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;https://ide-pay.stepaos.com&quot;</span><span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code></pre>
+<p>字段即插件契约：<strong>入口</strong>、<strong>呈现方式</strong>、<strong>版本</strong>、<strong>能力声明</strong>、<strong>网络白名单</strong>。<br><code>name</code> / <code>description</code> / <code>applicationId</code> 亦在其中。</p>
+<h3 id="2-3-容器运行时">2.3 容器运行时<a class="anchor" href="#2-3-容器运行时" aria-label="锚点">#</a></h3>
+<p><code>aapt2 dump xmltree</code> 得到的组件：</p>
+<ul><li><code>com.aiapp.ShellApplication</code> — Application</li><li><code>com.aiapp.container.WebContainerActivity</code> — <strong>承载 web 入口的 Activity</strong></li><li><code>com.aiapp.container.web.PortraitCaptureActivity</code> — 竖屏拍照</li><li>FileProvider authority <code>&lt;pkg&gt;.aiapp.files</code>，path 前缀 <code>/&lt;pkg&gt;</code></li></ul>
+<p>dex 中另有 <code>com.aiapp.bundlekit.AppFunctionsSpec</code> 与一整套<br><code>androidx.appfunctions.*</code>（<code>AppFunctionService</code> / <code>AppFunctionData</code> /<br><code>ExecuteAppFunctionRequest</code> / <code>aggregatedAppFunctionInvoker_delegate</code> 等），<br>说明 AI App 有<strong>声明 AppFunction 的规格通路</strong>。</p>
+<p><strong>推论（非直读验证）</strong>：web 入口与无头 JS 是<strong>同进程并存的两套</strong>，不是二选一——<br><code>WebContainerActivity</code> 走 UI，<code>com.dokar.quickjs</code> 走逻辑。</p>
+<h3 id="2-4-js-引擎">2.4 JS 引擎<a class="anchor" href="#2-4-js-引擎" aria-label="锚点">#</a></h3>
+<p>dex 中 <code>com.dokar.quickjs.QuickJs</code> / <code>binding/Bindings_*</code> / <code>ModuleLoaderBuilder</code> /<br><code>converter/JsObjectConverter</code> —— 即 <strong>quickjs-kotlin</strong>（dokar/quickjs，JNI 绑定）。<br>配套 <code>lib/arm64-v8a/libquickjs.so</code>。</p>
+<p><strong>这条事实推翻了本文此前的一个判断。</strong> 上一轮的结论是「手机上没有任何脚本解释器，<br>所以 stdio MCP 不可行、插件只能跑原生码」。结论的前半对（系统确实不带解释器），<br>后半错：<strong>解释器可以随 APK 分发</strong>，平台自己就是这么做的。</p>
+<h3 id="2-5-插件侧-sdk-assets-sdk-capsule-js">2.5 插件侧 SDK（<code>assets/sdk/capsule.js</code>）<a class="anchor" href="#2-5-插件侧-sdk-assets-sdk-capsule-js" aria-label="锚点">#</a></h3>
+<p><strong>微信小程序形状的桥</strong>：</p>
+<ul><li><code>global.CapsuleBridge.invoke(apiName, paramsJson, callbackId)</code></li><li><code>global.CapsuleBridge.notify(apiName, paramsJson)</code></li><li>错误契约 <code>errMsg: api + &quot;:fail &quot; + reason</code>，另带 <code>errorCode</code> / <code>errCode</code> / <code>errorCodeInt</code></li><li><code>__arrayBufferBase64</code> 承载二进制</li><li>按 API 分设超时：<code>getLocation</code> 30s、<code>getSensor</code> 3s、<code>request</code> 65s、</li></ul>
+<p><code>downloadFile</code> 65s；选图/录像/扫码等人的接口<strong>不设超时</strong>，注释明确写了原因</p>
+<p>即：<strong>能力经一个具名 API 表暴露，每个 API 有独立超时与错误码</strong>。<br>这正是候选 C 想要而候选 B 给不了的形状。</p>
+<h3 id="2-6-设备侧事实">2.6 设备侧事实<a class="anchor" href="#2-6-设备侧事实" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>事实</th><th>取证</th><th>状态</th></tr></thead><tbody><tr><td>SELinux 处于 <code>Enforcing</code></td><td><code>adb shell getenforce</code></td><td>已验证</td></tr><tr><td>设备上<strong>无任何</strong> <code>com.stepx.aiapp.*</code> 安装</td><td><code>adb shell pm list packages</code></td><td>已验证</td></tr><tr><td>手机无 node/python/python3/lua/luajit/perl/ruby/busybox</td><td><code>adb shell which</code>（上一轮）</td><td>已验证</td></tr><tr><td><code>/system/bin/app_process</code> 存在（→ <code>app_process64</code>）</td><td><code>adb shell ls -lZ</code></td><td>已验证</td></tr><tr><td>App 进程可自行 <code>Runtime.exec</code> 子进程</td><td><code>MainActivity.kt:1004</code> <code>Runtime.getRuntime().exec(arrayOf(&quot;sh&quot;,&quot;-c&quot;,command))</code></td><td>代码路径已验证；<strong>设备上未实测</strong></td></tr><tr><td>闸门 <code>SHELL_ALLOW</code> 是<strong>前缀白名单</strong>，且命令最终交 <code>sh -c</code></td><td><code>MainActivity.kt:44</code>、<code>:1184-1205</code></td><td>已验证</td></tr><tr><td>App 自身 SELinux 域能否 <code>exec</code> <code>app_process</code></td><td>—</td><td><strong>未验证</strong></td></tr></tbody></table>
+<h3 id="2-7-现有代码基线-选型要接的东西">2.7 现有代码基线（选型要接的东西）<a class="anchor" href="#2-7-现有代码基线-选型要接的东西" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>位置</th><th>现状</th></tr></thead><tbody><tr><td><code>delivery/mobile/khy-os-client-app/lib/core/tools/skills.dart</code></td><td><code>SkillType { delegation, compound, prompt }</code>；<strong>5 条硬编码 <code>Skill(...)</code></strong>（<code>:65-91</code>）；<strong>无磁盘加载、无安装链路</strong></td></tr><tr><td>同上 <code>lib/</code> 下</td><td><strong>无</strong> plugin / mcp / skill 目录</td></tr><tr><td><code>android/app/src/main/assets/</code></td><td>仅 <code>app_functions.xml</code> / <code>app_functions_schema.xsd</code> / <code>app_functions_v2.xml</code> / <code>shizuku</code></td></tr><tr><td><code>MainActivity.kt</code></td><td><code>SHELL_ALLOW</code> 前缀白名单 + <code>SHELL_DENY</code>；<code>isCommandAllowed</code> 已禁 shell 控制符（<code>;</code> <code>&amp;</code> `\</td></tr><tr><td><code>BridgeOverlayService.java</code></td><td>悬浮框开关已持久化（<code>khyos_overlay_pref</code> / <code>overlay_enabled</code>）</td></tr></tbody></table>
+<h3 id="2-8-一条安全观察-不照抄">2.8 一条安全观察（不照抄）<a class="anchor" href="#2-8-一条安全观察-不照抄" aria-label="锚点">#</a></h3>
+<p>StepX 的 <code>assets/ai-app/manifest.json</code> 里有一个<strong>明文 <code>apiKey</code> 字段</strong>。<br>按本仓 R2（<code>SECURITY-001</code>），真 key 不得以明文进 bundle。<strong>本文不复述该值</strong>，<br>且 khyos 的插件清单<strong>不得引入同类字段</strong>——插件的凭据只能由用户在运行时输入、<br>经 env 或受保护存储注入，不随插件包分发。</p>
+<hr>
+<h2 id="三-三个诉求必须拆开">三、三个诉求必须拆开<a class="anchor" href="#三-三个诉求必须拆开" aria-label="锚点">#</a></h2>
+<p>用户一次要了三样，但它们的难度差两个数量级，<strong>混在一起谈会做出错误的架构决定</strong>。</p>
+<h3 id="3-1-skill-安装-与架构选型无关-可立即做">3.1 Skill 安装 —— 与架构选型无关，可立即做<a class="anchor" href="#3-1-skill-安装-与架构选型无关-可立即做" aria-label="锚点">#</a></h3>
+<p>现状是 5 条硬编码 <code>Skill(...)</code>。加磁盘加载 + 安装/卸载链路即可。<br>纯 Dart、无新运行时、无安全模型变化（skill 是提示词与步骤，不是可执行码）。</p>
+<p><strong>这一片不依赖本文的任何决策，可以先行。</strong></p>
+<h3 id="3-2-mcp-传输方式决定可行性">3.2 MCP —— 传输方式决定可行性<a class="anchor" href="#3-2-mcp-传输方式决定可行性" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>传输</th><th>A</th><th>B</th><th>C</th></tr></thead><tbody><tr><td>http / sse 客户端</td><td>可</td><td>可</td><td>可</td></tr><tr><td><strong>stdio</strong></td><td>需容器自带解释器</td><td><strong>不可行</strong>（无解释器可拉）</td><td><strong>原理上可行</strong>（解释器随包分发）</td></tr></tbody></table>
+<p>C 让 stdio MCP 从「不可行」变成「可行但要额外造一个 Java 侧 stdio broker」——<br>QuickJS 在进程内、单线程、阻塞式求值，要冒充一个「可被 spawn 的子进程」需要<br>Java 侧管道转发到一个 JS 求值循环。<strong>工作量未估，本文不承诺。</strong></p>
+<p>另外，用户「蹭 claude code / opencode 市场」在 MCP 上的正解是<strong>导入它们的声明配置</strong><br>（<code>.mcp.json</code> / <code>mcp</code> 段的 http/sse 条目），这与架构选型也无关。</p>
+<h3 id="3-3-插件-唯一的架构分岔">3.3 插件 —— 唯一的架构分岔<a class="anchor" href="#3-3-插件-唯一的架构分岔" aria-label="锚点">#</a></h3>
+<p>见下。</p>
+<hr>
+<h2 id="四-三条候选架构">四、三条候选架构<a class="anchor" href="#四-三条候选架构" aria-label="锚点">#</a></h2>
+<h3 id="a-兼容-stepx-ai-app-格式">A｜兼容 StepX AI App 格式<a class="anchor" href="#a-兼容-stepx-ai-app-格式" aria-label="锚点">#</a></h3>
+<p>每个插件一个独立 APK：<code>assets/ai-app/manifest.json</code> + <code>assets/ai-app/web/</code> +<br><code>assets/sdk/capsule.js</code> + 自带 QuickJS。安装走系统安装器（App 已有<br><code>REQUEST_INSTALL_PACKAGES</code> 与 bundled-APK 先例：Shizuku 就是这么装的）。</p>
+<ul><li><strong>沙箱</strong>：真。独立 uid，Android 自己管。</li><li><strong>市场兼容</strong>：最彻底。<code>studio.stepx.com</code> 出的就是这个格式。</li><li><strong>代价</strong>：要么我们<strong>成为</strong> AI App 的宿主（要建一整个 WebView + 桥 + 清单解析 +</li></ul>
+<p>生命周期 + 安装管理的容器运行时），要么依赖设备上某个 StepX 宿主应用<br>  （设备上当前<strong>没有</strong>装任何 AI App，宿主是否存在未经确认）。</p>
+<ul><li><strong>用户体感</strong>：每装一个插件 = 一次系统安装器授权。对「装个插件」来说是重操作。</li></ul>
+<h3 id="b-进程内-jvm-插件">B｜进程内 JVM 插件<a class="anchor" href="#b-进程内-jvm-插件" aria-label="锚点">#</a></h3>
+<p>插件是 jar/dex，落 App 私有目录，App 用 <code>app_process</code> 拉起，走 socket IPC。</p>
+<ul><li><strong>沙箱</strong>：<strong>无</strong>。同 uid，插件可读桥令牌与 <code>api_keys.json</code>。</li><li><strong>市场兼容</strong>：无。那些市场分发 npm 包，这里跑不了。</li><li><strong>代价</strong>：<code>app_process</code> 能否被 untrusted_app 域 exec <strong>至今未验证</strong>（§9-T1）；</li></ul>
+<p>加上 IPC、生命周期、超时、崩溃隔离全套。</p>
+<ul><li><strong>唯一优势</strong>：用户不用再装一个 APK。</li></ul>
+<p><strong>这一条的用户选择已被明确记录（§〇），但其成立前提未验证，且豁免必须显式接受。</strong></p>
+<h3 id="c-进程内-quickjs-插件">C｜进程内 QuickJS 插件<a class="anchor" href="#c-进程内-quickjs-插件" aria-label="锚点">#</a></h3>
+<p>把 JS 引擎编进我们自己的 APK，插件是 App 私有目录下的 js 文件。</p>
+<ul><li><strong>沙箱</strong>：<strong>能力边界</strong>。JS 全局对象上只有我们亲手绑定的函数；</li></ul>
+<p>没有我们未绑定的文件、网络、反射入口。这不是 OS 级沙箱（QuickJS 的 JNI 边界<br>  若被突破仍可逃逸），但攻击面是<strong>一个可逐行审计的绑定表</strong>，而不是「任意 JVM<br>  字节码在我们的 uid 里跑」。</p>
+<ul><li><strong>市场兼容</strong>：部分。JS/skill 类资产可转换；npm 包仍不可直接跑。</li><li><strong>代价</strong>：要选型并编入 JS 引擎（quickjs-kotlin 或 quickjs-ng）、设计绑定表、</li></ul>
+<p>实现插件的安装/校验/版本/卸载。中等。</p>
+<ul><li><strong>附带收益</strong>：stdio MCP 在原理上变得可行（§3.2）。</li></ul>
+<hr>
+<h2 id="五-对比矩阵">五、对比矩阵<a class="anchor" href="#五-对比矩阵" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>维度</th><th>A 独立 APK</th><th>B 进程内 JVM</th><th>C 进程内 QuickJS</th></tr></thead><tbody><tr><td>隔离强度</td><td><strong>真沙箱</strong>（独立 uid）</td><td>无（同 uid）</td><td>能力边界（绑定表可审计）</td></tr><tr><td>用户能写真逻辑</td><td>能</td><td>能</td><td>能</td></tr><tr><td>解释器来源</td><td>随插件 APK 带</td><td>系统 ART</td><td>随我们 APK 带</td></tr><tr><td>安装摩擦</td><td>高（系统安装器每次）</td><td>低（落文件）</td><td>低（落文件）</td></tr><tr><td>蹭 StepX 市场</td><td><strong>完全</strong></td><td>不能</td><td>部分</td></tr><tr><td>使能 stdio MCP</td><td>需插件自带解释器</td><td>不能</td><td><strong>原理上可以</strong></td></tr><tr><td>实现工作量</td><td>最大</td><td>大 + 前提未验证</td><td>中</td></tr><tr><td>安全结论能否写进文档</td><td>能</td><td><strong>只能写豁免</strong></td><td>能</td></tr></tbody></table>
+<hr>
+<h2 id="六-为什么推荐-c">六、为什么推荐 C<a class="anchor" href="#六-为什么推荐-c" aria-label="锚点">#</a></h2>
+<ol><li><strong>它是这台设备上已经跑通的架构。</strong> 不是设计推演，是 5.8 MB 的实物证据</li></ol>
+<p>（§2.1–2.5）。QuickJS 编成 <code>.so</code> 进 APK 在 arm64-v8a / Android 16 上可行，<br>   这一点不需要我们再证。</p>
+<ol><li><strong>它把 B 的安全问题从「写豁免」变成「可审计」。</strong> B 的插件是任意 JVM 字节码，</li></ol>
+<p>与 App 同 uid，能读桥令牌和 <code>api_keys.json</code>——R2 直接被击穿，只能靠文档标红<br>   求用户背书。C 的插件能碰到的只有我们绑定的那几个函数，边界是一张表，<br>   可以逐行审、可以只读、可以在 CI 里钉住。</p>
+<ol><li><strong>它让「装真插件」这件事保持轻。</strong> 用户不用为每个插件过一次系统安装器。</li><li><strong>它顺手解开 stdio MCP。</strong> §3.2。</li><li><strong>它不排除 A。</strong> C 的插件格式（manifest + 载荷 + 能力声明）可以与 A 的清单</li></ol>
+<p>字段对齐，将来要升级到独立 APK 真沙箱时，插件资产可以迁移，绑定表变成<br>   <code>capsule.js</code> 的 API 表——两者是同一形状（§2.5 已经证明这个形状在平台侧成立）。</p>
+<hr>
+<h2 id="七-明确不做">七、明确不做<a class="anchor" href="#七-明确不做" aria-label="锚点">#</a></h2>
+<ul><li><strong>不做 Dart 插件</strong>（§〇：字面不可行）。</li><li><strong>不直接运行 npm 包</strong>（无 Node；「蹭市场」只蹭描述性资产与声明配置）。</li><li><strong>不在插件清单里放任何密钥字段</strong>（§2.8，R2）。</li><li><strong>不给 B 写实现</strong>，除非用户显式接受 §四-B 的豁免且 §9-T1 验证通过。</li><li><strong>不动 <code>router.js</code> 等上帝文件</strong>；新入口走自注册 manifest（既有惯例）。</li><li><strong>不自行决定版本递增</strong>（B7）。本文是设计记录，不带版本变更。</li></ul>
+<hr>
+<h2 id="八-待验证项与已验证项">八、待验证项与已验证项<a class="anchor" href="#八-待验证项与已验证项" aria-label="锚点">#</a></h2>
+<h3 id="8-1-已验证">8.1 已验证<a class="anchor" href="#8-1-已验证" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>ID</th><th>结论</th><th>证据</th></tr></thead><tbody><tr><td><strong>T2</strong></td><td><strong>quickjs-ng 在本项目构建链上可编、可链、arm64-v8a 可用，且原生↔JS 双向可达。候选 C 的工程前提成立。</strong></td><td>2026-10-29 真机 7/7 通过。<code>libkhyjs.so</code> 4,446,920 字节，由既有 CMake 原生构建产出并打进 APK；logcat 实测 <code>JNI_OnLoad: registered 1 native methods</code> / <code>engine ready (quickjs-ng, mem limit 33554432 bytes)</code></td></tr></tbody></table>
+<p><strong>T2 的七项实测</strong>（自检 Activity <code>KhyJsSelfTestActivity</code>，logcat tag <code>KhyJsSelfTest</code>）：</p>
+<table><thead><tr><th>用例</th><th>结果</th></tr></thead><tbody><tr><td><code>1 + 1</code></td><td><code>2</code></td></tr><tr><td><code>console.log('…')</code> 抵达原生绑定</td><td>PASS——<code>[script] khyjs binding ok</code> 由 C 侧 <code>__android_log_print</code> 打出</td></tr><tr><td><code>typeof console === 'object' &amp;&amp; typeof console.log === 'function'</code></td><td><code>true</code></td></tr><tr><td><code>throw new Error('deliberate')</code></td><td><code>ok=false</code>，错误串含 <code>deliberate</code>，<strong>进程未崩</strong></td></tr><tr><td><code>while (true) {}</code></td><td>正好 <strong>5000ms</strong> 后 <code>InternalError: interrupted</code></td></tr><tr><td>失控分配（32 MB 上限）</td><td><code>InternalError: out of memory</code>，进程未崩</td></tr><tr><td>前述全失败后再求值</td><td><code>still alive</code></td></tr></tbody></table>
+<p>第 5、6 两项是这个运行时<strong>不可省</strong>的性质：一个能让 App 卡死或被 OOM 杀掉的插件运行时，在方案对比里不能算「可用」。二者都成立。</p>
+<p><strong>T2 的落地物</strong>：</p>
+<table><thead><tr><th>文件</th><th>作用</th></tr></thead><tbody><tr><td><code>scripts/bootstrap-native-quickjs.ps1</code></td><td>拉取 vendored quickjs-ng v0.17.0 到 <code>third_party/quickjs</code>（gitignored），照 <code>bootstrap-native-llama.ps1</code> 的模式</td></tr><tr><td><code>android/app/src/main/cpp/khy_js_jni.cpp</code></td><td><strong>手工写的 JNI shim，就是方案 C 的「可审计绑定表」</strong>。当前只有一个绑定 <code>__khyLog</code></td></tr><tr><td><code>android/app/src/main/cpp/CMakeLists.txt</code></td><td>quickjs 静态库 + <code>libkhyjs.so</code>，沿用 llama.cpp 那一套 native build</td></tr><tr><td><code>android/app/src/main/kotlin/…/engine/KhyJs.kt</code></td><td>Kotlin 侧，只暴露 <code>eval</code></td></tr><tr><td><code>android/app/src/debug/…/KhyJsSelfTestActivity.kt</code></td><td><strong>debug 源集</strong>里的验收门，release 包不含</td></tr></tbody></table>
+<p><strong>复验方式</strong>（两个坑，都会让人以为装不上而不是以为没验）：</p>
+<ol><li><strong>签名冲突</strong>。设备上已装的是 <code>android/key.properties</code> 那把真钥匙签的 release 包，debug 构建用 debug keystore，<code>adb install -r</code> 报 <code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code>。<strong>不能卸载重装</strong>——装着已下载的视觉模型和全部用户状态。临时给 debug 构建加 <code>applicationIdSuffix &quot;.spike&quot;</code> 让它 alongside 安装，namespace 不变所以 JNI <code>FindClass</code> 照旧解析，验完把那一行删掉。</li><li><strong>MIUI USB 安装限制</strong>。装新包名报 <code>INSTALL_FAILED_USER_RESTRICTED</code>，按包授权：<code>adb shell settings put secure usb_install_item_&lt;包名&gt; &quot;&lt;标签&gt;:1&quot;</code>，然后<strong>立刻</strong>装（装失败会被系统写回 <code>:0</code>）。</li></ol>
+<pre><code class="language-bash">adb shell settings put secure usb_install_item_com.khyos.khy_os_client.spike <span class="hljs-string">&quot;khyos:1&quot;</span>
+adb install -r build/app/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.khyos.khy_os_client.spike/com.khyos.khy_os_client.KhyJsSelfTestActivity
+adb logcat -s KhyJsSelfTest KhyJs</code></pre>
+<h3 id="8-2-仍未验证">8.2 仍未验证<a class="anchor" href="#8-2-仍未验证" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>ID</th><th>待验证</th><th>为什么卡在选型上</th><th>怎么验</th></tr></thead><tbody><tr><td><strong>T1</strong></td><td>untrusted_app 域能否 <code>exec</code> <code>/system/bin/app_process</code></td><td><strong>候选 B 的唯一成立前提</strong>。SELinux <code>Enforcing</code>，我从记忆里答不出，猜错就是一整版白做</td><td>临时把 <code>app_process</code> 加进 <code>MainActivity.kt</code> 的 <code>SHELL_ALLOW</code>，编一版，经桥的 shell 工具跑 <code>app_process</code>，看 logcat 有无 avc denied；<strong>验完必须还原</strong></td></tr><tr><td><strong>T3</strong></td><td>C 的绑定表怎么落到进程结构上</td><td>定案、安全内核、每插件 context、net 能力均已完成并<strong>已真机验证</strong>（§8.3）</td><td>见 §8.3「仍未做」4 项；剩下的是存储落盘、loader、net.fetch 异步化</td></tr><tr><td><strong>T4</strong></td><td>设备上是否存在可作 A 的宿主的应用</td><td>候选 A 若要依赖外部宿主则直接不成立</td><td><code>pm list packages</code> 已做，未见 AI App；宿主应用未经确认</td></tr><tr><td><strong>T5</strong></td><td>悬浮窗「重新打开」仍未验证通过</td><td>与本文无关但同为未清账</td><td>约 25 个点击位置均未成功；记录为<strong>未验证</strong>，不是已通过</td></tr></tbody></table>
+<p><strong>T1 现在更重要了</strong>：T2 通过意味着候选 C 已经可以开工，而候选 B 仍然连前提都没验。若最终仍要比较 B，T1 是它的第一道门。</p>
+<h3 id="8-3-t3-最小绑定表-已定案-安全内核已实现并可测">8.3 T3：最小绑定表（已定案，安全内核已实现并可测）<a class="anchor" href="#8-3-t3-最小绑定表-已定案-安全内核已实现并可测" aria-label="锚点">#</a></h3>
+<p>T3 问的是「这个表该有什么、按什么粒度授权」。它比引擎能不能跑重要得多——<strong>这张表就是方案 C 相对方案 B 的全部优势所在</strong>，所以它是设计决定，不是实现细节。</p>
+<h4 id="授权粒度-按能力-由-manifest-声明">授权粒度：按能力、由 manifest 声明<a class="anchor" href="#授权粒度-按能力-由-manifest-声明" aria-label="锚点">#</a></h4>
+<p>三种可能，取第二种：</p>
+<table><thead><tr><th>方案</th><th>结论</th></tr></thead><tbody><tr><td>全有或全无</td><td>太粗。一个只弹 toast 的插件不该因此拿到网络</td></tr><tr><td><strong>按能力、manifest 声明</strong></td><td><strong>采用</strong>。loader 只把 manifest 声明的那些绑定装进该插件的 context</td></tr><tr><td>每次调用问用户</td><td><strong>明确拒绝</strong>。插件每调一次弹一次框不可用，且会把用户训练成反射性点「允许」——那比一个范围明确的静态授权<strong>更糟</strong>；何况 Amoo 本身就可能是在点的那个人</td></tr></tbody></table>
+<p>关键实现决定：<strong>没授权的绑定不是「装了但报错」，而是根本不装进那个插件的 context</strong>——<code>typeof net</code> 是 <code>undefined</code>。这比运行时检查强两点：插件能诚实做特性检测；检查代码写错时是拒绝而不是放行。</p>
+<h4 id="最小能力表">最小能力表<a class="anchor" href="#最小能力表" aria-label="锚点">#</a></h4>
+<table><thead><tr><th>capability</th><th>装什么 JS 绑定</th><th>能碰到什么</th></tr></thead><tbody><tr><td><code>log</code></td><td><code>log</code></td><td>只写 logcat，零读取</td></tr><tr><td><code>device.info</code></td><td><code>device.info</code></td><td>型号/系统版本/ABI/应用版本，<strong>不含任何设备标识符</strong></td></tr><tr><td><code>store</code></td><td><code>store</code></td><td>仅本插件自己的键值命名空间</td></tr><tr><td><code>net</code></td><td><code>net.fetch</code></td><td>仅 manifest 声明的主机，且仅 https</td></tr><tr><td><code>ui.toast</code></td><td><code>ui.toast</code></td><td>弹一条 toast</td></tr></tbody></table>
+<h4 id="刻意不在表里的东西">刻意不在表里的东西<a class="anchor" href="#刻意不在表里的东西" aria-label="锚点">#</a></h4>
+<p>这些是评审时<strong>应该找得到而找不到</strong>的条目，缺席是刻意的：</p>
+<ul><li><strong>任何能返回桥令牌、app secret、<code>api_keys.json</code> 里密钥的能力。</strong> 这是 C 胜过 B 的唯一理由，表里永远不该有「读凭据」这一项。</li><li><strong>桥自己的工具</strong>（<code>ui_tap</code> / <code>ui_swipe</code> / <code>shell</code> …）。那些是 App 的特权面，拿到就能驱动设备、跑命令，是比「弹 toast」高得多的一档，<strong>不许搭着最小集一起走</strong>。将来要加也是独立 capability 配独立授权。</li><li><strong>文件系统。</strong> <code>store</code> 已覆盖有状态场景，且命名空间锁死在一个插件内；裸文件访问能读到 App 自己的 prefs 和别的插件的数据。</li><li><strong>剪贴板读取。</strong> 剪贴板里常是用户刚复制的密码。只写输出可以，读不在最小集里。</li><li><strong>设备标识符。</strong> <code>device.info</code> 返回型号/SDK/ABI/版本，<strong>刻意不含 <code>ANDROID_ID</code>、IMEI、序列号</strong>——那是稳定追踪标识，交给任意插件是隐私成本，换不来功能。</li><li><strong>插件代码内的 <code>eval</code>。</strong> 插件自己的源码已经是任意代码，<code>eval</code> 不增加它能做的事；但对「从网络拿来的字符串」<code>eval</code> 就是代码注入入口。不绑它，去掉这个 footgun。</li></ul>
+<h4 id="两个真实的绕过路径-本轮的实质发现">两个真实的绕过路径（本轮的实质发现）<a class="anchor" href="#两个真实的绕过路径-本轮的实质发现" aria-label="锚点">#</a></h4>
+<p><strong>1. 回环绕过——最严重的一个。</strong> khy-os 自己的手机桥监听在 <code>127.0.0.1</code>。一个拿到 <code>net</code> 且 manifest 声明 <code>https://127.0.0.1</code> 的插件，可以直接跟桥对话，调用桥暴露的<strong>每一个</strong>工具——<code>ui_tap</code>、<code>ui_swipe</code>、受限 shell——<strong>这些全都不在能力表里</strong>。那会让整张表变成装饰品。</p>
+<p>处置是两层，都要：</p>
+<ul><li><strong>安装期</strong>：manifest 声明回环/私网地址，直接拒装。</li><li><strong>策略层</strong>：<code>PluginNetPolicy</code> 仍然拒绝回环、私网（RFC1918 + 100.64/10 CGNAT + 0.0.0.0/8 + 192.0.2.0/24 + 203.0.113.0/24）、链路本地、组播。第二层是兜底：万一哪天安装期那层被放宽，表依然是诚实的。</li></ul>
+<p><strong>2. 后缀匹配绕过。</strong> 白名单按后缀匹配（声明 <code>example.com</code> 就放行 <code>evil.example.com</code>）是经典漏洞——子域常常是攻击者可控的（用户内容主机、vanity 主机）。<strong>采用精确主机匹配</strong>，要放行子域就显式声明它。</p>
+<p>另外两条顺手关掉的：URL 带 userinfo（<code>https://allowed.com@evil.com/</code>，host 其实是 evil.com）整体拒绝；非默认端口拒绝（声明 <code>api.example.com</code> 不等于放行 <code>api.example.com:8443</code>）。</p>
+<h4 id="已实现并可测的部分">已实现并可测的部分<a class="anchor" href="#已实现并可测的部分" aria-label="锚点">#</a></h4>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody><tr><td><code>plugin/PluginCapability.kt</code></td><td><strong>能力表本身</strong>，每个条目带 wireName / 装的 JS 绑定 / 一行「能碰到什么」（给将来的同意界面用）</td></tr><tr><td><code>plugin/PluginManifest.kt</code></td><td>清单解析与校验，fail-closed：任何问题都拒装，不存在「解析了一半」的路径</td></tr><tr><td><code>plugin/PluginNetPolicy.kt</code></td><td>白名单判定，<strong>纯函数、无 IO、无 DNS</strong>，因此可在每次跳转上重复调用</td></tr><tr><td><code>plugin/PluginStoreScope.kt</code></td><td>存储作用域推导 + 体积上限</td></tr><tr><td><code>test/…/plugin/PluginSecurityTest.kt</code></td><td>50+ 条，钉住上面每一条规则</td></tr></tbody></table>
+<p>字段名刻意与 StepX AI App 格式一致（<code>entry</code> / <code>version</code> / <code>permissions</code> / <code>network.domains</code>），让 manifest 在两者之间可读——这才是「蹭那个市场」的实处，而不是发明一套私有格式。</p>
+<p>其中两条测试值得单独说：</p>
+<ul><li><strong><code>noCapabilityExposesACredentialOrTheBridge</code></strong> 钉的是<strong>缺席的不变量</strong>。谁要是加了一个名字或描述里含 token/secret/key/bridge/shell/tap/swipe/file/clipboard 的 capability，这条测试就红，逼他把理由讲出来。这是防止未来某一天有人「顺手加个读密钥的能力」的唯一机械防线。</li><li><strong><code>hostnameIsNotClassifiedAsAnAddress</code></strong> 钉的是一个<strong>已知缺口</strong>而不是一个通过项：主机名在没有 DNS 的情况下无法分类，而这个纯函数刻意不做 DNS。<code>localhost</code> 在这里被当作名字而不是 <code>127.0.0.1</code>。</li></ul>
+<h4 id="进程结构-已落地-2026-10-29-第二轮">进程结构：已落地（2026-10-29 第二轮）<a class="anchor" href="#进程结构-已落地-2026-10-29-第二轮" aria-label="锚点">#</a></h4>
+<p>原来这里是 5 项「仍未做」，第 1 项（每插件一个 JSContext）是其余各项的前置。现已落地，并把架构定下来了：</p>
+<p><strong>一个原生函数 + 按能力装的 JS 包装器。</strong> <code>khy_js_jni.cpp</code> 里<strong>只有一个</strong>原生函数 <code>__khyInvoke(api, argsJson)</code>，外加按授权装的薄 JS 包装器（<code>store</code>、<code>device</code>、<code>ui</code>、<code>log</code>）。每个包装器都汇到那一个原生函数，由它转给 Kotlin 的 <code>PluginHost</code>，<strong>由 Kotlin 按 manifest 逐次判授权</strong>。</p>
+<p>这个形状是刻选的：JNI 文件的审计面<strong>不随能力增加而增长</strong>——将来加 <code>net.fetch</code> 不该意味着加 C 代码。而「没授权就不装包装器」保住了粒度决策要求的性质：没拿到 <code>store</code> 的插件，<code>typeof store</code> 是 <code>undefined</code>，不是一个会报错的函数。</p>
+<p><strong>每插件一个 <code>JSRuntime</code> + 一个 <code>JSContext</code>。</strong> 内存上限因此是<strong>每插件</strong>的（一个插件吃光预算不会饿死另一个）；中断截止时间也存在实例上，两个插件可以并发求值而不互相打断。</p>
+<p><strong>新增落地物：</strong></p>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody><tr><td><code>engine/KhyJs.kt</code></td><td><code>setHost</code> / <code>load(manifest)</code> / <code>run(handle, code)</code> / <code>unload(handle)</code>。<strong>裸字符串入口已彻底移除</strong></td></tr><tr><td><code>plugin/PluginHost.kt</code></td><td>逐次判授权 + 四个处理器（<code>log</code> / <code>device.info</code> / <code>store.*</code> / <code>ui.toast</code>）；<code>API_CAPABILITY</code> 是 api 面的唯一声明处</td></tr><tr><td><code>src/debug/…/KhyJsSelfTestActivity.kt</code></td><td>自检扩到 14 项，新增能力过滤、跨插件隔离、句柄失效三条</td></tr></tbody></table>
+<p><strong>一个必须记下的耦合。</strong> <code>KhyJs.load</code> 发给 JNI 的是<strong>能力序数</strong>，JNI 侧对照的是 <code>khy_js_jni.cpp</code> 里手写的 C 枚举——两种语言、靠位置耦合。谁要是在 <code>PluginCapability</code> 中间插一个能力，所有插件的绑定会<strong>静默错位一格</strong>（授权 <code>store</code> 的插件拿到 <code>device</code>），而且不报错。<code>PluginSecurityTest.pluginCapabilityOrdinalsMatchTheNativeEnum</code> 靠解析 C 源文件里的枚举来钉住这件事；配套的 <code>everyCapabilityHasANativeWrapperOrIsDeliberatelyAbsent</code> 保证「刻意缺席」不会悄悄变成「忘了」。</p>
+<p><strong>过程中修掉的两个真问题</strong>（都是我自己写出来的，写在这里以免复发）：</p>
+<ol><li><code>manifestOf()</code> 原本在 <code>try</code> <strong>之外</strong>调用，宿主的异常会直接从 <code>JS_Eval</code> 里逃出去把进程带走。已移入 try。</li><li><code>store.set</code> 超限时原本返回 <code>{stored:false, ok:true}</code>——<code>ok</code> 是 JNI 侧给插件的<strong>唯一</strong>判别位，这种形状让插件无法判断成败。改为抛异常，经 catch 变成正经的 <code>{ok:false,error:…}</code>。</li></ol>
+<p><strong>真机验证通过（2026-10-29 17:14，17 项 0 失败）</strong>，并且它当场抓出两个单测抓不到的真问题——都是<strong>跨语言边界上的形状误解</strong>，这类错误在 JVM 单测里根本不存在，只有跑起来才暴露：</p>
+<ol><li><strong>中断处理器在空闲时也开火。</strong> <code>deadlineNs</code> 初值是 0，而判定是 <code>now &gt; deadline</code>；单调时钟恒为正，于是<strong>没武装的实例被判为「已过期」</strong>，把装载期的能力包装器全打断了。真机日志：每个插件都报 <code>capability wrapper failed: InternalError: interrupted</code>。修法是引入「永不打断」哨兵值（<code>INT64_MAX</code>），武装时写真实截止时间，解除时还原哨兵。<strong>这个 bug 只在有 JS 运行的设备上出现，JVM 单测完全看不到。</strong></li><li><strong><code>JSON.parse</code> 被多包了一层。</strong> <code>__khyInvoke</code> 在 C 侧已经 <code>JS_ParseJSON</code> 返回<strong>对象</strong>，我却在 JS 助手 <code>__khyResult</code> 里又 parse 了一次——对对象 parse 会先被强制成字符串 <code>&quot;[object Object]&quot;</code>，于是所有包装器同时报 <code>SyntaxError: unexpected token: 'object'</code>。症状是 <code>device.info()</code>、<code>ui.toast()</code> 全挂，而 toast 其实已经送到。修法是去掉那次 parse。</li></ol>
+<p>第二条顺带说明一件事：<strong><code>ui-toast</code> 那一项第一次是「假失败」</strong>——toast 送到了，但包装器抛了语法错导致求值失败。如果只看 <code>toasts=[hello from plugin]</code> 会误判为通过，只看 <code>ok=false</code> 会误判为 toast 没工作。两个信号矛盾时必须都查，不能挑一个顺的解释。</p>
+<p><strong>真机验证的 17 项</strong>（<code>KhyJsSelfTestActivity</code>，logcat tag <code>KhyJsSelfTest</code>）：两个插件句柄、基本求值、<code>typeof store</code>/<code>typeof device</code> 在有/无授权下的取值、直接调 <code>__khyInvoke</code> 仍被逐次鉴权拦下、store 写入/读回、<strong>跨插件存储隔离</strong>、跨命名空间键被拒、<code>device.info</code> 返回事实且无标识符、toast 送达、死循环 5000ms 被打断、失控分配被 32 MB 上限拦下、两个插件互不影响、未知接口被拒、卸载后句柄干净失效。</p>
+<h4 id="net-能力-已落地-2026-10-29-第三轮">net 能力：已落地（2026-10-29 第三轮）<a class="anchor" href="#net-能力-已落地-2026-10-29-第三轮" aria-label="锚点">#</a></h4>
+<p>前三项原列在此处，现已一并做完，因为它们本是一体：<strong><code>net.fetch</code> 是能力表里唯一能让数据外发的一项</strong>，单独接一半没有意义。</p>
+<p><strong>DNS 缺口已堵。</strong> <code>PluginNetPolicy</code> 是纯字符串函数、刻意不碰 DNS，所以它自己文档里写明「主机名无法分类」是个洞——<code>evil.example.com</code> 解析到 <code>127.0.0.1</code> 就能摸到 App 自己的桥。新增 <code>PluginNetGuard</code> 补上这一半：先跑字符串策略，再把 DNS <strong>实际返回的</strong>地址逐个分类，<strong>有一个非公网就拒</strong>（一个名字解析出公网+回环两个地址时，连接可能挑到回环那个）。解析器是注入的，所以测试不需要真 DNS——包括「名字解析到回环」这个原本只能靠真网络构造的用例。</p>
+<p><strong>重定向缺口已堵。</strong> <code>PluginNetTransport</code> 刻意<strong>不自动跟随重定向</strong>：<code>HttpURLConnection</code> 若自己跟，调用方只看到最终响应，中间 URL 从未被检查——这正是经典绕过。改为传输层只发一跳、把 <code>Location</code> 交回来，由 <code>PluginHost</code> 的重定向循环逐跳重跑 guard。另外两条顺手关掉：相对重定向按上一跳解析；<strong>重定向后丢弃 body</strong>（否则一个 302 就能把插件的 payload 送到它从未声明过的地方）。</p>
+<p><strong>关于同步的一个明示取舍。</strong> <code>net.fetch</code> 是<strong>同步</strong>的：它跑在 <code>JS_Eval</code> 里，所以引擎的截止时间打不断它。阻塞由传输层自己的 connect/read 超时兜住（10s / 15s）——<strong>有界但不可中途取消</strong>。插件调一个慢主机，最多卡住自己的求值那么久，卡不死 App，也卡不到别的插件（各有各的 runtime 和调用线程）。真正的异步桥（promise）才是终态，但它比这一轮大得多，先记在这里。</p>
+<p><strong>传输层保证不附带任何凭据</strong>：不装 cookie jar、不加 Authorization、App 自己的令牌从不进这条路。插件可以带<strong>它自己</strong>的头（它为自己服务申请的 key），拿不到的永远是 App 的。响应体按 256K 字符截断并明示已截断——否则「拉一个无界响应体」是绕开引擎内存上限的另一个原语。</p>
+<h4 id="仍未做">仍未做<a class="anchor" href="#仍未做" aria-label="锚点">#</a></h4>
+<ol><li><strong>存储落盘</strong>：作用域规则与体积上限已是纯函数且已测（<code>PluginHost.PluginStore</code> 是接口，测试用内存实现），持久化那层还没写。</li><li><strong>loader 本体</strong>：从磁盘读 manifest、建 context、跑 entry。现在 <code>load</code> 接收一个已解析的 <code>PluginManifest</code>，「从哪来」还没有。</li><li><strong><code>net.fetch</code> 的异步化</strong>：见上一节的取舍说明。同步版有界但不可取消，promise 桥是终态。</li><li><strong>重定向后的 method 未按 RFC 归一</strong>：301/302/303 本应改成 GET，现在原样保留（只丢了 body）。功能上可用，规范上不严格。</li></ol>
+<hr>
+<h2 id="九-边界-r1-r2-b7-b8">九、边界（R1 / R2 / B7 / B8）<a class="anchor" href="#九-边界-r1-r2-b7-b8" aria-label="锚点">#</a></h2>
+<ul><li><strong>R1</strong>：本文不产生任何 commit / push。要落地先开 feature branch，等明确点头。</li><li><strong>R2</strong>：插件清单不含密钥；插件凭据只由用户运行时输入，经 env 或受保护存储注入，</li></ul>
+<p>绝不落盘、绝不进 bundle。StepX 那个明文 <code>apiKey</code> 是反例（§2.8）。</p>
+<ul><li><strong>B7</strong>：不碰版本号。MINOR/MAJOR 必须人点头。</li><li><strong>B8</strong>：取证产物在 <code>works/data/khy/T4-transient/tmp/</code>，月底随 <code>.tmp_*</code> 规则清理；</li></ul>
+<p>不在仓库根造任何 <code>.khy</code> / <code>.khyos</code>。</p>
+<ul><li><strong>B6-3</strong>：结果要人能接住。若最终实现进入软著登记候选，插件运行时的每一行绑定</li></ul>
+<p>都必须能被人解释——这也是推荐 C 而非 B 的理由之一：B 的代码没人能解释完。</p>
+<hr>
+<p><em>最后更新：2026-10-29（首版，选型记录；架构未定，待用户裁决）</em></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-194] 原子能力聚合与接口目录.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-194] 原子能力聚合与接口目录</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-196] 手机侧沙箱直连通道架构选型.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-196] 手机侧沙箱直连通道架构选型</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-195] khyos手机版插件Skill-MCP安装架构选型.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

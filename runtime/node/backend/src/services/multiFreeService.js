@@ -643,6 +643,90 @@ function _offerableZenModels() {
   }
 }
 
+/**
+ * 把 role:'system' 消息从 rawMessages 提到系统提示槽（而不是随 rawMessages 一起被丢掉）。
+ *
+ * 网关（proxyServer）总把 Anthropic 的 system 字段单独经 opts.system 传进来，
+ * messages 里通常没有 system；但别的入站方可能把它放在 messages[0]。此时若直接
+ * 过滤掉 system 消息又不顶上，整段系统提示就静默消失了。
+ *
+ * @param {Array} rawMessages
+ * @param {string} system 调用方显式传入的系统提示（优先）
+ * @returns {string} 合并后的系统提示（可能为空串）
+ */
+function _hoistSystemFromRaw(rawMessages, system) {
+  const explicit = String(system || '');
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+    return explicit;
+  }
+  const hoisted = rawMessages
+    .filter((m) => m && m.role === 'system')
+    .map((m) => {
+      if (typeof m.content === 'string') return m.content;
+      if (Array.isArray(m.content)) {
+        return m.content
+          .filter((b) => b && b.type === 'text')
+          .map((b) => b.text || '')
+          .join('\n');
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join('\n\n');
+  if (!hoisted) {
+    return explicit;
+  }
+  return explicit ? `${explicit}\n\n${hoisted}` : hoisted;
+}
+
+/**
+ * 把消息 content 里的 Anthropic 图片块（`{type:'image', source:{...}}`）就地转成
+ * OpenAI vision 块（`{type:'image_url', image_url:{url}}`）。
+ *
+ * 只在**从 rawMessages 建消息**时用：那条路的 content 是客户端原始 Anthropic 块，
+ * 原样上线会被严格 OpenAI 兼容端点 400。structuredMessages 路的图片由调用方经
+ * opts.images 注入（见 callOpenAI 内的注入分支），不走这里。
+ * 没有图片块 → 原样返回同一对象（零分配）。
+ */
+function _anthropicImageBlocksToOpenAI(content) {
+  if (!Array.isArray(content)) {
+    return content;
+  }
+  let changed = false;
+  const out = content.map((b) => {
+    if (b && typeof b === 'object' && b.type === 'image') {
+      const vision = toOpenAIVisionBlocks([b]);
+      if (vision.length > 0) {
+        changed = true;
+        return vision[0];
+      }
+    }
+    return b;
+  });
+  return changed ? out : content;
+}
+
+/**
+ * 从 OpenAI 兼容响应里取「思考」文本。两条约定都认：
+ *   - `reasoning_content`（DeepSeek / Qwen / GLM / 智谱系）
+ *   - `thinking`（少数中转）
+ * 流式 delta 与非流式 message 同形，故同一函数两用。
+ * @returns {string}
+ */
+function _extractOpenAIThinking(source) {
+  if (!source || typeof source !== 'object') {
+    return '';
+  }
+  const raw = source.reasoning_content != null ? source.reasoning_content : source.thinking;
+  if (raw == null) {
+    return '';
+  }
+  if (typeof raw === 'string') {
+    return raw;
+  }
+  return '';
+}
+
 class MultiFreeService {
   constructor() {
     this.baiduToken = null;
@@ -978,10 +1062,19 @@ class MultiFreeService {
           images: options.images,
           model: requestedModel || provider.model,
           tools: options.tools,
+          // 原始工具定义（含服务端工具 type 字段如 web_search_20250305）：
+          // 与 tools 同源但未被 normalizeAnthropicTools 收敛，api 路径按需择优。
+          rawTools: options.rawTools,
           structuredMessages: options.structuredMessages,
+          // 原始 Anthropic 消息（content 数组内仍带 tool_use/tool_result 块）：
+          // structuredMessages 已被网关扁平成纯文本，工具回合历史只在 rawMessages 里。
+          rawMessages: options.rawMessages,
           system: options.system,
           onChunk: options.onChunk,
           thinking: options.thinking,
+          // 采样/控制参数透传：tool_choice 决定「必须/只能调某个工具」，
+          // 少了它 Claude Code 的 forced tool_use 到不了 OpenAI 上游。
+          toolChoice: options.toolChoice,
         });
         // callProvider now returns { content, tokenUsage, thinking?, toolUseBlocks?, finishReason? } or a plain string (legacy)
         const content = typeof result === 'string' ? result : result?.content;
@@ -1334,14 +1427,31 @@ class MultiFreeService {
     }
 
     // Use structured messages if available, otherwise single user message
+    //
+    // rawMessages（网关 /v1/messages 入站的原始 Anthropic messages，content 数组里
+    // 仍带 tool_use/tool_result 块）是**最高保真**源，与 _messageBuilder.resolveMessages
+    // 的择优顺序一致。只吃 structuredMessages 时：它已被 proxyServer 把 content 扁平
+    // 成纯文本、toolCalls/toolResults 拆到顶层字段，而下方 hasAnthropicToolBlocks 判据
+    // 看的是 content 里的块 → 恒 false → convertMessagesAnthropicToOpenAI 不跑 →
+    // 整个工具回合历史不到达 OpenAI 上游（上游只看到空 content + 一堆它不认识的字段）。
+    // 没有 rawMessages 的调用方（本地 CLI / 其它服务路径）逐字节走老路。
+    const _rawMsgs = Array.isArray(opts.rawMessages) ? opts.rawMessages : [];
+    const _effectiveSystem = _hoistSystemFromRaw(_rawMsgs, opts.system);
     let messages =
-      opts.structuredMessages && opts.structuredMessages.length > 0
-        ? opts.structuredMessages.map((m) => ({ ...m }))
-        : [{ role: 'user', content: messageContent }];
+      _rawMsgs.length > 0
+        ? _rawMsgs
+            .filter((m) => m && m.role !== 'system')
+            .map((m) => ({
+              ...m,
+              ...(Array.isArray(m.content) ? { content: _anthropicImageBlocksToOpenAI(m.content) } : {}),
+            }))
+        : opts.structuredMessages && opts.structuredMessages.length > 0
+          ? opts.structuredMessages.map((m) => ({ ...m }))
+          : [{ role: 'user', content: messageContent }];
 
     // 注入 system prompt（CC 通过 opts.system 传入，OpenAI 协议需要 role:'system' 消息）
-    if (opts.system && messages[0]?.role !== 'system') {
-      messages.unshift({ role: 'system', content: opts.system });
+    if (_effectiveSystem && messages[0]?.role !== 'system') {
+      messages.unshift({ role: 'system', content: _effectiveSystem });
     }
 
     // 追加模型身份信息到 system 消息末尾，防止小模型幻觉编造身份
@@ -1359,7 +1469,10 @@ class MultiFreeService {
     }
 
     // 当使用 structuredMessages 且有图片时，将图片注入到最后一条 user 消息
+    // rawMessages 路不走这里：它的 content 里已内联图片块（上面刚转成 OpenAI vision
+    // 块），再注入一次就是同一张图发两遍。
     if (
+      _rawMsgs.length === 0 &&
       opts.structuredMessages &&
       opts.structuredMessages.length > 0 &&
       opts.images &&
@@ -1429,11 +1542,25 @@ class MultiFreeService {
       messages = convertMessagesAnthropicToOpenAI(messages, !_isSmallModel);
     }
 
+    // ── Agnes 网关 max_tokens 钳位(KHY_AGNES_MAX_TOKENS_CLAMP,默认开)────────────
+    // Agnes 网关(国际站 apihub.agnes-ai.com / 中国站 api.agnes-ai.cn)对 max_tokens
+    // 有 65536 硬上限;khyos 无 Agnes 输出上限元数据(maxTokensPolicy 放行),调用方
+    // 显式携带的更高值(如经本地代理的 agent CLI 发 128000)会原样到达上游 → 400
+    // 「max_tokens 不能超过 65536」。与 callZhipu 的 GLM 视觉钳位同款:命中 Agnes
+    // 目标时收进 [1, 上限];其余原样透传;门关 / 叶子缺失 → 逐字节回退。
+    let _maxTokens = opts.maxTokens;
+    try {
+      const { clampMaxTokensForAgnes } = require('./gateway/agnesMaxTokens');
+      _maxTokens = clampMaxTokensForAgnes(model, opts.maxTokens, process.env, baseUrl);
+    } catch {
+      /* fail-soft: 叶子不可用 → 原样透传 */
+    }
+
     const requestBody = {
       model,
       messages,
       temperature: opts.temperature,
-      max_tokens: opts.maxTokens,
+      max_tokens: _maxTokens,
     };
 
     // Inject tool definitions for native function calling.
@@ -1457,6 +1584,18 @@ class MultiFreeService {
           },
         }));
       }
+    }
+
+    // tool_choice 透传。canonical.toolChoice 已经是 OpenAI 侧拼写
+    // （'auto' / 'required' / {type:'function',function:{name}}，见 shared
+    // protocolConverter/anthropic.js:81-85 的入站映射），原样上线即可。
+    // 少了它，Claude Code 的 forced tool_use（tool_choice.type='tool'）到不了
+    // OpenAI 上游，模型可自行决定不调工具 → 工具回合断掉。
+    // 与 tools 同生共死：没有 tools 声明时带 tool_choice 会被严格端点 400，
+    // 所以只在此处（tools 已定型、小模型剥离门已生效）才写。
+    // 400 重试路径 _retryWithoutTools 删 tools 时连带删 tool_choice，口径一致。
+    if (opts.toolChoice != null && requestBody.tools) {
+      requestBody.tool_choice = opts.toolChoice;
     }
 
     // ── Helper: retry after a 400 by stripping the payload bits a strict provider may reject ──
@@ -1614,6 +1753,7 @@ class MultiFreeService {
       _rememberRouteRejectsTools();
 
       let content = '';
+      let thinkingContent = ''; // reasoning_content 累积（流式思考，历史上整条路都丢）
       const toolCallAccum = {}; // index → {name, arguments}
       let inputTokens = 0,
         outputTokens = 0;
@@ -1670,11 +1810,40 @@ class MultiFreeService {
                     totalTokens: data.usage.total_tokens || inputTokens + outputTokens,
                   },
                 });
+                // 同时发 token_usage：网关的 Anthropic SSE 重组（proxyServer 的
+                // onChunk）只认 `type:'token_usage'` 这一种形状，api 路径历来只发
+                // `cost` → message_delta.usage 的 input_tokens 恒 0、output_tokens
+                // 退化成 chunk 计数。两个 chunk 都发：cost 的老消费者
+                // （aiManagementServer / replSession / queryEngine）不变，
+                // token_usage 让代理侧拿到真实计数。字段名与 _cwStreamParser 发的那种
+                // 逐字同形（inputTokens/outputTokens/cache*InputTokens）。
+                opts.onChunk({
+                  type: 'token_usage',
+                  inputTokens,
+                  outputTokens,
+                  totalTokens: data.usage.total_tokens || inputTokens + outputTokens,
+                  ...(cacheReadTokens || cacheWriteTokens
+                    ? {
+                        cacheReadInputTokens: cacheReadTokens,
+                        cacheWriteInputTokens: cacheWriteTokens,
+                      }
+                    : {}),
+                });
               }
 
               const delta = data.choices?.[0]?.delta;
               if (!delta) {
                 continue;
+              }
+
+              // Reasoning / thinking content. OpenAI 兼容族用 reasoning_content
+              // （DeepSeek / Qwen / GLM），少数中转用 thinking。历史上这一路整个丢掉
+              // 思考内容：模型只回 reasoning 时 content 为空 → 用户看到空回复。
+              // 以 thinking chunk 上行（Anthropic 侧即 thinking block），不混入正文。
+              const _deltaThinking = _extractOpenAIThinking(delta);
+              if (_deltaThinking) {
+                thinkingContent += _deltaThinking;
+                opts.onChunk({ type: 'thinking', text: _deltaThinking });
               }
 
               // Text content
@@ -1748,7 +1917,13 @@ class MultiFreeService {
                     : {}),
                 }
               : null;
-          resolve({ content, tokenUsage, toolUseBlocks, finishReason });
+          resolve({
+            content,
+            tokenUsage,
+            toolUseBlocks,
+            finishReason,
+            ...(thinkingContent ? { thinking: thinkingContent } : {}),
+          });
         });
 
         stream.on('error', (err) => {
@@ -1801,6 +1976,10 @@ class MultiFreeService {
 
     const msg = response.data?.choices?.[0]?.message;
     const content = msg?.content || '';
+    // Reasoning / thinking：与流式分支同源同口径（_extractOpenAIThinking）。
+    // 非流式路历来整个丢掉思考内容； reasoning-only 回复时 content 为空 →
+    // 用户看到空回复。这里原样带回，由调用方决定怎么呈现。
+    const thinking = _extractOpenAIThinking(msg) || undefined;
 
     // Convert native tool_calls → 结构化 toolUseBlocks
     let toolUseBlocks = null;
@@ -1828,7 +2007,7 @@ class MultiFreeService {
         }
       : null;
     const finishReason = response.data?.choices?.[0]?.finish_reason || null;
-    return { content, tokenUsage, toolUseBlocks, finishReason };
+    return { content, tokenUsage, toolUseBlocks, finishReason, thinking };
   }
 
   async callAnthropic(provider, prompt, opts) {

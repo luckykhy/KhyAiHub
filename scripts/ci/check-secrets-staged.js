@@ -23,11 +23,37 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 const { execFileSync } = require('child_process');
 
 const REPO_ROOT = process.env.KHY_RULEGUARD_ROOT
   ? path.resolve(process.env.KHY_RULEGUARD_ROOT)
   : path.resolve(__dirname, '..', '..');
+
+// ── 值级豁免（读 hygiene-allowlist.json，与第 3 步 check-staged-secrets.js 同口径）──
+// 2026-11-20 增补：本器原先只有路径形状豁免，于是两类既有登记值被反复误报——
+//   ① docs 孪生（.html 不在 EXEMPT_NAME 里，.md 在但孪生不在）；
+//   ② APK 签名指纹 / SPAKE2 测试向量 / 证书 pin / 复现用假 token——这些都已按
+//      「文件 + 完整值」登记在案，值本身没变，只是路径随 delivery 收敛搬了一次家。
+// 只放行「登记过的文件 + 登记过的完整值」：新文件里的新 key 形态照旧拦，
+// 不会把豁免表扩大成掩耳盗铃的洞。
+let ALLOWLIST = new Map();
+try {
+  const al = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/release/hygiene-allowlist.json'), 'utf8'));
+  for (const e of al.exemptions || []) {
+    if (!e.file || !e.match) continue;
+    const key = e.file.replace(/\\/g, '/');
+    if (!ALLOWLIST.has(key)) ALLOWLIST.set(key, new Set());
+    ALLOWLIST.get(key).add(e.match);
+  }
+} catch {
+  ALLOWLIST = new Map(); // 表读不到时不放行任何值级豁免——fail-closed
+}
+
+function isAllowlistedValue(file, value) {
+  const set = ALLOWLIST.get(file.replace(/\\/g, '/'));
+  return set ? set.has(value) : false;
+}
 
 // ── 形态集合 ──────────────────────────────────────────────────────────────
 // 都取「高置信」：宁可漏报，也不把注释 / 标识符 / 校验和判成密钥。
@@ -71,6 +97,15 @@ const EXEMPT_NAME = [
   /\.mdown$/i,
   /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|Pipfile\.lock|Cargo\.lock|go\.sum|composer\.lock|Gemfile\.lock|packages\.lock\.json)$/i,
   /\.lock$/i,
+  // hygiene-allowlist.json 自身：它是「文件 + 完整匹配值」的豁免登记表，表里每一行
+  // 都是被豁免的 key 形态串——扫它等于自指。登记行为由 check-staged-secrets.js
+  // （那个真读这张表）负责，本器只按路径形状放行。
+  /(^|\/)hygiene-allowlist\.json$/i,
+  // npm 渠道 bundle（works/ship/npm/bundled/）：构建产物，内容 = 源码的压缩内联，
+  // 源码已被本器扫过；且 bundle 里的 HTML 实体转义表会产生几十个 0123…/5656… 形态
+  // 的 64hex（2026-11-20 实测 47 个不同值），逐值登记不现实。产物可在
+  // BUILD-OUTPUTS.json 里按 rebuild 重新生成，与 .lock / .tsbuildinfo 同性质。
+  /(^|\/)works\/ship\/npm\/bundled\/.+\.mjs$/i,
   // TypeScript 增量构建缓存：装的是「本机 node_modules 布局 + 文件哈希」，
   // 不含文件内容，因此不可能带出凭据；而它随每台机器的依赖布局而变，
   // 入库就是纯 diff 噪声（2026-10-25 实测：pnpm store 路径与普通路径之差）。
@@ -145,13 +180,18 @@ function scanText(file, text) {
   return out;
 }
 
-/** 解析 `git diff --cached -U0`，返回 Map<文件, 新增行[]>。 */
+/** 解析 `git diff --cached -U0 -M`，返回 Map<文件, 新增行[]>。 */
 function stagedAddedLines() {
   let diff;
   try {
     diff = execFileSync(
       'git',
-      ['diff', '--cached', '-U0', '--no-color', '--no-ext-diff', '--no-textconv'],
+      // -M（find-renames）：没有它，一次 git mv 会被渲染成「整文件删除 + 整文件新增」，
+      // 搬迁文件里的每一个 key 形态串都算「新增行」——2026-11-20 实测：delivery 收敛
+      // 859 个 rename 让 53 条既有豁免值（APK 指纹/SPAKE2 向量/测试夹具）全量误报。
+      // 纯 rename 在 -M 下只有 rename from/to 行、零 hunk；带内容改动的 rename 仍按
+      // 真实改动行上报，漏报面不变。
+      ['diff', '--cached', '-U0', '-M', '--no-color', '--no-ext-diff', '--no-textconv'],
       { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 }
     );
   } catch (error) {
@@ -186,6 +226,7 @@ function scanStaged() {
     if (isExemptFile(file)) continue;
     lines.forEach((line, i) => {
       for (const h of scanLine(line)) {
+        if (isAllowlistedValue(file, h.value)) continue;
         findings.push({ file, line: i + 1, pattern: h.pattern, value: h.value });
       }
     });

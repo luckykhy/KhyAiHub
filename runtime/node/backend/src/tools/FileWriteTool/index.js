@@ -155,54 +155,22 @@ Usage:
         }
       }
 
-      const dir = path.dirname(filePath);
-
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      // 统一写通道（DESIGN-ARCH-210 §6）：锁 / 快照 / turn 记录 / 诊断基线 /
+      // tmp+rename / 先读后写台账刷新全部在 fileWriteService 内。
+      const written = await require('../../services/fileWriteService').write({
+        filePath,
+        content: params.content,
+        createIfMissing: true,
+        actor: 'tool',
+        reason: 'FileWriteTool',
+        turnId: context && context.traceContext && context.traceContext.turnId,
+        diagCwd: cwd,
+      });
+      if (!written.ok) {
+        return { success: false, error: written.error };
       }
 
-      // Pre-write snapshot for /rollback recovery (existing files only)
-      if (fs.existsSync(filePath)) {
-        try {
-          const fh = require('../../services/fileHistoryService');
-          fh.takeSnapshot(filePath, { reason: 'FileWriteTool' });
-        } catch {
-          /* non-critical */
-        }
-        // Turn-grouped rollback manifest (DESIGN-ARCH-096 §2-A), existing files only.
-        try {
-          const _turnId = context && context.traceContext && context.traceContext.turnId;
-          if (_turnId) {
-            require('../../services/turnCheckpointService').recordMutatedFile(_turnId, filePath, {
-              reason: 'FileWriteTool',
-            });
-          }
-        } catch {
-          /* non-critical */
-        }
-      }
-
-      // Pre-write diagnostics baseline (CC beforeFileEdited 口径,门控 KHY_POST_EDIT_DIAGNOSTICS)。
-      // 新文件此刻尚不存在 → 服务登记空基线,写后所有语法错都算「新增」(RISK 2)。
-      try {
-        require('../../services/postEditDiagnostics').captureBaseline(filePath, cwd);
-      } catch {
-        /* diagnostics baseline is best-effort; never blocks the write */
-      }
-
-      fs.writeFileSync(filePath, params.content, 'utf-8');
-      const bytes = Buffer.byteLength(params.content, 'utf-8');
-
-      // 写完刷新 readState：刚写进去的内容就是「当前内容」。不刷新的话，下一次 Edit
-      // 会因为「文件已变（stale）」或「本轮没读过」把用户自己刚写的文件拦住，
-      // 而用户明明刚写过它（新建的文件更糟：它压根没被读过，必然被 Edit 顶回来）。
-      try {
-        require('../_readTracker').markRead(filePath);
-      } catch {
-        /* tracker 不可用 → 跳过（best-effort，不影响写入本身） */
-      }
-
-      const result = { success: true, path: filePath, bytes };
+      const result = { success: true, path: filePath, bytes: written.bytes };
       // LSP 诊断自动注入：写入后收集编译错误
       try {
         const { serviceRegistry } = require('../../services/serviceRegistry');

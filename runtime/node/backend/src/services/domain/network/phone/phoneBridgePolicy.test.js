@@ -53,10 +53,9 @@ test('revive 走导出广播（桥并入 khy-os App 后的唤醒路径）', () =
   ]);
 });
 
-test('token/status 读取 argv 指向实测目录', () => {
-  assert.deepEqual(policy.buildTokenReadArgv({ serial: 's' }, '/sdcard/bridge-amoobridge/token.txt'), [
-    '-s', 's', 'shell', 'cat', '/sdcard/bridge-amoobridge/token.txt',
-  ]);
+test('status 读取 argv 指向实测目录', () => {
+  // 断点二之后只剩 status.json 走这条读法：token.txt 已从设备下线，读它的
+  // argv 构造器也一并删了——留着它就等于给下一个人留了一条现成的回退路。
   assert.deepEqual(policy.buildStatusReadArgv({ serial: 's' }, '/sdcard/bridge-amoobridge/status.json'), [
     '-s', 's', 'shell', 'cat', '/sdcard/bridge-amoobridge/status.json',
   ]);
@@ -64,17 +63,25 @@ test('token/status 读取 argv 指向实测目录', () => {
 
 // ── grants ───────────────────────────────────────────────────────────────────
 
-test('五项授权全部适用于当前构建（桥在 khy-os App 内，无障碍由 App 承接）', () => {
+test('七项授权全部适用于当前构建（桥在 khy-os App 内，无障碍由 App 承接，录音/相机可选）', () => {
   const grants = policy.listGrants();
-  assert.equal(grants.length, 5);
+  assert.equal(grants.length, 7);
   assert.deepEqual(grants.filter((g) => g.applicableToLiteBuild).map((g) => g.id).sort(), [
-    'accessibility_service', 'battery_optimization', 'manage_external_storage',
-    'usb_install_permission', 'write_settings',
+    'accessibility_service', 'battery_optimization', 'camera', 'manage_external_storage',
+    'record_audio', 'usb_install_permission', 'write_settings',
   ]);
   const a11y = grants.find((g) => g.id === 'accessibility_service');
   assert.equal(a11y.applicableToLiteBuild, true);
   assert.match(a11y.why, /KhyAccessibilityService/);
   assert.equal(a11y.argv[4], 'com.khyos.khy_os_client/.KhyAccessibilityService');
+  // 录音权限是 pm grant 运行时权限，不是 appops
+  const audio = grants.find((g) => g.id === 'record_audio');
+  assert.deepEqual(audio.argv, ['pm', 'grant', 'com.khyos.khy_os_client', 'android.permission.RECORD_AUDIO']);
+  assert.equal(audio.required, false);
+  // 相机权限同理：StepOS 相机对裸 IMAGE_CAPTURE 校验调用方，缺了整条 camera_open 直接死
+  const cam = grants.find((g) => g.id === 'camera');
+  assert.deepEqual(cam.argv, ['pm', 'grant', 'com.khyos.khy_os_client', 'android.permission.CAMERA']);
+  assert.equal(cam.required, false);
 });
 
 test('必填授权是文件访问与电池白名单两项', () => {
@@ -383,26 +390,7 @@ test('计划失败时不伪装成成功', () => {
 
 // ── token hygiene ────────────────────────────────────────────────────────────
 
-test('normalizeToken 吃掉 adb shell cat 带出的换行与空白', () => {
-  assert.equal(policy.normalizeToken('5500fae8db41cd054f45ea8834198d30\n'), '5500fae8db41cd054f45ea8834198d30');
-  assert.equal(policy.normalizeToken('  5500fae8db41cd054f45ea8834198d30  \r\n'), '5500fae8db41cd054f45ea8834198d30');
-  assert.equal(policy.normalizeToken('a\nb'), 'b');
-  assert.equal(policy.normalizeToken(''), '');
-  assert.equal(policy.normalizeToken(undefined), '');
-  assert.equal(policy.normalizeToken(null), '');
-});
 
-test('isValidTokenShape 只认 32 位十六进制', () => {
-  const good = '5500fae8db41cd054f45ea8834198d30';
-  assert.equal(policy.isValidTokenShape(good), true);
-  assert.equal(policy.isValidTokenShape(good.toUpperCase()), true);
-  assert.equal(policy.isValidTokenShape(good.slice(0, 31)), false);
-  assert.equal(policy.isValidTokenShape(`${good}0`), false);
-  assert.equal(policy.isValidTokenShape('not-a-token'), false);
-  assert.equal(policy.isValidTokenShape(''), false);
-  assert.equal(policy.isValidTokenShape(undefined), false);
-  assert.equal(policy.isValidTokenShape(1234), false);
-});
 
 test('redactSecrets 覆盖 Authorization 头、Bearer 串与裸 32 hex', () => {
   const token = '5500fae8db41cd054f45ea8834198d30';

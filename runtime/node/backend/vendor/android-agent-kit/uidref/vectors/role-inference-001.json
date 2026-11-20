@@ -1,0 +1,359 @@
+{
+  "id": "role-inference-001",
+  "title": "角色推断",
+  "why": "角色决定模型怎么理解这个元素。clickable 的布局类必须是 item——叫它 box 对模型没有信息量。",
+  "cases": [
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"Btn\" resource-id=\"\" class=\"android.widget.Button\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "Button → btn",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "btn",
+            "label": "Btn",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"Row\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "clickable 布局 → item",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "Row",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.EditText\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "EditText → input",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "input",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": true,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.CheckBox\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "CheckBox → switch",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "switch",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.ScrollView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"true\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "ScrollView → scroll",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "scroll",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": true,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"androidx.recyclerview.widget.RecyclerView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"true\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "RecyclerView → list",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "list",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": true,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.SeekBar\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "SeekBar → slider",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "slider",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.ImageButton\" package=\"com.example\" content-desc=\"Up\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "ImageButton → btn",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "btn",
+            "label": "Up",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.webkit.WebView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "WebView → webview",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "webview",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.RadioButton\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "RadioButton → radio",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "radio",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.FrameLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "clickable FrameLayout → item",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    }
+  ]
+}

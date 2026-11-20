@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: rig-usage.md -->
+<title>rig.js 用法 —— 建模子代理照抄这份 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>brand<span class="sep">›</span>khyos-desktop<span class="sep">›</span>docs<span class="sep">›</span>rig.js 用法 —— 建模子代理照抄这份</div>
+      <header class="hero reveal"><h1>rig.js 用法 —— 建模子代理照抄这份</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#rig-js-用法-建模子代理照抄这份">rig.js 用法 —— 建模子代理照抄这份</a></li><li class="lvl-2"><a href="#0-先读-三条硬约束">0. 先读：三条硬约束</a></li><li class="lvl-2"><a href="#1-导出清单">1. 导出清单</a></li><li class="lvl-2"><a href="#2-loft-截面曲线放样">2. loft —— 截面曲线放样</a></li><li class="lvl-2"><a href="#3-sculpt-沿骨骼的确定性位移雕刻">3. sculpt —— 沿骨骼的确定性位移雕刻</a></li><li class="lvl-2"><a href="#4-createbonechain-骨链">4. createBoneChain —— 骨链</a></li><li class="lvl-2"><a href="#5-bindskin-蒙皮">5. bindSkin —— 蒙皮</a></li><li class="lvl-2"><a href="#6-装配件-可动嘴-眼睑-鳍-四肢">6. 装配件 —— 可动嘴 / 眼睑 / 鳍·四肢</a></li><li class="lvl-3"><a href="#makejaw-headbone-opts-可动嘴">makeJaw(headBone, opts) —— 可动嘴</a></li><li class="lvl-3"><a href="#makeeyelids-headbone-opts-可动眼睑">makeEyelids(headBone, opts) —— 可动眼睑</a></li><li class="lvl-3"><a href="#makefin-bone-opts-鳍-四肢装配件">makeFin(bone, opts) —— 鳍 / 四肢装配件</a></li><li class="lvl-2"><a href="#7-端到端最小用例-一条墨鳗">7. 端到端最小用例（一条墨鳗）</a></li><li class="lvl-2"><a href="#8-装配件默认布局常量-要改比例就在-bindskin-之前改">8. 装配件默认布局常量（要改比例就在 bindSkin 之前改）</a></li><li class="lvl-2"><a href="#9-坑位表">9. 坑位表</a></li><li class="lvl-2"><a href="#10-自测">10. 自测</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="rig-js-用法-建模子代理照抄这份">rig.js 用法 —— 建模子代理照抄这份<a class="anchor" href="#rig-js-用法-建模子代理照抄这份" aria-label="锚点">#</a></h1>
+<blockquote><p>真源：<code>src/models/rig.js</code>（角色/生物建模的<strong>唯一</strong>公共层，ES module）。<br>签名、默认值、行为一律以源码为准，本文只做速查与最小用例。<br>依赖仅两个：<code>three@^0.170</code> 与 <code>src/util/rand.js</code>；<strong>不依赖渲染层</strong>——材质由调用方给。</p>
+<p>接线提示：<code>src/main.js</code> 加载的是导演侧的 <code>src/models.js</code>（<code>main.js:99</code>），<br>rig.js 是被它引用的公共层，不要直接把 rig.js 挂成第四个集成模块。</p></blockquote>
+<h2 id="0-先读-三条硬约束">0. 先读：三条硬约束<a class="anchor" href="#0-先读-三条硬约束" aria-label="锚点">#</a></h2>
+<ol><li><strong>确定性</strong>：一切都是 <code>(输入, t)</code> 的纯函数。采集链按 <code>t = i/24</code> 逐场景取帧并比对</li></ol>
+<p>两次渲染的字节；读墙钟或跨调用累加状态都会把「同一 t 两次渲染不一致」变成玄学。<br>   随机一律走 <code>src/util/rand.js</code>（<code>mulberry32</code> / <code>hashString</code> / <code>hash3</code>），<br>   <strong>禁 <code>Math.random</code> / <code>Date.now</code></strong>。<code>update(t)</code> 只写骨的局部旋转，不读时钟、不累加。</p>
+<ol><li><strong>一个 rest 世界空间</strong>：几何与骨骼都建在世界坐标里。<code>bindSkin</code> 抓取的</li></ol>
+<p><code>bindMatrix</code> 与 <code>boneInverses</code> 以 bind 那一刻的世界矩阵为准——bind 之后<strong>单独</strong><br>   挪某根骨的 rest 位置，部件会跟着变形而不是整体移动。要调位置，在 bind 之前调。</p>
+<ol><li><strong>骨必须在被渲染的图里</strong>：<code>Skeleton.update()</code> 读 <code>bone.matrixWorld</code>，不在场景图里的骨</li></ol>
+<p>矩阵永不刷新，蒙皮会<strong>静默停在 rest</strong>。<code>bindSkin</code> 会接管没有父节点的 root；<br>   root 已有父节点时，调用方自己 <code>scene.add(root)</code>。</p>
+<h2 id="1-导出清单">1. 导出清单<a class="anchor" href="#1-导出清单" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>导出</th><th>签名</th><th>返回</th></tr></thead><tbody><tr><td><code>loft</code></td><td><code>loft(sections, opts)</code></td><td><code>THREE.BufferGeometry</code>（position/normal/uv + index）</td></tr><tr><td><code>sculpt</code></td><td><code>sculpt(geometry, opts)</code></td><td>同一 geometry（原地修改）</td></tr><tr><td><code>createBoneChain</code></td><td><code>createBoneChain(spec)</code></td><td><code>{ root, bones: { name: Bone } }</code></td></tr><tr><td><code>bindSkin</code></td><td><code>bindSkin(mesh, root, weightFn)</code></td><td><code>THREE.SkinnedMesh</code></td></tr><tr><td><code>makeJaw</code></td><td><code>makeJaw(headBone, opts)</code></td><td><code>{ bone, mesh, update }</code></td></tr><tr><td><code>makeEyelids</code></td><td><code>makeEyelids(headBone, opts)</code></td><td><code>{ bone, bones, mesh, update }</code></td></tr><tr><td><code>makeFin</code></td><td><code>makeFin(bone, opts)</code></td><td><code>{ bone, bones, mesh, update }</code></td></tr></tbody></table>
+<p>三个装配件的 <code>update(t)</code>（t 为秒）都是纯函数，<code>update(0)</code> 即各自挺直/闭合的 rest 姿态；<br>装配件内部已各自 <code>bindSkin</code> 一次，拿到就能进场景。</p>
+<h2 id="2-loft-截面曲线放样">2. loft —— 截面曲线放样<a class="anchor" href="#2-loft-截面曲线放样" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-title function_">loft</span>(sections, opts)
+<span class="hljs-comment">// sections = [{ z, pts: [[x, y], ...] }, ...]  沿放样方向有序；每节点数必须一致</span>
+<span class="hljs-comment">// opts = { closed = false, cap = true }</span></code></pre>
+<ul><li><code>closed</code>：每节首尾相接成环；<code>cap</code>：两端加盖（盖与侧壁共享顶点，边缘是圆的）。</li><li>环序（顺/逆时针）<strong>没有约定也不必管</strong>：有向体积为负时整体翻面，法线一律朝外。</li><li><code>pts</code> 是 <code>[x, y]</code>，放样方向是 <code>z</code>；要沿别的轴放样，把截面数据按轴换位写即可。</li></ul>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> body = <span class="hljs-title function_">loft</span>(
+  <span class="hljs-title class_">Array</span>.<span class="hljs-title function_">from</span>({ <span class="hljs-attr">length</span>: <span class="hljs-number">24</span> }, <span class="hljs-function">(<span class="hljs-params">_, i</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> t = i / <span class="hljs-number">23</span>;
+    <span class="hljs-keyword">const</span> r = <span class="hljs-number">0.45</span> * <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">sin</span>(<span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>, t * <span class="hljs-number">1.15</span>)) + <span class="hljs-number">0.02</span>;
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">z</span>: -<span class="hljs-number">6</span> + t * <span class="hljs-number">6</span>,
+      <span class="hljs-attr">pts</span>: <span class="hljs-title class_">Array</span>.<span class="hljs-title function_">from</span>({ <span class="hljs-attr">length</span>: <span class="hljs-number">12</span> }, <span class="hljs-function">(<span class="hljs-params">_, k</span>) =&gt;</span> {
+        <span class="hljs-keyword">const</span> a = (k / <span class="hljs-number">12</span>) * <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>;
+        <span class="hljs-keyword">return</span> [<span class="hljs-title class_">Math</span>.<span class="hljs-title function_">cos</span>(a) * r, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">sin</span>(a) * r * <span class="hljs-number">0.5</span>];
+      }),
+    };
+  }),
+  { <span class="hljs-attr">closed</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">cap</span>: <span class="hljs-literal">true</span> },
+);</code></pre>
+<h2 id="3-sculpt-沿骨骼的确定性位移雕刻">3. sculpt —— 沿骨骼的确定性位移雕刻<a class="anchor" href="#3-sculpt-沿骨骼的确定性位移雕刻" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-title function_">sculpt</span>(geometry, { amp, freq, seed, bone })
+<span class="hljs-comment">// amp   位移幅度（米）；&lt;= 0 直接 no-op</span>
+<span class="hljs-comment">// freq  噪声频率（越大越碎）</span>
+<span class="hljs-comment">// seed  种子字符串，同种子同结果</span>
+<span class="hljs-comment">// bone  指定骨骼（Bone/Object3D）；省略时用几何自身坐标系</span></code></pre>
+<ul><li>每个顶点沿<strong>法线</strong>移动 <code>amp * (2*fbm - 1)</code>，噪声在骨的 rest 世界坐标系里取样——</li></ul>
+<p>浮雕跟着骨骼走。多次调用可叠加（低频铺体积、高频出碎纹），每次都会重读当前位置。</p>
+<ul><li><strong>原地修改并返回同一 geometry</strong>，结束时重算法线与包围球。</li><li>在<strong>播放姿势之前</strong>调用：雕的是 rest，不是姿态。</li></ul>
+<pre><code class="language-js"><span class="hljs-title function_">sculpt</span>(body, { <span class="hljs-attr">amp</span>: <span class="hljs-number">0.02</span>, <span class="hljs-attr">freq</span>: <span class="hljs-number">5</span>, <span class="hljs-attr">seed</span>: <span class="hljs-string">&#x27;ink-eel&#x27;</span>, <span class="hljs-attr">bone</span>: bones.<span class="hljs-property">mid</span> });
+<span class="hljs-title function_">sculpt</span>(body, { <span class="hljs-attr">amp</span>: <span class="hljs-number">0.006</span>, <span class="hljs-attr">freq</span>: <span class="hljs-number">16</span>, <span class="hljs-attr">seed</span>: <span class="hljs-string">&#x27;ink-eel-scales&#x27;</span> });</code></pre>
+<h2 id="4-createbonechain-骨链">4. createBoneChain —— 骨链<a class="anchor" href="#4-createbonechain-骨链" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-title function_">createBoneChain</span>(spec)
+<span class="hljs-comment">// spec = [{ name, pos: [x, y, z], parent }, ...]   pos 是世界坐标；父骨必须先于子骨出现</span>
+<span class="hljs-comment">// 返回 { root, bones: { name: Bone } }</span></code></pre>
+<p>骨<strong>只有位置、没有旋转</strong>（spec 里也没有旋转字段）。方向由世界坐标的拓扑关系推导，<br>或由装配件的 <code>opts.axis</code> 显式给出。要歪头/侧身，把倾斜写进 <code>pos</code>，不要用 <code>rotation</code><br>（装配件的壳是按「挂载骨 rest 姿态无旋转」布置的）。</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> { root, bones } = <span class="hljs-title function_">createBoneChain</span>([
+  { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;tail&#x27;</span>, <span class="hljs-attr">pos</span>: [-<span class="hljs-number">6</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>] },
+  { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;mid&#x27;</span>, <span class="hljs-attr">pos</span>: [<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>], <span class="hljs-attr">parent</span>: <span class="hljs-string">&#x27;tail&#x27;</span> },
+  { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;head&#x27;</span>, <span class="hljs-attr">pos</span>: [<span class="hljs-number">5.4</span>, <span class="hljs-number">0.2</span>, <span class="hljs-number">0</span>], <span class="hljs-attr">parent</span>: <span class="hljs-string">&#x27;mid&#x27;</span> },
+]);
+<span class="hljs-comment">// bones.mid.position 已被换算成父骨空间里的局部坐标；bones.mid.getWorldPosition() 回到世界坐标</span></code></pre>
+<h2 id="5-bindskin-蒙皮">5. bindSkin —— 蒙皮<a class="anchor" href="#5-bindskin-蒙皮" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-title function_">bindSkin</span>(mesh, root, weightFn)  <span class="hljs-comment">// -&gt; THREE.SkinnedMesh</span>
+<span class="hljs-comment">// weightFn(boneName, position) -&gt; 权重；position 是该顶点的 rest 世界坐标</span></code></pre>
+<ul><li>每个顶点取权重最高的 <strong>4 根骨</strong>并归一化（WebGL 的 <code>skinIndex</code> 是 <code>vec4</code>，第 5 根起</li></ul>
+<p>被静默丢弃）——权重函数要写得集中。</p>
+<ul><li>任何顶点全骨权重为 0 会<strong>抛错</strong>：那种顶点没有骨拉着，会塌到原点，静默反而更贵。</li><li>几何与骨在同一个 rest 世界空间；mesh 保持单位变换挂进该空间。</li><li>root 无父节点时会被挂成 SkinnedMesh 的子节点（保证骨进场景图）。</li><li>bind 之后整棵树可以一起移动/统一缩放（attached 模式每帧刷新 <code>bindMatrixInverse</code>）。</li><li>多个 SkinnedMesh 可以共享同一组骨：每个 mesh 各自 <code>bindSkin</code> 一次即可。</li></ul>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> boneWorld = <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">fromEntries</span>(
+  <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">entries</span>(bones).<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">[name, b]</span>) =&gt;</span> [name, b.<span class="hljs-title function_">getWorldPosition</span>(<span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">Vector3</span>())]),
+);
+<span class="hljs-keyword">const</span> bodyMesh = <span class="hljs-title function_">bindSkin</span>(<span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">Mesh</span>(body), root, <span class="hljs-function">(<span class="hljs-params">name, position</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> w = boneWorld[name];
+  <span class="hljs-keyword">return</span> w ? <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-number">1</span> - position.<span class="hljs-title function_">distanceTo</span>(w) / <span class="hljs-number">1.6</span>) : <span class="hljs-number">0</span>;
+});</code></pre>
+<h2 id="6-装配件-可动嘴-眼睑-鳍-四肢">6. 装配件 —— 可动嘴 / 眼睑 / 鳍·四肢<a class="anchor" href="#6-装配件-可动嘴-眼睑-鳍-四肢" aria-label="锚点">#</a></h2>
+<p>三者同形：<code>{ bone, mesh, update(t) }</code>（眼睑与鳍额外给 <code>bones: Bone[]</code>）。<br><code>mesh</code> 是已经蒙好骨的 SkinnedMesh；<code>bone</code> 是驱动它的那根骨。<br><strong>默认没有材质</strong>——把 cel 材质赋上去再进场景（颜色属渲染层，rig 不替你选）。</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { createCelMaterial } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../render/cel.js&#x27;</span>;
+<span class="hljs-keyword">const</span> cel = <span class="hljs-title function_">createCelMaterial</span>({ <span class="hljs-attr">base</span>: <span class="hljs-string">&#x27;#2b2f3a&#x27;</span>, <span class="hljs-attr">shadow</span>: <span class="hljs-string">&#x27;#141821&#x27;</span>, <span class="hljs-attr">rim</span>: <span class="hljs-string">&#x27;#ffb75e&#x27;</span>, <span class="hljs-attr">materialId</span>: <span class="hljs-number">3</span> });
+jaw.<span class="hljs-property">mesh</span>.<span class="hljs-property">material</span> = cel;</code></pre>
+<h3 id="makejaw-headbone-opts-可动嘴">makeJaw(headBone, opts) —— 可动嘴<a class="anchor" href="#makejaw-headbone-opts-可动嘴" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-title function_">makeJaw</span>(headBone, { pivot, range, axis })
+<span class="hljs-comment">// pivot  世界坐标铰点（缺省 = 头骨位置）</span>
+<span class="hljs-comment">// range  [闭合角, 张开角] 弧度，缺省 [0, 0.5]</span>
+<span class="hljs-comment">// axis   铰链轴，缺省世界 +X（角色面朝 +Z 时的左右轴）</span></code></pre>
+<p>壳是一枚以 <code>pivot</code> 为铰、向<strong>前</strong>收窄的透镜体；<code>update(t)</code> 按说话节拍开合<br>（3.4s 一句话，其中 72% 在说，每秒 2.6 次）。骨命名 <code>&lt;头骨名&gt;-jaw</code>。</p>
+<h3 id="makeeyelids-headbone-opts-可动眼睑">makeEyelids(headBone, opts) —— 可动眼睑<a class="anchor" href="#makeeyelids-headbone-opts-可动眼睑" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-title function_">makeEyelids</span>(headBone, { count, range, axis })
+<span class="hljs-comment">// count  睑骨数，缺省 2（1 就是一道整宽面罩睑；越多越像一道扫过去的褶）</span>
+<span class="hljs-comment">// range  [静息角, 闭合角] 弧度，缺省 [0, 1.15]</span>
+<span class="hljs-comment">// axis   铰链轴，缺省世界 +X</span></code></pre>
+<p>壳是立在眼裂上沿的一根横梁（宽 <code>LID_WIDTH</code>），每根睑骨负责一片；眨眼时刻表：<br>4.2s 一次、每次 0.16s，分段之间有 0.4s 的扫过延迟。默认布局按 ~0.3m 量级的头：<br>眼裂中心在头骨局部系 <code>(0, LID_UP, LID_FORWARD)</code>。骨命名 <code>&lt;头骨名&gt;-lid&lt;i&gt;</code>。</p>
+<h3 id="makefin-bone-opts-鳍-四肢装配件">makeFin(bone, opts) —— 鳍 / 四肢装配件<a class="anchor" href="#makefin-bone-opts-鳍-四肢装配件" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-title function_">makeFin</span>(bone, { segments, span, axis })
+<span class="hljs-comment">// segments 鳍骨段数，缺省 5</span>
+<span class="hljs-comment">// span     总长（米），缺省 0.3；段长 = span/segments</span>
+<span class="hljs-comment">// axis     生长轴，在挂载骨的父空间里给出，缺省世界 +Y（背鳍/尾鳍开箱即用）</span></code></pre>
+<p>膜面根半宽 <code>span/2</code>、尖收到 <code>span*0.12</code>，宽度方向取「挂载骨来向（父骨→挂载骨）」<br>在轴上的垂直投影。<code>update(t)</code> 是行波：1.2Hz、幅 0.3rad、3 段一个完整波，<br>FK 叠加所以鳍尖摆得最欢。骨命名 <code>&lt;挂载骨名&gt;-fin&lt;i&gt;</code>。<br>四肢（带蹼的腿）同样用它：<code>axis</code> 给肢体方向即可。</p>
+<h2 id="7-端到端最小用例-一条墨鳗">7. 端到端最小用例（一条墨鳗）<a class="anchor" href="#7-端到端最小用例-一条墨鳗" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> <span class="hljs-variable constant_">THREE</span> <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;three&#x27;</span>;
+<span class="hljs-keyword">import</span> { createCelMaterial } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../render/cel.js&#x27;</span>;
+<span class="hljs-keyword">import</span> { bindSkin, createBoneChain, loft, makeEyelids, makeFin, makeJaw, sculpt } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./rig.js&#x27;</span>;
+
+<span class="hljs-comment">// 1) 身体：尾到吻的放样</span>
+<span class="hljs-keyword">const</span> body = <span class="hljs-title function_">loft</span>(
+  <span class="hljs-title class_">Array</span>.<span class="hljs-title function_">from</span>({ <span class="hljs-attr">length</span>: <span class="hljs-number">24</span> }, <span class="hljs-function">(<span class="hljs-params">_, i</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> t = i / <span class="hljs-number">23</span>;
+    <span class="hljs-keyword">const</span> rx = <span class="hljs-number">0.45</span> * <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">sin</span>(<span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>, t * <span class="hljs-number">1.15</span>)) + <span class="hljs-number">0.02</span>;
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">z</span>: -<span class="hljs-number">6</span> + t * <span class="hljs-number">6</span>,
+      <span class="hljs-attr">pts</span>: <span class="hljs-title class_">Array</span>.<span class="hljs-title function_">from</span>({ <span class="hljs-attr">length</span>: <span class="hljs-number">12</span> }, <span class="hljs-function">(<span class="hljs-params">_, k</span>) =&gt;</span> {
+        <span class="hljs-keyword">const</span> a = (k / <span class="hljs-number">12</span>) * <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>;
+        <span class="hljs-keyword">return</span> [<span class="hljs-title class_">Math</span>.<span class="hljs-title function_">cos</span>(a) * rx, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">sin</span>(a) * rx * <span class="hljs-number">0.5</span>];
+      }),
+    };
+  }),
+  { <span class="hljs-attr">closed</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">cap</span>: <span class="hljs-literal">true</span> },
+);
+
+<span class="hljs-comment">// 2) 骨链（绝对坐标，父骨在前）：13 节脊骨，首尾命名</span>
+<span class="hljs-keyword">const</span> spec = [];
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">13</span>; i++) {
+  <span class="hljs-keyword">const</span> name = i === <span class="hljs-number">0</span> ? <span class="hljs-string">&#x27;tail&#x27;</span> : i === <span class="hljs-number">12</span> ? <span class="hljs-string">&#x27;head&#x27;</span> : <span class="hljs-string">`spine<span class="hljs-subst">${i}</span>`</span>;
+  spec.<span class="hljs-title function_">push</span>({ name, <span class="hljs-attr">pos</span>: [<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, -<span class="hljs-number">6</span> + i], <span class="hljs-attr">parent</span>: i &gt; <span class="hljs-number">0</span> ? spec[i - <span class="hljs-number">1</span>].<span class="hljs-property">name</span> : <span class="hljs-literal">undefined</span> });
+}
+<span class="hljs-keyword">const</span> { root, bones } = <span class="hljs-title function_">createBoneChain</span>(spec);
+
+<span class="hljs-comment">// 3) 雕刻：rest 姿态、bind 之前</span>
+<span class="hljs-title function_">sculpt</span>(body, { <span class="hljs-attr">amp</span>: <span class="hljs-number">0.02</span>, <span class="hljs-attr">freq</span>: <span class="hljs-number">5</span>, <span class="hljs-attr">seed</span>: <span class="hljs-string">&#x27;ink-eel&#x27;</span>, <span class="hljs-attr">bone</span>: bones.<span class="hljs-property">spine6</span> });
+
+<span class="hljs-comment">// 4) 蒙皮</span>
+<span class="hljs-keyword">const</span> boneWorld = <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">fromEntries</span>(
+  <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">entries</span>(bones).<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">[name, b]</span>) =&gt;</span> [name, b.<span class="hljs-title function_">getWorldPosition</span>(<span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">Vector3</span>())]),
+);
+<span class="hljs-keyword">const</span> bodyMesh = <span class="hljs-title function_">bindSkin</span>(<span class="hljs-keyword">new</span> <span class="hljs-variable constant_">THREE</span>.<span class="hljs-title class_">Mesh</span>(body), root, <span class="hljs-function">(<span class="hljs-params">name, position</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> w = boneWorld[name];
+  <span class="hljs-keyword">return</span> w ? <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-number">1</span> - position.<span class="hljs-title function_">distanceTo</span>(w) / <span class="hljs-number">1.6</span>) : <span class="hljs-number">0</span>;
+});
+
+<span class="hljs-comment">// 5) 装配件（各自内部已 bindSkin）</span>
+<span class="hljs-keyword">const</span> jaw = <span class="hljs-title function_">makeJaw</span>(bones.<span class="hljs-property">head</span>, { <span class="hljs-attr">pivot</span>: [<span class="hljs-number">0</span>, -<span class="hljs-number">0.06</span>, <span class="hljs-number">5.9</span>] });
+<span class="hljs-keyword">const</span> lids = <span class="hljs-title function_">makeEyelids</span>(bones.<span class="hljs-property">head</span>, { <span class="hljs-attr">count</span>: <span class="hljs-number">2</span> });
+<span class="hljs-keyword">const</span> dorsal = <span class="hljs-title function_">makeFin</span>(bones.<span class="hljs-property">spine6</span>, { <span class="hljs-attr">segments</span>: <span class="hljs-number">6</span>, <span class="hljs-attr">span</span>: <span class="hljs-number">0.9</span>, <span class="hljs-attr">axis</span>: [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>] });
+
+<span class="hljs-comment">// 6) 每帧：纯函数更新，然后 renderer.render(scene, camera)</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">frame</span>(<span class="hljs-params">t</span>) {
+  jaw.<span class="hljs-title function_">update</span>(t);
+  lids.<span class="hljs-title function_">update</span>(t);
+  dorsal.<span class="hljs-title function_">update</span>(t);
+}
+
+<span class="hljs-comment">// 7) 材质与入图</span>
+<span class="hljs-keyword">const</span> cel = <span class="hljs-title function_">createCelMaterial</span>({ <span class="hljs-attr">base</span>: <span class="hljs-string">&#x27;#2b2f3a&#x27;</span>, <span class="hljs-attr">shadow</span>: <span class="hljs-string">&#x27;#141821&#x27;</span>, <span class="hljs-attr">rim</span>: <span class="hljs-string">&#x27;#ffb75e&#x27;</span>, <span class="hljs-attr">materialId</span>: <span class="hljs-number">3</span> });
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> m <span class="hljs-keyword">of</span> [bodyMesh, jaw.<span class="hljs-property">mesh</span>, lids.<span class="hljs-property">mesh</span>, dorsal.<span class="hljs-property">mesh</span>]) m.<span class="hljs-property">material</span> = cel;
+scene.<span class="hljs-title function_">add</span>(bodyMesh, jaw.<span class="hljs-property">mesh</span>, lids.<span class="hljs-property">mesh</span>, dorsal.<span class="hljs-property">mesh</span>, root);</code></pre>
+<h2 id="8-装配件默认布局常量-要改比例就在-bindskin-之前改">8. 装配件默认布局常量（要改比例就在 bindSkin 之前改）<a class="anchor" href="#8-装配件默认布局常量-要改比例就在-bindskin-之前改" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>常量</th><th>值</th><th>管什么</th></tr></thead><tbody><tr><td><code>JAW_LENGTH</code> / <code>JAW_HALF_WIDTH</code> / <code>JAW_HALF_HEIGHT</code></td><td>0.09 / 0.07 / 0.015 m</td><td>嘴壳前伸长、半宽、半厚</td></tr><tr><td><code>JAW_TALK_HZ</code> / <code>JAW_SENTENCE_SEC</code> / <code>JAW_SPEAK_RATIO</code></td><td>2.6 / 3.4 / 0.72</td><td>说话节拍</td></tr><tr><td><code>LID_WIDTH</code> / <code>LID_LENGTH</code> / <code>LID_SLIT</code> / <code>LID_DEPTH</code></td><td>0.1 / 0.05 / 0.03 / 0.012 m</td><td>睑梁宽、长、眼裂高、厚</td></tr><tr><td><code>LID_UP</code> / <code>LID_FORWARD</code></td><td>0.02 / 0.12 m</td><td>眼裂中心在头骨局部系的位置</td></tr><tr><td><code>LID_BLINK_PERIOD</code> / <code>LID_BLINK_SEC</code> / <code>LID_SWEEP</code></td><td>4.2 / 0.16 / 0.4 s</td><td>眨眼时刻表与扫过延迟</td></tr><tr><td><code>FIN_WAVE_HZ</code> / <code>FIN_WAVE_AMP</code> / <code>FIN_WAVE_PERIOD</code></td><td>1.2 Hz / 0.3 rad / 3 段</td><td>鳍行波</td></tr></tbody></table>
+<h2 id="9-坑位表">9. 坑位表<a class="anchor" href="#9-坑位表" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>坑</th><th>规矩</th></tr></thead><tbody><tr><td>1</td><td>每顶点只有 4 根骨生效</td><td>权重函数写集中；第 5 根起被静默丢弃</td></tr><tr><td>2</td><td>全零权重的顶点塌到原点</td><td><code>bindSkin</code> 直接抛错——修 <code>weightFn</code>，别绕过。权重支撑要盖满全身：骨间距一半是下限，稀疏骨链会把中段顶点饿到零权重</td></tr><tr><td>3</td><td>bind 后单独改骨的 rest 位置</td><td>部件会变形而非移动；调位置放在 bind 前</td></tr><tr><td>4</td><td>骨不在场景图里</td><td>蒙皮静默停在 rest；root 有父节点时自己 <code>scene.add(root)</code></td></tr><tr><td>5</td><td>装配件默认无材质</td><td>进场景前赋 cel 材质，否则渲染期才炸</td></tr><tr><td>6</td><td>开放壳配 FrontSide 材质从背面消失</td><td>装配件全部用闭合环+盖；自己放样时同理</td></tr><tr><td>7</td><td>挂载骨带旋转</td><td>装配件的壳按 rest 无旋转布置；倾斜写进 spec 的 <code>pos</code></td></tr><tr><td>8</td><td><code>sculpt</code> 重算法线与包围球</td><td>手调过的法线会被覆盖；要保留就别 sculpt</td></tr><tr><td>9</td><td>各截面点数不一致</td><td><code>loft</code> 抛错；环序无所谓（自动翻面朝外）</td></tr><tr><td>10</td><td>随机</td><td>只走 <code>src/util/rand.js</code>；<code>Math.random</code>/<code>Date.now</code> 一出现就破坏字节级复现</td></tr></tbody></table>
+<h2 id="10-自测">10. 自测<a class="anchor" href="#10-自测" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --check src/models/rig.js</code></pre>
+<p>语法检查之外，本层的行为（法线朝外、雕刻确定性、rest 姿态零漂移、眨眼扫过、<br>鳍行波相位）由一次性冒烟脚本在仓外验证，不入库。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/brand/khyos-desktop/docs/leviathan-notes.html"><div class="dir">← 上一篇</div><div class="ttl">leviathan 调研笔记 —— 可复用的渲染管线与程序化建模技术</div></a><a class="next" href="../../../../works/brand/README.html"><div class="dir">下一篇 →</div><div class="ttl">Khy OS 品牌资产包（内核环）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/brand/khyos-desktop/docs/rig-usage.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

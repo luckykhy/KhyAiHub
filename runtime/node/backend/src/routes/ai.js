@@ -4,6 +4,7 @@ const router = express.Router();
 const { PRIMARY: MODELS } = require('../constants/models');
 const { authMiddleware } = require('../middleware/auth');
 const imageGenService = require('../services/imageGenService');
+const apiChatSession = require('../services/apiChatSession');
 const stockAnalysisEngine = require('../services/stockAnalysisEngine');
 const trainingData = require('../services/trainingDataService');
 const { request: nativeRequest } = require('../utils/nativeHttp');
@@ -425,13 +426,21 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
 
   const { question, stockCode, conversationHistory, tokens, clientLocation } = req.body;
   const safeQuestion = typeof question === 'string' ? question.trim() : '';
+  // Only a client that names its own session joins the shared store; web and
+  // khyquant send no sessionId and keep their conversations in their own stores.
+  const sharedSessionId = apiChatSession.normalizeSessionId(req.body && req.body.sessionId);
 
   if (!safeQuestion) {
     sendEvent({ type: 'error', message: 'Question is empty' });
     return res.end();
   }
 
-  sendEvent({ type: 'start', model: 'auto', timestamp: Date.now() });
+  sendEvent({
+    type: 'start',
+    model: 'auto',
+    timestamp: Date.now(),
+    ...(sharedSessionId ? { sessionId: sharedSessionId } : {}),
+  });
 
   // Keep-alive: send heartbeat every 15s while AI is processing,
   // so the frontend WebSocket and SSE connection don't think we're dead.
@@ -476,7 +485,7 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
       stockCode: stockCode || undefined,
       maxTokens: 2048,
       userId: req.user?.id,
-      sessionId: req.body?.sessionId,
+      sessionId: sharedSessionId || undefined,
       preferredAdapter: req.body?.preferredAdapter || undefined,
       preferredModel: req.body?.preferredModel || undefined,
       onChunk: (chunk) => {
@@ -502,8 +511,14 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
       },
     });
 
+    // The turn as the client sees it, persisted once after the branch settles.
+    let turnReply = '';
+    let turnModel = '';
+
     // Dedup hit — return cached result directly
     if (result.deduplicated) {
+      turnReply = result.content || '';
+      turnModel = result.provider || 'AI';
       sendEvent({ type: 'chunk', content: result.content || '' });
       sendEvent({
         type: 'done',
@@ -511,12 +526,15 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
         model: result.provider || 'AI',
         adapter: result.adapter || null,
         deduplicated: true,
+        ...(sharedSessionId ? { sessionId: sharedSessionId } : {}),
       });
     } else if (result.success && result.content) {
       // Simulate streaming by chunking the completed response.
       // CHUNK_SIZE raised from 12 → 64: fewer SSE events means less frontend
       // re-render pressure and lower backpressure overhead.
       const content = result.content;
+      turnReply = content;
+      turnModel = result.provider || result.model || 'AI';
       const CHUNK_SIZE = 64;
       let chunkIndex = 0;
       for (let i = 0; i < content.length; i += CHUNK_SIZE) {
@@ -534,6 +552,7 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
         model: result.provider || result.model || 'AI',
         adapter: result.actualAdapter || result.adapter || null,
         usage: result.tokenUsage || null,
+        ...(sharedSessionId ? { sessionId: sharedSessionId } : {}),
       });
     } else {
       // Gateway failed — fall back to stockAnalysisEngine, but DISCLOSE the
@@ -553,6 +572,8 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
 
       const engineResult = await stockAnalysisEngine.chat(stockCode, {}, safeQuestion);
       const fallbackContent = disclosure + '\n\n' + (engineResult.answer || 'No response available');
+      turnReply = fallbackContent;
+      turnModel = 'XiaoK Local';
 
       const CHUNK_SIZE = 64;
       let chunkIndex = 0;
@@ -572,7 +593,28 @@ router.post('/chat/stream', authMiddleware, async (req, res) => {
           errorType: result.errorType || 'unknown',
           attempts: failedAttempts,
         },
+        ...(sharedSessionId ? { sessionId: sharedSessionId } : {}),
       });
+    }
+
+    // Persist after the branch settles so one call covers all three shapes and
+    // the stored answer is exactly the one the client received.
+    const persistedId = apiChatSession.persistChatTurn({
+      sessionId: sharedSessionId,
+      question: safeQuestion,
+      reply: turnReply,
+      model: turnModel,
+      history: conversationHistory,
+      // AGT-03：记录/校验会话属主（跨用户续写他人会话会被拒）
+      userId: req.user?.id,
+    });
+
+    // The `sessionId` echo in `done` only says the id was well-formed; it does
+    // not say the turn reached .khy/sessions. A client that shows "synced"
+    // needs the write result, so it gets its own event. Sent only to callers
+    // that joined the shared store — otherwise there is nothing to report.
+    if (sharedSessionId) {
+      sendEvent({ type: 'sync', sessionId: sharedSessionId, persisted: !!persistedId });
     }
   } catch (err) {
     console.error('SSE stream error:', err);

@@ -1,0 +1,432 @@
+{
+ "id": "matching-001",
+ "title": "元素匹配：分层打分、面积比闸门、贪心确定性",
+ "cases": [
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "设置",
+      "bounds": [
+       0,
+       0,
+       1080,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/row1",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "设置",
+      "bounds": [
+       0,
+       1800,
+       1080,
+       2000
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/row1",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": [
+       "moved"
+      ]
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 1,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "resource-id 相同即匹配，bounds 因滚动全变也认"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "btn",
+      "label": "确定",
+      "bounds": [
+       0,
+       0,
+       200,
+       100
+      ],
+      "class_name": "android.widget.Button",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e2",
+      "role": "btn",
+      "label": "确定",
+      "bounds": [
+       10,
+       10,
+       210,
+       110
+      ],
+      "class_name": "android.widget.Button",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e2",
+      "changes": [
+       "moved"
+      ]
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 1,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "class 与 label 皆同、bounds 微移 → 70 分"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "img",
+      "label": "头像",
+      "bounds": [
+       891,
+       283,
+       1017,
+       409
+      ],
+      "class_name": "",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "scroll",
+      "label": "",
+      "bounds": [
+       0,
+       74,
+       1080,
+       2337
+      ],
+      "class_name": "",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [],
+    "added": [
+     {
+      "ref": "e1",
+      "role": "scroll",
+      "label": ""
+     }
+    ],
+    "removed": [
+     {
+      "ref": "e1",
+      "role": "img",
+      "label": "头像"
+     }
+    ],
+    "is_identical": false,
+    "counts": {
+     "matched": 0,
+     "added": 1,
+     "removed": 1,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "面积比闸门：全屏滚动容器不得吞掉小元素（真机案例）"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     },
+     {
+      "prev_ref": "e2",
+      "cur_ref": "e2",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 2,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "两个完全相同的元素，贪心按 (prev_index, cur_index) 配对"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "重复",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/r",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "重复",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/r",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "重复",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/r",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "重复"
+     }
+    ],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 1,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "rid 相同的一对多，只取 prev_index 最小的那个"
+  }
+ ]
+}

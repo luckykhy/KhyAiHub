@@ -62,20 +62,33 @@ function runStage(stage, { hrNow }) {
   let code = 0;
   let detail = '';
   try {
-    cp.execSync(stage.command, {
+    const stdout = cp.execSync(stage.command, {
       cwd: REPO_ROOT,
       stdio: 'pipe',
       env: process.env,
       timeout: 30 * 60 * 1000, // 30min 硬上限:防单阶段挂死拖垮整条门禁。
     });
+    // 干净跑完的阶段默认不留 detail;只有声明 showDetailOnPass 的读数型阶段
+    // (如依赖漏洞审计)把一行摘要带进报告。
+    if (stage.showDetailOnPass) {
+      detail = stdout ? stdout.toString('utf8').trim() : '';
+    }
   } catch (err) {
-    status = 'fail';
     code = typeof err.status === 'number' ? err.status : 1;
     const out = [err.stdout, err.stderr]
       .map((b) => (b ? b.toString('utf8') : ''))
       .join('\n')
       .trim();
-    detail = out || (err.message || 'command failed');
+    if (stage.skipExitCode && code === stage.skipExitCode) {
+      // SKIP 是第三种结局:执行器明确表示「没验证」,既不算 PASS 也不算 FAIL。
+      // 做成数据字段(stage.skipExitCode)而不是在这里认某个阶段 id,新增读数型
+      // 阶段时只需在阶段定义里声明同一个退出码。
+      status = 'skip';
+      detail = out || 'SKIP: 未验证';
+    } else {
+      status = 'fail';
+      detail = out || (err.message || 'command failed');
+    }
   }
   const ms = Math.max(0, Math.round(hrNow() - start));
   return gate.makeResult(stage, { status, code, ms, detail });
@@ -143,4 +156,9 @@ function main() {
   process.exit(verdict.automatedGo ? 0 : 1);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+// 薄壳的阶段执行器导出给单测：SKIP 映射与 PASS 读数都是行为契约，不该只靠肉眼。
+module.exports = { runStage, parseArgs };

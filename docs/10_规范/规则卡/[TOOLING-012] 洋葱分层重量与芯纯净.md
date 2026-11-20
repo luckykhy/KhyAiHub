@@ -3,7 +3,7 @@ name: 洋葱分层重量与芯纯净
 id: TOOLING-012
 domain: TOOLING
 nature: 约束为主，兼福利
-scope: "runtime/node/backend/src/**（后端模块图）、apps/khyos-desktop/src/**、delivery/web/**、delivery/channel/**、runtime/node/backend/src/cli/tui/**（视觉层）"
+scope: "runtime/node/backend/src/**（后端模块图）、apps/khyos-desktop/src/**、delivery/channel/web/**、delivery/channel/**、runtime/node/backend/src/cli/tui/**（视觉层）"
 priority: P1
 trigger: "新增/移动/删除后端或视觉层模块、新增跨层 require、或改动冷启动入口依赖图时"
 constraint: "运行时按加载时机分三层：L0 芯（冷启动即入内存）、L1 膜（被调用才装载）、L2 皮（终端/桌面/Web 表现层）。L0 不得依赖 L1/L2；L1 不得依赖 L2；L1 入口的可达闭包不得渗入视觉皮文件；逻辑侧不得经皮侧 re-export 门面引用通用能力。L0/L1 的冷闭包（仅顶层 require 边）文件数与行数不得超过 CORE-LAYERS.json 的基线，只许减不许增。视觉侧同构：V0 视觉芯的首屏冷闭包（仅静态 import/require 边）不得超基线；应懒加载的低频页面不得出现在 V0/V1 的首屏冷闭包里；视觉层方向矩阵（visual.edgePolicy）必须被消费 —— 芯(V0) 不得依赖膜(V1) 与皮(V2)，膜(V1) 不得依赖皮(V2)。运行时重量（体积轴）：version / doctor --quick / ai-lite 三个场景实际加载的第一方模块数、行数、字节数与外部依赖量不得超过 CORE-LAYERS.json 的 runtimeFootprint 预算；重量闸门（归因：非入口加载者中单点可达重量最大者）不得变大。运行时读数跨会话会漂，故硬预算只给文件数（实测波动 0），行数容差 1%、字节数容差 5%。 设计文档 [DESIGN-ARCH-197] 里引用的基线数字必须与 CORE-LAYERS.json 一致（warning 级：漂移要报，但不阻断整个 PR 构建）—— 「文档说的」与「机器做的」各说各话正是本契约要消灭的漂移本身。 入口顶层 require 预算：CLI 入口（bin/khy.js）中不在任何函数体内的 require（= 模块求值时必被执行，AST 口径）其第一方模块数量与合计行数不得超过 CORE-LAYERS.json 的 entryBudget 基线，只许减不许增 —— 这份重量由**所有命令**承担（含 khy --version），不会因为「那条路径用不到」而消失。 重量分摊预算：运行时顶层边可达（装载期求值）与懒加载边可达（只在被触发路径上求值）的模块数与行数不得超过 runtimeFootprint.weightLayers 的基线 —— 分项计量才知道该动哪一头，且该预算必须真的被守卫消费（写进契约却无人读取等于没有约束）。 分类口径：静态侧「顶层 vs 懒加载」用 AST 函数作用域判定（scripts/lib/requireGraph.js），运行时侧用「加载者是否正在求值」判定（scripts/lib/runtimeFootprint.js）；解析器不可用时必须显式报 core-classifier-degraded，不得静默降级为更差的判定。视觉侧同源：加载边分类同样用 AST（scripts/lib/visualLayerGraph.js），并显式处理视觉侧特有语义 —— ESM import 与 export ... from 是提升的（恒为装载期边）、类型导入被擦除（不算运行时边）、import() 恒为动态边；回退到括号深度口径必须显式报 visual-classifier-degraded。"

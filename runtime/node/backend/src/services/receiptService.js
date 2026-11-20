@@ -214,6 +214,8 @@ function startReceipt(ctx = {}) {
  * @param {object} [entry.result]
  * @param {number} [entry.elapsedMs]
  * @param {string} [entry.permission]
+ * @param {string} [entry.permissionRule] — which branch produced `permission`
+ *        (risk-safe, bypass-mode, user-allow-always, …); optional for old records
  * @param {string} [entry.stepType]  — hardened|flexible|human-gate
  * @param {string} [entry.risk]      — safe|low|medium|high|critical
  * @param {string} [entry.error]
@@ -241,6 +243,7 @@ function appendToolCall(entry = {}) {
     stepType: entry.stepType || 'flexible',
     risk: entry.risk || 'medium',
     permission: entry.permission || 'unknown',
+    permissionRule: entry.permissionRule || null,
     error: entry.error ? String(entry.error).slice(0, MAX_STR) : null,
     timestamp: new Date().toISOString(),
   };

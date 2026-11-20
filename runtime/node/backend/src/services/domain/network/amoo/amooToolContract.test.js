@@ -3,8 +3,8 @@
 /**
  * amooToolContract.test.js — 工具名 / 风险契约与五份清单的比对测试。
  *
- * WHY 这个测试存在：五份工具清单互不相通（PC 执行闸 22、目录 32、协作桥 12、
- * 手机端 48、手机循环 48——P0-2 起后者是前者的集合镜像），谁改一边另一边都不知道，
+ * WHY 这个测试存在：五份工具清单互不相通（PC 执行闸 22、目录 34、协作桥 12、
+ * 手机端 62、手机循环 62——P0-2 起后者是前者的集合镜像），谁改一边另一边都不知道，
  * 漂移就这么攒出来的。
  * 契约 `amooToolContract.json` 是它们的**坐标**，本测试把坐标和五份清单逐条
  * 对上，并报出计数与差集。
@@ -72,6 +72,31 @@ function parseJavaAsList(text, anchor) {
   return [...text.slice(open + 1, close).matchAll(/"([^"]+)"/g)].map((m) => m[1]);
 }
 
+const PHONE_DIR = 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge';
+
+// 协作桥的位置按**服务名**问，不写拓展 id。
+//
+// 原先这里直接写 `delivery/extension/bridges/khy-amoon-bridge/lib/contracts.js`，
+// 被 `check-repo-layout` 的 extension-id-hardcode 判红（基线 0，2026-11-09 实测 1）。
+// 判据真源是 [DESIGN-TOOL-002] §1.3：核里不得出现拓展 id，因为 id 会改名、可被
+// 第三方实现替换、可装在任何根下。测试也要守这条 —— 否则桥一改名，这个「契约对账」
+// 测试自己就先漂了。
+const BRIDGE_SERVICE = 'amoon-bridge';
+const BRIDGE_CONTRACTS_FILE = 'lib/contracts.js';
+const bridgeProvider = require('../../extensions/extensions/extensionRoots')
+  .findProvider(BRIDGE_SERVICE, { probe: BRIDGE_CONTRACTS_FILE });
+const BRIDGE_CONTRACTS = bridgeProvider
+  ? path.relative(REPO_ROOT, path.join(bridgeProvider.dir, BRIDGE_CONTRACTS_FILE)).split(path.sep).join('/')
+  : null;
+
+// 桥缺席时不要拿 null 去 readRepoFile —— 那时报的是 ENOENT 路径错误，看不出
+// 真正的原因（「provides 里没人声明 amoon-bridge」）。
+assert.ok(
+  BRIDGE_CONTRACTS,
+  '找不到 provides 声明 "amoon-bridge" 且带 lib/contracts.js 的拓展 —— '
+  + '协作桥未安装或 khy.extension.json 的 provides 被改，本测试无从对账',
+);
+
 /** 协作桥 contracts.js 的 TOOL_SPECS 里的工具名（只取名字，不取实现）。 */
 function parseBridgeToolSpecNames(text) {
   const start = text.indexOf('const TOOL_SPECS = [');
@@ -80,9 +105,6 @@ function parseBridgeToolSpecNames(text) {
   assert.ok(end > start, 'contracts.js 的 TOOL_SPECS 边界解析失败');
   return [...text.slice(start, end).matchAll(/\bname:\s*'([^']+)'/g)].map((m) => m[1]);
 }
-
-const PHONE_DIR = 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge';
-const BRIDGE_CONTRACTS = 'delivery/extension/bridges/khy-amoon-bridge/lib/contracts.js';
 
 const phoneNames = parseJavaStringList(
   readRepoFile(`${PHONE_DIR}/Tools.java`),
@@ -188,10 +210,11 @@ test('PC 执行闸的 22 项：契约全覆盖且风险档 / 确认门一致', (
   }
 });
 
-test('目录的 32 项（含 phone_* 名与历史别名）全部映射到契约条目', () => {
+test('目录的 34 项（含 phone_* 名与历史别名）全部映射到契约条目', () => {
   const contract = loadContract();
   const index = buildNameIndex(contract);
-  assert.equal(catalogTools.length, 32, '目录工具数被改动，需人工确认');
+  // 34 = 32 + record_audio + camera_open（2026-11-13 加入的采集能力：录音与拍照）。
+  assert.equal(catalogTools.length, 34, '目录工具数被改动，需人工确认');
   for (const name of catalogNames) {
     assert.ok(index.has(name), `目录里的名字不在契约里：${name}`);
   }
@@ -215,13 +238,18 @@ test('协作桥的 12 项 wire 工具全部映射到契约条目', () => {
   }
 });
 
-test('手机端 48 项与手机循环 48 项全部映射到契约条目，且两份清单集合相等', () => {
+test('手机端 66 项与手机循环 66 项全部映射到契约条目，且两份清单集合相等', () => {
   const contract = loadContract();
   const index = buildNameIndex(contract);
-  assert.equal(phoneNames.length, 48, '手机端 Tools.NAMES 数量被改动，需人工确认');
+  // 66 = 手机端 KNOWN_TOOLS 的既定规模（P0-2 起它与 Tools.NAMES 集合相等）。
+  // 规模随采集线与 apex 线的能力陆续加入而增长：48 → 62 → 65（net_rule 拆分，
+  // 已人工裁决）→ 66（2026-11-17 提权批次加入 elevate；任务书的 62→65 按
+  // 拆分增量 +3 计，当前基线 63 含 elevate，故绝对值是 66）。
+  // 差集断言仍然是承重墙——两份清单必须**集合相等**，不只是个数相等。
+  assert.equal(phoneNames.length, 66, '手机端 Tools.NAMES 数量被改动，需人工确认');
   assert.equal(
     loopKnownTools.length,
-    48,
+    66,
     '手机端 KNOWN_TOOLS 数量被改动，需人工确认（P0-2 起它与 Tools.NAMES 集合相等）',
   );
   for (const name of phoneNames) {

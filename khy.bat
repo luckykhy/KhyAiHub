@@ -251,7 +251,7 @@ echo Please install Python 3.8+: https://www.python.org/downloads/ or Node.js 20
 exit /b 1
 
 :set_portable_env
-:: The 16-var KHY_* contract lives in khy-env.bat so that khy-cli.bat and
+:: The 15-var KHY_* contract lives in khy-env.bat so that khy-cli.bat and
 :: <PORTABLE_ROOT>\bin\khy.cmd can share it instead of each declaring a subset
 :: (they used to declare none, which forked the data home onto a second tree).
 :: khy-env.bat derives every path from its own %~dp0, so calling it from here

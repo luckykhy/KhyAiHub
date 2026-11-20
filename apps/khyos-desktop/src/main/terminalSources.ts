@@ -38,6 +38,9 @@ export interface TerminalItem {
   readOnly: boolean
   toggleable: boolean
   deletable: boolean
+  // 设置页「命令」页的分组键；只有 command 行有值（khy 斜杠行由 slashCommandSources
+  // 按后端 category 填），钩子/技能/子智能体/记忆四 kind 恒不带该字段。
+  groupKey?: string
 }
 
 type AnyModule = Record<string, any>
@@ -621,6 +624,7 @@ function listCommands(): TerminalItem[] {
       readOnly: false,
       toggleable: false,
       deletable: true,
+      groupKey: 'claude-code',
     })
   }
   const pluginDir = String(backend().cliPlugins.PLUGINS_DIR || '')
@@ -655,6 +659,7 @@ function listCommands(): TerminalItem[] {
           readOnly: false,
           toggleable: false,
           deletable: true,
+          groupKey: 'plugin',
         })
       } catch {
         /* broken plugin: the terminal also skips it */
@@ -1239,7 +1244,7 @@ export async function installTerminalPlugin(): Promise<{ ok: false; error: strin
   return { ok: false, error: '桌面端未接入插件市场：请用终端执行 khy ext list / khy ext install 后在此管理' }
 }
 
-// ── ecosystem survey catalog (delivery/market) + live sources ───────────
+// ── ecosystem survey catalog (works/market) + live sources ───────────
 // Read-only data for the 发现 tab. Assembly lives in the backend
 // services/marketCatalog module — the same one the web route and the CLI call —
 // so the three surfaces cannot report different ecosystem counts or freshness.

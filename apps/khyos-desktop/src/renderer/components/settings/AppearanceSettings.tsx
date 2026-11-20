@@ -1,4 +1,5 @@
 // khy-canary: Khy-20261102-306-RV9NYXWT
+import { errText } from '../../utils/errText'
 import { useState, useEffect } from 'react'
 import { applyTheme, applyMessageFontSize } from '../../theme/theme'
 import {
@@ -40,6 +41,8 @@ function fileNameOf(filePath: string): string {
 
 export function AppearanceSettings({ settings, onChange }: AppearanceSettingsProps) {
   const [theme, setTheme] = useState('system')
+  // 主题状态读失败要可见：静默回退 'system' 会让外观页显示一套并没有生效的主题。
+  const [themeError, setThemeError] = useState('')
   const [systemLight, setSystemLight] = useState(
     () => window.matchMedia?.('(prefers-color-scheme: light)').matches === true,
   )
@@ -71,7 +74,9 @@ export function AppearanceSettings({ settings, onChange }: AppearanceSettingsPro
     const api = (window as unknown as {
       __KHYOS__?: { getTheme?: () => Promise<string> }
     }).__KHYOS__
-    api?.getTheme?.().then((t) => setTheme(t || 'system')).catch(() => {})
+    api?.getTheme?.()
+      .then((t) => setTheme(t || 'system'))
+      .catch((err: unknown) => setThemeError(`主题状态读取失败：${errText(err)}`))
   }, [])
 
   // 主题也可能从账号菜单换（或系统深浅色翻转）：跟着 DOM 已落定的类同步，
@@ -81,7 +86,9 @@ export function AppearanceSettings({ settings, onChange }: AppearanceSettingsPro
       const api = (window as unknown as {
         __KHYOS__?: { getTheme?: () => Promise<string> }
       }).__KHYOS__
-      api?.getTheme?.().then((t) => setTheme(t || 'system')).catch(() => {})
+      api?.getTheme?.()
+        .then((t) => setTheme(t || 'system'))
+        .catch((err: unknown) => setThemeError(`主题状态读取失败：${errText(err)}`))
     }
     const mql = window.matchMedia?.('(prefers-color-scheme: light)')
     const onScheme = () => setSystemLight(mql?.matches === true)
@@ -171,6 +178,11 @@ export function AppearanceSettings({ settings, onChange }: AppearanceSettingsPro
 
   return (
     <div className="max-w-3xl">
+      {themeError && (
+        <div className="mb-4 px-4 py-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl">
+          {themeError}
+        </div>
+      )}
       {/* ── 主题 ── */}
       <SettingSection title="主题">
         <RadioField

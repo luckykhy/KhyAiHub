@@ -1,17 +1,16 @@
 ﻿<#
 .SYNOPSIS
-    修复 / 重建 khy-os 仓库根的 7 个受控目录联接（Junction）。
+    修复 / 重建 khy-os 仓库根的 6 个受控目录联接（Junction）。
 
 .DESCRIPTION
     这个仓库是便携式（Portable）项目：整个 khy-os 目录可能被从 D 盘复制到 E 盘、
-    U 盘，或改变父文件夹名称。而 7 个第三方 AI 工具（Cursor / OpenCode / ZCode /
-    WorkBuddy / CodeArts Doer）以及 khyos 自己的轨迹数据家，都硬性要求按**仓库根
-    路径**读写自己的配置目录。
+    U 盘，或改变父文件夹名称。而 6 个第三方 AI 工具（Cursor / OpenCode / ZCode /
+    WorkBuddy / WorkBuddy-AI / CodeArts Doer）都硬性要求按**仓库根路径**读写
+    自己的配置目录。
 
     为同时满足「仓库根整洁」与「工具按根路径读写」，数据物理存放在 works/data/ 下，
     再用目录联接把原路径映射回根目录：
 
-        khy-Trajectory -> works/data/khy
         .cursor        -> works/data/cursor
         .opencode      -> works/data/opencode
         .zcode         -> works/data/zcode
@@ -102,11 +101,11 @@ function Write-Plain([string]$m) { Write-Host $m }
 #   Sub  : works/data/ 下的物理子目录名
 #   Why  : 一句话说明它是什么，仅用于摘要输出，便于人review
 #
-#   故意把 Link 和 Sub 分成两个字段而不是让它们默认相同：khy-Trajectory 的物理
-#   目录叫 khy，两者已经分叉过一次，写成两个字段以后再怎么改都不用动逻辑。
+#   故意把 Link 和 Sub 分成两个字段而不是让它们默认相同：历史上 khy-Trajectory 的
+#   物理目录叫 khy，两者分叉过一次（该别名已按 2026-11-19 用户裁决拆除，仓库不再
+#   使用 junction/symlink 维护数据家别名）；保留两字段，将来再分叉时不用动逻辑。
 # ─────────────────────────────────────────────────────────────────────────────
 $JunctionMap = [ordered]@{
-    'khy-Trajectory' = @{ Sub = 'khy';       Why = 'khyos 轨迹/会话数据家（works/data/khy）' }
     '.cursor'        = @{ Sub = 'cursor';    Why = 'Cursor 编辑器配置与状态' }
     '.opencode'      = @{ Sub = 'opencode';  Why = 'OpenCode 配置与状态' }
     '.zcode'         = @{ Sub = 'zcode';     Why = 'ZCode 配置与状态' }

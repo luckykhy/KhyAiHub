@@ -45,9 +45,15 @@ if (!(Test-Path -Path $khyEntry)) {
 # The generated function used to be a bare `node <entry> $args`, which set none
 # of the KHY_* environment contract. That forked the data home onto a second
 # tree: `khy` from PowerShell saw ~/.khy while `khy` from khy.bat saw
-# works\data\khy -- two caches, two session stores, one machine. The 16 vars
+# works\data\khy -- two caches, two session stores, one machine. The 15 vars
 # below are the same contract khy-env.bat exports for the batch entries; keep
 # the two in sync (khy-env.bat is the single source of truth for the .bat side).
+# KHYOS_HOME is deliberately not among them: getBaseHome() in
+# runtime\node\backend\src\utils\dataHome.js owns the base home, and the
+# portable-root exports below steer it onto its portable branch. The
+# works\data\khyos value this used to carry is the compatibility junction
+# retired by the 2026-11-19 no-junction adjudication -- pinning it here would
+# fork the base home off the resolver again.
 # $PSScriptRoot is resolved now, at setup time, and baked into the profile --
 # the profile is a per-machine artifact, so that is where the absolute path
 # belongs.
@@ -67,7 +73,6 @@ function khy {
     if (!`$env:KHY_DATA_HOME) { `$env:KHY_DATA_HOME = "$khyDataHome" }
     if (!`$env:KHY_PROJECT_DATA_HOME) { `$env:KHY_PROJECT_DATA_HOME = "$khyDataHome" }
     if (!`$env:KHYQUANT_DATA_HOME) { `$env:KHYQUANT_DATA_HOME = `$env:KHY_DATA_HOME }
-    `$env:KHYOS_HOME = "$khyRepoRoot\works\data\khyos"
     `$env:KHY_COORDINATOR_MODE = "true"
     `$env:KHY_RUNTIME_HOME = "`$env:KHY_DATA_HOME\runtime"
     `$env:KHY_CACHE_HOME = "`$env:KHY_DATA_HOME\cache"

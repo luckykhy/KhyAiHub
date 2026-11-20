@@ -195,6 +195,54 @@ function coldClosure(roots) {
   return seen;
 }
 
+// 仓库自己的 require 分类器（AST 分 top/lazy，check-core-layers 同款）：
+// 判据 #3 的「冷闭包」语义就是「仅顶层边」，用它而不是自写正则——
+// 自写遍历分不清顶层与惰性，会把故意懒加载的边误报成闭包命中（B4 实测）。
+let _requireGraph = null;
+function classifyRequires(file) {
+  if (!_requireGraph) {
+    try {
+      _requireGraph = require(path.join(REPO_ROOT, 'scripts/lib/requireGraph'));
+    } catch (_) {
+      _requireGraph = null;
+    }
+  }
+  if (_requireGraph && typeof _requireGraph.classifyFile === 'function') {
+    try {
+      return _requireGraph.classifyFile(file);
+    } catch (_) {
+      /* 落到正则兜底 */
+    }
+  }
+  const src = readLines(file).join('\n');
+  const top = [];
+  const lazy = [];
+  const re = /require\(\s*['"](\.[^'"]+)['"]\s*\)/g;
+  let m;
+  while ((m = re.exec(src))) {
+    (m.index === 0 || /^\s*(const|let|var)?\s*$/.test(src.slice(0, m.index).split('\n').pop() || '') ? top : lazy).push(m[1]);
+  }
+  return { top, lazy };
+}
+
+// 判据 #3 的冷闭包：只跟顶层 require 边（[DESIGN-ARCH-220] §13.3-3）。
+function coldClosureTopOnly(roots) {
+  const seen = new Set();
+  const queue = roots.filter((r) => fs.existsSync(r));
+  while (queue.length) {
+    const file = queue.shift();
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const cls = classifyRequires(file);
+    for (const spec of cls.top || []) {
+      if (!spec.startsWith('.')) continue;
+      const target = resolveRequire(file, spec);
+      if (target && !seen.has(target)) queue.push(target);
+    }
+  }
+  return seen;
+}
+
 function layerRoots() {
   try {
     const registry = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'docs/10_规范/registry/CORE-LAYERS.json'), 'utf8'));
@@ -221,6 +269,7 @@ function checkCoreBoundaryImport() {
     const lines = readLines(file);
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (isCommentLine(line)) continue; // provenance 注释里的旧路径不是 require 边
       if (!/(require\(|import\s|from\s)/.test(line)) continue;
       for (const needle of forbidden) {
         if (line.includes(needle)) {
@@ -265,10 +314,13 @@ function checkTerminalDirectGateway() {
 }
 
 // ── 判据 #3：入口冷闭包内不得出现 core ──────────────────────────────────────────
+// 「冷闭包」按仓库自己的 requireGraph（AST 分类 top/lazy）只跟**顶层 require 边**——
+// v1 的自写遍历把懒加载边也算进去，B4 的门面 require（故意懒加载，为了不占入口预算）
+// 就这样被误报成闭包命中。语义对齐 [DESIGN-ARCH-220] §13.3-3 的「仅顶层边」。
 function checkCoreNotInEntryClosure() {
   const roots = layerRoots();
   if (!roots.length) return;
-  const closure = coldClosure(roots);
+  const closure = coldClosureTopOnly(roots);
   for (const file of closure) {
     checksRun += 1;
     const r = rel(file);
@@ -276,11 +328,10 @@ function checkCoreNotInEntryClosure() {
       addFinding('core-not-in-entry-closure', file, 0, '入口冷闭包内出现 packages/core 源文件：S3b 之前 CLI 不得在入口链上加载 core（[DESIGN-ARCH-220] §13.3-3）');
       continue;
     }
-    const src = readLines(file).join('\n');
-    // 只认真实 require 边：backend package.json 里的 "@khy/core": "*" 是依赖声明，
-    // 不是加载边（v1 按字符串出现判，把声明误报成闭包命中）。
-    if (/(require\(\s*['"]@khy\/core|from\s+['"]@khy\/core)/.test(src)) {
-      addFinding('core-not-in-entry-closure', file, 0, '入口冷闭包内出现 @khy/core require 边：迁移期只允许 backend 消费面经已导出子路径读取');
+    const cls = classifyRequires(file);
+    const bareCore = (cls.top || []).some((spec) => spec.startsWith('@khy/core'));
+    if (bareCore) {
+      addFinding('core-not-in-entry-closure', file, 0, '入口冷闭包内出现 @khy/core 顶层 require 边：迁移期只允许 backend 消费面经已导出子路径读取');
     }
   }
 }
@@ -393,7 +444,7 @@ function checkCoreEnvSingleSource() {
 
 // ── 子档 C：终端之间不直接引用（静态；点对点通信由契约测试兜底） ──────────────────
 function checkTerminalCrossReference() {
-  const terminalRoots = ['delivery/channel/khyquant', 'delivery/web/ai-frontend', 'delivery/web/provider-hub', 'apps/khyos-desktop'];
+  const terminalRoots = ['delivery/channel/khyquant', 'delivery/channel/web/ai-frontend', 'delivery/channel/web/provider-hub', 'apps/khyos-desktop'];
   const crossTokens = [
     { from: 'khyquant', to: ['ai-frontend/', 'provider-hub/', 'khyos-desktop/'] },
     { from: 'ai-frontend', to: ['khyquant/', 'provider-hub/', 'khyos-desktop/'] },
@@ -473,7 +524,7 @@ function checkSuiteFork() {
       addFinding('suite-deps-core-pkg', pkgJson, 1, 'suite 未依赖 @khy/core：装配壳必须只依赖 core 包与终端清单');
     }
   }
-  for (const terminal of ['apps/khyos-desktop', 'delivery/web/ai-frontend', 'delivery/web/provider-hub']) {
+  for (const terminal of ['apps/khyos-desktop', 'delivery/channel/web/ai-frontend', 'delivery/channel/web/provider-hub']) {
     const dir = path.join(REPO_ROOT, terminal);
     if (!fs.existsSync(dir)) continue;
     for (const file of scoped(walkFiles(dir))) {

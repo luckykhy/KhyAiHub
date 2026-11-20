@@ -6,7 +6,7 @@
 
 跑在手机上的 AI 和跑在 PC 上的 AI，系统提示原本都是**项目盲**的：
 
-- 手机侧 `delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart` 只说
+- 手机侧 `delivery/channel/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart` 只说
   「你是 khy-os AI 助手，运行在用户的 Android 手机上」
 - PC 侧 `services/domain/network/stepneoCloud/agentLoop.js` 连项目名都没有，
   只有「你是一个能在用户手机上执行操作的智能体」
@@ -40,7 +40,7 @@ agent 下次就可能自动 commit，或把密钥写进源码——那不是它�
 
 1. `services/domain/network/stepneoCloud/agentLoop.js` —— PC 侧云模型 loop 的系统提示
 2. `scripts/project-profile/build-project-profile.js` —— 生成
-   `delivery/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart`
+   `delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart`
    （手机侧系统提示 + 设置页「项目」区块）
 
 ## 重新生成

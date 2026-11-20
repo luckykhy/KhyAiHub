@@ -46,15 +46,23 @@ Use dry_run to preview a graph's structure (node/edge counts) without running it
 
     // Look for workflow definition. Includes the app-data store that
     // `khy workflow import` writes to, so CLI-imported graphs are runnable here.
-    const searchPaths = [
-      path.join(process.cwd(), '.khy', 'workflows', `${params.name}.json`),
-      path.join(require('os').homedir(), '.khy', 'workflows', `${params.name}.json`),
-    ];
+    //
+    // The `<cwd>/.khy/workflows` entry used to sit here first: with the backend
+    // normally started from the repo root it is exactly the root-level `.khy`
+    // shadow tree the layout rules forbid (and sibling writers would populate).
+    // The bare `~/.khy/workflows` literal is gone with it — both now resolve
+    // through dataHome, which honors KHY_DATA_HOME and the portable project
+    // home. resolveDataPath is deliberately probe-only: getDataDir would mkdir
+    // the dir and the existsSync check below would always be true.
+    const searchPaths = [];
     try {
-      const { getAppDataDir } = require('../../utils/dataHome');
-      searchPaths.push(path.join(getAppDataDir('workflows'), `${params.name}.json`));
+      const { resolveDataPath, getAppDataDir } = require('../../utils/dataHome');
+      searchPaths.push(
+        resolveDataPath('workflows', `${params.name}.json`),
+        path.join(getAppDataDir('workflows'), `${params.name}.json`)
+      );
     } catch {
-      /* dataHome unavailable — fall back to .khy paths only */
+      /* dataHome unavailable — no candidate paths */
     }
 
     let workflowDef = null;
@@ -73,7 +81,7 @@ Use dry_run to preview a graph's structure (node/edge counts) without running it
 
     if (!workflowDef) {
       return {
-        error: `Workflow "${params.name}" not found. Create one at .khy/workflows/${params.name}.json or import via \`khy workflow import\`.`,
+        error: `Workflow "${params.name}" not found. Import one via \`khy workflow import\` (see searchedPaths for the dirs checked).`,
         searchedPaths: searchPaths,
       };
     }

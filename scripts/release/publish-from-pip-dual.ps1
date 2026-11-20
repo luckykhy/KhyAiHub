@@ -39,7 +39,7 @@ function Ensure-RequiredDirs([string]$RepoDir) {
   $required = @(
     'runtime/node/backend/models',
     'runtime/node/backend/ml/models',
-    'delivery/web/ai-frontend/node_modules',
+    'delivery/channel/web/ai-frontend/node_modules',
     'runtime/substrate/platform/packages/shared/logs'
   )
 

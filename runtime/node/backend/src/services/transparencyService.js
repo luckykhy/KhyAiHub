@@ -41,6 +41,7 @@ const c = () => (_chalk ??= require('chalk').default || require('chalk'));
  * @param {string} [usage.model]
  * @param {string} [usage.adapter]
  * @param {number} [usage.costUSD]
+ * @param {string} [usage.costState] - priced/free/flat/assumed/unknown
  * @param {number} [usage.durationMs]
  * @returns {string} Formatted line (ANSI colored)
  */
@@ -75,8 +76,22 @@ function formatTurnCost(usage) {
     parts.push(chalk.green(`${cached} 已缓存`));
   }
 
-  // Cost
-  if (usage.costUSD != null && usage.costUSD > 0) {
+  // Cost. costState decides the frame: priced/free is a measurement,
+  // flat/assumed is a rough fallback, unknown has no price on file.
+  // Why leave unknown blank instead of printing the default rate: a number the
+  // price table never contained would look exactly like a measured one, and the
+  // user has no way to tell them apart afterwards.
+  if (usage.costState === 'unknown') {
+    parts.push(chalk.dim('价格未知（价目表无此模型）'));
+  } else if (usage.costState === 'flat' || usage.costState === 'assumed') {
+    const rough =
+      usage.costUSD != null && usage.costUSD > 0
+        ? ` $${usage.costUSD >= 0.01 ? usage.costUSD.toFixed(2) : usage.costUSD.toFixed(4)}`
+        : '';
+    parts.push(chalk.yellow(`~粗价${rough}`));
+  } else if (usage.costState === 'free') {
+    parts.push(chalk.green('免费'));
+  } else if (usage.costUSD != null && usage.costUSD > 0) {
     const cost =
       usage.costUSD >= 0.01 ? `$${usage.costUSD.toFixed(2)}` : `$${usage.costUSD.toFixed(4)}`;
     parts.push(chalk.yellow(cost));

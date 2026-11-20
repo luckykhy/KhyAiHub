@@ -179,7 +179,7 @@ const RUNTIME_SOURCE_RE = [
   /^runtime\/substrate\/platform\/.*\.py$/,
   /^runtime\/node\/.*\.(js|mjs|cjs|ts)$/,
   /^delivery\/channel\/khyquant\/.*\.(py|js|mjs|cjs|ts|vue)$/,
-  /^delivery\/web\/.*\.(js|mjs|cjs|ts|vue)$/,
+  /^delivery\/channel\/web\/.*\.(js|mjs|cjs|ts|vue)$/,
   /^delivery\/extension\/.*\.(js|mjs|cjs|ts|py)$/,
 ];
 

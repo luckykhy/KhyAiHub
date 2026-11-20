@@ -1,8 +1,12 @@
 /**
  * mobileChartConfig.test.js — locks the chart-config contract in
- * src/utils/mobileChartConfig.ts: mobile vs desktop option shapes, the
+ * src/utils/mobileChartConfig: mobile vs desktop option shapes, the
  * isMobile dispatch in getChartOptions, and the time formatters'
  * date-only vs date+time rules. If the config keys drift, this goes red first.
+ *
+ * 导入**不带扩展名**：与产线（Vite）解析同一条路径。此前这里写死 '.ts'，
+ * 测的是一份从不进产物的文件（同名 .js 影子被 Vite 优先解析）—— 测试锁的
+ * 代码与产线跑的代码根本不是同一份（FE-01）。
  */
 import { describe, it, expect } from 'vitest'
 import {
@@ -12,7 +16,7 @@ import {
   getMobileTimeScaleOptions,
   getDesktopChartOptions,
   getChartOptions
-} from '../utils/mobileChartConfig.ts'
+} from '../utils/mobileChartConfig'
 
 describe('mobileChartConfig', () => {
   it('getMobileChartOptions carries the mobile-sized layout and disabled default gestures', () => {

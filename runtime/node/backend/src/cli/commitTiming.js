@@ -70,7 +70,11 @@ const DOC_EXTS = new Set(['.md', '.html', '.txt', '.json', '.yaml', '.yml', '.cs
 /** 游离产物（与 pre-commit 第 1 项口径一致）。 */
 const STRAY_RE = /(^|\/)(tmp-|tmp_|\.tmp$)|\.tmp$|(^|\/)probe[-_]|(^|\/)_probe|\.bak$|\.orig$/;
 
-/** 本机态 / 不该入库的目录：出现即极可能是 `git add -A` 卷进来的。 */
+/**
+ * 本机态 / 不该入库的目录：出现即极可能是 `git add -A` 卷进来的。
+ * khy-Trajectory/ 是 2026-11-19 已拆除的可见别名；保留为存量 junction 兜底，
+ * 与 .gitignore 同处理。
+ */
 const LOCAL_STATE_DIRS = ['.khy/', '.khyos/', '.khyquant/', 'khy-Trajectory/', '.zcode/tmp/'];
 
 /**

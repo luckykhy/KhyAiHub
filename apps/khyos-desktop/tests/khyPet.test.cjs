@@ -18,6 +18,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
+const { unregisteredChannels } = require('./ipcChannelScan.cjs');
 
 const projectRoot = join(__dirname, '..');
 const petDir = join(projectRoot, 'src', 'renderer', 'components', 'pet');
@@ -34,6 +35,8 @@ const layoutSrc = existsSync(layoutPath) ? readFileSync(layoutPath, 'utf-8') : '
 const preloadSrc = existsSync(preloadPath) ? readFileSync(preloadPath, 'utf-8') : '';
 const mainSrc = existsSync(mainPath) ? readFileSync(mainPath, 'utf-8') : '';
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+void preloadSrc;
+void mainSrc;
 
 // ── P1: 抽签算法 ──────────────────────────────────────────────
 
@@ -133,19 +136,9 @@ test('P6: AppLayout 挂载了桌宠', () => {
 
 test('P7: 桌宠没有新增 preload/main 通道', () => {
   assert.doesNotMatch(petSrc, /ipcRenderer|window\.__KHYOS__/);
-  // preload 与 main 的通道仍是一一对应（与 desktopUiContract 的 D6 同源：
-  // KeyManager 的通道注册在 src/main/keyManager/ipc.ts，也要一起扫）。
-  const keyManagerIpcPath = join(projectRoot, 'src', 'main', 'keyManager', 'ipc.ts');
-  const keyManagerIpcSrc = existsSync(keyManagerIpcPath) ? readFileSync(keyManagerIpcPath, 'utf-8') : '';
-  const preloadChannels = [...preloadSrc.matchAll(/ipcRenderer\.invoke\(\s*'([^']+)'/g)].map((m) => m[1]);
-  const mainHandles = [
-    ...mainSrc.matchAll(/ipcMain\.handle\(\s*'([^']+)'/g),
-    // keyManager 模块走自己的 ipc.handle 包装，不是裸 ipcMain.handle。
-    ...keyManagerIpcSrc.matchAll(/ipc(?:Main)?\.handle\(\s*'([^']+)'/g),
-  ].map((m) => m[1]);
-  for (const channel of preloadChannels) {
-    assert.ok(mainHandles.includes(channel), `preload 用了未注册的通道：${channel}`);
-  }
+  // preload 与 main 的通道仍是一一对应（与 desktopUiContract 的 D6 同源）。
+  const missing = unregisteredChannels(projectRoot);
+  assert.deepEqual(missing, [], `preload 用了未注册的通道：${missing.join(', ')}`);
 });
 
 // ── P8: 测试登记 ──────────────────────────────────────────────

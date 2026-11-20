@@ -18,7 +18,7 @@ const zlib = require('zlib');
 
 const { ComputerUseAgent, SYSTEM_PROMPT, _internals } = require('../../../src/services/domain/desktop/computerUse/computerUseAgent.js');
 const setOfMarks = require('../../../src/services/domain/desktop/computerUse/setOfMarks.js');
-const { getDataHome } = require('../../../src/utils/dataHome');
+const { resolveDataPath } = require('../../../src/utils/dataHome');
 
 // ── 测试用 PNG 编码器（复用 stateDetector 测试的 RGB 生成）──────────────────
 
@@ -77,6 +77,52 @@ function makeScreenshotPair() {
   fs.writeFileSync(a, encodeGrayPng(64, 64, () => 128));
   fs.writeFileSync(b, encodeGrayPng(64, 64, (x, y) => (y < 32 ? 255 : 128))); // 上半屏变亮
   return { a, b, dir };
+}
+
+/** 写一帧到指定目录；同内容不同文件名 = 「画面没变，但确实又拍了一张」 */
+function writeFrame(dir, name, paint) {
+  const p = path.join(dir, name);
+  fs.writeFileSync(p, encodeGrayPng(64, 64, paint));
+  return p;
+}
+
+/** 假控制器：observe 恒返回 observePath，screenshot 按序号取 shotPaths（快轮 observe 与 verify 共用它） */
+function framesController(observePath, shotPaths) {
+  let shots = 0;
+  return {
+    capabilities: () => ({ summary: { canSee: true } }),
+    observe: jest.fn(async () => ({
+      success: true,
+      path: observePath,
+      elements: [],
+      clickable: [],
+      recognized: null,
+    })),
+    screenshot: jest.fn(async () => ({ success: true, path: shotPaths[shots++ % shotPaths.length] })),
+    clickElement: jest.fn(async () => ({ success: true })),
+  };
+}
+
+/** 假网关：按队列吐动作，并把每轮提示词收进 sink */
+function promptGateway(responses, sink) {
+  const queue = responses.slice();
+  return {
+    generate: jest.fn(async (prompt) => {
+      sink.push(prompt);
+      return queue.shift() || { content: '{"action":"finish","summary":"queue drained"}' };
+    }),
+  };
+}
+
+/** verify 用例不碰本机 dataHome（轨迹日志与经验记忆都有既有 env 开关） */
+function silenceJournalEnv() {
+  process.env.KHY_COMPUTER_USE_JOURNAL = '0';
+  process.env.KHY_COMPUTER_USE_EXPERIENCE = '0';
+}
+
+function restoreJournalEnv() {
+  delete process.env.KHY_COMPUTER_USE_JOURNAL;
+  delete process.env.KHY_COMPUTER_USE_EXPERIENCE;
 }
 
 // ── 提示工程：few-shot ─────────────────────────────────────────────────────
@@ -380,7 +426,9 @@ describe('computerUseAgent — 屏幕内容提示注入防护', () => {
 
 describe('computerUseAgent — 经验记忆（LTM few-shot）', () => {
   function seedJournal(records) {
-    const dir = path.join(getDataHome(), 'computerUse', 'journal');
+    // 必须与 _writeJournal/_loadExperience 同一个解析器：DATA_PATHS 把 computerUse
+    // 映射到 T1-domains/desktop/computerUse，拼 getDataHome() 会播到没人读的旧位置。
+    const dir = resolveDataPath('computerUse', 'journal');
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'journal.jsonl'), records.map((r) => JSON.stringify(r)).join('\n') + '\n');
     return path.join(dir, 'journal.jsonl');
@@ -388,7 +436,7 @@ describe('computerUseAgent — 经验记忆（LTM few-shot）', () => {
 
   afterEach(() => {
     try {
-      const dir = path.join(getDataHome(), 'computerUse', 'journal');
+      const dir = resolveDataPath('computerUse', 'journal');
       fs.rmSync(dir, { recursive: true, force: true });
     } catch { /* 忽略 */ }
   });
@@ -756,3 +804,151 @@ describe('computerUseAgent — 结构化错误（报错与实况对齐）', () =
     expect(err.message).toContain('invalid api key');
   });
 });
+
+// ── verify 相位：动作起效判定 + is_stuck 止损 ──────────────────────────────
+
+describe('computerUseAgent — verify 相位（起效判定）', () => {
+  beforeAll(silenceJournalEnv);
+  afterAll(restoreJournalEnv);
+
+  test('_verifyActionEffect 三态：变化→true，同图→false，缺帧/同路径/解码失败→null', () => {
+    const shots = makeScreenshotPair();
+    const dir = path.dirname(shots.a);
+    const flat = () => 128;
+    try {
+      expect(_internals._verifyActionEffect({ prevScreenPath: shots.a, postPath: shots.b }).effective).toBe(true);
+      expect(
+        _internals._verifyActionEffect({ prevScreenPath: writeFrame(dir, 'f1.png', flat), postPath: writeFrame(dir, 'f2.png', flat) }).effective
+      ).toBe(false);
+      // 同一路径没有两帧可比（真实 capture 每次写新文件），只能判「无法判断」
+      expect(_internals._verifyActionEffect({ prevScreenPath: shots.a, postPath: shots.a })).toMatchObject({ effective: null, error: 'same_frame' });
+      expect(_internals._verifyActionEffect({ prevScreenPath: null, postPath: shots.a }).effective).toBe(null);
+      expect(_internals._verifyActionEffect({ prevScreenPath: shots.a }).effective).toBe(null);
+      // 解码失败收敛为 null，不抛
+      expect(_internals._verifyActionEffect({ prevScreenPath: shots.a, postPath: path.join(dir, 'nope.png') }).effective).toBe(null);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('连续三轮「有证据的未生效」→ repeated_no_effect（提示在 2，止损在 3）', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-cu-verify-stop-'));
+    try {
+      // 每次截图都是新文件、内容都是同一份灰屏：真实 capture 的形状
+      const still = writeFrame(dir, 'still.png', () => 128);
+      const posts = Array.from({ length: 6 }, (_, i) => writeFrame(dir, `post${i}.png`, () => 128));
+      const prompts = [];
+      const streaks = [];
+      const click = { content: '{"action":"clickElement","target":"e1","waitMs":10}' };
+      const gateway = promptGateway([click, click, click], prompts);
+      const agent = new ComputerUseAgent({ gateway, controller: framesController(still, posts) });
+      const result = await agent.run('点保存', { onIteration: (state) => streaks.push(state._noChangeStreak) });
+
+      expect(result.success).toBe(false);
+      expect(result.finished).toBe(false);
+      expect(result.stoppedReason).toBe('repeated_no_effect');
+      expect(result.summary).toContain('已连续 3 轮操作后画面无变化');
+      expect(result.iterations).toBe(3);
+      expect(streaks).toEqual([1, 2, 3]);
+      // verify 的裁决进了决策提示词；第 3 次决策时卡住提示已出现
+      expect(prompts[1]).toContain('- 动作起效判定：未生效');
+      expect(prompts[1]).not.toContain('## ⚠ 卡住检测');
+      expect(prompts[2]).toContain('## ⚠ 卡住检测');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── verify 相位：止损与提示词接线（整轮驱动）───────────────────────────────
+
+describe('computerUseAgent — verify 相位（整轮接线）', () => {
+  beforeAll(silenceJournalEnv);
+  afterAll(restoreJournalEnv);
+
+  test('已生效 → 计数清零、不误止损，提示词写「已生效」', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-cu-verify-ok-'));
+    try {
+      const before = writeFrame(dir, 'before.png', () => 128);
+      const after = writeFrame(dir, 'after.png', (x, y) => (y < 32 ? 255 : 128));
+      const prompts = [];
+      const streaks = [];
+      const gateway = promptGateway(
+        [
+          { content: '{"action":"clickElement","target":"e1","waitMs":10}' },
+          { content: '{"action":"finish","summary":"保存成功"}' },
+        ],
+        prompts
+      );
+      const agent = new ComputerUseAgent({ gateway, controller: framesController(before, [after]) });
+      const result = await agent.run('点保存', { onIteration: (state) => streaks.push(state._noChangeStreak) });
+
+      expect(result.stoppedReason).toBe('goal_achieved');
+      expect(result.finished).toBe(true);
+      expect(streaks[0]).toBe(0);
+      expect(prompts[1]).toContain('- 动作起效判定：已生效');
+      expect(prompts[1]).not.toContain('## ⚠ 卡住检测');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('无证据（同一帧）→ verify 不计数、不误止损，提示词写「无法判断」', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-cu-verify-null-'));
+    try {
+      const only = writeFrame(dir, 'only.png', () => 128);
+      const prompts = [];
+      const streaks = [];
+      const gateway = promptGateway(
+        [
+          { content: '{"action":"clickElement","target":"e1","waitMs":10}' },
+          { content: '{"action":"finish","summary":"ok"}' },
+        ],
+        prompts
+      );
+      const agent = new ComputerUseAgent({ gateway, controller: framesController(only, [only]) });
+      const result = await agent.run('点保存', { onIteration: (state) => streaks.push(state._noChangeStreak) });
+
+      expect(result.stoppedReason).toBe('goal_achieved');
+      expect(streaks[0]).toBe(0);
+      expect(prompts[1]).toContain('- 动作起效判定：无法判断（same_frame）');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('提示词追加裁决行不破坏原有段落（无证据时如实写原因）', () => {
+    const prompt = _internals._buildDecisionPrompt({
+      goal: 'x',
+      history: [],
+      lastElements: [],
+      lastClickable: [],
+      lastOcrText: '',
+      lastActionResult: { summary: 'clicked e1', success: true, actionKey: 'clickElement' },
+      lastChange: {
+        screenChange: { changed: false, distance: 0, lumaDiff: 0 },
+        elementChange: { addedCount: 0, removedCount: 0, changedCount: 0 },
+      },
+      lastActionVerify: { effective: false, method: 'screenshot-dhash', evidence: { distance: 0, lumaDiff: 0 } },
+      _noChangeStreak: 2,
+    });
+    expect(prompt).toContain('## 上一步动作后的状态变化');
+    expect(prompt).toContain('- 屏幕画面: 未变化');
+    expect(prompt).toContain('- UI 元素: 新增 0 / 消失 0 / 位置变化 0');
+    expect(prompt).toContain('- 动作起效判定：未生效（可能没点中，建议换目标或路径）');
+    expect(prompt).toContain('## ⚠ 卡住检测');
+
+    const promptNoChange = _internals._buildDecisionPrompt({
+      goal: 'x',
+      history: [],
+      lastElements: [],
+      lastClickable: [],
+      lastOcrText: '',
+      lastChange: null,
+      lastActionVerify: { effective: null, method: 'screenshot-dhash', evidence: null, error: 'same_frame' },
+    });
+    expect(promptNoChange).toContain('## 上一步动作后的状态变化');
+    expect(promptNoChange).toContain('- 动作起效判定：无法判断（same_frame）');
+  });
+});
+

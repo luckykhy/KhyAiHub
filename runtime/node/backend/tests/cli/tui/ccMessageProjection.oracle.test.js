@@ -80,6 +80,8 @@ function buildTree(scene) {
   const s = scene;
   const messages = Array.isArray(s.messages) ? s.messages : [];
   const status = s.status || {};
+  // CcApp 的忙碌行在交给组件前已按 cols 剪成单行（● + 前导空格 + 光标位 = 3 列）。
+  const streamText = P.clipSingleLine(s.streamingText || P.STREAMING_TEXT, Math.max(1, s.cols - 3));
 
   return React.createElement(
     Box,
@@ -104,7 +106,7 @@ function buildTree(scene) {
             )
           : React.createElement(CcAssistantMessage, { key: msg.id, text: msg.text })
       ),
-      s.busy ? React.createElement(CcStreamingMessage, { text: '思考中...' }) : null
+      s.busy ? React.createElement(CcStreamingMessage, { text: streamText }) : null
     ),
     s.messageBar
       ? React.createElement(CcMessageBar, {
@@ -416,6 +418,18 @@ test('oracle: busy 流式行', async () => {
     rows: 24,
     messages: [{ id: 1, role: 'user', text: 'u' }],
     busy: true,
+    status: { modelId: MODEL },
+  });
+});
+
+test('oracle: 窄终端 busy 文案与投影同为单行（BUG-82）', async () => {
+  await loadOnce();
+  compare('窄 busy', {
+    cols: 24,
+    rows: 24,
+    messages: [{ id: 1, role: 'user', text: 'u' }],
+    busy: true,
+    streamingText: '等待模型 super-long-model-name 返回 · 第 12 轮',
     status: { modelId: MODEL },
   });
 });

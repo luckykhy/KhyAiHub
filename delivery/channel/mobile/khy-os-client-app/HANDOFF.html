@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: HANDOFF.md -->
+<title>khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>channel<span class="sep">›</span>mobile<span class="sep">›</span>khy-os-client-app<span class="sep">›</span>khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00）</div>
+      <header class="hero reveal"><h1>khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-控制台改造-当前状态交接-2026-11-16-21-00">khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00）</a></li><li class="lvl-2"><a href="#〇-一句话现状">〇、一句话现状</a></li><li class="lvl-2"><a href="#一-任务目标-回顾">一、任务目标（回顾）</a></li><li class="lvl-2"><a href="#二-代码侧-已完成">二、代码侧：已完成</a></li><li class="lvl-2"><a href="#三-真机侧-五项有效证据-均在-2026-11-16-12-0x-前取得">三、真机侧：五项有效证据（均在 2026-11-16 12:0x 前取得）</a></li><li class="lvl-2"><a href="#四-今天作废的分析-重要-避免重复">四、今天作废的分析（重要，避免重复）</a></li><li class="lvl-2"><a href="#五-还差什么">五、还差什么</a></li><li class="lvl-2"><a href="#六-一键复跑">六、一键复跑</a></li><li class="lvl-2"><a href="#七-已知问题-不在本次范围">七、已知问题（不在本次范围）</a></li><li class="lvl-2"><a href="#八-资产位置-2026-11-16-逐个核对存在">八、资产位置（2026-11-16 逐个核对存在）</a></li><li class="lvl-2"><a href="#九-用户所持-新版-ui-apk-的判定与新包-2026-11-16-14-0x">九、用户所持「新版 UI」APK 的判定与新包（2026-11-16 14:0x）</a></li><li class="lvl-3"><a href="#本轮修掉的三个脚本缺陷-都不是产品代码">本轮修掉的三个脚本缺陷（都不是产品代码）</a></li><li class="lvl-3"><a href="#最重要-验收驱动的判定从来没有对过-2026-11-16-14-4x">最重要：验收驱动的判定从来没有对过（2026-11-16 14:4x）</a></li><li class="lvl-1"><a href="#交付-阻碍点-实现方案-改动清单">交付：阻碍点 / 实现方案 / 改动清单</a></li><li class="lvl-2"><a href="#一-阻碍点">一、阻碍点</a></li><li class="lvl-2"><a href="#二-实现方案">二、实现方案</a></li><li class="lvl-2"><a href="#三-改动清单">三、改动清单</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-控制台改造-当前状态交接-2026-11-16-21-00">khy-os 控制台改造 · 当前状态交接（2026-11-16 21:00）<a class="anchor" href="#khy-os-控制台改造-当前状态交接-2026-11-16-21-00" aria-label="锚点">#</a></h1>
+<blockquote><p>本文是当前状态的单一总结口。<code>VERIFICATION.md</code> 已于 2026-11-14 因<br>Set-Content 编码事故损坏（1507 个 U+FFFD），细节过程见<br><code>ACCEPTANCE-PROGRESS.md</code> 与 <code>DOC-CORRUPTION-INCIDENT.md</code>。</p>
+<p><strong>交付三段（目标第六条要求的格式）见文末「交付：阻碍点 / 实现方案 / 改动清单」。</strong></p></blockquote>
+<h2 id="〇-一句话现状">〇、一句话现状<a class="anchor" href="#〇-一句话现状" aria-label="锚点">#</a></h2>
+<p>控制台改造的代码与真机验证<strong>主体已完成</strong>。21/21 混合命令三类失败分类在<strong>设备当前<br>实际运行的构建</strong>（versionCode 43）上复跑通过，且<strong>三个独立证据源一致</strong>（驱动判定 +<br><code>KHYCONSOLE</code> 日志 14 行 + 历史独立复核 21/21）。冷启动首屏非 Amoo、无障碍降级行为、<br>「去授权」可达权限中心、不提权、常用指令、共享存储、raw JSON 切换、可导出，均已真机<br>实证；<code>clearHistory</code> 补齐测试（41/41 全过）。</p>
+<p><strong>只剩 ② 断网执行与 ③ Amoo 完整取证两项，分别只差「插 USB」和「开无障碍 + 启动<br>拦截循环」这两个用户物理动作。</strong></p>
+<blockquote><p>注意：设备上跑的已是<strong>另一会话</strong>在 16:23 安装的 versionCode 43 构建<br>（哈希 <code>B0CE13E2…</code>），不是本文交付副本 <code>349D8BFC…</code>。「装机 = 交付副本」是<br><strong>时效性结论</strong>，只对 15:43–16:23 成立；交付副本本身通过过全部核验。</p></blockquote>
+<h2 id="一-任务目标-回顾">一、任务目标（回顾）<a class="anchor" href="#一-任务目标-回顾" aria-label="锚点">#</a></h2>
+<p>让 khy-os 本地直接接收并执行 JSON 命令、在 khy-os 内显示结果，<br>不再默认把 Amoo 拉到前端。原链路「用户 → Amoo → 桥执行 → 回 Amoo」<br>改为「用户 → khy-os 本地 Console → 桥执行 → 结果在 khy-os 内显示」。</p>
+<h2 id="二-代码侧-已完成">二、代码侧：已完成<a class="anchor" href="#二-代码侧-已完成" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>模块</th><th>文件</th><th>状态</th></tr></thead><tbody><tr><td>执行内核</td><td><code>bridge/KhyConsole.java</code>（785 行）</td><td>唯一通道，三类失败分类</td></tr><tr><td>工具契约</td><td><code>bridge/ToolSchema.java</code>（427 行）</td><td>50 工具，描述复用 CATALOG</td></tr><tr><td>Amoo 解耦</td><td><code>bridge/AmooLoop.java</code></td><td>走同一通道 + 唯一净化出站</td></tr><tr><td>通道方法</td><td><code>MainActivity.kt</code> 1029-1208 行</td><td>8 个方法 + base64 预填</td></tr><tr><td>Dart 服务</td><td><code>lib/core/services/console_service.dart</code></td><td>只翻译不重新判断</td></tr><tr><td>界面</td><td><code>lib/ui/screens/console_screen.dart</code></td><td>品牌块 + 三类渲染 + 翻历史</td></tr><tr><td>页签</td><td><code>lib/main.dart</code></td><td>控制台为第二页签</td></tr><tr><td>页签配平</td><td><code>lib/main.dart</code> 导航循环</td><td><strong>修</strong>：写死 <code>i &lt; 5</code>，6 条页签只渲染 5 个 destination，「设置」页点不到</td></tr></tbody></table>
+<p>测试：JVM 40 个 / Dart 状态 14 个 / widget 12 个 / 页签配平护栏 2 个（含阳性对照），<strong>全绿</strong>。<br><code>flutter analyze</code> 对改动文件 0 问题（<code>main.dart:292</code> 两条 warning 是别的会话未提交的电池提示代码，非本次引入）。</p>
+<h2 id="三-真机侧-五项有效证据-均在-2026-11-16-12-0x-前取得">三、真机侧：五项有效证据（均在 2026-11-16 12:0x 前取得）<a class="anchor" href="#三-真机侧-五项有效证据-均在-2026-11-16-12-0x-前取得" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>证据</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td><strong>11 条 manual 记录全部 <code>ok</code></strong></td><td>raw 已逐条核实匹配探针命令（10×ping + 1×ls），无人工或其他会话混入</td></tr><tr><td>2</td><td><strong>Amoo 产出命令走本地通道</strong></td><td>Amoo 回复原文：「我们刚才在 khy-os 本地执行了一条命令：ui_click，参数 {&quot;text&quot;:&quot;x&quot;}，结果 tool_unavailable」</td></tr><tr><td>3</td><td><strong>72 条 origin=link 全部 <code>ok</code></strong></td><td>PC 经 BridgeLink 下发，无失败</td></tr><tr><td>4</td><td><strong>三类失败分类正确</strong></td><td>JVM 上用 20 条混合命令逐条断言 status 与文案互异</td></tr><tr><td>5</td><td><strong>断网不依赖网络（结构侧）</strong></td><td>控制台四文件 0 网络 import；执行由 <code>Tools.dispatch()</code> 进程内完成</td></tr></tbody></table>
+<h2 id="四-今天作废的分析-重要-避免重复">四、今天作废的分析（重要，避免重复）<a class="anchor" href="#四-今天作废的分析-重要-避免重复" aria-label="锚点">#</a></h2>
+<p>2026-11-16 12:0x 之后我曾得出「App 进程不存在」「点击事件不触发」等结论，<br><strong>全部作废</strong>。真实原因是设备当时已离线，而脚本用 <code>2&gt;$null</code> / <code>2&gt;&amp;1 | Out-Null</code><br>吞掉了 adb 的失败，使「命令没执行」与「执行了但结果为空」无法区分。</p>
+<p>教训已固化为 <code>OBSERVATION-RULES.md</code> 三条铁律，并已应用到<br><code>khy-today.ps1</code>（离线时 exit 3，不再显示陈旧数据）。</p>
+<h2 id="五-还差什么">五、还差什么<a class="anchor" href="#五-还差什么" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>前置条件</th></tr></thead><tbody><tr><td>① 21 条混合命令完整跑查</td><td>设备恢复（<code>khy_accept2.ps1</code> 就绪，含 ts 过滤器与 cycle 重试）</td></tr><tr><td>② 断网执行</td><td>设备恢复 <strong>且插 USB</strong>（<code>khy_offline_accept.ps1</code> 就绪，三层兜底防射频全灭）</td></tr><tr><td>③ Amoo/manual 完整取证</td><td>设备恢复 + <strong>先在系统设置给本 App 开无障碍</strong> + 人点「唤起 Amoo」按钮</td></tr></tbody></table>
+<h2 id="六-一键复跑">六、一键复跑<a class="anchor" href="#六-一键复跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 设备恢复后，一条命令走完 0-3 步（step 4 会停下等你人工参与）</span>
+powershell <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> <span class="hljs-string">&#x27;D:\Portable\4-output\Temp\khy_run_all.ps1&#x27;</span>
+
+<span class="hljs-comment"># 编排器自检（不需要手机，六项断言）</span>
+powershell <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> <span class="hljs-string">&#x27;D:\Portable\4-output\Temp\khy-verify_driver.ps1&#x27;</span>
+
+<span class="hljs-comment"># 只看设备状态</span>
+powershell <span class="hljs-literal">-ExecutionPolicy</span> Bypass <span class="hljs-operator">-File</span> <span class="hljs-string">&#x27;D:\Portable\4-output\Temp\khy-devcheck.ps1&#x27;</span></code></pre>
+<h2 id="七-已知问题-不在本次范围">七、已知问题（不在本次范围）<a class="anchor" href="#七-已知问题-不在本次范围" aria-label="锚点">#</a></h2>
+<ol><li><code>VERIFICATION.md</code> 损坏待重建（内容绝大部分在对话历史里）；文件开头已加</li></ol>
+<p>横幅指明替代文档，<strong>不要从零重写</strong>；</p>
+<ol><li><code>origin</code> 现有三种取值：<code>manual</code> / <code>amoo</code> / <code>link</code>（后者是别的会话新增的</li></ol>
+<p>PC 经桥下发通道）；</p>
+<ol><li>① 的 21 条跑查成功率约 1/3（两个 App 侧偶发竞态：预填有时不到输入框、</li></ol>
+<p>点击有时不触发），已用 cycle 重试缓解，根因需 App 内日志；</p>
+<ol><li><strong><code>D:\Portable\4-output\Temp\</code> 是系统临时目录，会被清理</strong>。今天</li></ol>
+<p><code>khy-verify_driver.ps1</code> 与 <code>khy-devcheck.ps1</code> 就被清掉并重建过一次。<br>   长期保留的脚本应考虑移到仓库外的固定位置，或接受「随时需要重建」；</p>
+<ol><li>① 的<strong>判定逻辑</strong>（ts 过滤器 / cycle 重试 / PASS 判定）尚未在受控输入下</li></ol>
+<p>验证过——<code>fake-adb-test.ps1</code> 就是为这个写的（假 adb + 脚本化历史）。<br>   <strong>2026-11-16 14:0x 进展</strong>：前两次中断的根因是测试脚本自身的 bug 之一已定位并<br>   修掉——<code>khy_accept2.ps1</code> 第 11 行硬编码 adb 路径、不认 <code>KHY_ADB</code>，导致假 adb<br>   从未被用上，驱动一直以真 adb 跑并在设备检查处 <code>FATAL: no device</code> 退出<br>   （铁律 4 的又一例：测试脚本的 bug 伪装成被测对象的缺陷）。现已改为<br>   <code>$adb = if ($env:KHY_ADB) { $env:KHY_ADB } else { &lt;原路径&gt; }</code>，完整重跑在后台<br>   进行中（假 adb 下每条命令走满三重试，全程约 20 分钟）；</p>
+<ol><li><strong>冻结表守卫曾退红</strong>：<code>check-amoo-package-literals.cjs</code> 从 0 error 退到 16</li></ol>
+<p>（7 处行号漂移 + 2 条真新增），来源是别的会话今天 13:04 改 <code>MainActivity.kt</code><br>   与 11-14 的几处改动，非本次引入。已按「坐标 + 整行文本 + 理由」补登记，<br>   现为冻结 32 / 实测 32、0 error。<strong>该表会随别人改这些文件再次退红</strong>，见红先分<br>   漂移与新增，别一律当成自己的回归；</p>
+<ol><li><strong>仓库布局门禁 <code>check-repo-layout.js</code> 当前是红的</strong>，三处均与本次改动无关：</li></ol>
+<p>根目录 11 个 <code>*_diff.txt</code>、1 份未进索引的新设计文档、6 个怪异顶层目录<br>   （<code>%T%</code>、<code>-p</code>、<code>done</code>、<code>echo</code>、<code>mkdir</code>，像是某次脚本重定向失控的产物）。<br>   都是别的会话在飞的产物，未代劳清理。</p>
+<h2 id="八-资产位置-2026-11-16-逐个核对存在">八、资产位置（2026-11-16 逐个核对存在）<a class="anchor" href="#八-资产位置-2026-11-16-逐个核对存在" aria-label="锚点">#</a></h2>
+<p><strong>A. 仓库内 <code>delivery/mobile/khy-os-client-app/</code>（随仓库走，不会被清）</strong></p>
+<table><thead><tr><th>文件</th><th>用途</th></tr></thead><tbody><tr><td><code>HANDOFF.md</code></td><td>本文件，当前状态单一总结口</td></tr><tr><td><code>ACCEPTANCE-PROGRESS.md</code></td><td>过程账：带日期的证据 + 哪些结论已作废</td></tr><tr><td><code>DOC-CORRUPTION-INCIDENT.md</code></td><td><code>VERIFICATION.md</code> 损坏事故记录</td></tr><tr><td><code>VERIFICATION.md</code></td><td><strong>已损坏</strong>（1507 个 U+FFFD），开头有指路横幅，勿重写</td></tr></tbody></table>
+<p><strong>B. 系统临时目录 <code>D:\Portable\4-output\Temp\</code>（会被清理，接受随时重建）</strong></p>
+<table><thead><tr><th>脚本</th><th>用途</th></tr></thead><tbody><tr><td><code>khy_run_all.ps1</code></td><td>入口：设备检查 → 装包 → ① → ②，step ③ 停下等人</td></tr><tr><td><code>khy_verify_driver.ps1</code></td><td>编排器自检（假 adb + 标记文件，六项断言，不需要手机）</td></tr><tr><td><code>khy_devcheck.ps1</code></td><td>设备状态（exit 0=有设备 / 3=无设备）</td></tr><tr><td><code>khy_install.ps1</code></td><td>装包（APK 旧则拒装、绝不卸载、只认 USB）</td></tr><tr><td><code>khy_accept2.ps1</code> + <code>khy_cmds.json</code></td><td>① 21 条混合命令（ts 过滤器 + cycle 重试）</td></tr><tr><td><code>khy_offline_accept.ps1</code> + <code>.sh</code> ×2</td><td>② 断网执行（三层兜底防射频全灭）</td></tr><tr><td><code>khy_amoo_accept.ps1</code></td><td>③ Amoo/手动一致性取证</td></tr><tr><td><code>khy-race.ps1</code></td><td>设备恢复后分离 RACE-A / RACE-B / 坐标漂移</td></tr><tr><td><code>khy-today.ps1</code></td><td>今日 manual 记录（带三重自检，范本）</td></tr><tr><td><code>OBSERVATION-RULES.md</code></td><td>观测脚本三条铁律（今天一小时误判换来的）</td></tr></tbody></table>
+<blockquote><p><strong>本节曾被改错两次</strong>：先把它误列在仓库内，修正时又漏了核对、把仓库节删错。<br>最终以 2026-11-16 实查为准：<code>OBSERVATION-RULES.md</code> 在 <strong>Temp</strong>，不在仓库内。<br>教训与 <code>OBSERVATION-RULES.md</code> 铁律 1 同源——<strong>改文档前先跑一次存在性检查</strong>。</p></blockquote>
+<hr>
+<h2 id="九-用户所持-新版-ui-apk-的判定与新包-2026-11-16-14-0x">九、用户所持「新版 UI」APK 的判定与新包（2026-11-16 14:0x）<a class="anchor" href="#九-用户所持-新版-ui-apk-的判定与新包-2026-11-16-14-0x" aria-label="锚点">#</a></h2>
+<p>用户通过微信发来一个 236 MB 的 APK（<code>.../2026-11/base (1).apk</code>），称是新版 UI、<br>要求控制台也进新版并带 khyos 品牌标记。逐层扫描后的结论：</p>
+<table><thead><tr><th>查什么</th><th>结果</th></tr></thead><tbody><tr><td>版本号（<code>resources.arsc</code>）</td><td><strong>1.1.17</strong>，远早于本树的 1.1.53</td></tr><tr><td>Dart 层 <code>ConsoleScreen</code></td><td>在（kernel_blob 28 处）</td></tr><tr><td>Dart 层 <code>ConsoleService</code></td><td><strong>无</strong></td></tr><tr><td>原生 <code>consoleExec</code> / <code>amooSummon</code> / <code>consoleHistory</code></td><td><strong>全无</strong>（dex 与 kernel 双侧）</td></tr><tr><td>原生 <code>KhyConsole</code> / <code>ToolSchema</code></td><td><strong>无</strong></td></tr><tr><td>原生 <code>AmooLoop</code></td><td>在</td></tr></tbody></table>
+<p>即：<strong>那个包是执行通道落地前的旧构建，控制台只是个没接执行通道的空壳</strong>，<br>不是新版缺了控制台。本树里控制台早在新版六页签壳的第二页签，顶栏带品牌标。</p>
+<p><strong>品牌形态（2026-11-16 14:1x 对齐）</strong>：早先控制台 AppBar 用的是裸<br><code>KhyBrandMark(size: 22)</code>，而新版其他界面（聊天页 AppBar 区 <code>:1291</code> 与抽屉头<br><code>:2469</code>、连接页、设置页）用的都是 <code>KhyBrandTile</code>——墨黑圆角底 + 琥珀主标，<br>即 Web / 桌面端 / TUI 共用的同一枚主标与同一块墨黑底。控制台是新版六屏里<br>唯一不带墨黑底的一处，已改为 <code>KhyBrandTile(size: 28)</code>（与抽屉头同尺寸）。<br>位图本身核过：<code>assets/brand/khy-os-mark-{256,64}.png</code> 与母版<br><code>delivery/brand/png/</code> 对应文件<strong>逐字节相同</strong>（同为 11-04 13:39 构建产物），<br>没有被手改、也不是过期资产。</p>
+<p>本轮因此做成一包可直接安装的 release（含上述页签配平修复）：</p>
+<pre><code>D:\Portable\khy-os\delivery\mobile\khy-os-client-app\build\app\outputs\flutter-apk\
+  khy-os-client-1.1.53-console-release.apk     62.5 MB</code></pre>
+<p>已核验（<strong>2026-11-16 14:12 重建后</strong>）：<code>apksigner verify</code> exit 0<br>（<code>CN=khy-os, OU=Mobile, O=KhyOS</code>，可直接覆盖安装，无需先卸载）；<br>dex 内 10 个控制台通道方法<br>（<code>consoleExec</code>/<code>consoleTools</code>/<code>consoleHistory</code>/<code>consoleClear</code>/<code>consoleExport</code>/<br><code>consoleFavorites</code>/<code>consolePending</code>/<code>amooSummon</code>/<code>consoleResetToken</code>）加<br><code>khy_console_cmd_b64</code> 全在；品牌资产在 <code>flutter_assets</code> 内。<br>SHA-256 <code>349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974</code><br>（<strong>15:16 构建，含 KHYCONSOLE 日志见证</strong>；仓库内 <code>build/</code> 副本与仓库外<br><code>D:\Portable\4-output\</code> 备份三处同哈希，签名 verify exit 0，已装机）。<br>此前 14:12 那版是 <code>97E67D1B4A781CD1B95F0A2BD587B73FB01ABA5C160ABB45EEB11AFFDD649C36</code>，<br>只有品牌块修复、<strong>没有</strong>日志见证，别混用。</p>
+<blockquote><p>注意 <code>build/</code> 是构建产物、会被 <code>flutter clean</code> 或别人的构建冲掉，<br>要留档就复制到仓库外。另：今天 13:41 另有会话构建过一次 <code>app-release.apk</code><br>（62.5 MB，同样带控制台通道，但不含本轮页签修复），别把两者搞混。</p></blockquote>
+<p><strong>版本号更正（2026-11-16 14:2x）</strong>：这个包的 <code>versionName</code> 是 <strong>1.1.53 / versionCode 42</strong>，<br>不是 1.1.51——我在 13:40 读到 pubspec 是 1.1.51+40，另一会话在我 14:09 开始构建前把版本<br>推上去了，构建直接吃进了新值。先前按 1.1.51 命名的两个副本已删除并改名重建，<br>哈希未变（同一个文件）。教训同铁律 1：<strong>别凭早先读到的值给产物命名</strong>。</p>
+<p><strong>真机冒烟已通过（2026-11-16 14:2x）</strong>：设备经 mDNS TLS 恢复在线（同一手机注册了两遍，<br><code>adb devices</code> 列出两条 <code>device</code>）。用 <code>khy_smoke.ps1</code> 走完整流程跑了一条<br><code>{&quot;tool&quot;:&quot;ping&quot;}</code>（force-stop → base64 预填冷启动 → 点控制台页签 → 收键盘 → 点执行），<br>共享历史新增一条 <code>origin&quot;:&quot;manual&quot;</code>、<code>status&quot;:&quot;ok&quot;</code>、<code>result</code> 带回 <code>pong</code> 与 <code>pid</code>。<br><strong>端到端链路在真机上成立</strong>。</p>
+<h3 id="本轮修掉的三个脚本缺陷-都不是产品代码">本轮修掉的三个脚本缺陷（都不是产品代码）<a class="anchor" href="#本轮修掉的三个脚本缺陷-都不是产品代码" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>缺陷</th><th>修法</th></tr></thead><tbody><tr><td><code>khy_run_all.ps1</code> step 0</td><td>WiFi 防护只认 <code>IP:PORT</code>（<code>-match ':$'</code>），漏判 mDNS/TLS 形态，于是把 WiFi 设备当 USB 放行，一路跑到断网项——<strong>正是会把手机双射频搞掉的那条路</strong>。<code>khy_install.ps1:35</code> 早就会匹配三种形态，只有编排器漏了</td><td>改成正向判据：USB 序列号是纯令牌，凡带点号/冒号/空白的都是网络传输。阳性对照已验证（现在对该设备明确拒绝并 exit 1）</td></tr><tr><td><code>khy_accept2.ps1</code> 序列号选择</td><td>取 <code>$d[0]</code>，而 mDNS 重复注册名 <code>adb-XXXX (2)._adb-tls-connect._tcp</code> <strong>带空格</strong>，<code>adb -s</code> 对它报 <code>device not found</code>——设备就在眼前却全盘失败</td><td>先改成「跳过含空白的序列号」，<strong>又错了</strong>：哪个注册当前可用会随时间翻转，那一版只剩空格注册可用时反而报 <code>FATAL: no device</code>。最终改为按 <code>adb -s &lt;s&gt; get-state</code> 探针选取，不看名字形态</td></tr><tr><td><code>fake-adb-test.ps1</code> 固件</td><td>假 adb 的 pull 处理器无视目标参数、永远写 <code>console_history.jsonl</code>，而驱动 pull 到 <code>console_history_probe.jsonl</code>（<code>khy_accept2.ps1:184</code>）→ 驱动读到不存在的探针文件 → 21 条全报 NOT RECORDED → ts 过滤器<strong>根本没被检验到</strong>，却让第三条断言翻红（铁律 4 又一例）</td><td>让假 adb 按 <code>$args</code> 里的目标路径复制。<strong>重跑尚未做</strong>——两者共用同一探针文件，不能与真机跑查并发</td></tr></tbody></table>
+<p>另有一个<strong>纯陷阱文件</strong>：<code>D:\Portable\4-output\Temp\khy_devcheck.ps1</code>（<strong>下划线</strong>）带 348 个<br>非 ASCII 字节且无 BOM，PowerShell 5.1 按 GBK 解码后中文注释与下一行的 <code>$dev = ...</code> 赋值<br>被并成同一行，<code>#</code> 把赋值整行注释掉 → 永远报 <code>NO DEVICE</code>。canonical 版是<strong>连字符</strong>的<br><code>khy-devcheck.ps1</code>（纯 ASCII，HANDOFF §六一直写的是它）。<strong>我今天敲错成下划线版，<br>白绕了四轮诊断</strong>。它只被自己引用，建议直接删掉。</p>
+<h3 id="最重要-验收驱动的判定从来没有对过-2026-11-16-14-4x">最重要：验收驱动的判定从来没有对过（2026-11-16 14:4x）<a class="anchor" href="#最重要-验收驱动的判定从来没有对过-2026-11-16-14-4x" aria-label="锚点">#</a></h3>
+<p><code>khy_accept2.ps1</code> 有<strong>两个</strong> bug，任何一个都足以让全部 21 条判定失效。它们一直在，<br>所以本文档此前所有基于该脚本输出的结论——包括「成功率约 1/3」「两个 App 侧偶发竞态」<br>（<code>_loadAll()</code> async 导致预填有时没写入、点击有时不触发）——<strong>归因是错的</strong>，<br>那些现象是驱动自己造成的，不是 App 的。</p>
+<table><thead><tr><th>#</th><th>位置</th><th>缺陷</th><th>实测</th></tr></thead><tbody><tr><td>1</td><td>ts 过滤器（原 L333）</td><td><code>[int]::TryParse</code> 解析 epoch <strong>毫秒</strong>。<code>[int]</code> 是 Int32，上限 2147483647，而当前 epoch 毫秒约 1.79 万亿 → 必然解析失败，<code>$ts</code> 保持 0 → <code>0 -lt $runStartedAtMs</code> 恒真 → <strong>每条记录都被当陈旧跳过</strong></td><td><code>[int]::TryParse('1794811097848') -&gt; False, value=0</code>；<code>[int64]::TryParse(...) -&gt; True</code></td></tr><tr><td>2</td><td><code>Get-HistEntries</code> 读文件（原 L190）</td><td><code>Get-Content</code> 不写 <code>-Encoding UTF8</code>，中文 Windows 上默认按 GBK(936) 解码 UTF-8 文件，误解码出的字符会破坏 JSON → 这些行计入 <code>$bad</code> 后被丢弃</td><td>一条 135 行的真实历史：默认读法 <strong>91 好 / 44 坏</strong>，UTF8 读法 <strong>135 好 / 0 坏</strong>。丢掉的 44 行正是带中文错误文案的记录（<code>invalid_args</code>/<code>tool_unavailable</code>/<code>exec_error</code>）——<strong>即最该被验证的失败用例</strong></td></tr></tbody></table>
+<p>两处都已修（<code>[int64]</code> + <code>-Encoding UTF8</code>），并用真机拉到的历史做过验证：135 条全部解析成功，<br><code>{&quot;tool&quot;:&quot;ping&quot;}</code> 与 <code>{&quot;tool&quot;:&quot;info&quot;}</code> 均正确匹配到 <code>status=ok</code> 的新记录。<br><strong>在此之前，该脚本从未产生过一次正确判定。</strong></p>
+<blockquote><p>连带结论：<code>fake-adb-test.ps1</code> 那条 FAIL 不只固件 bug——即使固件修好，<br>Int32 溢出也会让它永远报 NOT RECORDED 而拿不到期望的 WRONG STATUS。<br>我先前「只是固件问题」的诊断不完整，是继续挖才浮出这两个的。</p></blockquote>
+<hr>
+<h1 id="交付-阻碍点-实现方案-改动清单">交付：阻碍点 / 实现方案 / 改动清单<a class="anchor" href="#交付-阻碍点-实现方案-改动清单" aria-label="锚点">#</a></h1>
+<h2 id="一-阻碍点">一、阻碍点<a class="anchor" href="#一-阻碍点" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>阻碍</th><th>性质</th><th>解除条件</th></tr></thead><tbody><tr><td>1</td><td><strong>② 断网执行未跑</strong></td><td>用户侧物理条件</td><td>手机插 USB。设备当前是 TCP/mDNS 形态，断网项会自断 adb 链路（脚本注释记录过「已经发生过一次」）</td></tr><tr><td>2</td><td><strong>③ Amoo/manual 完整取证未跑</strong></td><td>用户侧物理条件</td><td>系统设置里给本 App 开无障碍服务，再由人点「唤起 Amoo」并在 Amoo 聊天发 <code>{&quot;tool&quot;:&quot;battery&quot;}</code></td></tr><tr><td>3</td><td><code>VERIFICATION.md</code> 永久损坏</td><td>历史事故</td><td>1507 个 U+FFFD 不可恢复；已加指路横幅，<strong>不要从零重写</strong>。重建需用户决策（应视为「恢复的副本」）</td></tr><tr><td>4</td><td>仓库布局门禁 <code>check-repo-layout.js</code> 红</td><td>别会话产物</td><td>根目录 11 个 <code>*_diff.txt</code>、1 份未索引新文档、6 个怪异顶层目录（<code>%T%</code>、<code>-p</code>、<code>done</code>、<code>echo</code>、<code>mkdir</code>）。<strong>非本次引入，未代劳清理</strong></td></tr></tbody></table>
+<h2 id="二-实现方案">二、实现方案<a class="anchor" href="#二-实现方案" aria-label="锚点">#</a></h2>
+<p><strong>本地命令通道</strong>：<code>KhyConsole.exec()</code> 是唯一入口，<code>prepare()</code> 做白名单 + schema 校验，<br><code>finish()</code> 统一收口并落共享历史。三类失败在<strong>产生处</strong>就分开，不靠下游辨别。</p>
+<p><strong>结果渲染</strong>：Dart 侧 <code>console_service.dart</code> 只做翻译不重新判断；<code>console_screen.dart</code><br>默认格式化视图、可切 raw JSON；历史写 <code>/sdcard/bridge-amoobridge/console_history.jsonl</code><br>（追加写），常用指令写同目录 <code>console_favorites.json</code>——<strong>Amoo 侧读同一份</strong>。</p>
+<p><strong>与 Amoo 解耦</strong>：<code>AmooLoop.executeOne</code> 改走 <code>KhyConsole.exec(ORIGIN_AMOO, …)</code>；<br><code>typeIntoAmoo()</code> 是唯一净化出站通道；Amoo 从「启动即拉起」改为「按需唤起」，<br>且先 arm 拦截循环再打开聊天页（反过来会漏掉 Amoo 已开始输出的命令）。</p>
+<p><strong>执行见证</strong>：<code>KhyConsole.exec</code> 以 <code>Log.i(&quot;KHYCONSOLE&quot;, origin/tool/status/id)</code> 落一行，<br>与历史文件构成两个独立证据源。刻意不放在 <code>finish()</code>——那会被 <code>validateOnly</code><br>（纯校验、不执行）也命中，使见证无法区分「执行过」与「只是解析过」。</p>
+<h2 id="三-改动清单">三、改动清单<a class="anchor" href="#三-改动清单" aria-label="锚点">#</a></h2>
+<p><strong>产品代码</strong>（<code>delivery/mobile/khy-os-client-app/</code>）</p>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>android/.../bridge/KhyConsole.java</code></td><td>新增执行内核；本轮补 <code>LOG_TAG</code> + <code>exec</code> 包 <code>execInner</code> 的日志见证</td></tr><tr><td><code>android/.../bridge/ToolSchema.java</code></td><td>新增 50 工具契约（描述复用 <code>Tools.CATALOG</code>）</td></tr><tr><td><code>android/.../bridge/AmooLoop.java</code></td><td>走同一执行通道；<code>typeIntoAmoo</code> 唯一净化出站</td></tr><tr><td><code>android/.../kotlin/.../MainActivity.kt</code></td><td>8 个通道方法 + base64 预填 + <code>onCreate</code></td></tr><tr><td><code>lib/core/services/console_service.dart</code></td><td>新增；只翻译不重新判断</td></tr><tr><td><code>lib/ui/screens/console_screen.dart</code></td><td>新增；品牌块 + 三类渲染 + 翻历史 + 常用指令</td></tr><tr><td><code>lib/main.dart</code></td><td>控制台为第二页签；<strong>修</strong>导航循环写死 <code>i &lt; 5</code>（6 页签只渲染 5 个，「设置」点不到）</td></tr><tr><td><code>android/app/build.gradle</code></td><td><code>testOptions.unitTests.returnDefaultValues = true</code>（否则 JVM 测试撞 <code>Log not mocked</code>）</td></tr><tr><td><code>test/app_shell_tab_parity_test.dart</code></td><td>新增页签配平护栏（含阳性对照）</td></tr></tbody></table>
+<p><strong>验收脚本</strong>（<code>D:\Portable\4-output\Temp\</code>，均非产品代码）</p>
+<table><thead><tr><th>文件</th><th>修掉的问题</th></tr></thead><tbody><tr><td><code>khy_accept2.ps1</code></td><td>① 认 <code>KHY_ADB</code>；② 序列号改 <code>get-state</code> 探针；③ ts 过滤器 Int32→Int64；④ <code>Get-Content</code> 补 <code>-Encoding UTF8</code>（3 处）；⑤ 汇总段同</td></tr><tr><td><code>khy_run_all.ps1</code></td><td>step 0 WiFi 防护漏判 mDNS/TLS 形态（会放行 WiFi 设备跑到断网项）</td></tr><tr><td><code>khy_offline_accept.ps1</code></td><td>同类 WiFi 漏判 + <code>$usb</code> 被循环覆盖；改正向判据 + 探针</td></tr><tr><td><code>khy_amoo_accept.ps1</code></td><td>3 处 <code>Get-Content</code> 补 UTF8；序列号改探针</td></tr><tr><td><code>khy-today.ps1</code></td><td><code>Get-Content</code> 补 UTF8；<code>catch { continue }</code> 改为计数并告警（原先静默丢行）</td></tr><tr><td><code>fake-adb-test.ps1</code></td><td>假 adb 的 pull 改认目标参数；补 <code>get-state</code> 应答</td></tr><tr><td><code>khy_witness.ps1</code></td><td>新增；序列号改探针动态选设备</td></tr></tbody></table>
+<p><strong>交付物</strong>：<code>khy-os-client-1.1.53-console-release.apk</code>（62.5 MB，<br>SHA-256 <code>349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974</code>），<br>仓库内 <code>build/</code> 与仓库外 <code>D:\Portable\4-output\</code> 各一份，已装机且哈希一致。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../delivery/channel/mobile/khy-os-client-app/DOC-CORRUPTION-INCIDENT.html"><div class="dir">← 上一篇</div><div class="ttl">VERIFICATION.md 损坏事故记录（2026-11-14 08:0x）</div></a><a class="next" href="../../../../delivery/channel/mobile/khy-os-client-app/README.html"><div class="dir">下一篇 →</div><div class="ttl">khyosclient</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="delivery/channel/mobile/khy-os-client-app/HANDOFF.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

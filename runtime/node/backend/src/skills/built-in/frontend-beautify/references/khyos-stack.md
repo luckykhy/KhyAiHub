@@ -4,7 +4,7 @@
 
 ## 共享设计 token（ai-frontend 为准）
 
-`delivery/web/ai-frontend/src/styles/newapi-theme.css` 定义了完整的 `--khy-*` token 体系（新 API 风格、oklch 派生、亮暗双主题）。这是 khyos 主前端的**设计语言真源**，所有视觉改动必须复用它。
+`delivery/channel/web/ai-frontend/src/styles/newapi-theme.css` 定义了完整的 `--khy-*` token 体系（新 API 风格、oklch 派生、亮暗双主题）。这是 khyos 主前端的**设计语言真源**，所有视觉改动必须复用它。
 
 ### 核心 token（亮色）
 
@@ -74,8 +74,8 @@
 
 | 项目 | dev | build 检查 |
 |---|---|---|
-| ai-frontend | `cd delivery/web/ai-frontend && npm run dev` | `cd delivery/web/ai-frontend && npx vite build` |
+| ai-frontend | `cd delivery/channel/web/ai-frontend && npm run dev` | `cd delivery/channel/web/ai-frontend && npx vite build` |
 | khyquant | `cd delivery/channel/khyquant/frontend && npm run dev` | `cd delivery/channel/khyquant/frontend && npx vite build` |
-| 移动端 | `delivery/mobile/khy-os-client-app`（Flutter，`flutter run`） | `flutter build apk` |
+| 移动端 | `delivery/channel/mobile/khy-os-client-app`（Flutter，`flutter run`） | `flutter build apk` |
 
 每次改动后至少跑一次 build 检查确认无编译错误。

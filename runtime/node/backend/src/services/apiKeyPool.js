@@ -39,6 +39,40 @@ const BASE_COOLDOWN_MS = API_KEY_POOL.BASE_COOLDOWN_MS;
 const MAX_COOLDOWN_MS = API_KEY_POOL.MAX_COOLDOWN_MS;
 const MAX_RETRY_AFTER_MS = API_KEY_POOL.MAX_RETRY_AFTER_MS;
 
+// ── ccSwitch 卡片池的命名空间别名（只读兼容，零迁移）────────────────────────
+// ccSwitch 卡片自有 key 登记在 apiKeyPool 的一个独立命名空间里。历史版本用
+// `cc-switch:<cardId>`（含冒号），而网关三段式模型名 `api:<pool>:<model>` 的池段
+// 正则只认 [a-z0-9_-]（apiAdapter.parseProviderModel / aiGateway 的同源正则），
+// 于是那个名字当池名用时会被截成 'cc-switch'、pick 不到 key/endpoint，模型 id 还
+// 被污染成 '<cardId>:<model>'。现行命名空间是 `cc_switch_<cardId>`（见
+// domain/config/ccSwitch/constants.js:cardPoolProvider）。
+//
+// 已落盘的 api_keys.json **不做迁移**（那是明文凭据文件，不该由运行时重写）：
+// 这里给查找路径加一层别名解析 —— 用新名查不到时回退旧名，反之亦然。写入路径
+// （addKey/removeKey）只用调用方给的名字，不在此处改名，所以新旧卡片各自成文。
+const CC_SWITCH_POOL_NS = 'cc_switch';
+const LEGACY_CC_SWITCH_POOL_NS = 'cc-switch';
+
+/**
+ * 池名的候选列表（[原样, ...别名]）。非 ccSwitch 命名空间 → 只有原样一个。
+ * 纯字符串运算，绝不抛。
+ * @param {string} provider
+ * @returns {string[]}
+ */
+function _poolProviderAliases(provider) {
+  const raw = String(provider || '');
+  if (!raw) {
+    return [];
+  }
+  const out = [raw];
+  if (raw.startsWith(`${CC_SWITCH_POOL_NS}_`)) {
+    out.push(`${LEGACY_CC_SWITCH_POOL_NS}:${raw.slice(CC_SWITCH_POOL_NS.length + 1)}`);
+  } else if (raw.startsWith(`${LEGACY_CC_SWITCH_POOL_NS}:`)) {
+    out.push(`${CC_SWITCH_POOL_NS}_${raw.slice(LEGACY_CC_SWITCH_POOL_NS.length + 1)}`);
+  }
+  return out;
+}
+
 // ── 凭据文件权限 ──────────────────────────────────────────────────────────
 // api_keys.json 是**明文**凭据文件。历史上按 0o666 落盘(实际权限由 umask 决定,
 // 通常 0644 → 同机其他用户可读),当时是为了与旧写入路径保持字节级一致。
@@ -845,11 +879,18 @@ function _isPlaceholderKey(key) {
 }
 
 function _collectAvailableEntries(provider) {
-  const entries = _pool.get(provider);
-  if (!entries || entries.length === 0) {
-    return [];
+  // ccSwitch 卡片池命名空间别名：新名 `cc_switch_<id>` 与旧名 `cc-switch:<id>`
+  // 指向同一批 key（已落盘文件不迁移）。原样名命中就不看别名，零行为变化。
+  for (const candidate of _poolProviderAliases(provider)) {
+    const entries = _pool.get(candidate);
+    if (entries && entries.length > 0) {
+      return _filterAvailableEntries(entries);
+    }
   }
+  return [];
+}
 
+function _filterAvailableEntries(entries) {
   const now = Date.now();
   for (const e of entries) {
     if (e.status === 'cooldown' && e.cooldownUntil <= now) {
@@ -983,4 +1024,5 @@ module.exports = {
   hasAvailableKeys,
   _getBuiltinProviderKeys,
   resolveCredentialsFileMode,
+  _poolProviderAliases,
 };

@@ -23,7 +23,7 @@ if errorlevel 1 (
 )
 
 pushd "%APP_DIR%"
-node scripts\watch-rebuild.cjs --relaunch
+node scripts\dev\watch-rebuild.cjs --relaunch
 popd
 echo.
 echo 监听已退出。应用若还开着，跑的是最后一次构建的产物。

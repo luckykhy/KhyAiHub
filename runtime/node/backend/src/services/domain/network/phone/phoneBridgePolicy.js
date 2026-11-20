@@ -76,6 +76,29 @@ const GRANTS = Object.freeze([
     why: '只有调屏幕亮度用得到；不给也能用，brightness 会返回中文权限错误。',
   },
   {
+    id: 'record_audio',
+    label: '录音权限（RECORD_AUDIO，可选）',
+    required: false,
+    applicableToLiteBuild: true,
+    argv: ['pm', 'grant', BRIDGE_PACKAGE, 'android.permission.RECORD_AUDIO'],
+    verifyArgv: ['dumpsys', 'package', BRIDGE_PACKAGE],
+    expectIncludes: 'RECORD_AUDIO: granted=true',
+    why: '只有 record_audio 用得到；不给也能用其它工具，record_audio 会返回中文权限错误。',
+  },
+  {
+    id: 'camera',
+    label: '相机权限（CAMERA，可选）',
+    required: false,
+    applicableToLiteBuild: true,
+    argv: ['pm', 'grant', BRIDGE_PACKAGE, 'android.permission.CAMERA'],
+    verifyArgv: ['dumpsys', 'package', BRIDGE_PACKAGE],
+    expectIncludes: 'CAMERA: granted=true',
+    // 反直觉的一点：照片由系统相机 App 拍、写盘走 EXTRA_OUTPUT，按常规调用方
+    // 不需要 CAMERA。但实测 StepOS 的 CameraSimplifyActivity 会校验调用方权限，
+    // 缺它就是 SecurityException(revoked permission)，整条 camera_open 直接死。
+    why: '只有 camera_open 用得到；StepOS 相机对裸 IMAGE_CAPTURE 校验调用方 CAMERA，缺权限直接 SecurityException。',
+  },
+  {
     id: 'accessibility_service',
     label: '无障碍服务（UI 自动化必需）',
     required: false,
@@ -433,10 +456,6 @@ function buildForwardArgv(config, localPort, remotePort) {
   ]);
 }
 
-function buildTokenReadArgv(config, tokenRemotePath) {
-  return buildAdbArgv(config, ['shell', 'cat', String(tokenRemotePath || '')]);
-}
-
 function buildStatusReadArgv(config, statusRemotePath) {
   return buildAdbArgv(config, ['shell', 'cat', String(statusRemotePath || '')]);
 }
@@ -452,9 +471,12 @@ function buildSizeArgv(config, remotePath) {
 /**
  * 一次拿到大小与修改时间（stat -c '%s %Y'）。比 wc -c 多一个字段，却不多一次
  * adb 往返——采集要按时间窗筛文件，光有大小不够。
+ *
+ * 格式串必须自带引号：adb shell 把 argv 用空格拼成一条命令后交给设备 shell 重新
+ * 分词，不带引号的 %s %Y 会被拆成 -c %s 和一个名为 %Y 的文件名（真机实测踩到）。
  */
 function buildStatArgv(config, remotePath) {
-  return buildAdbArgv(config, ['shell', 'stat', '-c', '%s %Y', String(remotePath || '')]);
+  return buildAdbArgv(config, ['shell', 'stat', '-c', "'%s %Y'", String(remotePath || '')]);
 }
 
 /** 拉取设备文件到主机。路径都是参数，不拼进命令串。 */
@@ -470,6 +492,20 @@ function buildPushArgv(config, localPath, remotePath) {
 /** 设备侧建目录（-p 递归），供 push 用。 */
 function buildMkdirArgv(config, remoteDir) {
   return buildAdbArgv(config, ['shell', 'mkdir', '-p', String(remoteDir || '')]);
+}
+
+/** 列目录内容（-1 每项一行）：体检时用来判断存储通道能不能读。 */
+function buildLsArgv(config, remoteDir) {
+  return buildAdbArgv(config, ['shell', 'ls', '-1', String(remoteDir || '')]);
+}
+
+/**
+ * 枚举目录下的文件。必须带 `-s <serial>`：同一台手机常同时有 IP 与 mDNS 两条 transport，
+ * 不带串号的 adb 会直接报 more than one device/emulator（真机上实测踩到过）。
+ * 深度不在设备侧限（toybox 的 find 不一定支持 -maxdepth），改在 JS 里按路径分段数过滤。
+ */
+function buildFindArgv(config, remoteDir) {
+  return buildAdbArgv(config, ['shell', 'find', String(remoteDir || ''), '-type', 'f']);
 }
 
 /**
@@ -496,17 +532,6 @@ function redactSecrets(text) {
   return out;
 }
 
-function isValidTokenShape(token) {
-  return typeof token === 'string' && /^[0-9a-f]{32}$/i.test(token.trim());
-}
-
-function normalizeToken(raw) {
-  if (typeof raw !== 'string') {
-    return '';
-  }
-  return raw.trim().split(/\s+/).pop() || '';
-}
-
 module.exports = {
   BRIDGE_PACKAGE,
   BRIDGE_APK_NAME,
@@ -522,16 +547,15 @@ module.exports = {
   buildConnectArgv,
   buildForwardArgv,
   buildReviveArgv,
-  buildTokenReadArgv,
   buildStatusReadArgv,
   buildSizeArgv,
   buildStatArgv,
   buildPullArgv,
   buildPushArgv,
   buildMkdirArgv,
+  buildLsArgv,
+  buildFindArgv,
   redactSecrets,
-  isValidTokenShape,
-  normalizeToken,
   isPhoneBridgeToolName,
   resolveBridgeToolName,
 };

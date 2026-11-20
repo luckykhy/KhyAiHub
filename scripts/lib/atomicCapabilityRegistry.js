@@ -215,7 +215,7 @@ const ATOMIC_GROUPS = [
     id: 'fs.zip',
     summary: '把手机目录/文件打包成 zip 或解包',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['phone_zip', 'phone_unzip'],
       'phone-native': ['zip', 'unzip'],
@@ -274,6 +274,17 @@ const ATOMIC_GROUPS = [
       + '它是 `PHONE_RESTRICTED_TOOLS` 之一（phone-tools.js:58）——**刻意更窄**，不是重复实现。'
       + '故不与 `exec.shell` 归组：把它们当同一能力，会让「复用」变成「放宽到任意 shell」，'
       + '那是降级不是复用。',
+  },
+  {
+    id: 'sys.elevation',
+    summary: '查询免 root 提权代理是否可用',
+    layer: 'L1',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/lib/core/services/device_control.dart',
+    members: {
+      'mobile-dart': ['elevation_status'],
+    },
+    note: '`exec_shell_elevated`（归 `exec.shell`）的状态面：只读查询提权代理装没装、'
+      + '起没起。与执行能力分开登记——它是「能不能提权」的判据，不是执行本身。',
   },
   {
     id: 'exec.code',
@@ -369,6 +380,24 @@ const ATOMIC_GROUPS = [
       backend: ['Firecrawl'],
     },
     note: '后端独有；与 `net.http` 的差异是「抓取+解析」而非「取回」。',
+  },
+  {
+    id: 'net.capture-rule',
+    summary: '抓包与改写规则（手机侧调试面）',
+    layer: 'L1',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    members: {
+      'phone-native': [
+        'net_capture_start', 'net_capture_stop', 'net_capture_status',
+        'net_capture_list', 'net_capture_export',
+        'net_rule_set', 'net_rule_list', 'net_rule_delete', 'net_rule_clear',
+      ],
+    },
+    note: '五个采集入口 + 四个规则入口；规则那四个由 2026-11-17 人工裁决从合并的 '
+      + 'net_rule（op 参数）拆回独立工具（工具面棘轮 +3，已批准），九个入口共用 '
+      + 'Tools.java 同一道调试解锁门与同一份 netRule() 规则引擎（NetCaptureCore），'
+      + '拆分只改工具名不改规则语义。`net_capture_*` 五个原先也是孤儿'
+      + '（atomic-orphan-exposure），同一次归组，避免孤儿数从 12 涨到 15。',
   },
 
   // ── 手机 / 设备 ───────────────────────────────────────────────────────
@@ -558,7 +587,7 @@ const ATOMIC_GROUPS = [
     id: 'device.ui-dump',
     summary: '读取屏幕上的可交互元素树',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['ui_dump'],
       'phone-native': ['ui_dump'],
@@ -586,7 +615,7 @@ const ATOMIC_GROUPS = [
     id: 'device.ui-tap',
     summary: '点击屏幕元素',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['ui_tap', 'ui_click'],
       'phone-native': ['ui_tap', 'ui_click'],
@@ -599,7 +628,7 @@ const ATOMIC_GROUPS = [
     id: 'device.ui-type',
     summary: '向输入框写入文本',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['ui_type'],
       'phone-native': ['ui_type'],
@@ -611,7 +640,7 @@ const ATOMIC_GROUPS = [
     id: 'device.ui-gesture',
     summary: '滑动、长按与系统导航',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['ui_swipe', 'ui_longpress', 'ui_back', 'ui_home', 'ui_recents'],
       'phone-native': ['ui_swipe', 'ui_longpress', 'ui_back', 'ui_home', 'ui_recents'],
@@ -620,10 +649,23 @@ const ATOMIC_GROUPS = [
     note: '',
   },
   {
+    id: 'device.ui-drive',
+    summary: '按元素引用驱动 Android 界面（dump → digest → 动作 → 复检）',
+    layer: 'L1',
+    canonical: 'runtime/node/backend/src/tools/AndroidUiTool/index.js',
+    members: {
+      backend: ['AndroidUi'],
+    },
+    note: '**聚合工具面**，同 `exec.shell` 里的 `PhoneBridge`：一个工具收进 snapshot/tap/swipe/type 多个动作，'
+      + '不是新的原子能力实现——元素引用与变化判定用 vendored android-agent-kit，适配层在 '
+      + 'services/domain/network/phone/androidRef。单成员组，**刻意不并进 `device.ui-tap` / `device.ui-type`**：'
+      + '同名多归是 error，且本工具的参数契约（ref 必填 + confirm 门）与那几组不同，并进去会触发接口分歧误报。',
+  },
+  {
     id: 'device.screenshot',
     summary: '截屏',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['shot', 'shot_b64'],
       'phone-native': ['shot', 'shot_b64'],
@@ -648,6 +690,17 @@ const ATOMIC_GROUPS = [
       + '**不内联就拿不到图**，与手机侧直接返回 b64 的形态不同。',
   },
   {
+    id: 'device.media-capture',
+    summary: '录音与开相机（媒体采集）',
+    layer: 'L1',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    members: {
+      'phone-bridge': ['phone_record_audio', 'phone_camera_open'],
+      'phone-native': ['record_audio', 'camera_open'],
+    },
+    note: '桥面 `phone_*` 前缀名与原生裸名是同一采集能力的两端接入（与 device.screenshot 同构）。',
+  },
+  {
     id: 'device.location',
     summary: '读取地理位置',
     layer: 'L1',
@@ -661,7 +714,7 @@ const ATOMIC_GROUPS = [
     id: 'device.install-apk',
     summary: '安装 APK / 配置提权环境',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
     members: {
       'mobile-dart': ['install_apk', 'install_shizuku', 'shizuku_status'],
     },
@@ -671,7 +724,7 @@ const ATOMIC_GROUPS = [
     id: 'device.analysis',
     summary: '分析当前屏幕内容',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
     members: {
       'mobile-dart': ['analyze_screen'],
     },
@@ -681,7 +734,7 @@ const ATOMIC_GROUPS = [
     id: 'device.dart-swipe',
     summary: 'Dart 侧无障碍滑动手势',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
     members: {
       'mobile-dart': ['a11y_swipe'],
     },
@@ -696,7 +749,7 @@ const ATOMIC_GROUPS = [
     id: 'bridge.tool-catalog',
     summary: '桥自述都有什么工具',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-bridge': ['phone_tools'],
       'phone-native': ['tools'],
@@ -713,7 +766,7 @@ const ATOMIC_GROUPS = [
     id: 'credential.delivery',
     summary: '凭据投递四件套',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-native': ['secret_code', 'secret_put', 'secret_list', 'secret_del'],
     },
@@ -728,7 +781,7 @@ const ATOMIC_GROUPS = [
     id: 'app.adou-signin',
     summary: '调用 khy 的 a豆助手',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java',
     members: {
       'phone-native': ['adou_signin'],
     },
@@ -740,13 +793,44 @@ const ATOMIC_GROUPS = [
       + '（Tools.java:1870-1872）。它依赖 `com.amoo.adousignin`，未装时返回 not_installed'
       + '（:2029-2033）——检测不到就是不可用，不伪造在线。',
   },
+  {
+    id: 'sync.log',
+    summary: '共享层日志：追加、增量读、校验链、导出（手机本地，两端对读）',
+    layer: 'L1',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/SyncStore.java',
+    members: {
+      'phone-native': [
+        'sync_status', 'sync_append', 'sync_read',
+        'sync_delete', 'sync_verify', 'sync_export',
+      ],
+    },
+    note: '六个入口的实现体全在 SyncStore.java（append/delete/verify/export/status 各一个 '
+      + '`public static synchronized`，记录落 /sdcard/khyos-sync）。PC 侧没有同名调用面——'
+      + '它是手机本地共享层，不是设备控制能力，所以 `phone-bridge` 面为空是对的。'
+      + '2026-11-17 加工具名时未归组，是 atomic-orphan-exposure 的 6 个孤儿；'
+      + '与 net_capture_* 同批补齐，避免「新工具先说明它复用哪个原子能力」这道闸被绕过。',
+  },
+  {
+    id: 'device.elevate',
+    summary: '提权自举：与本机 adbd 配对、拉起 uid 2000 提权代理、查/切提权开关',
+    layer: 'L1',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/shell/ElevationBootstrap.kt',
+    members: {
+      'phone-native': ['elevate'],
+      'mobile-dart': ['elevate'],
+    },
+    note: '两个接入点是同一份实现，不是重复：Dart 侧 builtin_tools.dart:454 走 '
+      + 'DeviceControl.elevate → 原生 Tools.java 的 elevate 分支（stopSidecar / '
+      + 'pairWithCode / setEndpoint / bootstrap），UI 按钮调的也是同一个 ElevationBootstrap。'
+      + '开关默认关是红线：raise 在开关关着时直接拒绝，没有静默提权的路。',
+  },
 
   // ── amoo 协作 ─────────────────────────────────────────────────────────
   {
     id: 'mobile.notes',
     summary: '检索本地笔记',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
     members: {
       'mobile-dart': ['search_notes'],
     },
@@ -756,11 +840,14 @@ const ATOMIC_GROUPS = [
     id: 'mobile.calc',
     summary: '计算数学表达式',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart',
+    canonical: 'runtime/node/backend/src/tools/CalculatorTool/index.js',
     members: {
+      backend: ['Calculator'],
       'mobile-dart': ['calculator'],
     },
-    note: 'Dart 侧独有。',
+    note: '两端各一份实现：后端 `Calculator`（CalculatorTool，支持 sqrt/pi 等白名单函数，'
+      + 'category=analysis）与 Dart `calculator`（四则+幂）。参数契约同为 `expression:string` 必填，'
+      + '跨面无必填性分歧；按「同一能力的多个接入点」归入同组，canonical 取后端主面。',
   },
   {
     id: 'amoo.dispatch',
@@ -790,6 +877,7 @@ const ATOMIC_GROUPS = [
     members: {
       'phone-bridge': ['phone_amoo_ask', 'phone_amoo_result'],
       'phone-native': ['amoo_ask', 'amoo_result'],
+      'mobile-dart': ['amoo_ask'],
     },
     note: '**与 `amoo.dispatch` 分开登记**：本条是**手机侧反代**——`phone_amoo_ask` 只启动、'
       + '结果用 `phone_amoo_result` 轮询（异步是必须的：桥 socket 超时 20s，而 amoo 一想约 6 分钟，'
@@ -805,7 +893,7 @@ const ATOMIC_GROUPS = [
     id: 'amoo.stop',
     summary: '立即中止进行中的 amoo 反代任务、释放单飞锁',
     layer: 'L1',
-    canonical: 'delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooLoop.java',
+    canonical: 'delivery/channel/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooLoop.java',
     members: {
       'phone-bridge': ['phone_amoo_stop'],
       'phone-native': ['amoo_stop'],
@@ -895,6 +983,21 @@ const ATOMIC_GROUPS = [
       'amoo-bridge': ['bridge_status'],
     },
     note: '',
+  },
+  {
+    id: 'phone.hiao-bridge',
+    summary: '经 hiao（phone-dsh）治理桥调用手机工具',
+    layer: 'L2',
+    canonical: 'runtime/node/backend/src/services/domain/network/phone/hiaoBridge/hiaoBridgeClient.js',
+    members: {
+      backend: ['HiaoBridge'],
+    },
+    note: '**单成员组，刻意不并进 `device.ui-*` 四组**：`HiaoBridge` 是桥**门面**'
+      + '（ping/status/tools/call/task/approvals/approve/audit 聚合），不是某一个原子能力——'
+      + 'call 的目标由手机端 `/status` 实时决定，逐工具映射要等 hiao 工具表被契约测试钉住后再拆。'
+      + '并进 `device.ui-*` 会让 `atomic-interface-divergent` 因参数必填性不同而红'
+      + '（桥面参数是自由 `args` 对象，原生面是逐字段契约），与 `exec.shell` 里把 `PhoneBridge`'
+      + '记为聚合面而不是新实现是同一条口径。',
   },
 
   // ── 记忆 / 技能 / 上下文 ─────────────────────────────────────────────
@@ -1054,6 +1157,18 @@ const ATOMIC_GROUPS = [
       backend: ['repoAudit'],
     },
     note: '',
+  },
+  {
+    id: 'git.branch',
+    summary: '列出与切换分支',
+    layer: 'L1',
+    canonical: 'runtime/node/backend/src/services/domain/git/gitBranchService.js',
+    members: {
+      backend: ['gitBranch', 'gitSwitch'],
+    },
+    note: '读（gitBranch 列分支）与写（gitSwitch 切换，force 时丢弃本地改动）两个工具'
+      + '共用同一 service，故归一组；canonical 指 service 而非两个工具文件——'
+      + '按工具文件拆两组会给「同一能力两处真源」打掩护。',
   },
 
   // ── 模型 / AI ─────────────────────────────────────────────────────────
@@ -1663,6 +1778,12 @@ const DIVERGENT_GROUPS = {
     + '其余面可选。Dart 侧把剪贴板拆成 `read_clipboard`/`write_clipboard` 两个工具，'
     + '写工具天然只需 text；其余面是单一 `clipboard` 工具配 `op` 判别（get 时不需要 text）。'
     + '粒度不同导致同一参数在两处的必填性不同，不是契约冲突。',
+  'amoo.ask': '【接入面校验严格度差异】`prompt`：手机两侧均必填'
+    + '（原生 Tools.java:2177「amoo_ask 需要 prompt」拒绝空值；'
+    + 'Dart builtin_tools.dart:996 required 列表），'
+    + 'PC 桥面 phoneBridgeCatalog.js:642-647 的 args.prompt 未标 required（可选）。'
+    + '桥侧对缺失 prompt 有自己的拒绝路径，必填性只是各接入面校验严格度不同，'
+    + '不是能力语义分歧；以手机两侧为准，桥面收紧另开任务，不在本轮 driver 化范围。',
 };
 
 /**

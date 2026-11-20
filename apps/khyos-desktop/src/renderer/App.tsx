@@ -21,7 +21,7 @@ import type { ToolExecution } from './state/toolExecutionSlice'
 import type { ToolDiff } from '../shared/toolDiff'
 import { loadTheme, subscribeToTheme, loadMessageFontSize } from './theme/theme'
 import { loadBackground } from './theme/background'
-import { getModelOptionLabel, loadPersistedModelSelection, persistModelSelection, useModelCatalog } from './utils/useModelCatalog'
+import { getModelOptionLabel, loadPersistedModelSelection, persistModelSelection, reconcileModelSelection, useModelCatalog } from './utils/useModelCatalog'
 import { AGENT_MODES, DEFAULT_AGENT_MODE } from './components/composer/ModeSelector'
 import { openWorkspace } from './utils/openWorkspace'
 import { resolveDesktopAction } from './shared/keymap'
@@ -62,6 +62,14 @@ const AutomationsPage = lazy(() =>
 )
 const EnvironmentsPage = lazy(() =>
   import('./components/environments/EnvironmentsPage').then((m) => ({ default: m.EnvironmentsPage }))
+)
+// 模型管理页（#/model-manager）：受管模型列表（Card.models[]/defaultModel 的
+// 派生视图）+ 一键应用到 Claude Code。同属「全屏替换分支」低频页，按需加载；
+// 侧栏入口走主窗整屏渲染，独立窗口入口（Ctrl+Shift+M / 窗口菜单）由 main 的
+// models:openWindow 创建。导出名 ModelsPage 与路由名 model-manager 按
+// pinnedContract 钉的接；页面文件由页面 track 建在 components/modelManager/。
+const ModelsPage = lazy(() =>
+  import('./components/modelManager/ModelsPage').then((m) => ({ default: m.ModelsPage }))
 )
 
 // 剥洋葱 · 视觉侧第四刀：ToolExecutionPanel 曾在本层按需加载。
@@ -197,21 +205,27 @@ export default function App() {
   }, [])
 
   const catalog = useModelCatalog()
-  // 持久化 id 来自上一次运行，选项表却来自本次实时采集——上游改名或下架后两者
-  // 会对不上。此时不能静默沿用：Composer 会从 id 字符串反推 preferredModel 继续
-  // 发线，界面显示「选择模型」而请求钉着一个已消失的模型。选项表就绪后校验一次，
-  // miss 就回退到首个可用项并告知用户（不猜「最像的」新 id，改名不等于重构）。
+  // 选项表就绪后只做对账，**不改选**。miss 的原因可能是上游改名/下架，也可能
+  // 只是本次探测没返回它（采集叶会跑后台深测，且采集为空时 host 回退静态目录，
+  // 两套 id 互不相交）。这两种情况都不是用户改主意的证据：自动落到 options[0]
+  // 并写回 settings，会把选中态永久钉在一个碰巧排第一、且往往没配好的模型上——
+  // 下次启动再跳一次，正是「每次选好下次就跳到其他不可用模型」的成因。
+  // 保留原 id 后，Composer 只在选项表查得到时才钉网关（resolveModelPins），
+  // 查不到就走网关默认通道，不会把已消失的模型钉进请求。
+  const staleNotifiedRef = useRef('')
   useEffect(() => {
     if (catalog.loading || !selectedModel || catalog.options.length === 0) return
-    if (catalog.options.some((o) => o.id === selectedModel)) return
-    const dead = selectedModel
-    const fallback = catalog.options[0]
-    setSelectedModel(fallback.id)
-    persistModelSelection(fallback.id)
+    const { id, known } = reconcileModelSelection(selectedModel, catalog.options)
+    if (known) {
+      staleNotifiedRef.current = ''
+      return
+    }
+    if (staleNotifiedRef.current === id) return
+    staleNotifiedRef.current = id
     store.dispatch(addToast({
       type: 'info',
-      title: `上次选中的模型 ${dead} 已不在当前可选列表，已切换为「${fallback.label}」`,
-      description: '上游可能已改名或下架。请确认本次选择，点底部模型按钮可重新选。',
+      title: `上次选中的模型 ${id} 当前不可用（未自动切换）`,
+      description: '上游可能改名或下架，或本次探测未返回它。请点底部模型按钮重新选择；原选择已保留，不会写入其他模型。',
     }))
   }, [catalog.loading, catalog.options, selectedModel])
   // P3-7④：选中模型展示名 = 选项表 label 解析；未选中时退化为占位符。
@@ -371,6 +385,19 @@ export default function App() {
   const settings = route === 'settings' || route.startsWith('settings/')
   const automations = route === 'automations'
   const environments = route === 'environments'
+  // 模型管理（受管模型列表）。路由名刻意不叫 'models'：设置页 nav id
+  // 'models' 与深链 #/settings/models 已被 KeyManagerPage 内嵌态占用。
+  // 前缀匹配而非全等：独立管理窗（frame:false）加载的是
+  // `#/model-manager?window=models`（modelsWindow.ts MODELS_WINDOW_QUERY），
+  // 查询段不进 route 名但必须仍命中本分支。
+  const models = route === 'model-manager' || route.startsWith('model-manager?')
+  // 本窗是不是那个独立的无框模型管理窗。侧栏入口在主窗走同一 hash 的整屏分支，
+  // 那边有 TitleBar/侧栏可返回；独立窗两者都没有且 frame:false 连系统关闭钮都没，
+  // 所以 ModelsPage 的 ✕ / 「返回工作区」要不要渲染，全看这个标志是不是真的。
+  const modelsStandalone = (() => {
+    const q = window.location.hash.replace(/^#\/?/, '').split('?')[1] || ''
+    return new URLSearchParams(q).get('window') === 'models'
+  })()
 
   // 侧栏「搜索」按钮派发的事件 → 打开命令中心（与 Ctrl+K 同一入口）
   useEffect(() => {
@@ -460,7 +487,7 @@ export default function App() {
   // 副作用留在本层（薄壳）：命令面板开合、模型/强度状态都在 App。
   // 面板类快捷键（Ctrl+Alt+B / Ctrl+J）的副作用在 AppLayout，那边用自己的监听。
   useEffect(() => {
-    if (keyManager || settings) return
+    if (keyManager || settings || models) return
     const THOUGHT_LEVELS = ['off', 'low', 'high', 'max']
     const handler = (e: KeyboardEvent) => {
       const action = resolveDesktopAction(e)
@@ -492,6 +519,15 @@ export default function App() {
         void api?.openKeyManagerWindow?.()
         return
       }
+      if (action === 'openModels') {
+        // 模型管理独立窗口：与 openKeyManager 同形态，窗口本体由 main 的
+        // models:openWindow 创建（页面 hash #/model-manager）。主窗内的整屏
+        // 模型管理路由走侧栏入口（window.location.hash = '#/model-manager'）。
+        e.preventDefault()
+        const api = (window as unknown as { __KHYOS__?: { openModelsWindow?: () => Promise<void> } }).__KHYOS__
+        void api?.openModelsWindow?.()
+        return
+      }
       if (action === 'cycleThoughtLevel') {
         e.preventDefault()
         // 用函数式更新，免得把 thoughtLevel 塞进依赖数组导致每次切换强度都重订阅
@@ -504,7 +540,7 @@ export default function App() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [keyManager, settings, handleNewTask])
+  }, [keyManager, settings, models, handleNewTask])
 
   // 窗口级键位（F11 全屏 / F12 开发者工具）：与路由无关 —— 设置页、密钥管理页、
   // 自动化页上同样要能按。刻意与上面那段分开注册，否则会被 `keyManager || settings`
@@ -747,6 +783,24 @@ export default function App() {
         <ErrorBoundary>
           <Suspense fallback={<div style={{ padding: 24 }} />}>
             <EnvironmentsPage />
+          </Suspense>
+        </ErrorBoundary>
+        <ToastContainer />
+      </>
+    )
+  }
+
+  // 模型管理页（受管模型列表 + 应用到 Claude Code）。侧栏入口走这里：整屏替换，
+  // 不渲染 AppLayout/侧栏/TitleBar —— 所以页面顶栏自带无条件「返回工作区」出口
+  // （ModelsPage 块0，P0 级卡死修复）。独立窗口入口见 openModels 键位消费。
+  // standalone 只对**真正的独立无框窗**为真（URL 带 ?window=models）：那个窗
+  // 没有 TitleBar、frame:false 也没有系统关闭钮，✕ 必须由页面自己画。
+  if (models) {
+    return (
+      <>
+        <ErrorBoundary>
+          <Suspense fallback={<div style={{ padding: 24 }} />}>
+            <ModelsPage standalone={modelsStandalone} />
           </Suspense>
         </ErrorBoundary>
         <ToastContainer />

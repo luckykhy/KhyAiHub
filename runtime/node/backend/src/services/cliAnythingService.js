@@ -14,19 +14,11 @@
 
 const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
-// Portable-aware data home resolved at load (legacy const semantics preserved).
-function _dataHome() {
-  try {
-    const { getDataHome } = require('../utils/dataHome');
-    return getDataHome();
-  } catch {
-    return path.join(os.homedir(), '.khy');
-  }
-}
-const CLI_ANYTHING_DIR = path.join(_dataHome(), 'cli-anything');
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
+
+const CLI_ANYTHING_DIR = getDataDir('cli-anything');
 const REGISTRY_CACHE = path.join(CLI_ANYTHING_DIR, 'registry.json');
 const PUBLIC_REGISTRY_CACHE = path.join(CLI_ANYTHING_DIR, 'public_registry.json');
 const INSTALLED_CACHE = path.join(CLI_ANYTHING_DIR, 'installed.json');
@@ -634,7 +626,7 @@ function convertToKHYSkill(parsed, cliName) {
     return null;
   }
   const meta = parsed.meta || {};
-  const skillDir = path.join(_dataHome(), 'skills', `cli-anything-${cliName}`);
+  const skillDir = getDataDir('skills', `cli-anything-${cliName}`);
 
   if (!fs.existsSync(skillDir)) {
     fs.mkdirSync(skillDir, { recursive: true });
@@ -739,7 +731,7 @@ function _findSkillMD(cli) {
   // Local clone
   candidates.push(
     path.join(CLI_ANYTHING_DIR, 'generated', cli.name, 'skills', 'SKILL.md'),
-    path.join(_dataHome(), 'skills', `cli-anything-${cli.name}`, 'SKILL.md')
+    path.join(resolveDataPath('skills', `cli-anything-${cli.name}`), 'SKILL.md')
   );
 
   // Built-in vendored SKILL.md shipped with KHY (offline, zero-config)

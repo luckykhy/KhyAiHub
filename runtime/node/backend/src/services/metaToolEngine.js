@@ -22,7 +22,6 @@
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 // ── 可调阈值（全部 env 可覆盖，零硬编码红线）────────────────────────────────
@@ -331,12 +330,8 @@ function _generatedDir() {
   if (process.env.KHY_META_TOOL_DIR) {
     return process.env.KHY_META_TOOL_DIR;
   }
-  // Portable-aware data home; fallback to the legacy location.
-  try {
-    return path.join(require('../utils/dataHome').getDataHome(), 'generated_tools');
-  } catch {
-    return path.join(os.homedir(), '.khy', 'generated_tools');
-  }
+  // 写侧与读恢复共用同一目录：getDataDir 建目录，读侧 readdirSync 失败即按「无历史」处理。
+  return require('../utils/dataHome').getDataDir('generated_tools');
 }
 
 function persistGeneratedTool(def) {

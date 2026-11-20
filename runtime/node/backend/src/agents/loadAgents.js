@@ -225,7 +225,8 @@ async function loadCustomAgents(cwd) {
     {
       dir: (() => {
         try {
-          return path.join(require('../utils/dataHome').getDataHome(), 'agents');
+          // Candidate search dir only — must not create it, or existsSync below is always true.
+          return require('../utils/dataHome').resolveDataPath('agents');
         } catch {
           return path.join(os.homedir(), '.khy', 'agents');
         }

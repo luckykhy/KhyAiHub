@@ -58,27 +58,29 @@ runtime/node/backend/**/*.test.js
 runtime/node/backend/**/*.spec.js
 runtime/node/backend/src/**/*.html
 runtime/node/backend/*.html
-# 同理不能用 `**/*.html`：delivery/web/ai-frontend/index.html 是 Vite 的构建入口，
+# 同理不能用 `**/*.html`：delivery/channel/web/ai-frontend/index.html 是 Vite 的构建入口，
 # 排除它会让 `pnpm --filter khy-ai-frontend run build` 直接失败。
 
 # ── 整个不进镜像的树（无任何 Dockerfile COPY 它们）────────────────────────────
 # apps/khyos-desktop 是独立 Electron 工程（delivery/desktop/khyos-desktop 迁址后的
 # 新位置），根 Dockerfile 与 ai-frontend Dockerfile 都不 COPY 它。
 #
-# ⚠ delivery/mobile/ 是本次补的最大一项（2026-11-02 才发现，前两轮都漏了）：
-#   delivery/mobile/khy-os-client-app/build      3.9 GB（Flutter Android 构建产物）
-#   delivery/mobile/khy-os-client-app/.dart_tool 479 MB（Dart 工具链缓存）
+# ⚠ delivery/channel/mobile/ 是本次补的最大一项（2026-11-02 才发现，前两轮都漏了）：
+#   delivery/channel/mobile/khy-os-client-app/build      3.9 GB（Flutter Android 构建产物）
+#   delivery/channel/mobile/khy-os-client-app/.dart_tool 479 MB（Dart 工具链缓存）
 #   两者都是 `flutter build apk` / `flutter pub get` 的产物，可重建，且**没有任何
-#   Dockerfile 从 delivery/mobile/ COPY 任何东西**（已 grep 全部 Dockerfile 确认）。
+#   Dockerfile 从 delivery/channel/mobile/ COPY 任何东西**（已 grep 全部 Dockerfile 确认）。
 #   它们此前一直在构建上下文里 —— 单这一项就比前几轮所有优化加起来还大。
-#   注意：这里只排除 mobile 的构建产物，**不排 delivery/mobile/khy-os-client-app
+#   注意：这里只排除 mobile 的构建产物，**不排 delivery/channel/mobile/khy-os-client-app
 #   源码**——那是 L4 渠道的随身 App 源码，将来若要做移动端镜像还要用。
 #   （仓库自带的 scripts/maintenance/clean.js 也把这两项目标列为可清理项，
 #    但那会真删文件、下次要重新构建；.dockerignore 是非破坏性做法，两者不冲突。）
-delivery/mobile/khy-os-client-app/build
-delivery/mobile/khy-os-client-app/.dart_tool
+delivery/channel/mobile/khy-os-client-app/build
+delivery/channel/mobile/khy-os-client-app/.dart_tool
 apps
 delivery/desktop
+# khy-Trajectory 是 2026-11-19 裁决拆除的可见别名（junction）；保留为存量兜底，
+# 老机器上这条链接若还在，不进镜像构建上下文。
 khy-Trajectory
 4-output
 venvs
@@ -94,20 +96,20 @@ node
 runtime/substrate/platform/khy_platform/bundled
 
 # ── 被整树 COPY 的前端构建输出 ────────────────────────────────────────────────
-# delivery/web/ai-frontend/ 被 ai-frontend Dockerfile 整树 COPY，其 dist 是
+# delivery/channel/web/ai-frontend/ 被 ai-frontend Dockerfile 整树 COPY，其 dist 是
 # `pnpm --filter khy-ai-frontend run build` 的产物（14 MB，2026-11-02 实测）。
 # 根级 `dist` 模式匹配不到它 —— Docker 的 `*` 不跨 `/`。
 # 排除是安全的：stage 2 取的是 builder 阶段里**重新生成**的那份 dist，
 # 不是宿主机这份。（这一条是 check-docker-context.js 的「目录型 COPY」检查
 # 抓出来的 —— 2026-11-02 它开火第一轮就指出我这份 .dockerignore 漏了这里。）
-delivery/web/ai-frontend/dist
+delivery/channel/web/ai-frontend/dist
 
 # ── 文档：只排除上下文根的散落 md 与文档站，**不动 src/ 下的技能 md** ──────────
 # ⚠ 这里刻意不用 `**/*.md`：runtime/node/backend/src/ 下有 109 个 SKILL.md /
 #   prompt.md（cliAnythingRegistry/skills/、src/skills/、src/services/skills/），
 #   技能加载器运行时逐个读（backend/package.json 的 //files 注释第 ③ 条、
 #   src/cli/repl/userSkillCommands.js:147）。全排除 = 容器内技能全灭。
-#   同理不能用 `**/*.html`：delivery/web/ai-frontend/index.html 是 Vite 的构建入口，
+#   同理不能用 `**/*.html`：delivery/channel/web/ai-frontend/index.html 是 Vite 的构建入口，
 #   排除它会让 `pnpm --filter khy-ai-frontend run build` 直接失败。
 # `*.md`（无 `**/`）因 `*` 不跨 `/` 而只命中上下文根的 4 个 md，
 # 正是想要的效果；写成 `/*.md` 则依赖 Docker 对前导斜杠的清理，不必要地绕。

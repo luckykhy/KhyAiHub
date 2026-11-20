@@ -3,14 +3,14 @@
 /**
  * dbHealth.dedupeDatabases.test.js — `_dedupeByRealPath` 去重契约。
  *
- * 背景：`khy-Trajectory` 是数据家的**可见别名**（junction / symlink，
- * `utils/dataHome._ensureVisibleAlias` 每次启动重建），所以
- * `khy-Trajectory/sessions.db` 与 `.khy/sessions.db` 是同一个 inode。
- * `_discoverDatabases()` 原先两条都收，启动时对同一个 28MB 文件连做两遍
+ * 背景：历史上 `khy-Trajectory` 是数据家的**可见别名**（junction / symlink），
+ * `khy-Trajectory/sessions.db` 与 `.khy/sessions.db` 是同一个 inode，
+ * `_discoverDatabases()` 两条都收 → 启动时对同一个 28MB 文件连做两遍
  * `PRAGMA quick_check`（实测 ~450ms/遍，白烧近一秒）。
- *
- * 这里锁三件事：① 指向同一物理文件的两条只留第一条；② 真正不同的库一条都不能丢；
- * ③ 解析不出真实路径时保守保留（宁可多查一次，也不能漏查）。
+ * 2026-11-19 用户裁决仓库不再使用 junction/symlink，别名机制整体拆除，
+ * `_discoverDatabases()` 已退化为单路径——本套件从此只锁 `_dedupeByRealPath`
+ * 的通用契约：同一物理文件经两条不同路径只留第一条；真正不同的库一条都不能丢；
+ * 解析不出真实路径时保守保留（宁可多查一次，也不能漏查）。
  *
  * node:test：与 dbHealth 一族保持一致。
  */
@@ -40,21 +40,23 @@ describe('_dedupeByRealPath', () => {
     }
   });
 
-  test('别名目录下的同名库与真身合并为一条', () => {
+  test('同一物理文件经两条路径只留第一条', () => {
     const realDir = path.join(tmpRoot, '.khy');
-    const aliasDir = path.join(tmpRoot, 'khy-Trajectory');
+    // 用一条链接构造「两条路径指向同一文件」：2026-11-19 起产品侧不再建任何
+    // 别名，这里只是给纯函数造输入，链接落在临时目录里、after 整树清理。
+    const linkView = path.join(tmpRoot, 'linked-view');
     fs.mkdirSync(realDir, { recursive: true });
     fs.writeFileSync(path.join(realDir, 'sessions.db'), 'x');
     // junction 在 Windows 上无需管理员权限；POSIX 用 dir 类型同样可行。
-    fs.symlinkSync(realDir, aliasDir, process.platform === 'win32' ? 'junction' : 'dir');
+    fs.symlinkSync(realDir, linkView, process.platform === 'win32' ? 'junction' : 'dir');
 
     const result = dbHealth._dedupeByRealPath([
       { name: 'sessions.db', path: path.join(realDir, 'sessions.db') },
-      { name: 'khy-Trajectory/sessions.db', path: path.join(aliasDir, 'sessions.db') },
+      { name: 'linked-view/sessions.db', path: path.join(linkView, 'sessions.db') },
     ]);
 
     assert.equal(result.length, 1);
-    // 保留先出现的那条（名字更贴真身），别名条目被丢弃。
+    // 保留先出现的那条（名字更贴真身），另一条被丢弃。
     assert.equal(result[0].name, 'sessions.db');
   });
 

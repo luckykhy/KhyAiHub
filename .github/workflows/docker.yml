@@ -49,6 +49,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # 镜像里必须钉住版本。此前 build-arg 取自 workflow_dispatch 的 input，
+      # 而 tag 事件没有 input ⇒ 传空 ⇒ Dockerfile 装 PyPI 当时 latest，与镜像里
+      # COPY 进去的后端源码分叉（REL-02 / DEP-09）。tag 用 tag 号，其余用
+      # pyproject.toml（pip 渠道真源）读当前版本，推不出就失败，不许静默装 latest。
+      - name: Resolve version to pin in the image
+        id: ver
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          elif [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="$(node -p "require('fs').readFileSync('pyproject.toml','utf8').match(/^\s*version\s*=\s*['\"]([^'\"]+)['\"]/m)[1]")"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "::error::无法确定要钉住的版本（ref=$GITHUB_REF input=${{ inputs.version }}）—— 镜像不允许装 latest"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "钉住版本：$VERSION"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
@@ -67,6 +89,8 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.ver.outputs.version }}
 
       - name: Build and push by digest
         id: build
@@ -77,7 +101,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            KHY_OS_VERSION=${{ github.event.inputs.version || '' }}
+            KHY_OS_VERSION=${{ steps.ver.outputs.version }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
           # 缓存 ref 必须带平台后缀。共用 :buildcache 时 amd64 与 arm64 会互相
           # 覆盖对方的缓存，两边都长期未命中 —— 这是 tag 覆盖之外的同类 bug。

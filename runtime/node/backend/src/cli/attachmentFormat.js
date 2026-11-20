@@ -12,10 +12,10 @@
  *
  * 与另外两份表的关系（**第三份，不是 import**）：桌面端
  * `apps/khyos-desktop/src/renderer/components/composer/attachmentKind.ts` 与 web
- * `delivery/web/ai-frontend/src/utils/attachmentView.js` 各有一份同口径表。三个包分属
+ * `delivery/channel/web/ai-frontend/src/utils/attachmentView.js` 各有一份同口径表。三个包分属
  * 不同构建边界（backend 是独立 npm 包，桌面端只 spawn 它、package.json 里没有任何
  * `@khy-os/*` 依赖），所以「共用一张表」得先建共享包，代价高于收益。三份由
- * `delivery/web/ai-frontend/src/utils/attachmentFormat.crossEnd.test.js` 逐扩展名对齐
+ * `delivery/channel/web/ai-frontend/src/utils/attachmentFormat.crossEnd.test.js` 逐扩展名对齐
  * 钉住 —— **改这里必须同时改那张表，否则那条测试会红**。
  *
  * 分桶口径与两端一致：**扩展名优先**，MIME 只在没有扩展名时兜底（剪贴板内容常常只有

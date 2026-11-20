@@ -39,7 +39,7 @@ const { getDataHome, getLegacyDataHome } = require('../../../../utils/dataHome')
 const atomicWriteJson = require('../../../../utils/atomicWriteJson');
 const { atomicWriteText } = require('../../../../utils/atomicWriteJson');
 const { safeReadJsonSync } = require('../../../configGuard');
-const { PROTOCOLS, APPS, AGENT_MODES, DATA_FILE, SCHEMA_VERSION } = require('./constants');
+const { PROTOCOLS, APPS, AGENT_MODES, DATA_FILE, SCHEMA_VERSION, cardPoolProvider } = require('./constants');
 
 const apiKeyPool = require('../../../apiKeyPool');
 
@@ -483,8 +483,11 @@ function importSnapshot(snapshot, { replace = false } = {}) {
 }
 
 // apiKeyPool provider namespace for a card's keys (isolated from builtin pools).
+// 必须是网关三段式模型名 `api:<pool>:<model>` 认得的池名（池段只收 [a-z0-9_-]），
+// 否则 routeResolver/proxyAccess 拼出的三名解不出池、key 也 pick 不到。
+// 历史命名空间 `cc-switch:<cardId>`（含冒号）由 apiKeyPool 的只读别名兼容兜底。
 function _poolProvider(cardId) {
-  return `cc-switch:${cardId}`;
+  return cardPoolProvider(cardId);
 }
 
 // Test helper.

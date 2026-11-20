@@ -3,10 +3,12 @@
 const { z } = require('zod');
 
 // 锁记录（[DESIGN-ARCH-220] §4.2）：tokenHash 只存在锁文件，绝不出现在 /core/health。
+// port 允许 0：锁在 server 绑定之前创建（先抢锁再起服务，避免两个服务抢同一个端口），
+// 真实端口由 locator-host 在 start() 成功后回填。
 const CoreLockRecordSchema = z.object({
   coreId: z.string().min(1),
   pid: z.number().int().positive(),
-  port: z.number().int().positive(),
+  port: z.number().int().nonnegative(),
   host: z.string().min(1),
   tokenHash: z.string().min(1),
   protocolVersion: z.number().int(),

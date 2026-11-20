@@ -22,7 +22,7 @@
 # 该用哪个：
 #   · HTTP 服务镜像（唯一活着的入口）  → 仓库根 `Dockerfile`
 #   · AI 后端镜像（compose --profile ai）→ `runtime/node/ai-backend/Dockerfile`
-#   · 前端静态站（compose --profile web）→ `delivery/web/ai-frontend/Dockerfile`
+#   · 前端静态站（compose --profile web）→ `delivery/channel/web/ai-frontend/Dockerfile`
 #   docker-compose.yml 与 .github/workflows/docker.yml 只引用上述三个，不引用本文件。
 #
 # 迁移映射（本文件路径 → 新路径）：

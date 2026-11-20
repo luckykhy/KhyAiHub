@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-LAY-011] 新增文件落位与命名规程.md -->
+<title>[DESIGN-LAY-011] 新增文件落位与命名规程 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-LAY<span class="sep">›</span>[DESIGN-LAY-011] 新增文件落位与命名规程</div>
+      <header class="hero reveal"><h1>[DESIGN-LAY-011] 新增文件落位与命名规程</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-011-新增文件落位与命名规程">[DESIGN-LAY-011] 新增文件落位与命名规程</a></li><li class="lvl-2"><a href="#一-六问定坐标-决策树">一、六问定坐标（决策树）</a></li><li class="lvl-2"><a href="#二-四桶落位-取代已废止的-产物-与-b8-禁区-khyos">二、四桶落位（取代已废止的 `_产物/` 与 B8 禁区 `.khyos/`）</a></li><li class="lvl-2"><a href="#三-命名语法总表">三、命名语法总表</a></li><li class="lvl-2"><a href="#四-存量迁移流程-老东西怎么改">四、存量迁移流程（老东西怎么改）</a></li><li class="lvl-2"><a href="#五-检测与守卫">五、检测与守卫</a></li><li class="lvl-2"><a href="#附录一-禁物清单">附录一：禁物清单</a></li><li class="lvl-2"><a href="#附录二-工具家点目录的允许项">附录二：工具家点目录的允许项</a></li><li class="lvl-2"><a href="#附-与既有规范的关系">附：与既有规范的关系</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-LAY-011 | 阶段: 设计 | 原路径: 新建 --&gt;<br>&lt;!-- IMPL-STATUS: active --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：操作规程随本批落盘；判定真源为 <code>[DESIGN-LAY-010]</code>，落点名册为 <code>[DESIGN-LAY-005]</code>。</p></blockquote>
+<h1 id="design-lay-011-新增文件落位与命名规程">[DESIGN-LAY-011] 新增文件落位与命名规程<a class="anchor" href="#design-lay-011-新增文件落位与命名规程" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>操作规程 · 「这个东西放哪、叫什么、谁来登记」的可执行判据</strong> · 回答三个问题：① 新出现的文件/目录按什么顺序判定落点；② 每类对象该叫什么名；③ 老存量怎么迁进来而不制造第二份真相。</p>
+<p><strong>定位（防重叠，<code>[MGMT-STD-008]</code> §2.2）</strong>：本篇只出<strong>操作步骤</strong>，不复制任何真源条文。层级名册 → <code>[DESIGN-LAY-005]</code>；层内可见性与语言轴 → <code>[DESIGN-LAY-002]</code>；整理与巡检 → <code>[DESIGN-LAY-003]</code>；数据三态 → <code>[DESIGN-LAY-007]</code>；数据 SSOT → <code>[DESIGN-LAY-009]</code>；判据（凭什么说这棵树是好的） → <code>[DESIGN-LAY-010]</code>。</p>
+<p><strong>效力</strong>：本文是规程，无独立规则号（规则 12 棘轮：规则数只降不升）。检测由 <code>npm run check:hygiene</code>（S1 观察者，恒 exit 0）承担，见 §五。</p>
+<p><strong>谁该读</strong>：任何要新增文件、新增目录、造临时物、迁移存量的人与 AI 智能体。</p></blockquote>
+<hr>
+<h2 id="一-六问定坐标-决策树">一、六问定坐标（决策树）<a class="anchor" href="#一-六问定坐标-决策树" aria-label="锚点">#</a></h2>
+<p>新东西出现时，<strong>自上而下</strong>逐问，<strong>首个命中即停</strong>：</p>
+<pre><code class="language-text">新出现的文件 / 目录
+│
+├─ ① 有人会「打开它读内容」？
+│    ├─ 业务 / 设计 / 报告文档
+│    │    → docs/NN_中文/  ·  文件名 [&lt;STAGE&gt;-&lt;TYPE&gt;-NNN] 中文名.md
+│    │    → 双索引登记：该目录 00_INDEX_*.md + docs/00_INDEX_文档索引.md
+│    └─ 软著 / 登记存证材料
+│         → works/record/evidence/  ·  登记 docs/10_规范/registry/COPYRIGHT-MATERIALS.json
+│
+├─ ② 有人会「跑它复现结论」？
+│    ├─ 可复跑的探针 / 扫描 / 诊断
+│    │    → works/data/khy/T4-transient/tmp/&lt;task&gt;/
+│    └─ 要长期保留的检查器（进 CI / 被门引用）
+│         → scripts/ci/  ·  必须接线：npm run check:wiring 不得报零接线
+│
+├─ ③ 是某个任务的诊疗记录？
+│    → works/data/khy/feedback/&lt;task-id&gt;/
+│      （主诉 complaint.md / 复现 repro-before.txt / 差分 differential.md / 回滚 rollback.txt）
+│
+├─ ④ 是运行期产生的数据？
+│    → works/data/khy/T&lt;n&gt;-&lt;语义&gt;/
+│      先登记 docs/10_规范/registry/DATA-LOCATIONS.json，
+│      再在 runtime/node/backend/src/utils/dataHome.js 的 DATA_PATHS 加逻辑名映射
+│
+├─ ⑤ 是代码？
+│    → 按层落 runtime/ · apps/ · delivery/
+│      命名随语言轴（[DESIGN-LAY-002] §4）：Node camelCase / Python snake_case / 横切 kebab-case
+│
+└─ ⑥ 以上皆否 → 一次性临时物
+     → works/data/khy/T4-transient/tmp/&lt;task&gt;-&lt;date&gt;-&lt;slug&gt;.&lt;ext&gt;
+     收工：删掉，或隔离进 .../tmp/housekeeping/&lt;YYYY-MM-DD&gt;/ 并留 manifest</code></pre>
+<p><strong>落地后须跑结构锁确认无 drift</strong>：<code>npm run check:structure-lock</code>（S1 观察者，恒 exit 0）——根目录条目、docs 编号轴、数据档位凡快照外新增或快照内消失，即 finding；授权通道见 §五。</p>
+<h2 id="二-四桶落位-取代已废止的-产物-与-b8-禁区-khyos">二、四桶落位（取代已废止的 <code>_产物/</code> 与 B8 禁区 <code>.khyos/</code>）<a class="anchor" href="#二-四桶落位-取代已废止的-产物-与-b8-禁区-khyos" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>桶</th><th>判据</th><th>落点</th></tr></thead><tbody><tr><td>交付物</td><td>有人会打开读</td><td><code>docs/NN_中文/</code>（编号 + 双索引）或 <code>works/record/evidence/</code></td></tr><tr><td>任务证据</td><td>为某次诊疗留证、要能复诊</td><td><code>works/data/khy/feedback/&lt;task-id&gt;/</code></td></tr><tr><td>过程态工具</td><td>有人会跑它复现结论</td><td><code>works/data/khy/T4-transient/tmp/&lt;task&gt;/</code>；长期检查器入 <code>scripts/ci/</code></td></tr><tr><td>一次性临时 + 隔离区</td><td>用完即弃 / 已淘汰待撤回</td><td><code>.../T4-transient/tmp/</code>；隔离进 <code>.../tmp/housekeeping/&lt;YYYY-MM-DD&gt;/</code></td></tr></tbody></table>
+<p>三条硬约束：</p>
+<ol><li><strong><code>_产物/</code> 已于 2026-09-27 溶解，<code>.khyos/</code> 属 B8 禁区</strong>——二者不得再作为落点。历史上指向它们的文档（<code>[DESIGN-LAY-002]</code> §3.1、<code>[DESIGN-LAY-003]</code> §3）已订正。</li><li><strong>四个桶都是磁盘上的真目录</strong>：禁 <code>junction</code> / <code>symlink</code> / 硬链接。链接会让 <code>dir</code>/<code>tree</code> 看到的与磁盘真实的分离，视觉层开始说谎。</li><li>临时物<strong>不得</strong>落在仓库根、<code>scripts/</code>、<code>docs/</code>、<code>runtime/</code> 等语义目录内。</li></ol>
+<h2 id="三-命名语法总表">三、命名语法总表<a class="anchor" href="#三-命名语法总表" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>对象</th><th>语法</th><th>例</th><th>真源</th></tr></thead><tbody><tr><td>顶层目录（章）</td><td>小写单词，名册封闭、不随手新建</td><td><code>runtime</code> <code>delivery</code> <code>works</code></td><td><code>[DESIGN-LAY-005]</code> §一 / <code>check-repo-layout.js</code> <code>LAYERS</code></td></tr><tr><td>层内目录</td><td>随语言轴：Node <code>camelCase</code>、Python <code>snake_case</code>、横切 <code>kebab-case</code></td><td><code>desktopControl</code> / <code>check-repo-layout.js</code></td><td><code>[DESIGN-LAY-002]</code> §4</td></tr><tr><td>文档目录</td><td><code>NN_中文/</code>：<code>01</code>–<code>09</code> 生命周期阶段（冻结）、<code>10</code>–<code>19</code> 跨阶段资产（续编）</td><td><code>10_规范</code></td><td><code>[DESIGN-LAY-005]</code> §3.1</td></tr><tr><td>文档文件</td><td><code>[&lt;STAGE&gt;-&lt;TYPE&gt;-NNN] 中文名.md</code>；<code>NNN</code> 由 AI 取<strong>下一个未占用</strong>号，删除的号不复用</td><td><code>[DESIGN-LAY-011] 新增文件落位与命名规程.md</code></td><td><code>[MGMT-STD-007]</code> R3 / §2.3</td></tr><tr><td>数据落点</td><td>先登记 <code>T0</code>–<code>T4</code> × 领域轴，再落目录；代码经 <code>getDataDir()</code> / <code>resolveDataPath()</code> 取址</td><td><code>T1-domains/sessions/conversations</code></td><td><code>DATA-LOCATIONS.json</code> / <code>dataHome.js</code></td></tr><tr><td>过程 / 临时 / 隔离</td><td><code>&lt;task&gt;-&lt;date&gt;-&lt;slug&gt;</code>；隔离区 <code>&lt;YYYY-MM-DD&gt;/</code> + <code>manifest.json</code></td><td><code>verify-218-20261116.js</code></td><td>本规程</td></tr><tr><td>扩展名</td><td>随层：<code>.c/.asm</code>→L0，<code>.py</code>→L1/L4，<code>.js</code>→L2，<code>.ts/.vue</code>→L3，<code>.md/.html</code> 成对</td><td>—</td><td><code>[DESIGN-LAY-002]</code> §5</td></tr></tbody></table>
+<h2 id="四-存量迁移流程-老东西怎么改">四、存量迁移流程（老东西怎么改）<a class="anchor" href="#四-存量迁移流程-老东西怎么改" aria-label="锚点">#</a></h2>
+<p>每批同构，五步：</p>
+<pre><code class="language-text">清点 → 四桶分类 → 写 manifest(+sha256, 可撤回) → 分批迁移 → 守卫对账
+                                                      │
+                                        计数下降 → 进下一批
+                                        计数上升 → 立即 restore 撤回</code></pre>
+<ul><li><strong>分批口径</strong>：目录算 1 件；散件 ≤10 件/批，多轮执行。</li><li><strong>只隔离不删除</strong>（<code>[DESIGN-LAY-003]</code> HK-3）：淘汰进 <code>.../tmp/housekeeping/&lt;日期&gt;/</code>，凭 manifest 原路撤回。</li><li><strong>零触碰</strong>：<code>git ls-files</code> 跟踪的文件不动（HK-1）；运行期数据只读（HK-2）。</li><li><strong>不覆盖</strong>：目标同名加 <code>_1</code> 后缀（HK-8）。</li><li>每批结束跑 <code>node scripts/ci/check-repo-layout.js</code>，把 <code>root-junk</code> / <code>root-shadow-dir</code> / <code>layer-registry</code> / <code>root-uncatalogued</code> 的前后计数记进批次报告。</li></ul>
+<h2 id="五-检测与守卫">五、检测与守卫<a class="anchor" href="#五-检测与守卫" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>层</th><th>机制</th><th>行为</th></tr></thead><tbody><tr><td>硬闸</td><td><code>node scripts/ci/check-repo-layout.js</code></td><td>根级杂物 / 影子数据家 / 未登记顶层目录 → error</td></tr><tr><td>观察者</td><td><code>npm run check:hygiene</code>（<code>scripts/ci/check-litter.js</code>，Node 版 S1）</td><td>全树 <code>.tmp-*</code>、碎片名、junction、根白名单外条目 → findings，<strong>恒 exit 0</strong>（S1，<code>PROCESS-008</code>）</td></tr><tr><td>结构锁</td><td><code>npm run check:structure-lock</code>（S1）</td><td>对照 <code>docs/10_规范/registry/STRUCTURE-LOCK.json</code> 的快照，新增/删除已登记条目 → drift finding；授权 = 更新快照 version+1 + 提交信息 <code>structure-lock-approved-by: &lt;批准人&gt;</code></td></tr><tr><td>巡检</td><td><code>python scripts/maintenance/organize.py --report</code>（仅在有 Python 的机器）</td><td>每日巡检；L2 隔离需人工确认</td></tr></tbody></table>
+<blockquote><p>2026-11-19：观察者由 <code>organize.py --check</code> 迁移到 Node 版 <code>scripts/ci/check-litter.js</code>——本机无可用 Python 解释器（Microsoft Store 残桩 <code>exit 9009</code>），python 系检查不可运行；<code>organize.py</code> 保留为 LAYOUT-004 巡检执行器。两版共处期以 npm 脚本 <code>check:hygiene</code> 为唯一入口。</p></blockquote>
+<p><strong>任何智能体在收工前必须跑一次硬闸与观察者</strong>，见 <code>AGENTS.md</code> §智能体卫生契约。</p>
+<hr>
+<h2 id="附录一-禁物清单">附录一：禁物清单<a class="anchor" href="#附录一-禁物清单" aria-label="锚点">#</a></h2>
+<ul><li><code>junction</code> / <code>symlink</code> / 硬链接（2026-11-18 用户裁决：不再使用，视觉真实优先）</li><li>碎片名文件：引号、括号、分号事故（如 <code>NUL</code>、<code>'</code>、<code>0)out.push(m[1])</code>、<code>{const</code>）</li><li>Windows 保留设备名：<code>NUL</code> <code>CON</code> <code>PRN</code> <code>AUX</code> <code>COM1</code>–<code>COM9</code> <code>LPT1</code>–<code>LPT9</code></li><li>根目录白名单外的新文件（真源 <code>[MGMT-STD-001]</code> §1.3 + <code>check-repo-layout.js</code>）</li><li>在仓库根或任意子目录造 <code>.khy</code> / <code>.khyos</code> / <code>.khy-runtime</code></li><li><code>.tmp-*</code> / <code>*.tmp-*</code> 出现在 <code>works/data/khy/T4-transient/</code> 之外</li><li>未接线的检查器放进 <code>scripts/ci/</code>（<code>check:wiring</code> 判零接线）</li></ul>
+<h2 id="附录二-工具家点目录的允许项">附录二：工具家点目录的允许项<a class="anchor" href="#附录二-工具家点目录的允许项" aria-label="锚点">#</a></h2>
+<p><code>.claude</code> <code>.cursor</code> <code>.zcode</code> <code>.opencode</code> <code>.workbuddy</code> <code>.workbuddy-ai</code> <code>.codeartsdoer</code> <code>.mavis</code> <code>.qoder</code> <code>.ai</code> 属于<strong>工具硬编码路径</strong>，允许存在，但三条必须同时成立：</p>
+<ol><li>必须是磁盘上的<strong>真目录</strong>——不得用 junction 伪装（2026-11-18 已拆 6 个垫片）；</li><li>必须在 <code>.gitignore</code> 内，属本机态，不入库；</li><li>真数据住 <code>works/data/&lt;tool&gt;/</code>，<strong>不得在其中存放项目交付物</strong>（交付物按 §一 落 <code>docs/</code> 或 <code>works/record/</code>）。</li></ol>
+<h2 id="附-与既有规范的关系">附：与既有规范的关系<a class="anchor" href="#附-与既有规范的关系" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问题</th><th>去哪</th></tr></thead><tbody><tr><td>有哪些层、每层担什么责</td><td><code>[DESIGN-LAY-005]</code></td></tr><tr><td>层内怎么分、谁能看见谁、语言轴命名</td><td><code>[DESIGN-LAY-002]</code></td></tr><tr><td>已乱的存量怎么回收</td><td><code>[DESIGN-LAY-003]</code></td></tr><tr><td>数据三态与寻址</td><td><code>[DESIGN-LAY-007]</code></td></tr><tr><td>同一份数据只写一遍</td><td><code>[DESIGN-LAY-009]</code></td></tr><tr><td>凭什么说这棵树是好的（判据）</td><td><code>[DESIGN-LAY-010]</code></td></tr><tr><td><strong>新东西放哪、叫什么、怎么迁</strong></td><td><strong>本篇</strong></td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-010] 目录结构唯一原则-位置与语义双射.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-LAY/00_INDEX_DESIGN-LAY-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-LAY</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

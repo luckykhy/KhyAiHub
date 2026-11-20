@@ -127,8 +127,8 @@ function _toolchainCacheTtlMs() {
  */
 function _toolchainCacheFilePath() {
   try {
-    const { getDataHome } = require('../../utils/dataHome');
-    return path.join(getDataHome(), 'cache', 'doctor-toolchain.json');
+    const { getDataDir } = require('../../utils/dataHome');
+    return path.join(getDataDir('cache'), 'doctor-toolchain.json');
   } catch {
     return '';
   }
@@ -565,8 +565,8 @@ function _resolveApiKeyPoolPath() {
     /* fall through to the dataHome derivation */
   }
   try {
-    const { getDataHome } = require('../../utils/dataHome');
-    return path.join(getDataHome(), 'api_keys.json');
+    const { resolveDataPath } = require('../../utils/dataHome');
+    return resolveDataPath('api_keys.json');
   } catch {
     return '';
   }

@@ -5,6 +5,7 @@ import { addToast } from '../../state/toastSlice'
 import { openWorkspace } from '../../utils/openWorkspace'
 import { callSlashList, runSlashToSession, type SlashMenuRowPayload } from '../../utils/slashRun'
 import { keyLabelFor } from '../../shared/keymap'
+import type { CommandGroup } from '../../../shared/commandGroup'
 import { Icon, type IconName } from '../ui/Icon'
 
 interface Command {
@@ -17,6 +18,9 @@ interface Command {
   // 而对应的加速键根本没人实现，等于向用户展示一组假的快捷键。
   shortcut?: string
   category: string
+  // khy 行带（静态组不带）：归堆按它，组名另取目录 label —— 同一 groupKey 在不同
+  // 载荷里该显示的中文组名由目录决定，桌面不编第二份。
+  groupKey?: string
   action: () => void
   // khy 命令行的别名键（main 侧 aliasTermsForRow 连接结果），参与面板搜索。
   aliases?: string[]
@@ -53,16 +57,24 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   // khy 斜杠命令面（slash:list 真源）。每次打开面板时重取：设置页里新增的技能
-  // 命令下一次 Ctrl+K 就能看到，不缓存第二份。
+  // 命令下一次 Ctrl+K 就能看到，不缓存第二份。groups 是随响应下发的组目录
+  // （组名真源是后端），只在本组件存活期内持有。
   const [khyCommands, setKhyCommands] = useState<SlashMenuRowPayload[]>([])
+  const [khyGroups, setKhyGroups] = useState<CommandGroup[]>([])
 
   useEffect(() => {
     if (!visible) return
     let cancelled = false
     void callSlashList().then((res) => {
-      if (!cancelled) setKhyCommands(res?.commands || [])
+      if (!cancelled) {
+        setKhyCommands(res?.commands || [])
+        setKhyGroups(res?.groups || [])
+      }
     }).catch(() => {
-      if (!cancelled) setKhyCommands([])
+      if (!cancelled) {
+        setKhyCommands([])
+        setKhyGroups([])
+      }
     })
     return () => {
       cancelled = true
@@ -143,19 +155,23 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
     // none 类没有执行通道 —— 两类都不进面板（不渲染点了没反应的项，诚实红线）。
     for (const row of khyCommands) {
       if (row.runnable !== 'routed') continue
+      // 组名取随响应下发的目录（真源是后端，桌面不复制）；目录里没有的键回落键名，
+      // 载荷没带 groupKey 的旧主进程回落今日的单一桶。
+      const label = khyGroups.find((g) => g.key === row.groupKey)?.label
       list.push({
         id: row.id,
         label: row.label,
         description: row.description,
         icon: 'terminal',
-        category: 'Khy 命令',
+        category: label || row.groupKey || 'Khy 命令',
+        groupKey: row.groupKey,
         aliases: row.aliases || [],
         action: () => { void runSlashToSession(row.cmd) },
       })
     }
 
     return list
-  }, [onPanelAction, onNewTask, onReloadSession, khyCommands])
+  }, [onPanelAction, onNewTask, onReloadSession, khyCommands, khyGroups])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return commands
@@ -171,11 +187,30 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
   const grouped = useMemo(() => {
     const groups: Record<string, Command[]> = {}
     filtered.forEach(cmd => {
-      if (!groups[cmd.category]) groups[cmd.category] = []
-      groups[cmd.category].push(cmd)
+      const key = cmd.groupKey || cmd.category
+      if (!groups[key]) groups[key] = []
+      groups[key].push(cmd)
     })
     return groups
   }, [filtered])
+
+  // 组序：静态四组在前，其后按 main 目录序，目录外的键按出现序补后。组头保持非交互
+  // div（不折叠）：折叠会把面板里全部 khy 命令的键盘可达性交给鼠标，而今日的箭头
+  // 导航本来就能到达每一行。
+  const groupOrder = useMemo(() => {
+    const present = Object.keys(grouped)
+    const order: string[] = []
+    for (const key of ['任务', '视图', '文件', '应用']) {
+      if (present.includes(key)) order.push(key)
+    }
+    for (const g of khyGroups) {
+      if (present.includes(g.key) && !order.includes(g.key)) order.push(g.key)
+    }
+    for (const key of present) {
+      if (!order.includes(key)) order.push(key)
+    }
+    return order
+  }, [grouped, khyGroups])
 
   useEffect(() => {
     if (visible) {
@@ -250,12 +285,12 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
               暂无相关结果
             </div>
           ) : (
-            Object.entries(grouped).map(([category, cmds]) => (
-              <div key={category}>
+            groupOrder.map((key) => (
+              <div key={key}>
                 <div className="px-4 py-1.5 text-xs font-medium text-foreground">
-                  {category}
+                  {khyGroups.find((g) => g.key === key)?.label || key}
                 </div>
-                {cmds.map(cmd => {
+                {grouped[key].map(cmd => {
                   flatIndex++
                   const isSelected = flatIndex === selectedIndex
                   return (

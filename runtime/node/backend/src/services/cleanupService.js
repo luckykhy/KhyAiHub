@@ -39,6 +39,9 @@ const zlib = require('zlib');
 
 const _formatBytesAtom = require('../utils/formatBytes');
 const { LOGS, AUDIT, CHECKPOINT, RUNTIME_FOOTPRINT } = require('../constants/serviceDefaults');
+// DATA_PATHS 登记表是这些目录的单一真源;清理侧只读不建目录,所以一律走纯解析的
+// resolveDataPath(探测/删除路径用 getDataDir 会留下本服务自己都要回收的空目录)。
+const { resolveDataPath, getAppHome } = require('../utils/dataHome');
 
 // Lazily resolve the legacy-compatible app home (portable-aware).
 // No local caching: preserves getAppHome() live-resolve semantics.
@@ -393,7 +396,7 @@ function rotateSecurityLog() {
 // ── Growth snapshots pruning ────────────────────────────────────────────
 
 function cleanSnapshots(maxKeep = SNAPSHOTS_MAX_KEEP) {
-  const dir = path.join(_baseDir(), 'growth', 'snapshots');
+  const dir = resolveDataPath('growth', 'snapshots');
   const files = safeLs(dir)
     .filter((f) => f.endsWith('.json'))
     .sort();
@@ -421,7 +424,7 @@ function cleanSnapshots(maxKeep = SNAPSHOTS_MAX_KEEP) {
 // ── Training data trimming ──────────────────────────────────────────────
 
 function trimTrainingData(maxLines = TRAINING_MAX_LINES) {
-  const filePath = path.join(_baseDir(), 'training', 'interaction_records.jsonl');
+  const filePath = resolveDataPath('training', 'interaction_records.jsonl');
   const size = safeSize(filePath);
   if (size === 0) {
     return { trimmed: false, lines: 0, size: 0 };
@@ -477,7 +480,7 @@ function trimTrainingData(maxLines = TRAINING_MAX_LINES) {
 // ── Telemetry exports pruning ───────────────────────────────────────────
 
 function cleanTelemetry(maxFiles = TELEMETRY_MAX_FILES) {
-  const dir = path.join(_baseDir(), 'telemetry');
+  const dir = resolveDataPath('telemetry');
   const files = safeLs(dir).sort();
 
   if (files.length <= maxFiles) {
@@ -586,7 +589,7 @@ function getStorageReport() {
   report.securityLogArchives = { size: archiveSize };
 
   // Growth snapshots
-  const snapDir = path.join(_baseDir(), 'growth', 'snapshots');
+  const snapDir = resolveDataPath('growth', 'snapshots');
   const snapFiles = safeLs(snapDir);
   let snapSize = 0;
   for (const f of snapFiles) {
@@ -595,11 +598,11 @@ function getStorageReport() {
   report.growthSnapshots = { count: snapFiles.length, size: snapSize, path: snapDir };
 
   // Training data
-  const trainPath = path.join(_baseDir(), 'training', 'interaction_records.jsonl');
+  const trainPath = resolveDataPath('training', 'interaction_records.jsonl');
   report.trainingData = { size: safeSize(trainPath), path: trainPath };
 
   // Telemetry
-  const telDir = path.join(_baseDir(), 'telemetry');
+  const telDir = resolveDataPath('telemetry');
   const telFiles = safeLs(telDir);
   let telSize = 0;
   for (const f of telFiles) {
@@ -608,7 +611,7 @@ function getStorageReport() {
   report.telemetry = { count: telFiles.length, size: telSize, path: telDir };
 
   // Conversations
-  const convoDir = path.join(_baseDir(), 'conversations');
+  const convoDir = resolveDataPath('conversations');
   const convoFiles = safeLs(convoDir);
   let convoSize = 0;
   for (const f of convoFiles) {
@@ -617,7 +620,7 @@ function getStorageReport() {
   report.conversations = { count: convoFiles.length, size: convoSize };
 
   // Trace audit (~/.khy/audit/)
-  const auditRoot = path.join(_khyHome(), 'audit');
+  const auditRoot = resolveDataPath('audit');
   report.traceAudit = { size: safeTreeSize(auditRoot), path: auditRoot };
 
   // Scan log
@@ -627,14 +630,14 @@ function getStorageReport() {
   report.skillAudit = { size: safeSize(path.join(_baseDir(), 'skill-ledger', 'audit.jsonl')) };
 
   // Telemetry audit
-  report.telemetryAudit = { size: safeSize(path.join(_khyHome(), 'audit.jsonl')) };
+  report.telemetryAudit = { size: safeSize(resolveDataPath('audit.jsonl')) };
 
   // Sessions
-  const sessDir = path.join(_khyHome(), 'sessions');
+  const sessDir = resolveDataPath('sessions');
   report.sessions = { size: safeTreeSize(sessDir), count: safeLs(sessDir).length };
 
   // Checkpoints
-  const ckptRoot = path.join(_baseDir(), 'checkpoints');
+  const ckptRoot = resolveDataPath('checkpoints');
   report.checkpoints = { size: safeTreeSize(ckptRoot) };
 
   const runtimeLogRoot = _runtimeLogRoot();
@@ -654,11 +657,11 @@ function getStorageReport() {
   };
 
   // Task outputs
-  const taskDir = path.join(_khyHome(), 'tmp', 'tasks');
+  const taskDir = resolveDataPath('tmp', 'tasks');
   report.taskOutputs = { size: safeTreeSize(taskDir) };
 
   // Daily logs
-  const dailyLogDir = path.join(_khyHome(), 'memory', 'logs');
+  const dailyLogDir = resolveDataPath('memory', 'logs');
   report.dailyLogs = { size: safeTreeSize(dailyLogDir) };
 
   // Atomic-write orphan tmp files (kill -9 leftovers from atomicWriteJson/_writePointer)
@@ -829,7 +832,7 @@ function _capAuditArchives(auditRoot) {
  *
  * @param {string} [auditRoot] 审计根目录,缺省 <dataHome>/audit
  */
-function cleanTraceAudit(auditRoot = path.join(_khyHome(), 'audit')) {
+function cleanTraceAudit(auditRoot = resolveDataPath('audit')) {
   let removed = 0,
     bytes = 0;
 
@@ -942,7 +945,7 @@ function rotateSkillAudit() {
 
 function rotateTelemetryAudit() {
   return _rotateAppendLog(
-    path.join(_khyHome(), 'audit.jsonl'),
+    resolveDataPath('audit.jsonl'),
     TELEM_AUDIT_MAX_BYTES,
     'telemetry-audit'
   );
@@ -953,8 +956,8 @@ function rotateTelemetryAudit() {
 function trimQuarantine() {
   // Try both possible locations
   const candidates = [
-    path.join(_khyHome(), 'training', 'interaction_quarantine.jsonl'),
-    path.join(_baseDir(), 'training', 'interaction_quarantine.jsonl'),
+    resolveDataPath('training', 'interaction_quarantine.jsonl'),
+    path.join(getAppHome(), 'training', 'interaction_quarantine.jsonl'),
   ];
   let lastError = null;
   for (const filePath of candidates) {
@@ -1009,7 +1012,7 @@ function trimQuarantine() {
 // ── Daily memory log pruning ───────────────────────────────────────────
 
 function cleanDailyLogs() {
-  const logsDir = path.join(_khyHome(), 'memory', 'logs');
+  const logsDir = resolveDataPath('memory', 'logs');
   if (!fs.existsSync(logsDir)) {
     return { removed: 0, bytes: 0 };
   }
@@ -1073,7 +1076,7 @@ function cleanDailyLogs() {
 // ── Session file cleanup ───────────────────────────────────────────────
 
 function cleanSessions() {
-  const sessDir = path.join(_khyHome(), 'sessions');
+  const sessDir = resolveDataPath('sessions');
   if (!fs.existsSync(sessDir)) {
     return { removed: 0, bytes: 0 };
   }
@@ -1269,7 +1272,7 @@ function _newestMtime(entryPath) {
 // ── Task output cleanup ───────────────────────────────────────────────
 
 function cleanTaskOutputs() {
-  const taskDir = process.env.KHY_TASK_OUTPUT_DIR || path.join(_khyHome(), 'tmp', 'tasks');
+  const taskDir = process.env.KHY_TASK_OUTPUT_DIR || resolveDataPath('tmp', 'tasks');
   if (!fs.existsSync(taskDir)) {
     return { removed: 0, bytes: 0 };
   }
@@ -1604,7 +1607,7 @@ function cleanRuntimeLogs(root = _runtimeLogRoot(), policy = LOGS) {
 
 function planCheckpointStorage(maxTotalMb = CKPT_MAX_TOTAL_MB, options = {}) {
   const fsImpl = options.fsImpl || fs;
-  const ckptRoot = options.root || path.join(_baseDir(), 'checkpoints');
+  const ckptRoot = options.root || resolveDataPath('checkpoints');
   let currentSize = 0;
   try { currentSize = safeTreeSize(ckptRoot); } catch { return { ok: false, currentSize: 0, selected: [], held: [], reason: 'checkpoint root unavailable' }; }
   const maxBytes = maxTotalMb * 1024 * 1024;
@@ -1656,7 +1659,7 @@ function planCheckpointStorage(maxTotalMb = CKPT_MAX_TOTAL_MB, options = {}) {
 // ── Checkpoint storage cap ─────────────────────────────────────────────
 
 function cleanCheckpointStorage(maxTotalMb = CKPT_MAX_TOTAL_MB) {
-  const ckptRoot = path.join(_baseDir(), 'checkpoints');
+  const ckptRoot = resolveDataPath('checkpoints');
   if (!fs.existsSync(ckptRoot)) {
     return { removed: 0, bytes: 0 };
   }

@@ -15,6 +15,7 @@ khy-os 仓库整理器 —— [DESIGN-LAY-003] 仓库整理与巡检规范 (LAYO
 用法:
     python scripts/maintenance/organize.py --report   # 只出报告（默认）
     python scripts/maintenance/organize.py --apply    # 额外隔离白名单内超期临时文件
+    python scripts/maintenance/organize.py --check    # 智能体卫生观察者（S1）：全仓只读扫描
 """
 
 from __future__ import annotations
@@ -29,6 +30,12 @@ import subprocess
 import sys
 import datetime as dt
 from pathlib import Path
+
+# 落地阶段（PROCESS-008 / [DESIGN-PROCESS-002]）：S1 观察者，只记录不阻断，恒 exit 0。
+# 登记于 FEATURE-OWNERSHIP.json rollout.mechanisms[] 的 agent-hygiene-check。
+# 阶段权威在 Python 常量本身；check-rollout-stage.js 用 JS 形态正则找它，
+# 故行尾保留同一字面供机器比对（Python 没有 const 关键字）。
+GUARD_STAGE = 'S1'  # const GUARD_STAGE = 'S1'
 
 # ------------------------------------------------------------------ 配置
 
@@ -395,7 +402,7 @@ class Auditor:
             "1. **`.html` 孪生**：LAY-5 要求，保持现状。",
             "2. **`_产物/` 版本冗余**：保留最新一版，其余按 `_v1/_v2` 重命名或移入隔离区。",
             "3. **`.research-tmp/`**：超期文件隔离；若长期使用应改正式目录名并纳入版本控制。",
-            "4. **越界软链**：`_产物/khy-Trajectory` 指向仓库外，建议删除或改仓库内相对路径。",
+            "4. **越界软链**：`_产物/<某链接>` 指向仓库外，建议删除或改仓库内相对路径。",
             "5. **L3 删除**：脚本永不执行（HK-3）。",
             "", "---", "",
             f"> 隔离区：`{OUT_ROOT}\\`（已被 .gitignore 忽略，HK-6）",
@@ -455,12 +462,282 @@ class Auditor:
         return 0
 
 
+# ------------------------------------------------------------------ --check：智能体卫生观察者
+#
+# 真源：docs/10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.md §五「检测与守卫」
+# + 附录一「禁物清单」。该节把本模式定为**观察者**：全树扫 .tmp-*、碎片名、junction、
+# 根白名单外条目 → findings，恒 exit 0（S1，PROCESS-008）。
+#
+# 与 --report / --apply 三者互斥，且本模式**只读**：不写报告、不写 manifest、不隔离任何文件。
+# 毕业看样本量（≥200 条），不看时间。
+
+# 临时件的唯一合法落点（[DESIGN-LAY-011] §一 ⑥ 与 §二「四桶落位」）。
+# 出现在它之外的 .tmp-* 即 finding；落点之内一律放行（隔离区 .../tmp/housekeeping/ 也在其内）。
+T4_TRANSIENT_REL = "works/data/khy/T4-transient"
+
+# 全树扫描的排除集。.git / node_modules / dist / build / vendor / third_party / flutter
+# 与 works/data/khy/perf（夹具）是任务书为 reparse point 一类点名排除的；名字形态一类
+# 借同一集合只为省时间——本仓实测加上/去掉该集合，.tmp-* 命中都是 38 条
+# （node_modules 内 0 条），判定结果不变。
+SCAN_SKIP_DIRS = {".git", "node_modules", "dist", "build", "vendor", "third_party", "flutter"}
+SCAN_SKIP_PREFIXES = ("works/data/khy/perf",)
+
+# 碎片名签名（[DESIGN-LAY-011] 附录一「引号、括号、分号事故」+ Windows 保留设备名）。
+# 刻意**不含**空格、方括号、圆括号：全树 125,704 个文件实测它们分别有约 1958 / 1926 / 33 处
+# **合法**命中——`[DESIGN-ARCH-116] …(@khy-plugin-sdk).md` 是文档命名铁律（[MGMT-STD-007] R3），
+# electron 安装包名带空格，一律收进来会把观察者变成误报机器。
+# 圆括号只认 `])` 一种形状：`m[1])` / `x[1])` 这类 JS 下标取用残段，实测全树 3 处全是事故、
+# 0 处合法。根级的括号事故由 check-repo-layout.js 的 root-junk 兜（它只看根，误报面小得多）。
+FRAGMENT_NAME_CHARS = "'\"`{};"
+FRAGMENT_NAME_SEQ = "])"
+WINDOWS_RESERVED_NAMES = {"nul", "con", "prn", "aux"} | {
+    f"{stem}{n}" for stem in ("com", "lpt") for n in range(1, 10)
+}
+
+# 根级封闭清单的**运行时真源**：不在这里抄第二份（[MGMT-STD-008] §2.2 重叠即违规）。
+# 规范真源 [MGMT-STD-001] §1.3；机器真源就是下面这个文件里的六处声明。
+ROOT_WHITELIST_SOURCE = "scripts/ci/check-repo-layout.js"
+ROOT_WHITELIST_OBJECTS = ("ROOT_CATALOG", "LAYERS", "CROSSCUTTING")
+ROOT_WHITELIST_SETS = ("ROOT_DOC_WHITELIST", "GENERATED_TOP_LEVEL_DIRS", "ROOT_ALWAYS_OK")
+ROOT_WHITELIST_MIN_KEYS = 20
+
+
+def fragment_name_reason(name: str) -> str | None:
+    """碎片名判据（[DESIGN-LAY-011] 附录一）。命中返回一句原因，否则 None。"""
+    for ch in FRAGMENT_NAME_CHARS:
+        if ch in name:
+            return f"含 {ch!r}（shell 元字符）"
+    if FRAGMENT_NAME_SEQ in name:
+        return f"含 {FRAGMENT_NAME_SEQ!r}（JS 下标取用残段）"
+    if name.lower() in WINDOWS_RESERVED_NAMES:
+        return "Windows 保留设备名"
+    return None
+
+
+def _slice_js_object(src: str, name: str) -> str:
+    """按花括号配平切出 `const <name> = { ... };` 的体（跨行、含嵌套）。"""
+    m = re.search(rf"const {name} = \{{", src)
+    if not m:
+        return ""
+    depth, i = 0, src.index("{", m.start())
+    for j in range(i, len(src)):
+        if src[j] == "{":
+            depth += 1
+        elif src[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return src[i:j + 1]
+    return ""
+
+
+def _slice_js_set(src: str, name: str) -> str:
+    """切出 `const <name> = new Set([ ... ]);` 的数组体。"""
+    m = re.search(rf"const {name} = new Set\(\[", src)
+    if not m:
+        return ""
+    i = src.index("[", m.start())
+    j = src.index("]", i)
+    return src[i + 1:j]
+
+
+def _js_object_keys(block: str) -> set[str]:
+    """对象字面量的键名。注释行不参与——ROOT_CATALOG 的注释里到处是带引号的路径。"""
+    keys: set[str] = set()
+    for line in block.splitlines():
+        s = line.strip()
+        if s.startswith(("//", "*", "/*")):
+            continue
+        m = re.match(r"^'([^']+)'\s*:", s) or re.match(r"^([A-Za-z_$][\w$]*)\s*:", s)
+        if m:
+            keys.add(m.group(1))
+    return keys
+
+
+def load_root_whitelist(src: str) -> tuple[set[str], str]:
+    """从 check-repo-layout.js 的源码里现取根级封闭清单。返回 (名单, 问题说明)。
+
+    解析出的条目少得可疑时名单为空、问题非空——调用方只报 finding，
+    绝不把「判据取不到」当成「根目录干净」（RUNTIME-010 A2-7：判定失败禁止静默放行）。
+    """
+    names: set[str] = set()
+    for obj in ROOT_WHITELIST_OBJECTS:
+        names |= _js_object_keys(_slice_js_object(src, obj))
+    for st in ROOT_WHITELIST_SETS:
+        names |= set(re.findall(r"'([^']+)'", _slice_js_set(src, st)))
+    # LAYERS / CROSSCUTTING 的键是仓库根相对路径，顶层名取首段
+    # （同 JS 的 topLevelNamesCoveredByRegistry：目录搬进某一层，仍是那棵树的顶层成员）。
+    names |= {n.split("/")[0] for n in names if "/" in n}
+
+    if len(names) < ROOT_WHITELIST_MIN_KEYS:
+        return set(), (
+            f"{ROOT_WHITELIST_SOURCE} 里只解析出 {len(names)} 个条目"
+            f"（阈值 {ROOT_WHITELIST_MIN_KEYS}）——ROOT_CATALOG/LAYERS/CROSSCUTTING 的形状大概被改过，"
+            "本条判据不敢用；修好解析再跑，别把读不到当成干净。"
+        )
+    return names, ""
+
+
+def load_readme_variant_re(src: str) -> re.Pattern | None:
+    m = re.search(r"const README_VARIANT_RE = /([^/\n]+)/", src)
+    if not m:
+        return None
+    try:
+        return re.compile(m.group(1))
+    except re.error:
+        return None
+
+
+def iter_tree(base: Path):
+    """全树遍历，yield (Path, kind)，kind ∈ {"dir", "file", "reparse"}。
+
+    不穿透 reparse point（HK-5）：链接只报、绝不顺着它往下走，否则既可能绕出仓库，
+    也会让同一棵子树被数两遍。生成/供应商目录与夹具区的排除见 SCAN_SKIP_DIRS /
+    SCAN_SKIP_PREFIXES。
+    """
+    stack = [base]
+    while stack:
+        cur = stack.pop()
+        try:
+            with os.scandir(cur) as it:
+                entries = sorted(it, key=lambda e: e.name)
+        except OSError:
+            continue
+        for e in entries:
+            p = Path(e.path)
+            if is_link(p):
+                yield p, "reparse"
+                continue
+            try:
+                if e.is_dir(follow_symlinks=False):
+                    if e.name in SCAN_SKIP_DIRS:
+                        continue
+                    r = rel(p)
+                    if any(r == pre or r.startswith(pre + "/") for pre in SCAN_SKIP_PREFIXES):
+                        continue
+                    stack.append(p)
+                    yield p, "dir"
+                    continue
+            except OSError:
+                continue
+            yield p, "file"
+
+
+def _under(p: Path, prefix_rel: str) -> bool:
+    r = rel(p)
+    return r == prefix_rel or r.startswith(prefix_rel + "/")
+
+
+class HygieneAuditor:
+    """--check：全仓只读扫描，输出 JSON findings（S1 观察者，恒 exit 0）。"""
+
+    def __init__(self) -> None:
+        self.findings: list[dict] = []
+        self.counts: dict[str, int] = {}
+        self.scanned_files = 0
+        self.scanned_dirs = 0
+        self.root_whitelist: set[str] = set()
+        self.readme_variant: re.Pattern | None = None
+
+    def add(self, kind: str, path: str, hint: str) -> None:
+        self.findings.append({"kind": kind, "path": path, "hint": hint})
+        self.counts[kind] = self.counts.get(kind, 0) + 1
+
+    # ---------- ①+② 一趟遍历：名字形态与 reparse point ----------
+
+    def scan_tree(self) -> None:
+        """全树一趟：计数 + reparse point + .tmp-*/碎片名（T4-transient 之外）。"""
+        for p, kind in iter_tree(REPO):
+            if kind == "reparse":
+                self.add(
+                    "reparse-point", rel(p),
+                    f"指向 {link_target(p)}（{link_scope(p)}）；[DESIGN-LAY-011] §二/附录一 2026-11-18 裁决"
+                    "禁用 junction / symlink，四个桶必须是磁盘上的真目录",
+                )
+                continue
+            if kind == "dir":
+                self.scanned_dirs += 1
+            else:
+                self.scanned_files += 1
+            if _under(p, T4_TRANSIENT_REL):
+                continue  # 临时件的合法落点，其内一律放行
+            name = p.name
+            if ".tmp-" in name:
+                self.add(
+                    "tmp-name-outside-t4", rel(p),
+                    "临时件唯一合法落点是 works/data/khy/T4-transient/（[DESIGN-LAY-011] §一 ⑥）；"
+                    "收工删掉，或隔离进 .../tmp/housekeeping/<日期>/ 并留 manifest（只隔离不删除，HK-3）",
+                )
+                continue
+            why = fragment_name_reason(name)
+            if why:
+                self.add(
+                    "fragment-name", rel(p),
+                    f"{why}：shell / node -e 载荷被展开成文件名的事故残骸，"
+                    "内容通常也是工具输出碎片；隔离进 .../tmp/housekeeping/<日期>/（HK-3）",
+                )
+
+    # ---------- ③ 根级封闭清单 ----------
+
+    def scan_root_catalog(self) -> None:
+        try:
+            src = (REPO / ROOT_WHITELIST_SOURCE).read_text(encoding="utf-8")
+        except OSError as exc:
+            self.add("root-whitelist-unavailable", ROOT_WHITELIST_SOURCE,
+                     f"读不到 {ROOT_WHITELIST_SOURCE}：{exc}")
+            return
+        whitelist, problem = load_root_whitelist(src)
+        if problem:
+            self.add("root-whitelist-unavailable", ROOT_WHITELIST_SOURCE, problem)
+            return
+        self.root_whitelist = whitelist
+        self.readme_variant = load_readme_variant_re(src)
+        for p in sorted(REPO.iterdir()):
+            n = p.name
+            if n in whitelist:
+                continue
+            if self.readme_variant and self.readme_variant.match(n):
+                continue
+            self.add(
+                "root-uncatalogued", n,
+                "根级实体未登记；补 scripts/ci/check-repo-layout.js 的 ROOT_CATALOG 条目"
+                "（category/reason/reviewBy）或归入既有层。若它其实是临时/事故残留，先删再补——"
+                "真源 [MGMT-STD-001] §1.3",
+            )
+
+    # ---------- 汇总 ----------
+
+    def run(self) -> int:
+        if not REPO.is_dir():
+            print(json.dumps({"stage": GUARD_STAGE, "error": f"仓库不存在: {REPO}"},
+                             ensure_ascii=False))
+            return 0
+        self.scan_tree()
+        self.scan_root_catalog()
+        payload = {
+            "stage": GUARD_STAGE,
+            "mode": "check",
+            "repo": str(REPO),
+            "generatedAt": now().isoformat(timespec="seconds"),
+            "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.md §五 + 附录一",
+            "scanned": {"files": self.scanned_files, "dirs": self.scanned_dirs},
+            "counts": self.counts,
+            "findingCount": len(self.findings),
+            "findings": self.findings,
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="khy-os 仓库整理器 (LAYOUT-004)")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--report", action="store_true", help="只出报告（默认）")
     g.add_argument("--apply", action="store_true", help="隔离白名单内超期临时文件")
+    g.add_argument("--check", action="store_true",
+                   help="智能体卫生观察者（S1）：全仓只读扫描，输出 JSON findings，恒 exit 0")
     args = ap.parse_args()
+    if args.check:
+        return HygieneAuditor().run()
     return Auditor(apply=bool(args.apply)).run()
 
 

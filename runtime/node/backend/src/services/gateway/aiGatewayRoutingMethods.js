@@ -251,6 +251,36 @@ function setAiGatewayRoutingMethodsDeps(deps = {}) {
   }
 }
 
+// ── UCB 选路的旁路读数（块 B2）──────────────────────────────────────────────
+// 被选中臂的 {pulls, mean} 只挂在这个**不可枚举**属性上：ranking 数组照旧是纯
+// assessment 数组，spread / JSON.stringify / Object.keys 都看不到它。不往 assessment
+// 里塞字段，是因为 ranking 会流向 getDefaultRouteRecommendation 的对外 JSON。
+// 唯一用途：让 routeFact.bandit 能如实报出「这条选路有多少样本」。
+const UCB_PICK_KEY = '__khyUcbPick';
+const UCB_PICK_SCOPE = 'in-process';
+
+function _attachUcbPick(target, pick) {
+  if (!Array.isArray(target) || !pick || typeof pick !== 'object') {
+    return target;
+  }
+  const adapter = String(pick.adapter || '');
+  const pulls = Number(pick.pulls);
+  const mean = Number(pick.mean);
+  if (!adapter || !Number.isFinite(pulls) || pulls < 0 || !Number.isFinite(mean)) {
+    return target;
+  }
+  try {
+    Object.defineProperty(target, UCB_PICK_KEY, {
+      value: { adapter, pulls, mean, scope: UCB_PICK_SCOPE },
+      enumerable: false,
+      configurable: true,
+    });
+  } catch {
+    /* 读数可选：挂不上不影响排序 */
+  }
+  return target;
+}
+
 const AIGatewayRoutingMethods = {
   _resolveAdapterTimeoutMs(adapterKey, fallbackTimeoutMs) {
     const fallbackMs = _parseMs(fallbackTimeoutMs, 60000, 1000);
@@ -698,7 +728,7 @@ const AIGatewayRoutingMethods = {
       const order = new Map(ranked.map((r, index) => [r.adapter, index]));
       // Stable re-sort by UCB position; items unknown to the bandit keep their
       // incoming (penalty-score) order behind ranked ones.
-      return [...eligible].sort((a, b) => {
+      const sorted = [...eligible].sort((a, b) => {
         const ai = order.has(String(a.adapter || '').toLowerCase())
           ? order.get(String(a.adapter || '').toLowerCase())
           : Number.MAX_SAFE_INTEGER;
@@ -707,6 +737,7 @@ const AIGatewayRoutingMethods = {
           : Number.MAX_SAFE_INTEGER;
         return ai - bi;
       });
+      return _attachUcbPick(sorted, ranked[0]);
     } catch {
       return eligible; // bandit optional — fall back to penalty order
     }
@@ -760,15 +791,16 @@ const AIGatewayRoutingMethods = {
       ...options,
       entries: list,
     });
+    const ranking = routeRanking.ranking || [];
     const positionByKey = new Map(
-      (routeRanking.ranking || []).map((item, index) => [String(item.adapter || ''), index])
+      ranking.map((item, index) => [String(item.adapter || ''), index])
     );
     // 用户自定义故障转移顺序：作为主排序键。列出的通道按其给定顺序优先，未列出
     // 的通道接在其后并沿用自动 penalty 排序为次级键。仅改变「尝试顺序」——熔断/
     // 冷却判定不受影响：被用户排到最前但处于 cooldown 的通道仍会被 _getRecentFastFail
     // 快速跳过、cascade 继续下一个（现有行为完整保留）。
     const userOrder = this._getFailoverOrderMap();
-    return [...list].sort((a, b) => {
+    const sorted = [...list].sort((a, b) => {
       if (userOrder) {
         const aKey = String(a?.key || '');
         const bKey = String(b?.key || '');
@@ -789,6 +821,7 @@ const AIGatewayRoutingMethods = {
       }
       return Number(a?.priority || 0) - Number(b?.priority || 0);
     });
+    return _attachUcbPick(sorted, ranking[UCB_PICK_KEY]);
   },
 
   _reorderAdaptersByModelProtocolHint(entries = [], options = {}, routeControl = {}) {
@@ -2265,6 +2298,8 @@ const AIGatewayRoutingMethods = {
 module.exports = {
   AIGatewayRoutingMethods,
   setAiGatewayRoutingMethodsDeps,
+  // 旁路读数的键名（测试与 routeFact 接线方读取用；不可枚举，不进 JSON）
+  UCB_PICK_KEY,
   // 供单测直调：目录直查不要求 adapter 枚举过该型号（供血级做不到这件事）
   feedContextWindowFromCatalogById,
 };

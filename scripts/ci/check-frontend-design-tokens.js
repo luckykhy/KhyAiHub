@@ -60,7 +60,7 @@ function targets() {
   if (changedMode) return changedFiles();
 
   const frontendDirs = [
-    path.join(REPO_ROOT, 'delivery', 'web', 'ai-frontend', 'src'),
+    path.join(REPO_ROOT, 'delivery', 'channel', 'web', 'ai-frontend', 'src'),
     path.join(REPO_ROOT, 'delivery', 'channel', 'khyquant', 'frontend'),
     path.join(REPO_ROOT, 'runtime', 'substrate', 'platform', 'packages', 'ui-shared'),
   ];

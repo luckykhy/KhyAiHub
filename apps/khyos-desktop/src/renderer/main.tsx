@@ -6,8 +6,15 @@ import { store } from './state/store'
 import App from './App'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import './i18n'
-import './monacoSetup'
+// monacoSetup 不再在这里引入：Monaco 只服务两个 lazy 入口（工作台 / 侧栏编辑态），
+// 首屏引入等于把 ~4MB 内核钉死在入口 chunk（[DESIGN-ARCH-210] M1）。
 import './theme/globals.css'
+import { loadBackground } from './theme/background'
+
+// 壁纸自举：把当前预设的 CSS 变量写到 <html>（含活场景开关 --khy-bg-live）。
+// 异步、不 await——首帧不因为它晚几百毫秒；失败也只是壁纸回落到 CSS 兜底，
+// 拖垮应用没有任何好处。
+void loadBackground()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

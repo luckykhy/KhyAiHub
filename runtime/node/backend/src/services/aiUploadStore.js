@@ -217,8 +217,11 @@ function manifestPath(id) {
  * Persist an already-on-disk temp file (multer diskStorage) as a managed
  * attachment: move it to <id><ext>, extract a text excerpt for text-like files,
  * write an <id>.json manifest, and return the public descriptor.
+ *
+ * `ownerUserId` 记录附件属主（SEC-04）。HTTP 入口都必须传 —— 此前 manifest 没有
+ * 属主维度，任何已登录用户拿到别人的附件 id 即可读取其正文/截图。
  */
-function commitUpload({ tempPath, originalName, mimeType, size }) {
+function commitUpload({ tempPath, originalName, mimeType, size, ownerUserId }) {
   const dir = uploadDir();
   fs.mkdirSync(dir, { recursive: true });
 
@@ -283,6 +286,9 @@ function commitUpload({ tempPath, originalName, mimeType, size }) {
     kind,
     textExcerpt,
     textTruncated: truncated,
+    // 属主：空值表示「本次修复之前落盘的旧附件」，读取侧带属主过滤时会按不存在处理。
+    ownerUserId:
+      ownerUserId != null && String(ownerUserId).trim() ? String(ownerUserId) : null,
     createdAt: new Date().toISOString(),
   };
 
@@ -437,7 +443,15 @@ async function commitAndEnrich(args, deps = {}) {
   return manifest;
 }
 
-function getUpload(id) {
+/**
+ * Read a manifest by id.
+ *
+ * SEC-04 对象级授权：传入 ownerUserId 时，manifest 记录的属主必须与之一致；
+ * 不一致（含旧 manifest 没有属主字段）一律按「不存在」返回 —— 调用方据此转
+ * 404，而不是 403，避免泄露「该 id 存在」这一事实。
+ * 不传 ownerUserId 的调用只允许出现在本机内部路径（TUI / CLI，无多用户边界）。
+ */
+function getUpload(id, ownerUserId) {
   const clean = String(id || '')
     .trim()
     .toLowerCase();
@@ -451,6 +465,11 @@ function getUpload(id) {
     const dir = uploadDir();
     if (!path.resolve(manifest.storedPath || '').startsWith(path.resolve(dir))) {
       return null;
+    }
+    if (ownerUserId != null && String(ownerUserId).trim() !== '') {
+      if (!manifest.ownerUserId || manifest.ownerUserId !== String(ownerUserId)) {
+        return null;
+      }
     }
     return manifest;
   } catch {
@@ -502,7 +521,7 @@ function humanSize(bytes, env = process.env) {
  * inject their excerpt. Everything else injects a reference line so the model is
  * aware of the attachment even when it can't read the bytes.
  */
-function resolveForChat(ids) {
+function resolveForChat(ids, ownerUserId) {
   const list = Array.isArray(ids) ? ids : [];
   const images = [];
   const promptBlocks = [];
@@ -511,7 +530,7 @@ function resolveForChat(ids) {
 
   for (const entry of list) {
     const id = typeof entry === 'string' ? entry : entry && entry.id;
-    const manifest = getUpload(id);
+    const manifest = getUpload(id, ownerUserId);
     if (!manifest) {
       if (id) {
         missing.push(String(id));

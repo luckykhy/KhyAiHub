@@ -1,0 +1,135 @@
+{
+  "id": "state-flags-001",
+  "title": "禁用/选中/密码状态必须显式",
+  "why": "enabled=false 的节点仍然要发 ref 并标 disabled——否则模型会反复点一个死按钮却看不出为什么没反应。",
+  "cases": [
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"灰的\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"false\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "禁用仍发 ref 且标 disabled",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "灰的",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": true,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"开的\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"true\" checked=\"true\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "checked",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "开的",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": true,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.EditText\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"true\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "password",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "input",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": true,
+            "checked": false,
+            "disabled": false,
+            "password": true
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"禁用且选中\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"true\" checked=\"true\" clickable=\"true\" enabled=\"false\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "多标志并存",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "禁用且选中",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": true,
+            "disabled": true,
+            "password": false
+          }
+        ]
+      }
+    }
+  ]
+}

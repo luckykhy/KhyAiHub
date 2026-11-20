@@ -26,7 +26,7 @@
  *   B) 一组功能地雷路径的排除状态必须符合既定策略（见下方 MUST_* 两张表）。
  *
  * B 之所以重要：它防的是「顺手泛化」。把 src 下的 html 收窄模式泛化成递归 html
- * 模式看着更整洁，但 delivery/web/ai-frontend/index.html 是 Vite 的构建入口；
+ * 模式看着更整洁，但 delivery/channel/web/ai-frontend/index.html 是 Vite 的构建入口；
  * 把只排根的 `*.md` 改成递归 md 模式更对称，但 src/ 下有 109 个 SKILL.md /
  * prompt.md 是技能加载器运行时逐个读的。这两类误伤都不会让构建失败，
  * 只会在运行时静默少一块功能。
@@ -83,7 +83,7 @@ const MUST_EXCLUDE = [
     '本机调试日志'],
   ['runtime/substrate/platform/packages/shared/logs/active/app.log',
     'shared 被整树 COPY 进两个镜像，其 winston 日志必须排掉'],
-  ['delivery/web/ai-frontend/build-bg.log',
+  ['delivery/channel/web/ai-frontend/build-bg.log',
     '前端被整树 COPY，其构建日志必须排掉'],
   ['runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs',
     '17.9 MB 兜底 bundle；会进镜像但不必进构建上下文（无 Dockerfile COPY 它）'],
@@ -94,12 +94,10 @@ const MUST_NOT_EXCLUDE = [
     '技能加载器运行时逐个读 src 下的 109 个 SKILL.md/prompt.md；全排 = 容器内技能全灭'],
   ['runtime/node/backend/src/skills/foo/prompt.md',
     '同上'],
-  ['delivery/web/ai-frontend/index.html',
+  ['delivery/channel/web/ai-frontend/index.html',
     'Vite 构建入口；排了它 pnpm --filter khy-ai-frontend run build 直接失败'],
-  ['delivery/web/ai-frontend/nginx.conf',
+  ['delivery/channel/web/ai-frontend/nginx.conf',
     'Dockerfile 直接 COPY 它当反代配置'],
-  ['runtime/node/backend/data/.admin_initial_password',
-    'git 跟踪的初始管理员口令真源；删了会改掉首次启动行为'],
   ['runtime/node/backend/server.js', 'HTTP 服务入口'],
   ['runtime/node/backend/docker-entrypoint.js', '容器 CMD'],
   ['runtime/node/backend/bin/khy.js', 'CLI 入口'],
@@ -253,8 +251,8 @@ function checkDirCopy(ctx, srcRel, df) {
     if (!present) continue;
     // 子条目相对**上下文根**的完整路径。这里不能用裸 name：
     // .dockerignore 的模式是相对上下文根的，而 COPY 的源目录可能只是上下文的
-    // 一个子树（如 `COPY delivery/web/ai-frontend/ ...`，其 dist 的完整路径是
-    // `delivery/web/ai-frontend/dist`）。第一版用裸 name，导致明明排除了还报错。
+    // 一个子树（如 `COPY delivery/channel/web/ai-frontend/ ...`，其 dist 的完整路径是
+    // `delivery/channel/web/ai-frontend/dist`）。第一版用裸 name，导致明明排除了还报错。
     const childRel = srcRel === '.' || srcRel === '' ? name : srcRel + '/' + name;
     if (ctx.patterns && isExcluded(ctx.patterns, childRel)) continue;
     findings.push({

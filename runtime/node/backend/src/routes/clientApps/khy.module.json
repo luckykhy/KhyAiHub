@@ -10,7 +10,7 @@
   "fanInEvidence": [
     "server.js（/api/client-apps 挂载点）"
   ],
-  "_fanIn_note": "外部非测试消费者去重 1 个：monolith Express server 的挂载行。前端 `delivery/web/ai-frontend/src/api/clientApps.js` 是 HTTP 消费方，不算本仓内的 require 边。计数排除 *.test.js。",
+  "_fanIn_note": "外部非测试消费者去重 1 个：monolith Express server 的挂载行。前端 `delivery/channel/web/ai-frontend/src/api/clientApps.js` 是 HTTP 消费方，不算本仓内的 require 边。计数排除 *.test.js。",
   "lifecycle": {
     "stage": "stable",
     "since": "2026-10-14",

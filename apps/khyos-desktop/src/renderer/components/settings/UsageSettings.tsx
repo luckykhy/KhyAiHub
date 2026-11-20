@@ -1,4 +1,5 @@
 // khy-canary: Khy-20261102-316-6JAGRA29
+import { errText } from '../../utils/errText'
 import { useState, useEffect, useCallback } from 'react'
 
 // ── 使用统计 settings page（ZC-ALIGN-002 I8, a11y s-7）──
@@ -116,8 +117,8 @@ export function UsageSettings() {
         setUsageError(res?.error || '用量历史读取失败：后端未返回数据，请重启应用后重试')
       }
       setLoading(false)
-    }).catch(() => {
-      setUsageError('用量历史读取失败：host 进程无响应，请重启应用')
+    }).catch((err: unknown) => {
+      setUsageError(`用量历史读取失败：${errText(err)}。若持续失败请重启应用`)
       setLoading(false)
     })
   }, [])

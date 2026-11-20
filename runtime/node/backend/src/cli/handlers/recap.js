@@ -71,10 +71,37 @@ function _parseNarrativeArgs(args) {
 }
 
 /**
+ * 润色稿与确定性骨架落盘后外观相同 —— 文件一旦被归档或转发，「模型写的」这层
+ * 事实就只剩终端 printInfo，会消失。故在标题下插一行来源标记，让两种产物可区分。
+ * reason 枚举见 polish.js（gate-off | no-provider | ok | error | anchor-dropped |
+ * anchor-injected | too-long），回退时原样写入，不做美化。
+ */
+function _provenanceLine(polished) {
+  if (polished && polished.polished) {
+    return '> 来源：模型润色稿 —— 事实骨架与 [#n] 锚点由确定性引擎生成，锚点逐条校验通过。';
+  }
+  if (polished) {
+    return `> 来源：确定性骨架，未润色（reason=${polished.reason}）。`;
+  }
+  return '> 来源：确定性骨架（未请求润色）。';
+}
+
+function _withProvenance(markdown, line) {
+  const lines = String(markdown).split('\n');
+  if (lines.length && /^#\s/.test(lines[0])) {
+    lines.splice(1, 0, '', line);
+    return lines.join('\n');
+  }
+  // 润色稿可能动了标题结构（理论上不该，校验兜底）：来源行放在最前，不吞内容。
+  return `${line}\n\n${markdown}`;
+}
+
+/**
  * `/recap narrative` —— 任务叙事（DESIGN-ARCH-130，热奈特话语层）。
  * 故事层 collectStory → 话语层 buildNarrative → renderNarrative 成稿；
  * --polish 走 maybePolish（KHY_NARRATIVE_POLISH 默认关），润色失守锚点契约
- * 一律回退确定性骨架。全程只读 transcript，绝不写会话数据。
+ * 一律回退确定性骨架。成稿（含 stdout 与落盘）带一行来源标记，
+ * 让「模型润色」与「确定性骨架」在文件层面可区分。全程只读 transcript，绝不写会话数据。
  */
 async function _handleNarrative(args) {
   if (!_narrativeEnabled(process.env)) {
@@ -123,8 +150,10 @@ async function _handleNarrative(args) {
 
   let { markdown } = narrative.renderNarrative({ plan, events, recap, sessionId, mode: opts.mode });
 
+  let polishState = null;
   if (opts.polish) {
     const polished = await narrative.maybePolish(markdown);
+    polishState = polished;
     if (polished.polished) {
       markdown = polished.text;
       printInfo('润色完成（模型仅改文风，证据锚点逐条校验通过）。');
@@ -132,6 +161,8 @@ async function _handleNarrative(args) {
       printInfo(`润色未生效（${polished.reason}），已回退确定性骨架。`);
     }
   }
+  // 润色之后再插：模型输出只承诺保留 #/## 标题结构，来源行不该经过它。
+  markdown = _withProvenance(markdown, _provenanceLine(polishState));
 
   console.log(markdown);
 
@@ -208,4 +239,4 @@ async function handleRecap(subCommand, _args = [], _options = {}) {
   return true;
 }
 
-module.exports = { handleRecap };
+module.exports = { handleRecap, _provenanceLine, _withProvenance };

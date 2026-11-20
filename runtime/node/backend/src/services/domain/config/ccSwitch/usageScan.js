@@ -424,7 +424,12 @@ async function scanSessions(opts = {}) {
         }
         try {
           const costUSD = estimateCostUSD(usage.inputTokens, usage.outputTokens, usage.model);
-          recordUsage(usage.provider || app, usage.model || app, usage.inputTokens, usage.outputTokens, costUSD);
+          // Token counts here are read from the external JSONL (real), so never
+          // mark them estimated. The cost, however, is a legacy estimate — keep
+          // its price state so reports can say "回落粗价" instead of implying
+          // it was measured.
+          const costState = resolveCostState(usage.provider || app, usage.model || app);
+          recordUsage(usage.provider || app, usage.model || app, usage.inputTokens, usage.outputTokens, costUSD, 0, 0, { costState });
           importedForFile += 1;
           result.imported += 1;
           result.byApp[app].imported += 1;
@@ -458,6 +463,21 @@ function estimateCostUSD(inputTokens, outputTokens, model) {
   }
   // Conservative default: $2.5/M input, $10/M output (Claude Sonnet-class).
   return (inputTokens / 1e6) * 2.5 + (outputTokens / 1e6) * 10;
+}
+
+/**
+ * Price state for an imported record. Check the provider first: subscription
+ * relays (kiro/trae/...) are flat even when their model name has a list price.
+ */
+function resolveCostState(provider, model) {
+  try {
+    const mp = require('../../../modelPricing');
+    const byProvider = mp.resolvePrice(String(provider || ''));
+    if (byProvider.state === 'flat') return 'flat';
+    return mp.resolvePrice(String(model || '')).state;
+  } catch {
+    return 'unknown';
+  }
 }
 
 function getCursorState() {

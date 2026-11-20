@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: SOURCE.md -->
+<title>android-agent-kit · vendored 出处与使用边界 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>vendor<span class="sep">›</span>android-agent-kit<span class="sep">›</span>android-agent-kit · vendored 出处与使用边界</div>
+      <header class="hero reveal"><h1>android-agent-kit · vendored 出处与使用边界</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#android-agent-kit-vendored-出处与使用边界">android-agent-kit · vendored 出处与使用边界</a></li><li class="lvl-2"><a href="#上游">上游</a></li><li class="lvl-2"><a href="#版本钉与-b-m1-6-偏差-批准-ledger-行即同时批准本条">版本钉与 B-M1 #6 偏差（批准 ledger 行即同时批准本条）</a></li><li class="lvl-2"><a href="#逐字声明">逐字声明</a></li><li class="lvl-2"><a href="#文件清单">文件清单</a></li><li class="lvl-2"><a href="#夹具-fixtures">夹具（fixtures/）</a></li><li class="lvl-2"><a href="#未入库-excluded">未入库（excluded）</a></li><li class="lvl-2"><a href="#node-使用注意">Node 使用注意</a></li><li class="lvl-2"><a href="#上游-quirk-照录-不改">上游 quirk（照录，不改）</a></li><li class="lvl-2"><a href="#可整删">可整删</a></li><li class="lvl-2"><a href="#登记状态-两步走-本-pr-只完成第一步">登记状态（两步走，本 PR 只完成第一步）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="android-agent-kit-vendored-出处与使用边界">android-agent-kit · vendored 出处与使用边界<a class="anchor" href="#android-agent-kit-vendored-出处与使用边界" aria-label="锚点">#</a></h1>
+<p>本目录是<strong>逐字入库</strong>的上游代码，不是本仓实现。改行为请写适配层<br>（<code>runtime/node/backend/src/services/domain/network/phone/androidRef/</code>），<br>本目录内文件一行不改——上游行号在本仓文档与测试里被引用，改一个字就对不上了。</p>
+<h2 id="上游">上游<a class="anchor" href="#上游" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>值</th></tr></thead><tbody><tr><td>来源</td><td><code>android-agent-kit</code> v0.1.0（GitHub 归档包 <code>android-agent-kit-main.zip</code>）</td></tr><tr><td>版本日期</td><td>2026-10-27（上游 <code>MANIFEST.md</code> §头部「版本日期」）</td></tr><tr><td>归档快照</td><td><code>android-agent-kit-main.zip</code>，787,345 B，SHA-256 <code>691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a</code></td></tr><tr><td>许可证</td><td>Apache-2.0（模块根 <code>LICENSE</code>，全文 11,358 B）</td></tr><tr><td>版权人</td><td><strong>无具名版权人</strong>。三份 <code>LICENSE</code>（仓库根 / <code>uidref/</code> / <code>screendiff/</code>）逐字节相同，SHA-256 <code>cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30</code>，附录仍是未填占位「Copyright [yyyy] [name of copyright owner]」；上游 md/py/js/json/toml 里 <code>Copyright</code> 零命中</td></tr></tbody></table>
+<p><strong>为什么不填版权人</strong>：Apache-2.0 §4(a) 要求分发时保留许可证原文与（若有）NOTICE。<br>上游没有具名版权人，替它编一个等于伪造归属；原样保留未填占位是唯一诚实的做法。</p>
+<h2 id="版本钉与-b-m1-6-偏差-批准-ledger-行即同时批准本条">版本钉与 B-M1 #6 偏差（批准 ledger 行即同时批准本条）<a class="anchor" href="#版本钉与-b-m1-6-偏差-批准-ledger-行即同时批准本条" aria-label="锚点">#</a></h2>
+<p>B-M1 第 6 条要求 vendored 登记写明「依赖版本与上游 commit」。本条目<strong>做不到 commit<br>那一半</strong>，原因是上游归档本身没有：<code>android-agent-kit-main.zip</code> 解包后根目录只有<br><code>LICENSE</code> / <code>MANIFEST.md</code> / <code>README.md</code> / <code>QUICKSTART.md</code> / <code>requirements.txt</code> /<br><code>run-tests.sh</code> / <code>.gitignore</code> / <code>.gitattributes</code> 与各模块目录——<strong>没有 <code>.git</code> 目录</strong><br>（<code>.gitignore</code>/<code>.gitattributes</code> 只是快照里的两个文件，不含历史），全归档 217 个文本<br>文件（md/py/js/json/toml/txt/sh + 上述两个点文件）grep <code>commit</code> 与 40 位十六进制哈希<br><strong>零命中</strong>（本批实测；<br>该归档是 GitHub 的 main 分支快照下载，不是 <code>git clone</code>）。</p>
+<p>因此版本钉只能钉快照：</p>
+<pre><code>versionPin = 归档快照：zip SHA-256 = 691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a
+             + 上游 MANIFEST.md 版本日期 2026-10-27</code></pre>
+<p>批准 ledger 行前请看清三件事：</p>
+<ol><li><code>approvedBy</code> / <code>approvedAt</code> <strong>同时就是批准这条 B-M1 #6 偏差</strong>——批准的是一个</li></ol>
+<p>归档快照哈希，不是一个「看起来像 commit」的值；</p>
+<ol><li>日后若拿到上游真 commit（上游补 tag、或提供 git 历史），<strong>必须换钉</strong>，并在 ledger</li></ol>
+<p><code>notes</code> 写明换钉原因与新旧值（B-L3：versionPin 一旦登记不得静默变更）；</p>
+<ol><li>复核不依赖网络：任何拿到同一 zip 的人重算 SHA-256 即可确认与本目录同源。</li></ol>
+<p><code>FEATURE-OWNERSHIP.json</code> 的 <code>notes</code>（androidui 批同批落）会再写一遍这条偏差——B-M1 #6<br>的字面落点是那一行（<code>method='vendored'</code> 的登记载体），本文件是它的证据附件。</p>
+<h2 id="逐字声明">逐字声明<a class="anchor" href="#逐字声明" aria-label="锚点">#</a></h2>
+<p>除本文件（<code>SOURCE.md</code>——本批新写的出处文档，不在上游归档中）外，本目录全部文件按归档<br>原始字节复制（二进制拷贝，未做行尾归一化、未重排、未加注释），入库时逐文件 SHA-256<br>与归档内同名文件比对一致（13 个具名文件 + 13 个向量全部一致）。行为校验脚本见<br><code>runtime/node/backend/tests/vendor/androidAgentKitConformance.test.js</code><br>（该测试不比对上游哈希——上游归档不入仓；它比对行为：向量 + 真实 dump）。</p>
+<h2 id="文件清单">文件清单<a class="anchor" href="#文件清单" aria-label="锚点">#</a></h2>
+<p><code>uidref/js</code> 5 个文件 613 行，<code>screendiff/js</code> 3 个文件 273 行（<code>find /c /v &quot;&quot;</code> 实测，含空行）：</p>
+<table><thead><tr><th>本仓路径</th><th>字节</th><th>行</th><th>用途</th></tr></thead><tbody><tr><td><code>uidref/LICENSE</code></td><td>11,358</td><td>—</td><td>Apache-2.0 全文（§4(a) 随包保留）</td></tr><tr><td><code>uidref/js/uidref.js</code></td><td>15,097</td><td>433</td><td>核心库：uiautomator XML → snapshot + digest + 稳定 ref</td></tr><tr><td><code>uidref/js/conformance.js</code></td><td>3,175</td><td>97</td><td>向量运行器（CLI 壳）</td></tr><tr><td><code>uidref/js/impl.js</code></td><td>1,206</td><td>48</td><td>契约 CLI 包装（XML 文件 → JSON）</td></tr><tr><td><code>uidref/js/dumpjson.js</code></td><td>798</td><td>21</td><td>跨语言差分工具（CLI 壳）</td></tr><tr><td><code>uidref/js/package.json</code></td><td>365</td><td>14</td><td>零依赖清单：<code>:4</code> description、<code>:5</code> license <code>Apache-2.0</code>、<code>:11</code> engines <code>node&gt;=18</code>、<code>:12</code> dependencies 为空对象</td></tr><tr><td><code>uidref/vectors/*.json</code></td><td>—</td><td>—</td><td>7 个向量文件 / 45 个用例（上游自带，随包）</td></tr><tr><td><code>uidref/fixtures/settings-storage.xml</code></td><td>29,361</td><td>—</td><td>真实设备 dump（见下「夹具」）</td></tr><tr><td><code>screendiff/LICENSE</code></td><td>11,358</td><td>—</td><td>同上</td></tr><tr><td><code>screendiff/js/screendiff.js</code></td><td>7,019</td><td>204</td><td>核心库：两份 snapshot → ChangeSet / effectOf / isStuck / isLoading</td></tr><tr><td><code>screendiff/js/conformance.js</code></td><td>2,083</td><td>38</td><td>向量运行器（CLI 壳）</td></tr><tr><td><code>screendiff/js/impl.js</code></td><td>848</td><td>31</td><td>契约 CLI 包装</td></tr><tr><td><code>screendiff/vectors/*.json</code></td><td>—</td><td>—</td><td>6 个向量文件 / 27 个用例</td></tr><tr><td><code>screendiff/fixtures/c1.xml</code></td><td>22,754</td><td>—</td><td>真实设备 dump，diff 的 prev</td></tr><tr><td><code>screendiff/fixtures/c2.xml</code></td><td>22,841</td><td>—</td><td>真实设备 dump，diff 的 cur</td></tr></tbody></table>
+<p><code>screendiff/js</code> 没有 <code>package.json</code>（上游就没有），所以没有第二条零依赖声明可抄；<br>它的零依赖是实测事实：<code>screendiff.js</code> 全文零 <code>require</code>，<code>conformance.js</code> / <code>impl.js</code><br>只引 <code>fs</code>/<code>path</code>/<code>process</code> 这类 Node 内建。</p>
+<h2 id="夹具-fixtures">夹具（fixtures/）<a class="anchor" href="#夹具-fixtures" aria-label="锚点">#</a></h2>
+<p>三份 XML 是<strong>上游自带测试数据</strong>（真实设备 uiautomator dump），不是用户界面截图，<br>来自上游 <code>uidref/dumps/settings-storage.xml</code>、<code>screendiff/dumps/c1.xml</code>、<br><code>screendiff/dumps/c2.xml</code>，Apache-2.0 随包。它们放在模块自己的 <code>fixtures/</code> 下（与<br><code>LICENSE</code> 同模块根），因此仍受 B-M1 第 4 条「同路径保留 LICENSE」覆盖。</p>
+<p>其余 dump 不入库：上游四处 <code>dumps/</code> 共 32 份（<code>uidref/dumps</code> 16、<code>screendiff/dumps</code> 4、<br><code>scrollkey/dumps</code> 7、<code>crosstrack/dumps</code> 5），只收录这 3 份；未收录的 29 份中还有多组内容<br>重复（例如 <code>c1.xml</code> 与 <code>settings-search.xml</code> 同内容），入仓只会增加体积而不增加覆盖。</p>
+<h2 id="未入库-excluded">未入库（excluded）<a class="anchor" href="#未入库-excluded" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>未入项</th><th>原因</th></tr></thead><tbody><tr><td>6 个 Python 模块（<code>screenpoint</code>/<code>pointparse</code>/<code>imespec</code>/<code>blindspot</code>/<code>fieldstate</code>/<code>swipefind</code>）与 <code>scrollkey</code>/<code>crosstrack</code>/<code>claimcheck</code>/<code>claimaudit</code>/<code>capturetrap</code>/<code>textin</code>/<code>e2e</code></td><td>宿主是 Node，不为此引入 Python 运行时；按需分批移植成 TS，届时按 <code>method='reference'</code> 另行登记，不复制上游源码</td></tr><tr><td><code>uidref/http_api.py</code>（本地 <code>:8770</code> 回环服务）</td><td>同上；桌面侧用 JS 实现，不跑 Python sidecar</td></tr><tr><td><code>tests/</code>、<code>tools/</code>、<code>docs/</code>、<code>提案/</code>、各模块 <code>README*.md</code> / <code>SPEC.md</code></td><td>文档与设备探针脚本，运行时不需要</td></tr><tr><td>其余 29 份 dump（<code>uidref/dumps</code> 另外 15 份、<code>screendiff/dumps</code> 的 c3/d1、<code>scrollkey/dumps</code> 7 份、<code>crosstrack/dumps</code> 5 份）</td><td>见上「夹具」</td></tr><tr><td><code>uidref/</code> 下的 0 字节杂物文件「1」</td><td>上游解压遗留，非代码</td></tr></tbody></table>
+<h2 id="node-使用注意">Node 使用注意<a class="anchor" href="#node-使用注意" aria-label="锚点">#</a></h2>
+<ul><li><code>uidref.js</code> 核心只需一个 Node 内建：<code>:12</code> <code>require('crypto')</code>。</li><li>两处 <code>Buffer.byteLength</code>：<code>uidref.js:309</code>（<code>xml_bytes</code>）与 <code>:374-376</code>（digest 字节数与</li></ul>
+<p><code>compression</code>/<code>est_tokens</code>）。浏览器环境需以 <code>TextEncoder</code> 替换。</p>
+<ul><li><code>uidref.js:333</code> <code>crypto.createHash('sha256')</code>（<code>snapshotIdOf</code>）。浏览器环境需 WebCrypto，</li></ul>
+<p>或改由本仓适配层注入 snapshot id。</p>
+<ul><li>因此 <code>uidref.js</code> 与 <code>screendiff.js</code> 只在 Node 后端可用；<code>conformance.js</code> / <code>impl.js</code> /</li></ul>
+<p><code>dumpjson.js</code> 是 CLI 壳（<code>fs</code>/<code>path</code>/<code>process</code>），不经后端加载。</p>
+<h2 id="上游-quirk-照录-不改">上游 quirk（照录，不改）<a class="anchor" href="#上游-quirk-照录-不改" aria-label="锚点">#</a></h2>
+<p><code>uidref.js:320-321</code>：<code>parse()</code> 返回的 <code>digest()</code> / <code>metrics()</code> 闭包只传了<br><code>{package, rotation, width, height, elements…}</code>，<strong>没有传 <code>snapshot_id</code></strong>。后果：</p>
+<ul><li><code>p.digest()</code> 的首行渲染成 <code>[undefined] &lt;package&gt; &lt;w&gt;x&lt;h&gt; rot=… elements=…</code></li></ul>
+<p>（实测：<code>[undefined] com.android.settings 1080x2337 rot=0 elements=11</code>）；</p>
+<ul><li><code>p.metrics()</code> 的返回对象里<strong>没有 <code>snapshot_id</code> 字段</strong>（<code>undefined</code> 被 JSON 序列化丢掉）。</li></ul>
+<p>vendored 文件不改这个行为（改了就不是逐字入库）。适配层要用 snapshot id 时取<br><code>p.snapshot_id</code>，<strong>不要</strong>解析 <code>digest()</code> 首行；冒烟断言同理。两个函数的其余输出正常，<br>可以照常使用。</p>
+<h2 id="可整删">可整删<a class="anchor" href="#可整删" aria-label="锚点">#</a></h2>
+<p><code>deletableAsWhole: true</code> —— 删掉本目录后，本仓失去 <code>androidRef</code> 适配层的底层实现（表现为<br><code>uidrefAdapter</code> 加载失败并按 fail-soft 报错），但不会影响任何其他模块、构建或测试装配；<br>本仓自己的代码里没有对上游文件的引用（引用只出现在适配层与<br><code>tests/vendor/androidAgentKitConformance.test.js</code>）。</p>
+<h2 id="登记状态-两步走-本-pr-只完成第一步">登记状态（两步走，本 PR 只完成第一步）<a class="anchor" href="#登记状态-两步走-本-pr-只完成第一步" aria-label="锚点">#</a></h2>
+<ol><li><strong><code>SOURCING-PROVENANCE.json</code></strong>：本目录记为 <code>observedVendorDirs.dirs[]</code> 的</li></ol>
+<p><code>state: &quot;pending-approval&quot;</code>，并由 <code>knownGaps</code> 的 <code>gap-5</code> 覆盖（<code>path</code> 与目录逐字相等；<br>   <code>gap-5</code> 的 <code>description</code> 里写明同上「B-M1 #6 commit 缺失偏差」，批准人读 gap 即可见）。<br>   <strong>不写 <code>ledger</code> 行</strong>：<code>check-provenance.js:114-118</code> 对 vendored 缺 <code>approvedBy</code> 直接判<br>   error，而 <code>approvedBy</code> 必须是维护者且 ≠ 实现者（B-P3），属 <code>STOP_FOR_USER</code> 的<br>   <strong>人的决定</strong>，AI 不得代填。批准人提交 ledger 行时：<code>versionPin</code> 用上文「版本钉与<br>   B-M1 #6 偏差」里的快照字符串、<code>approvedBy</code>/<code>approvedAt</code> 一并即批准该偏差；随后把<br>   state 改回 <code>ledgered</code>、删掉 <code>gap-5</code>。</p>
+<ol><li><strong><code>FEATURE-OWNERSHIP.json</code></strong> 的 capability 行（<code>domain: &quot;android-ui-ref&quot;</code>、</li></ol>
+<p><code>method: &quot;vendored&quot;</code>）<strong>由 androidui 批次同批落</strong>：<code>check-feature-ownership.js:116-118</code><br>   （<code>ownership-canonical-missing</code>）要求 <code>canonical</code> 在盘上存在，而 canonical<br>   （<code>runtime/node/backend/src/services/domain/network/phone/androidRef/index.js</code>）<br>   由 androidui 创建，本批次不能先写。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../runtime/node/backend/src/utils/text/README.html"><div class="dir">← 上一篇</div><div class="ttl">utils/text/ — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）</div></a><a class="next" href="../../../../../runtime/node/backend/wasm-indicators/AGENTS.html"><div class="dir">下一篇 →</div><div class="ttl">Project Agents.md Guide</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="runtime/node/backend/vendor/android-agent-kit/SOURCE.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

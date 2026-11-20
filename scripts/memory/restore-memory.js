@@ -16,15 +16,16 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getDataDir, resolveDataPath } = require('../../runtime/node/backend/src/utils/dataHome');
 
-// 路径配置
-const ROOT_DIR = path.resolve(__dirname, '../..');
-const MEMORY_DIR = path.join(ROOT_DIR, '.khy/memory');
-const ARCHIVE_DIR = path.join(MEMORY_DIR, '.archive');
-const SKILLS_DIR = path.join(ROOT_DIR, '.khy/skills');
-const SKILLS_ARCHIVE_DIR = path.join(SKILLS_DIR, '.archive');
-const SESSIONS_DIR = path.join(ROOT_DIR, '.khy/sessions');
-const SESSIONS_ARCHIVE_DIR = path.join(SESSIONS_DIR, '.archive');
+// 路径配置：一律经 dataHome 解析器取址。写死 ROOT_DIR/.khy/* 会在仓库根制造影子
+// 数据目录（CLAUDE.md §二 B8、[DESIGN-MEM-009] D2）；归档侧只探测，用纯映射解析器。
+const MEMORY_DIR = getDataDir('memory');
+const ARCHIVE_DIR = resolveDataPath('memory', '.archive');
+const SKILLS_DIR = getDataDir('skills');
+const SKILLS_ARCHIVE_DIR = resolveDataPath('skills', '.archive');
+const SESSIONS_DIR = getDataDir('sessions');
+const SESSIONS_ARCHIVE_DIR = resolveDataPath('sessions', '.archive');
 
 // 颜色输出
 const chalk = {
@@ -99,7 +100,7 @@ function listRecoverableMemories() {
   // 核心记忆
   const memoryFiles = listArchivedFiles(ARCHIVE_DIR);
   if (memoryFiles.length > 0) {
-    console.log(chalk.cyan('  核心记忆 (.khy/memory/.archive/):'));
+    console.log(chalk.cyan(`  核心记忆 (${ARCHIVE_DIR}):`));
     memoryFiles.forEach(f => {
       const stats = fs.statSync(path.join(ARCHIVE_DIR, f));
       const size = (stats.size / 1024).toFixed(2);
@@ -113,7 +114,7 @@ function listRecoverableMemories() {
   // 学习缓存
   const skillsFiles = listArchivedFiles(SKILLS_ARCHIVE_DIR);
   if (skillsFiles.length > 0) {
-    console.log(chalk.cyan('\n  学习缓存 (.khy/skills/.archive/):'));
+    console.log(chalk.cyan(`\n  学习缓存 (${SKILLS_ARCHIVE_DIR}):`));
     skillsFiles.forEach(f => {
       const stats = fs.statSync(path.join(SKILLS_ARCHIVE_DIR, f));
       const size = (stats.size / 1024).toFixed(2);
@@ -127,7 +128,7 @@ function listRecoverableMemories() {
   // 会话数据
   const sessionFiles = listArchivedFiles(SESSIONS_ARCHIVE_DIR);
   if (sessionFiles.length > 0) {
-    console.log(chalk.cyan('\n  会话数据 (.khy/sessions/.archive/):'));
+    console.log(chalk.cyan(`\n  会话数据 (${SESSIONS_ARCHIVE_DIR}):`));
     sessionFiles.forEach(f => {
       const stats = fs.statSync(path.join(SESSIONS_ARCHIVE_DIR, f));
       const size = (stats.size / 1024).toFixed(2);

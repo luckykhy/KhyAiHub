@@ -14,21 +14,13 @@
 
 const { execFileSync } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const gen = require('./cliAnythingGenerator');
+const { getDataDir } = require('../utils/dataHome');
 
-// Portable-aware data home resolved at load (legacy const semantics preserved).
-function _dataHome() {
-  try {
-    const { getDataHome } = require('../utils/dataHome');
-    return getDataHome();
-  } catch {
-    return path.join(os.homedir(), '.khy');
-  }
-}
-const PROXY_DIR = path.join(_dataHome(), 'khyanything');
+// 写入侧：proxies.json 落定前先有目录，故走 getDataDir（带 mkdir）。
+const PROXY_DIR = getDataDir('khyanything');
 const PROXIES_FILE = path.join(PROXY_DIR, 'proxies.json');
 
 function _ensureDir() {

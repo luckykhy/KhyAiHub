@@ -76,12 +76,18 @@ try {
 const RELOCATIONS = [
   ['services/ai-backend', 'runtime/node/ai-backend'],
   ['services/backend', 'runtime/node/backend'],
-  ['apps/ai-frontend', 'delivery/web/ai-frontend'],
+  ['apps/ai-frontend', 'delivery/channel/web/ai-frontend'],
   ['software/khyquant', 'delivery/channel/khyquant'],
-  ['apps/provider-hub', 'delivery/web/provider-hub'],
+  ['apps/provider-hub', 'delivery/channel/web/provider-hub'],
   ['packaging', 'works/ship'],
   ['platform', 'runtime/substrate/platform'],
   ['.ai', 'works/record/ai'],
+  // 2026-11-19 delivery 单轴化（层级轴收敛）：web/mobile 并入 delivery/channel，
+  // brand/market 归工程产物区 works/。历史文档仍写旧路径，靠这 4 条解析到新落点。
+  ['delivery/web', 'delivery/channel/web'],
+  ['delivery/mobile', 'delivery/channel/mobile'],
+  ['delivery/brand', 'works/brand'],
+  ['delivery/market', 'works/market'],
 ];
 
 const CODE_EXTS = /\.(js|mjs|cjs|ts|tsx|vue|py|sh|json|yaml|md)$/;

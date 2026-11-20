@@ -15,9 +15,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const BACKEND_DIR = path.resolve(__dirname, '..'); // services/backend
-const REPO_ROOT = path.resolve(BACKEND_DIR, '..', '..'); // monorepo root
-const SHARED_SRC = path.join(REPO_ROOT, 'platform', 'packages', 'shared');
+const BACKEND_DIR = path.resolve(__dirname, '..'); // runtime/node/backend
+const REPO_ROOT = path.resolve(BACKEND_DIR, '..', '..'); // runtime/
+// 共享包真源在 runtime/substrate/platform/packages/shared（方案 P 把顶层 platform/
+// 物理化迁进 substrate/）。曾按搬家前的 runtime/platform/ 算，源目录不存在 ⇒
+// prepack 直接抛「找不到共享包源」，npm 渠道发布自迁移起即中止。
+const SHARED_SRC = path.join(REPO_ROOT, 'substrate', 'platform', 'packages', 'shared');
 const VENDOR_SHARED = path.join(BACKEND_DIR, 'vendor', 'shared');
 
 function log(msg) {

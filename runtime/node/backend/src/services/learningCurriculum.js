@@ -10,7 +10,6 @@
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const chalkModule = require('chalk');
@@ -22,7 +21,7 @@ const {
   getBugCase,
   searchBugCases,
 } = require('../data/bugCases');
-const { getBaseDataDir, getLegacyBaseHome } = require('../utils/dataHome');
+const { getLegacyBaseHome } = require('../utils/dataHome');
 
 // ── 终端适配 ─────────────────────────────────────────────────────────
 
@@ -159,7 +158,7 @@ const _PATH_REMAPS = [
   [/^backend\//, 'runtime/node/backend/'],
   [/^ai-backend\//, 'runtime/node/ai-backend/'],
   [/^khy_platform\//, 'runtime/substrate/platform/khy_platform/'],
-  [/^frontend\//, 'delivery/web/ai-frontend/'],
+  [/^frontend\//, 'delivery/channel/web/ai-frontend/'],
 ];
 
 /**

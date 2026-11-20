@@ -5,7 +5,7 @@
  * 把 GLB 解成「一串可以直接喂给 WebGL 的绘制项」。
  *
  * 为什么自己写而不用现成 gltf 库：本仓明确不引 three.js（见
- * delivery/web/ai-frontend/src/webgl/khyAura3d.js 的「no three.js」约定），
+ * delivery/channel/web/ai-frontend/src/webgl/khyAura3d.js 的「no three.js」约定），
  * 而桌宠模型只需要 POSITION/NORMAL/UV + 一个基础色 + 至多一张贴图。
  *
  * 两处关键取舍：

@@ -3776,6 +3776,23 @@ const FLAGS = {
     parent: 'KHY_MAX_TOKENS_AUTO_RESOLVE',
   },
 
+  // ── Agnes 网关 max_tokens 钳位(gateway/agnesMaxTokens.js) ────────────────────
+  // Agnes 网关(国际站 / 中国站)对 chat completions 的 max_tokens 有 65536 硬上限,
+  // 超限直接 400「max_tokens 不能超过 65536」。khyos 侧无 Agnes 输出上限元数据
+  // (maxTokensPolicy 只钳有元数据的模型),调用方显式携带的更高值会原样撞上限。
+  // 开该门 → 命中 Agnes 模型/端点时把 max_tokens 收进 [1, KHY_AGNES_MAX_TOKENS];
+  // 关 → 逐字节回退(原样发送)。判定与钳位逻辑见 gateway/agnesMaxTokens.js。
+  KHY_AGNES_MAX_TOKENS_CLAMP: { mode: 'default-on', off: 'CANON', default: true },
+  // Agnes max_tokens 上限旋钮:默认 65536(中国站实测上限)。两站上限若分化或官方
+  // 调整时单点调整,不必改码。非法解析 → 回退默认值。parent 上门(钳位关时无意义)。
+  KHY_AGNES_MAX_TOKENS: {
+    mode: 'numeric',
+    default: 65536,
+    min: 1,
+    max: 1000000,
+    parent: 'KHY_AGNES_MAX_TOKENS_CLAMP',
+  },
+
   // ── Tool interruptBehavior consumption (toolUseLoopCore) ───────────────────
   // Consume the declarative per-tool interruptBehavior ('cancel'|'block') at the
   // executeTool sites: 'block' tools get a derived abort signal that withholds a
@@ -4053,6 +4070,57 @@ const FLAGS = {
   // KHY_STEP_ANCHOR_STAGE 同族,是字符串不是布尔门控,不入表。
   KHY_CLUE_VAULT: { mode: 'default-on', off: 'CANON', default: true },
 };
+
+// ── Android GUI loop: 4 gates (androidRef service + AndroidUiTool) ──────────
+// Declared in a separate table merged into FLAGS instead of inside the literal
+// above: FLAGS is already the largest brace block in this file and
+// check-file-ratchet's maxFuncLines measures exactly that, so any entry added
+// inside would push that HARD metric up (pr-gate blocking). After the merge,
+// listFlags / isFlagEnabled / resolveNumeric see the same table; behavior
+// unchanged.
+//   KHY_ANDROID_UI_TOOL (child gate, parent KHY_PHONE_BRIDGE): whether the
+//     AndroidUi NL tool registers. Reader: src/tools/AndroidUiTool/index.js
+//     _gateEnabled (at require time). Off -> the module exports a disabled
+//     placeholder and loadTools skips it; the androidRef service is unaffected.
+//   KHY_ANDROID_UI_DUMP: whether screen reads are allowed
+//     (adb exec-out uiautomator dump). Reader: androidRef/androidUiPolicy.js
+//     planAndroidUiAction — every action dumps first, so this is the gate for the
+//     whole chain; off -> code 'dump_disabled', no adb spawn.
+//   KHY_ANDROID_UI_TEXT: whether keyed text input is allowed. Reader: the same
+//     function's type branch; off -> code 'text_disabled', plan only.
+//   KHY_ANDROID_UI_VERIFY_MS: settle budget (ms) before the re-check dump.
+//     Reader: androidRef/index.js resolveVerifyMs; missing -> 20000. It is the
+//     short I/O wait for the UI to settle, not a task kill; the parent link is
+//     declaration only (resolveNumeric does not walk parents) and the only
+//     consumer is AndroidUiTool.
+const ANDROID_UI_FLAGS = {
+  KHY_ANDROID_UI_TOOL: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_PHONE_BRIDGE',
+  },
+  KHY_ANDROID_UI_DUMP: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_ANDROID_UI_TOOL',
+  },
+  KHY_ANDROID_UI_TEXT: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_ANDROID_UI_TOOL',
+  },
+  KHY_ANDROID_UI_VERIFY_MS: {
+    mode: 'numeric',
+    default: 20000,
+    min: 5000,
+    max: 60000,
+    parent: 'KHY_ANDROID_UI_TOOL',
+  },
+};
+Object.assign(FLAGS, ANDROID_UI_FLAGS);
 
 /**
  * 判定一个 flag 是否启用。父→子优先级在此集中施加:父门控关 → 子门控必关。

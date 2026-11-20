@@ -235,14 +235,20 @@ function findRouteRule(model, routeRules) {
   return null;
 }
 
-// 内置模型路由（pip 安装后无 .env 也能路由到正确 provider）
-const BUILTIN_MODEL_ROUTE_MAP = Object.freeze({
-  'sensenova-6.7-flash-lite': { target: 'api:sensenova:sensenova-6.7-flash-lite', strict: true },
-  'sensenova-u1-fast': { target: 'api:sensenova:sensenova-u1-fast', strict: true },
-  'deepseek-v4-flash': { target: 'api:sensenova:deepseek-v4-flash', strict: true },
-  'agnes-2.5-flash': { target: 'api:agnes:agnes-2.5-flash', strict: false },
-  'agnes-2.0-flash': { target: 'api:agnes:agnes-2.0-flash', strict: true },
-});
+// 内置模型路由（pip 安装后无 .env 也能路由到正确 provider）。
+// [DESIGN-ARCH-218] §3.5：模型名是配置数据，不是代码；真源在 config/models/routing.json。
+// require 失败时退化为空表（fail-soft），用户配置仍照常生效。
+function loadBuiltinRouteMap() {
+  try {
+    const cfg = require('../../../config/models/routing.json');
+    const map = cfg && cfg.builtinRouteMap;
+    return map && typeof map === 'object' && !Array.isArray(map) ? map : {};
+  } catch {
+    return {};
+  }
+}
+
+const BUILTIN_MODEL_ROUTE_MAP = Object.freeze(loadBuiltinRouteMap());
 
 function inferBuiltinFamilyRoute(modelId) {
   const normalized = String(modelId || '').trim();
@@ -381,6 +387,9 @@ function resolveModelRoute(input = {}) {
   };
 }
 
+// [DESIGN-ARCH-218] 的单模型包装在 ./modelRouterSingle：本体 resolveModelRoute 必须
+// 保持为文件里最后一个函数声明（函数口径按「声明行 → 下一个声明行」计），而三个新
+// 函数会把本文件顶过 500 行上限。此处并进导出面，调用方与既有测试仍从本模块取。
 module.exports = {
   DEFAULT_PREFIX_TO_ADAPTER,
   DEFAULT_ADAPTER_TO_PREFIX,
@@ -388,4 +397,5 @@ module.exports = {
   parseAdapterScopedModel,
   parseRouteMap,
   resolveModelRoute,
+  ...require('./modelRouterSingle'),
 };

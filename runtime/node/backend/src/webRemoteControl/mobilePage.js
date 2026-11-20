@@ -161,7 +161,11 @@ function onStream(ev){
   if(ev.kind==='chunk'){live.textContent+=ev.text||''}
   else if(ev.kind==='tool_call'){view.appendChild(el('div','msg tool',COPY.toolCall.replace('{name}',ev.tool||'?')));view.appendChild(live)}
   else if(ev.kind==='tool_result'){view.appendChild(el('div','msg tool',COPY.toolResult.replace('{name}',ev.tool||'?')));view.appendChild(live)}
-  else if(ev.kind==='end'){document.getElementById('status').textContent=COPY.active.replace('{role}',role||'-').replace('{count}',events)}
+  else if(ev.kind==='end'){
+    // 新任务的第一轮由桌面 host 铸会话 id：认领它，下一条消息才续在同一会话上。
+    if(ev.sessionId)window.__sid=ev.sessionId;
+    document.getElementById('status').textContent=COPY.active.replace('{role}',role||'-').replace('{count}',events)
+  }
 }
 function onControl(m){
   var r=el('div','row');r.appendChild(el('b',null,COPY.controlTitle));

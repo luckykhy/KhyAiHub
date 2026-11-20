@@ -46,16 +46,11 @@ function extensionOf(name) {
 }
 
 /** 归类：扩展名命中返回类型，未命中返回 null（不是所有文件都值得采）。 */
+function bucketFor(name) {
+  return classifyFile(name) || 'other';
+}
 function classifyFile(name) {
   return EXT_TO_TYPE.get(extensionOf(name)) || null;
-}
-
-/**
- * find 的 argv。深度不在设备侧限（toybox 的 find 不一定支持 -maxdepth），
- * 改在 JS 里按路径分段数过滤——这条规则跟着本文件走，不依赖设备的 find 实现。
- */
-function buildFindArgv(config, remoteDir) {
-  return ['shell', 'find', String(remoteDir || ''), '-type', 'f'];
 }
 
 /** 路径深度：/sdcard/DCIM/x.jpg 是 3 段。 */
@@ -137,7 +132,8 @@ function listCandidates(input = {}) {
     if (pathDepth(p) > maxDepth) {
       continue;
     }
-    candidates.push({ remotePath: p, type: classifyFile(p) });
+    const type = input.includeUnknown === true ? bucketFor(p) : classifyFile(p);
+    candidates.push({ remotePath: p, type });
   }
   return candidates;
 }
@@ -152,7 +148,8 @@ function selectFiles(input = {}) {
       .map((t) => String(t).toLowerCase())
       .filter((t) => TYPE_NAMES.includes(t)),
   );
-  return listCandidates(input).filter((c) => c.type && wanted.has(c.type));
+  const keepOther = input.includeUnknown === true;
+  return listCandidates(input).filter((c) => c.type && (wanted.has(c.type) || (keepOther && c.type === 'other')));
 }
 
 /** 清单：本次采了什么、来自哪里、多大、什么类型。 */
@@ -161,6 +158,8 @@ function buildManifest(input = {}) {
     schema: 'khy-phone-collect/1',
     at: new Date().toISOString(),
     remoteDir: String(input.remoteDir || ''),
+    remoteDirs: Array.isArray(input.remoteDirs) ? input.remoteDirs : [],
+    roots: Array.isArray(input.roots) ? input.roots : [],
     localDir: String(input.localDir || ''),
     types: Array.isArray(input.types) && input.types.length ? input.types : TYPE_NAMES,
     sinceMs: typeof input.sinceMs === 'number' ? input.sinceMs : null,
@@ -176,7 +175,6 @@ module.exports = {
   TYPE_NAMES,
   extensionOf,
   classifyFile,
-  buildFindArgv,
   pathDepth,
   isUnderDir,
   parseSince,

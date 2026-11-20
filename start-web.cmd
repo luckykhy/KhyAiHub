@@ -22,11 +22,11 @@ if not exist "%ROOT%khy.bat" (
 )
 
 rem Two flags, both about speed and staying up:
-rem   --no-auto-frontend  serve the prebuilt delivery/web/ai-frontend/dist instead
+rem   --no-auto-frontend  serve the prebuilt delivery/channel/web/ai-frontend/dist instead
 rem                       of spawning a Vite dev server (cold compile ~11s, plus the
 rem                       CLI then polls for it). The dist is the fallback path the
 rem                       daemon already implements, so nothing new is wired up.
-rem                       Rebuild it with: cd delivery\web\ai-frontend && npm run build
+rem                       Rebuild it with: cd delivery\channel\web\ai-frontend && npm run build
 rem   --idle-ms 7200000   the daemon kills itself after 600s with no session, which
 rem                       left the browser pointed at a dead backend. Two hours.
 rem `open` is explicit even though it is the default action: it is the branch that

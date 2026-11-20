@@ -13,11 +13,12 @@ const os = require('os');
 const path = require('path');
 
 const clean = require('../../src/cli/handlers/clean');
+const dataHomeModule = require('../../src/utils/dataHome');
 
 /** 真仓库根：cli → tests → backend → node → runtime → root，共五层。按服务名解析要用真树。 */
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
-/** 造一棵一次性的假仓库树。返回 { root, dataHome, cleanup }。 */
+/** 造一棵一次性的假仓库树。返回 { root, dataHome, write, cleanup }。 */
 function fixture(layout = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-clean-'));
   const dataHome = path.join(root, '.khy');
@@ -29,22 +30,42 @@ function fixture(layout = {}) {
   for (const [rel, bytes] of Object.entries(layout)) {
     write(rel, bytes);
   }
-  return { root, dataHome, write, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
+  // 运行时目标经 resolveDataPath 取址，解析器只认 KHY_DATA_HOME。不设它，便携部署
+  // （仓库根带 .portable 标记）会把解析器指到**真仓库**的 works/data/khy —— 测试就
+  // 会去量真实数据。设完必须清 dataHome 的解析缓存，否则前面已缓存的真家不重算。
+  const savedDataHome = process.env.KHY_DATA_HOME;
+  process.env.KHY_DATA_HOME = dataHome;
+  dataHomeModule._resetStorageCaches();
+  return {
+    root,
+    dataHome,
+    write,
+    cleanup: () => {
+      if (savedDataHome === undefined) {
+        delete process.env.KHY_DATA_HOME;
+      } else {
+        process.env.KHY_DATA_HOME = savedDataHome;
+      }
+      dataHomeModule._resetStorageCaches();
+      fs.rmSync(root, { recursive: true, force: true });
+    },
+  };
 }
 
 describe('buildCleanPlan — 档位划分', () => {
   test('--runtime 不碰会话存档，只把它报成「保留」', () => {
+    // 档位真目录：logs → T3-archives/logs，checkpoints → T1-domains/sessions/checkpoints。
     const f = fixture({
-      '.khy/logs/a.log': 4096,
-      '.khy/checkpoints/session-1.json': 8192,
+      '.khy/T3-archives/logs/a.log': 4096,
+      '.khy/T1-domains/sessions/checkpoints/session-1.json': 8192,
     });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['runtime'], root: f.root, dataHome: f.dataHome });
       const rels = plan.items.map((i) => i.rel);
-      expect(rels).toContain('.khy/logs');
+      expect(rels).toContain('T3-archives/logs');
       // 这是本命令最重要的一条约束:会话历史不进 --runtime。
-      expect(rels).not.toContain('.khy/checkpoints');
-      expect(plan.held.map((h) => h.rel)).toEqual(['.khy/checkpoints']);
+      expect(rels).not.toContain('T1-domains/sessions/checkpoints');
+      expect(plan.held.map((h) => h.rel)).toEqual(['T1-domains/sessions/checkpoints']);
       expect(plan.held[0].bytes).toBe(8192);
       // 保留的字节不许被算进「预计回收」,否则报出的数字是假的。
       expect(plan.totalBytes).toBe(4096);
@@ -59,7 +80,7 @@ describe('buildCleanPlan — 档位划分', () => {
     // 测试要造真实的 manifest 结构，并用极小配额逼出「这一个必须回收」。
     const f = fixture({});
     try {
-      const projDir = path.join(f.dataHome, 'checkpoints', 'proj-a');
+      const projDir = path.join(f.dataHome, 'T1-domains', 'sessions', 'checkpoints', 'proj-a');
       fs.mkdirSync(projDir, { recursive: true });
       fs.writeFileSync(path.join(projDir, 'cp-1.patch'), Buffer.alloc(8192, 0x61));
       fs.writeFileSync(
@@ -70,7 +91,7 @@ describe('buildCleanPlan — 档位划分', () => {
         tiers: ['runtime'], root: f.root, dataHome: f.dataHome,
         checkpoints: true, checkpointMaxMb: 0.001,
       });
-      const cp = plan.items.find((i) => i.rel === '.khy/checkpoints');
+      const cp = plan.items.find((i) => i.rel === 'T1-domains/sessions/checkpoints');
       expect(cp).toBeTruthy();
       expect(cp.bytes).toBe(8192);
       expect(plan.held).toEqual([]);
@@ -80,21 +101,51 @@ describe('buildCleanPlan — 档位划分', () => {
   });
 
   test('运行时档是白名单：.khy 下的凭据与配置永远不在射程内', () => {
+    // 诱饵按各自的档位真目录落（credentials → T1-domains/secrets/credentials 等）：
+    // 解析器取址后，白名单漏一个名字就等于把这些位置整棵树删掉。
     const f = fixture({
-      '.khy/logs/a.log': 1024,
+      '.khy/T3-archives/logs/a.log': 1024,
       '.khy/api_keys.json': 512,
-      '.khy/credentials/default-admin.json': 512,
-      '.khy/memory/notes.json': 512,
-      '.khy/sessions/s.json': 512,
-      '.khy/receipts/r.json': 512,
+      '.khy/T1-domains/secrets/credentials/default-admin.json': 512,
+      '.khy/T1-domains/memory/memory/notes.json': 512,
+      '.khy/T1-domains/sessions/sessions/s.json': 512,
+      '.khy/T1-domains/telemetry/receipts/r.json': 512,
     });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['runtime'], root: f.root, dataHome: f.dataHome });
       const rels = plan.items.map((i) => i.rel);
-      for (const keep of ['.khy/api_keys.json', '.khy/credentials', '.khy/memory', '.khy/sessions', '.khy/receipts']) {
+      for (const keep of ['.khy/api_keys.json', 'T1-domains/secrets/credentials', 'T1-domains/memory/memory', 'T1-domains/sessions/sessions', 'T1-domains/telemetry/receipts']) {
         expect(rels).not.toContain(keep);
       }
-      expect(rels).toEqual(['.khy/logs']);
+      expect(rels).toEqual(['T3-archives/logs']);
+    } finally {
+      f.cleanup();
+    }
+  });
+
+  test('tmp 档按前缀保留 housekeeping 隔离区与 quarantine 遗留（HK-3）', () => {
+    // tmp 解析到 T4-transient/tmp 后才第一次真正可清——隔离区就在这棵树下，
+    // 漏一条保留前缀就是把 organize.py 待人工确认的件一起 rm 掉。
+    const f = fixture({
+      '.khy/T4-transient/tmp/scratch.txt': 1024,
+      '.khy/T4-transient/tmp/quarantine-old/x': 2048,
+      '.khy/T4-transient/tmp/housekeeping/2026-11-18/quarantine/y': 4096,
+    });
+    try {
+      const plan = clean.buildCleanPlan({ tiers: ['runtime'], root: f.root, dataHome: f.dataHome });
+      const tmp = plan.items.find((i) => i.rel === 'T4-transient/tmp');
+      expect(tmp).toBeTruthy();
+      expect(tmp.keep.slice().sort()).toEqual(['housekeeping', 'quarantine-old']);
+      // 保留的字节不许算进「预计回收」。
+      expect(tmp.bytes).toBe(1024);
+      const held = plan.held.filter((h) => h.rel.startsWith('T4-transient/tmp/{'));
+      expect(held).toHaveLength(1);
+      expect(held[0].bytes).toBe(2048 + 4096);
+      const res = clean.executeClean(plan);
+      expect(res.ok).toBe(true);
+      expect(fs.existsSync(path.join(f.dataHome, 'T4-transient', 'tmp', 'scratch.txt'))).toBe(false);
+      expect(fs.existsSync(path.join(f.dataHome, 'T4-transient', 'tmp', 'housekeeping'))).toBe(true);
+      expect(fs.existsSync(path.join(f.dataHome, 'T4-transient', 'tmp', 'quarantine-old'))).toBe(true);
     } finally {
       f.cleanup();
     }
@@ -136,13 +187,13 @@ describe('buildCleanPlan — 目标发现与安全边界', () => {
       'works/ship/npm/bundled/khy/bundle.mjs': 4096,
       'works/ship/npm/package.json': 100,
       'works/ship/npm/scripts/assemble.js': 100,
-      'delivery/web/ai-frontend/dist/index.js': 2048,
-      'delivery/web/ai-frontend/src/main.js': 100,
+      'delivery/channel/web/ai-frontend/dist/index.js': 2048,
+      'delivery/channel/web/ai-frontend/src/main.js': 100,
     });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       const rels = plan.items.map((i) => i.rel).sort();
-      expect(rels).toEqual(['delivery/web/ai-frontend/dist', 'works/ship/npm/bundled']);
+      expect(rels).toEqual(['delivery/channel/web/ai-frontend/dist', 'works/ship/npm/bundled']);
     } finally {
       f.cleanup();
     }
@@ -239,14 +290,14 @@ describe('可逆性与账目', () => {
   });
 
   test('executeClean 回收的字节数与计划里报的一致，且真的删掉了', () => {
-    const f = fixture({ 'delivery/web/ai-frontend/dist/index.js': 4096, 'src/keep.js': 100 });
+    const f = fixture({ 'delivery/channel/web/ai-frontend/dist/index.js': 4096, 'src/keep.js': 100 });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       expect(plan.totalBytes).toBe(4096);
       const res = clean.executeClean(plan);
       expect(res.ok).toBe(true);
       expect(res.reclaimedBytes).toBe(4096);
-      expect(fs.existsSync(path.join(f.root, 'delivery', 'web', 'ai-frontend', 'dist'))).toBe(false);
+      expect(fs.existsSync(path.join(f.root, 'delivery', 'channel', 'web', 'ai-frontend', 'dist'))).toBe(false);
       expect(fs.existsSync(path.join(f.root, 'src', 'keep.js'))).toBe(true);
     } finally {
       f.cleanup();
@@ -254,7 +305,7 @@ describe('可逆性与账目', () => {
   });
 
   test('删不掉的一项不拖垮其余各项，并被如实报为失败', () => {
-    const f = fixture({ 'build/a.js': 1024, 'delivery/web/ai-frontend/dist/b.js': 2048 });
+    const f = fixture({ 'build/a.js': 1024, 'delivery/channel/web/ai-frontend/dist/b.js': 2048 });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       const fsImpl = {

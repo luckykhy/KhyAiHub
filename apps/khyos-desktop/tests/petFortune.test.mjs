@@ -5,7 +5,7 @@
  * 锁死三件事：
  *   ① FNV-1a 32 的标准向量 + UTF-8 字节口径；
  *   ② 跨端锚点：同一天同一角色，三端必须给出**同一个**种子/档位/提示/幸运色
- *      （锚点值由本仓共享数据源 delivery/brand/pet/pet-fortune.json 算出）；
+ *      （锚点值由本仓共享数据源 works/brand/pet/pet-fortune.json 算出）；
  *   ③ 加权档位、提示与幸运色的派生位偏移不得漂移。
  */
 import test from 'node:test'

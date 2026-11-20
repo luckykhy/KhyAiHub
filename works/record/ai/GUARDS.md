@@ -1,4 +1,4 @@
-<!-- khy-metadata:auto khy-metadata/4 fingerprint=a16aa572854940ba -->
+<!-- khy-metadata:auto khy-metadata/4 fingerprint=f87cc549fea7fda8 -->
 <!-- 机器生成，可被 `khy metadata refresh` 覆盖。删除此标记行即人工接管。项目特有红线请写在「项目特有红线」小节，刷新不会动那一节以外的人工补写——但为安全起见，接管整文件时请删除本标记。 -->
 # GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)
 
@@ -6,8 +6,8 @@
 > 自动探测部分是事实；`TODO(人工)` 部分需第一位维护者补全项目特有红线。
 
 ## 探测到的事实（改动前先看）
-- **入口点**: `runtime/substrate/platform/packages/shared/src/index.js`, `runtime/substrate/platform/packages/ui-shared/src/index.js`, `runtime/substrate/platform/packages/plugin-sdk/index.js`, `runtime/node/backend/server.js`, `runtime/node/backend/bin/khy.js`, `runtime/node/backend/bin/khy.js` — 改这些文件影响启动行为。
-- **配置/敏感文件**: `.env.example`, `docker-compose.yml`, `fly.staging.toml`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `pyproject.toml`, `apps/khyos-desktop/electron.vite.config.ts`, `apps/khyos-desktop/vite.config.js` — 含运行参数/密钥，勿提交真实密钥到版本库。
+- **入口点**: `runtime/substrate/platform/packages/shared/src/index.js`, `runtime/substrate/platform/packages/core/src/contracts/index.js`, `runtime/substrate/platform/packages/ui-shared/src/index.js`, `runtime/substrate/platform/packages/plugin-sdk/index.js`, `runtime/node/backend/server.js`, `runtime/node/backend/bin/khy.js` — 改这些文件影响启动行为。
+- **配置/敏感文件**: `.env.example`, `docker-compose.yml`, `fly.staging.toml`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `pyproject.toml`, `apps/khyos-desktop/electron.vite.config.ts`, `apps/khyos-desktop/vite.host.config.ts` — 含运行参数/密钥，勿提交真实密钥到版本库。
 - **技术栈**: node, monorepo, python, docker, docker-compose — 工具链需与之匹配。
 
 ## 如何在没有 AI 的情况下维护本项目

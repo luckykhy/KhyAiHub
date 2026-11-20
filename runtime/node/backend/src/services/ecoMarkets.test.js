@@ -3,7 +3,7 @@
 /**
  * ecoMarkets 服务的对抗性回归测试。
  *
- * 夹具全部用 fs.mkdtempSync 自造 tmp 根，绝不依赖未入仓的 delivery/market——那份
+ * 夹具全部用 fs.mkdtempSync 自造 tmp 根，绝不依赖未入仓的 works/market——那份
  * 编目在 CI clone 里整个目录都不存在，测试必须自己在磁盘上复现三态数据根
  * （env / 仓库 / 工作区）与全部坏形状（越界 file、eco 错配、非法 JSON、非数组
  * 字段、写错的 entryCount）。
@@ -60,7 +60,7 @@ function writeIndex(root) {
 }
 
 // 两个生态收录同名条目 wshobson/agents 但判定不同（按名合并即错判）。
-// 字段形状照真实编目（delivery/market/catalogs/*.json）：entries / blocked /
+// 字段形状照真实编目（works/market/catalogs/*.json）：entries / blocked /
 // marketplaces 是对象数组，uncertainties 是字符串数组——实测六个生态 36 条
 // uncertainties 全是 string。夹具写成别的形状，测试就守不住真实数据的回归。
 function buildCatalogRoot() {
@@ -100,12 +100,12 @@ test('resolveRoot：env 显式覆盖优先，指向不存在的目录也照样�
   assert.strictEqual(gone.source, 'env');
   assert.ok(!fs.existsSync(gone.root));
 
-  // 无 env 时是仓库内 delivery/market（本工作树有）或空（CI clone 没有）。
+  // 无 env 时是仓库内 works/market（本工作树有）或空（CI clone 没有）。
   // 编目未入仓，两种树态都算正确，这里只锁形状不锁具体是哪一态。
   const fallback = svc.resolveRoot({});
   assert.ok(fallback.source === 'repo' || fallback.source === '', `source=${fallback.source}`);
   if (fallback.source === 'repo') {
-    assert.ok(fallback.root.endsWith(path.join('delivery', 'market')), fallback.root);
+    assert.ok(fallback.root.endsWith(path.join('works', 'market')), fallback.root);
   } else {
     assert.strictEqual(fallback.root, '');
   }
@@ -115,12 +115,12 @@ test('resolveRoot：仓库回落 → 工作区数据家 → 空（KHY_OS_ROOT �
   const prevRoot = process.env.KHY_OS_ROOT;
   try {
     const repoRoot = makeRoot('repo');
-    writeJson(path.join(repoRoot, 'delivery', 'market', 'index.json'), {});
+    writeJson(path.join(repoRoot, 'works', 'market', 'index.json'), {});
     process.env.KHY_OS_ROOT = repoRoot;
     dataHome._resetStorageCaches();
     const repo = svc.resolveRoot({});
     assert.strictEqual(repo.source, 'repo');
-    assert.strictEqual(repo.root, path.join(repoRoot, 'delivery', 'market'));
+    assert.strictEqual(repo.root, path.join(repoRoot, 'works', 'market'));
 
     const wsRoot = makeRoot('workspace');
     writeJson(path.join(wsRoot, 'works', 'data', 'khy', 'eco-markets', 'index.json'), {});

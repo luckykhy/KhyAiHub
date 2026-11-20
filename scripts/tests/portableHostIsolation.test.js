@@ -163,10 +163,11 @@ test('portable storage resolution leaves fake host homes untouched', t => {
     KHY_DATA_HOME: dataHome,
     KHY_PROJECT_DATA_HOME: dataHome,
     KHYQUANT_DATA_HOME: dataHome,
-    KHYOS_HOME: dataHome,
     KHY_LOG_HOME: path.join(dataHome, 'logs'),
     KHY_TEMP_HOME: path.join(dataHome, 'tmp'),
   };
+  // 底座数据家交给 getBaseHome() 解析：不钉 KHYOS_HOME，env 钉孔只会测到「覆盖生效」而非解析器本身。
+  delete env.KHYOS_HOME;
   delete env.KHY_APP_HOME;
   delete env.BRIDGE_DATA_DIR;
   delete env.SQLITE_DB_PATH;
@@ -185,7 +186,8 @@ test('portable storage resolution leaves fake host homes untouched', t => {
   assert.equal(result.dataHome, dataHome);
   assert.equal(result.projectDataHome, dataHome);
   assert.equal(result.appHome, dataHome);
-  assert.equal(result.baseHome, dataHome);
+  // dataHome.js getBaseHome() 便携分支：无 KHYOS_HOME 覆盖时落在便携树内的 base 档。
+  assert.equal(result.baseHome, path.join(portableRoot, 'works', 'data', 'khy', 'T1-domains', 'base'));
   assert.equal(result.bridge.dataDir, path.join(dataHome, 'bridge'));
   assert.equal(result.sqlite, path.join(dataHome, 'khyquant', 'data', 'khy-quant.db'));
   assert.equal(result.logs, path.join(dataHome, 'logs'));
@@ -220,10 +222,10 @@ test('portable CLI startup does not initialize host data directories', t => {
     KHY_DATA_HOME: dataHome,
     KHY_PROJECT_DATA_HOME: dataHome,
     KHYQUANT_DATA_HOME: dataHome,
-    KHYOS_HOME: dataHome,
     KHY_LOG_HOME: path.join(dataHome, 'logs'),
     KHY_TEMP_HOME: path.join(dataHome, 'tmp'),
   };
+  delete env.KHYOS_HOME;
   const child = spawnSync(process.execPath, [BACKEND_ENTRY, '--help'], {
     cwd: portableRoot,
     env,

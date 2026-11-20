@@ -116,6 +116,14 @@ export interface AuditEntry {
     | 'backend-resolve-failed'
     | 'backend-resolve-ok'
     | 'proxy-start'
+    // 受管模型（Card.models[]/defaultModel 派生视图）的五个动作：与卡片级
+    // add/update/remove/apply 分开记，审计页才能分辨「改了卡片默认模型」
+    // 与「应用到了 Claude Code」。
+    | 'model-add'
+    | 'model-update'
+    | 'model-remove'
+    | 'model-apply'
+    | 'model-probe'
     | 'error'
   target?: string
   fingerprint?: string

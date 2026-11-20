@@ -19,6 +19,7 @@ const { Text, Box, useInput } = require('../inkRuntime').get();
 const imeCommitGuard = require('../imeCommitGuard');
 const { _prevStep, _nextStep } = require('../utils/Cursor');
 const { inputRenderRows, inputWindow, INPUT_MAX_ROWS_DEFAULT } = require('../utils/ccLayout');
+const { clipCell } = require('../wrapCell');
 
 // ── 常量 ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +43,9 @@ const PLACEHOLDERS = Object.freeze({
   default: 'Send a message...',
   shell: 'Run a command...',
   voice: 'Listening...',
-  busy: 'AI is thinking...',
+  // 回合进行中用户仍可打字（Enter 只保留、不发送，见 :82）。占位符要说清这件事，
+  // 否则「AI is thinking...」会被读成输入框已锁定。
+  busy: '等待回复…（可先输入，回合结束后发送）',
 });
 
 const PROMPT = '> ';  // 主提示符
@@ -183,9 +186,11 @@ const Cursor = React.memo(function Cursor({ mode = 'insert', visible = true }) {
 
 // ── 占位符组件 ──────────────────────────────────────────────────────────────
 
-const Placeholder = React.memo(function Placeholder({ mode = 'default', busy = false }) {
+const Placeholder = React.memo(function Placeholder({ mode = 'default', busy = false, maxWidth = 0 }) {
   if (busy) {
-    return React.createElement(Text, { color: '#6B7280' }, PLACEHOLDERS.busy);
+    // 占位符只占一行：超过可用列就剪，不能让 ink 折行（账本按单行记账，BUG-82）。
+    const text = maxWidth > 0 ? clipCell(PLACEHOLDERS.busy, maxWidth) : PLACEHOLDERS.busy;
+    return React.createElement(Text, { color: '#6B7280' }, text);
   }
   const text = PLACEHOLDERS[mode] || PLACEHOLDERS.default;
   return React.createElement(Text, { color: '#6B7280' }, text);
@@ -504,7 +509,11 @@ function CcPromptInput({
     renderLines.push(
       React.createElement(Box, { key: 'busy' },
         React.createElement(LinePrefix, { isFirst: true }),
-        React.createElement(Placeholder, { busy: true }),
+        React.createElement(Placeholder, {
+          busy: true,
+          // 与投影同一条算式：前缀 '> ' 占 MARKER_W 列。
+          maxWidth: Math.max(1, cols - MARKER_W),
+        }),
       )
     );
   }

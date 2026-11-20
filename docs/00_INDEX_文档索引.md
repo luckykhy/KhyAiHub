@@ -120,7 +120,7 @@
 
 ## 03_DESIGN_设计
 
-> **清单真源**：本阶段完整清单（129 篇）见 [`00_INDEX_设计-分类索引.md`](03_DESIGN_设计/00_INDEX_设计-分类索引.md)；主索引此处只保留总纲/入口类与就近索引尚未收录的 40 篇补漏。（B8 去重，2026-09-18：主索引不再逐篇点名，`check-repo-layout` 的 `docs-index-complete` 已接受就近索引的覆盖。）
+> **清单真源**：本阶段完整清单（129 篇）见 [`00_INDEX_设计-分类索引.md`](03_DESIGN_设计/00_INDEX_设计-分类索引.md)；主索引此处只保留总纲/入口类与就近索引尚未收录的 40 篇补漏（2026-11-16 实测本区列行 63 条，含本次新增 2 条）。（B8 去重，2026-09-18：主索引不再逐篇点名，`check-repo-layout` 的 `docs-index-complete` 已接受就近索引的覆盖。）
 > **B9 按标签归夹（2026-09-18）**：本阶段内设计文档已按 `[TAG-XXX]` 标签归入 `03_DESIGN_设计/[TAG-XXX]/` 子目录；DR7 代码耦合文档（如 `[DESIGN-LAY-005]`、`[DESIGN-TOOL-002]`）留根目录不移动。子目录内文档由 `npm run docs:build` 的 `nav-data.js` 全量收录进站点导航，近索引只点名根级件。
 
 
@@ -198,6 +198,8 @@
 - [`DESIGN-ARCH-118` HQ 能力吸收与多机协作规范](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md) — 把指挥部仓库 `khy-os-hq` 的能力**吸收**进 khy-os 单仓（非搬家）后废弃 HQ：状态真源落 `.ai/hq/`、命令面 `khy hq`（10 子命令 + 状态机 + 多机租约）、自动同步落 `.khyos/autopull.js`。含四条硬约束死因（D1 向上四级推算 `PORTABLE_ROOT` / D2 递归自扫）、`DOCS-003` D9 补上 HQ `drivability` 丢弃后的孪生面机械保障、步骤 1–3 已完成记录与「诚实代价」清单
 - [`DESIGN-ARCH-124` CC 模式剪贴板复制能力补齐提案](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-124] CC 模式剪贴板复制能力补齐提案.md) — CC 模式（`KHY_CC_TUI=1`）下剪贴板底层通道（`utils/ccClipboard.writeClipboard`）与选区算法叶子（`selection.js`）的补齐提案（**提案待评审、尚未编码**）；上游依赖 `[DESIGN-ARCH-119]`、`[DESIGN-ARCH-111]`；属 TUI 设计族，总纲见 `[DESIGN-ARCH-122]`
 - [`DESIGN-ARCH-122` TUI 设计族总纲](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-122] TUI 设计族总纲.md) — `docs/03_DESIGN_设计/` 中 TUI 设计族的**唯一导航入口与 scope 裁决真源**：20 个编号 / 21 个文件分 5 组（设计规范 · CC 复刻 · 组件设计 · 调研痛点 · 启动与可用性修复）；裁决重叠归属（规则真源 = `[DESIGN-ARCH-102]`、`[DESIGN-ARCH-079]` 已降级、`[DESIGN-ARCH-119]` 同号双文件勿合并），各子篇已加「隶属」头指向本文件
+- [`DESIGN-ARCH-219` 一核心+多终端重构施工总案](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-219] 一核心+多终端重构施工总案.md) — 「一核心 + 多终端」重构施工总案（2026-11-16 登记 · 设计稿待评审）：方案原文路径按 LAYERS 名册换算到方案 P 落点、D1–D10 待拍板决策、core/清单/组合态三机制与 A/B/C 执行路线、四条新规则草案与 S1 落地面；文首标注本次未改动生产代码
+- [`REFACTOR-001` refactor-001 耦合清单](03_DESIGN_设计/DESIGN-ARCH/[REFACTOR-001] refactor-001 耦合清单（coupling inventory）.md) — refactor-001 耦合清单（2026-11-16 登记 · 设计稿待评审）：201 条有向边 / 248 加权位点（表 A 消费侧→backend 15 条、表 B ai-backend→backend 24 条、表 C 反向 4 条）、越界 45 条分级、宿主泄漏与绕过网关清单、三档拆分建议；全部计数可回溯 facts JSON
 
 ## 10_规范/（跨阶段规范目录，2026-09-10 自 `03_DESIGN_设计/` 拆出）
 
@@ -215,6 +217,8 @@
 - [`DESIGN-LAY-003` 仓库整理与巡检规范](10_规范/DESIGN-LAY/[DESIGN-LAY-003] 仓库整理与巡检规范.md) — 存量杂物（生成物/临时物/产物）回收；HK-1–HK-8 红线、只隔离不删除；规则登记为 `LAYOUT-004`
 - [`DESIGN-LAY-004` 构建产物单一根规范](10_规范/DESIGN-LAY/[DESIGN-LAY-004] 构建产物单一根规范.md) — **产物放哪、删了怎么回来**：唯一产物根 `entries/`（2026-09-18 由 `_build/` 迁入）、三条不变量（可删除性 / 零越界 / 非寄生棘轮）、`BUILD-OUTPUTS.json` 一份真源派生三处清单；实测证据含「`check-build-artifacts` 绿着放行 10 个已跟踪产物」「`clean.js` 漏登记 17 条」「`.gitignore` 指向已改名路径致 3.2 MB 产物裸奔」；规则登记为 `LAYOUT-005`
 - [`DESIGN-LAY-008` 目录层级重设计执行路线图](10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md) — **搬任何东西前先看这篇**：不新增设计，只给 `[DESIGN-LAY-007]` 三态目标的执行序列（Phase 0 清创 → 骨架 → 数据归位 → 代码态减法 → 文档态分区）；裁决根级无主垃圾（立即走 LAY-003 隔离）与根启动器去留（原地登记 + 根索引，不搬）；含 2026-09-28 七项棘轮基线
+- [`DESIGN-LAY-010` 目录结构唯一原则-位置与语义双射](10_规范/DESIGN-LAY/[DESIGN-LAY-010] 目录结构唯一原则-位置与语义双射.md) — **判断「这棵树好不好」的判据真源**：位置 ⟺ 语义双射（存在/唯一/可读三面）、双向唯一测试、同层同轴推论、轴的选择规定；只出判据不登记名册
+- [`DESIGN-LAY-011` 新增文件落位与命名规程](10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.md) — **新东西放哪、叫什么、老存量怎么迁**：六问决策树、四桶落位（取代已废止 `_产物/` 与 B8 禁区 `.khyos/`）、命名语法总表、存量迁移五步、禁物清单与工具家点目录允许项；操作规程，真源指回 LAY-002/003/005/007/009/010
 - [`DESIGN-PERF-001` 性能规范](./10_规范/其它规范/[DESIGN-PERF-001]%20性能规范.md) — 保留 `PERF-001`；设计提案 `[DESIGN-PERF-002]` 在 `03_DESIGN_设计/`
 - [`DESIGN-MEM-006` 记忆与维护元数据生命周期规范](10_规范/DESIGN-MEM/[DESIGN-MEM-006] 记忆与维护元数据生命周期规范.md) — GOV-MEM-001–004 契约真源：session/persistent 判定口径、persistent 记录五字段格式、记忆与 `.ai/` 元数据的指定读写入口、清理与生命周期；含 UC-001（`.ai/` 三件套缺失）裁决
 - [`DESIGN-TOOL-001` 工具与扩展升级废弃规范](10_规范/其它规范/[DESIGN-TOOL-001] 工具与扩展升级废弃规范.md) — GOV-TOOL-003 契约真源：`khy.extension.json` 的 `lifecycle` 块冻结、工具改名/移除的兼容期与迁移说明、manifest 版本策略与最小权限边界

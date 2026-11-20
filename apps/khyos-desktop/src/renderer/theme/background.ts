@@ -29,6 +29,12 @@ export interface BackgroundPreset {
   image?: string
   position?: string
   overlay?: string
+  /**
+   * 活背景标记：'khyos-scene' 表示这个预设不铺静态图，由
+   * components/khyos/KhyosStage.tsx 在 main 区挂 three.js 画布。
+   * 静态预设一律不设这个字段（--khy-bg-live 因此显式为 none）。
+   */
+  live?: 'khyos-scene'
 }
 
 // 左 60% 是消息列与问候语，必须压到几乎看不出底图；右侧留一点暖光。
@@ -51,13 +57,34 @@ const CUSTOM_LIGHT_OVERLAY =
 const PAPER_OVERLAY =
   'radial-gradient(900px 620px at 84% 42%, rgba(226, 112, 58, 0.12), rgba(246, 247, 249, 0) 68%), linear-gradient(118deg, #fbfcfd 0%, #f4f6f8 55%, #eef1f4 100%)'
 
-export const DEFAULT_BACKGROUND_ID = 'brand-ring'
-export const LIGHT_DEFAULT_BACKGROUND_ID = 'light-paper'
+// 活场景（khyos 3D）的可读性纱罩。它和静态壁纸的 overlay 是两层不同的东西：
+// 静态壁纸的 overlay 在 main 的 background-image 里（画布之下），活场景的纱罩
+// 必须由 KhyosStage 渲染在画布之上——main 的背景画在孩子节点下面，压不住画布。
+// 深色沿用 DEFAULT_OVERLAY 的左侧重压；浅色比 LIGHT_OVERLAY 更轻——活场景是
+// 「会动的世界」，压成 95% 白就只剩了一层雾，3D 存在的意义没了。
+export const LIVE_OVERLAY_DARK =
+  'linear-gradient(100deg, rgba(8, 12, 20, 0.9) 0%, rgba(8, 12, 20, 0.84) 42%, rgba(8, 12, 20, 0.55) 100%)'
+export const LIVE_OVERLAY_LIGHT =
+  'linear-gradient(100deg, rgba(246, 247, 249, 0.82) 0%, rgba(246, 247, 249, 0.66) 44%, rgba(246, 247, 249, 0.22) 100%)'
+
+export const LIVE_BACKGROUND_ID = 'khyos-live'
+
+export const DEFAULT_BACKGROUND_ID = LIVE_BACKGROUND_ID
+export const LIGHT_DEFAULT_BACKGROUND_ID = LIVE_BACKGROUND_ID
 export const CUSTOM_BACKGROUND_ID = 'custom'
 
 export const BACKGROUND_PRESETS: BackgroundPreset[] = [
   {
-    id: DEFAULT_BACKGROUND_ID,
+    id: LIVE_BACKGROUND_ID,
+    theme: 'dark',
+    name: 'khyos 活场景',
+    hint: '3D 世界实时渲染在桌面背后：晨灯 / 渡海 / 夜雨 / 归港自动轮播，底部可手动切换',
+    live: 'khyos-scene',
+    // 活场景不铺静态图：--khy-bg-image 显式 none，让位给画布。
+    overlay: LIVE_OVERLAY_DARK,
+  },
+  {
+    id: 'brand-ring',
     theme: 'dark',
     name: '品牌环',
     hint: '四段弧叶与 K 内核悬在湿地上，暖金环收在右侧',
@@ -95,10 +122,18 @@ export const BACKGROUND_PRESETS: BackgroundPreset[] = [
 
 export const LIGHT_BACKGROUND_PRESETS: BackgroundPreset[] = [
   {
-    id: LIGHT_DEFAULT_BACKGROUND_ID,
+    id: LIVE_BACKGROUND_ID,
+    theme: 'light',
+    name: 'khyos 活场景',
+    hint: '3D 世界实时渲染在桌面背后：晨灯 / 渡海 / 夜雨 / 归港自动轮播，底部可手动切换',
+    live: 'khyos-scene',
+    overlay: LIVE_OVERLAY_LIGHT,
+  },
+  {
+    id: 'light-paper',
     theme: 'light',
     name: '素笺',
-    hint: '不铺图，米白纸面加右侧一点暖光，最省显存',
+    hint: '不铺图，米白纸面加右侧一点品牌暖光，最省显存',
     overlay: PAPER_OVERLAY,
   },
   {
@@ -171,13 +206,16 @@ function presetById(theme: BackgroundTheme, id: string): BackgroundPreset {
   return presets.find((p) => p.id === id) ?? presets[0]
 }
 
-function setBackgroundVars(image: string | undefined, position: string, overlay: string): void {
+function setBackgroundVars(image: string | undefined, position: string, overlay: string, live?: string): void {
   const style = document.documentElement.style
   style.setProperty('--khy-bg-overlay', overlay)
   style.setProperty('--khy-bg-position', position)
   // 无图预设必须显式写 none：删掉变量会落回 CSS 的 var() 兜底（深色品牌环），
   // 「纯墨蓝 / 素笺」就变成了品牌环。
   style.setProperty('--khy-bg-image', image ? `url("${image}")` : 'none')
+  // 活背景开关：KhyosStage 只认这个变量。静态预设显式写 none——
+  // 删掉变量会让上一次的活场景标记残留，换成静态壁纸后画布还在跑。
+  style.setProperty('--khy-bg-live', live ?? 'none')
 }
 
 function applyPreset(theme: BackgroundTheme, id: string): void {
@@ -186,6 +224,7 @@ function applyPreset(theme: BackgroundTheme, id: string): void {
     preset.image,
     preset.position ?? 'center',
     preset.overlay ?? (theme === 'light' ? LIGHT_OVERLAY : DEFAULT_OVERLAY),
+    preset.live,
   )
 }
 
@@ -233,8 +272,18 @@ export async function applyBackground(
 
 /** 启动时从主进程读设置并应用（与 loadTheme 同一条自举路径）。 */
 export async function loadBackground(): Promise<void> {
-  const settings = await backgroundApi()?.getSettings?.().catch(() => undefined)
-  await applyBackground(settings || {})
+  // 预读失败不能吃掉自举：`backgroundApi()?.getSettings?.()` 在 preload 没暴露
+  // __KHYOS__ 时求值为 undefined，对 undefined 调 .catch 会抛 TypeError——
+  // 而那会把整个 loadBackground 变成一条没人接的 rejection，壁纸变量一个都
+  // 写不上，main 静默退回 CSS 兜底照片。读不到设置就走空设置（= 默认预设），
+  // 和「没有这项设置」是同一回事。
+  let settings: Record<string, unknown> = {}
+  try {
+    settings = (await backgroundApi()?.getSettings?.()) ?? {}
+  } catch {
+    settings = {}
+  }
+  await applyBackground(settings)
   // 主题类由 theme.ts 落定后派发 khy:theme-applied；这里按**已生效的类**
   // 重挑一套，深色壁纸不会残留在浅色界面里，反之亦然。
   window.addEventListener('khy:theme-applied', () => {

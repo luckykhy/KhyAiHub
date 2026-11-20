@@ -100,7 +100,7 @@ const MANIFESTS = [
   'package.json',
   'runtime/node/backend/package.json',
   'runtime/node/ai-backend/package.json',
-  'delivery/web/ai-frontend/package.json',
+  'delivery/channel/web/ai-frontend/package.json',
   'delivery/channel/khyquant/frontend/package.json',
   'runtime/substrate/platform/packages/shared/package.json',
   'runtime/substrate/platform/packages/ui-shared/package.json',

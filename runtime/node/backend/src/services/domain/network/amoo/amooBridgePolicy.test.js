@@ -409,3 +409,51 @@ test('escapeForDeviceShell quotes once and survives embedded single quotes', () 
   // the clipboard route exists, but the escaping must not corrupt it.
   assert.equal(escapeForDeviceShell('中文 任务'), "'中文 任务'");
 });
+
+
+// ── S1：status.mailbox 的 PC 解析面（parseBridgeStatus）─────────────────────
+// 手机侧 status.json 的 mailbox 块自 2026-11-18 起带 oldest_result_age_ms 与
+// dropped（GC 丢弃 ≠ 消费）；tools 在新旧两代桥上是数字/数组两形。
+
+test('parseBridgeStatus: tools 数组读长度、数字读原值、缺省 null（两形都对）', () => {
+  const numeric = parseBridgeStatus(JSON.stringify({ tools: 65 }));
+  assert.equal(numeric.tools, 65);
+  const array = parseBridgeStatus(JSON.stringify({ tools: ['ls', 'read', 'exec'] }));
+  assert.equal(array.tools, 3);
+  const none = parseBridgeStatus(JSON.stringify({ running: true }));
+  assert.equal(none.tools, null);
+});
+
+test('parseBridgeStatus: mailbox 块机器可读（含 oldest_result_age_ms 与 dropped），缺块为 null', () => {
+  const full = parseBridgeStatus(JSON.stringify({
+    running: true,
+    mailbox: { pending: 1, processing: 2, results: 3, tmp: 4, oldest_result_age_ms: 90000000, dropped: 7, last_gc_ms: 12345 },
+  }));
+  assert.deepEqual(full.mailbox, {
+    pending: 1,
+    processing: 2,
+    results: 3,
+    tmp: 4,
+    oldest_result_age_ms: 90000000,
+    dropped: 7,
+    last_gc_ms: 12345,
+  });
+  const legacy = parseBridgeStatus(JSON.stringify({
+    running: true,
+    mailbox: { pending: 0, processing: 0, results: 5, tmp: 0 },
+  }));
+  // 旧版桥没有这两个字段：如实记 null，不替桥编 0。
+  assert.equal(legacy.mailbox.oldest_result_age_ms, null);
+  assert.equal(legacy.mailbox.dropped, null);
+  assert.equal(legacy.mailbox.results, 5);
+  const none = parseBridgeStatus(JSON.stringify({ running: true }));
+  assert.equal(none.mailbox, null);
+});
+
+test('parseBridgeStatus: 接受已解析对象（probe 手里是 parsed，不必二次序列化）', () => {
+  const s = parseBridgeStatus({ running: true, tools: ['x', 'y'], mailbox: { pending: 9, processing: 0, results: 0, tmp: 0, oldest_result_age_ms: -1, dropped: 0, last_gc_ms: 7 } });
+  assert.equal(s.running, true);
+  assert.equal(s.tools, 2);
+  assert.equal(s.mailbox.pending, 9);
+  assert.equal(s.mailbox.oldest_result_age_ms, -1);
+});

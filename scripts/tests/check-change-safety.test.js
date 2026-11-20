@@ -54,7 +54,7 @@ describe('check-change-safety maintainer map integration', () => {
     assert.equal(status, 0);
     assert.match(stdout, /High-risk surface touched: route layer\./);
     assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js runtime\/node\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
-    assert.match(stdout, /npm run build --prefix delivery\/web\/ai-frontend/);
+    assert.match(stdout, /npm run build --prefix delivery\/channel\/web\/ai-frontend/);
   });
 
   test('maps safety gate files back to safety verification', () => {
@@ -70,7 +70,7 @@ describe('check-change-safety maintainer map integration', () => {
 
     assert.equal(status, 0);
     assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js runtime\/node\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
-    assert.match(stdout, /npm run build --prefix delivery\/web\/ai-frontend/);
+    assert.match(stdout, /npm run build --prefix delivery\/channel\/web\/ai-frontend/);
     assert.doesNotMatch(stdout, /npm run test:maintainer:gateway/);
   });
 

@@ -17,6 +17,8 @@ const REAL_TOOL_NAMES = Object.freeze([
   'zip', 'unzip', 'tools',
   'start_app', 'open_url', 'share_text', 'clipboard', 'toast', 'notify',
   'list_apps', 'battery', 'volume', 'brightness', 'vibrate',
+  'camera_open',
+  'record_audio',
   'loop_start', 'loop_stop', 'loop_status',
   'amoo_ask', 'amoo_result', 'amoo_memory', 'amoo_stop',
 ]);
@@ -26,11 +28,11 @@ const REAL_UI_TOOL_NAMES = Object.freeze([
   'ui_back', 'ui_home', 'ui_recents', 'shot', 'shot_b64',
 ]);
 
-test('目录收录的正是实机 32 个非 UI 工具，一个不多一个不少', () => {
+test('目录收录的正是实机 33 个非 UI 工具，一个不多一个不少', () => {
   // 28 → 31 → 32：zip / unzip / tools 是 2026-10-26 加进安卓侧的；amoo_stop 是
   // 随后与桥对齐的即时中止工具。这个数字的意义就在于「一个不多一个不少」——
   // 它就是安卓侧与 PC 侧是否还对齐的哨兵。
-  assert.equal(catalog.BRIDGE_TOOLS.length, 32);
+  assert.equal(catalog.BRIDGE_TOOLS.length, 34);
   assert.deepEqual(
     catalog.BRIDGE_TOOLS.map((t) => t.bridgeName).sort(),
     [...REAL_TOOL_NAMES].sort()
@@ -137,8 +139,9 @@ test('写操作集合与桥契约逐条对得上', () => {
     .map((t) => t.bridgeName)
     .sort();
   assert.deepEqual(actuating, [
-    'amoo_ask', 'amoo_stop', 'cp', 'exec', 'loop_start', 'loop_stop', 'mkdir', 'mv', 'notify', 'open_url',
-    'rm', 'share_text', 'start_app', 'toast', 'unzip', 'vibrate', 'write', 'zip',
+    'amoo_ask', 'amoo_stop', 'camera_open', 'cp', 'exec', 'loop_start', 'loop_stop', 'mkdir', 'mv',
+    'notify', 'open_url', 'record_audio', 'rm', 'share_text', 'start_app', 'toast', 'unzip',
+    'vibrate', 'write', 'zip',
   ]);
 });
 
@@ -152,7 +155,12 @@ test('rm 被单独标为 dangerous——recursive 默认 true 会连锅端', () 
 
 test('exec 的两个已知陷阱写进 note，不藏在实现里', () => {
   const exec = catalog.findPhoneBridgeTool('exec');
-  assert.match(exec.note, /input \/ screencap \/ dumpsys \/ su \/ pm/);
+  // note 里列的是「App uid 下一律被拒」的那族命令。清单随提权通道变过：
+  // Shizuku 于 2026-11-12 移除后，exec 的提权只剩 shell sidecar 一层，
+  // 被拒的族也从 input/screencap/dumpsys/su/pm 换成了 input/am/pm/settings put/读写 /data。
+  // 这里钉的是「note 必须点名被拒的那族命令」这件事本身，不是某一份具体清单。
+  assert.match(exec.note, /input \/ .*pm/);
+  assert.match(exec.note, /一律被拒/);
   assert.match(exec.args.timeout.description, /sleep 300/);
   assert.equal(exec.args.timeout.maximum, 120);
   assert.equal(exec.args.timeout.minimum, 1);
@@ -188,7 +196,7 @@ test('toKhyToolDefinition 转译出合法 JSON Schema 与 phone_ 名字', () => 
   const defs = catalog.listKhyToolDefinitions();
   // 32 = 22 个既有桥工具 + 3 个循环控制 + 3 个反代与记忆 + zip / unzip / tools + amoo_stop。
   // zip / unzip / tools 是 2026-10-26 补进来的；amoo_stop 是随后与桥对齐的即时中止。
-  assert.equal(defs.length, 32);
+  assert.equal(defs.length, 34);
   for (const def of defs) {
     assert.ok(def.name.startsWith('phone_'));
     assert.equal(def.inputSchema.type, 'object');

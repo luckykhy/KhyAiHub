@@ -13,7 +13,6 @@
 // ── Imports ──
 const crypto = require('crypto');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const _chatState = require('./aiChatState');
@@ -38,7 +37,10 @@ function _globalConvoDir() {
     const { getAppDataDir } = require('../utils/dataHome');
     return getAppDataDir('conversations');
   } catch {
-    return path.join(os.homedir(), '.khyquant', 'conversations');
+    // dataHome 模块不可加载（裁剪安装）时的 legacy 落点。~/.khyquant 由
+    // getLegacyDataHome() 单一真源给出，不在此处手搓字面路径；同一 require 也
+    // 失败时异常上交 getConvoDir 的 catch，save/load/list 全部 fail-soft。
+    return path.join(require('../utils/dataHome').getLegacyDataHome(), 'conversations');
   }
 }
 const MAX_SAVED_CONVERSATIONS = 50;
@@ -593,8 +595,17 @@ function _getProjectMemoryCandidates(cwd = process.cwd()) {
   } catch {
     /* ignore */
   }
-  // 4. Legacy user-home compatibility path (last resort).
-  files.push(path.join(os.homedir(), '.khy', 'memory', 'MEMORY.md'));
+  // 4. Data-home memory index — the DATA_PATHS-registered location
+  //    (<dataHome>/T1-domains/memory/memory). resolveDataPath, not getDataDir:
+  //    this is a candidate probe, and creating the dir here would make
+  //    "does it exist" always true. Replaces the hand-built ~/.khy/memory
+  //    literal, which ignored KHY_DATA_HOME / portable resolution.
+  try {
+    const { resolveDataPath } = require('../utils/dataHome');
+    files.push(resolveDataPath('memory', 'MEMORY.md'));
+  } catch {
+    /* ignore */
+  }
   return [...new Set(files)];
 }
 

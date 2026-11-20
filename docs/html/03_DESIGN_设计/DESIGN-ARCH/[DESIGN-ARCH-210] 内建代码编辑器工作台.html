@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-210] 内建代码编辑器工作台.md -->
+<title>[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-210-内建代码编辑器工作台-人与-ai-共用同一份代码">[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码</a></li><li class="lvl-2"><a href="#0-需求五问-runtime-008">0. 需求五问（RUNTIME-008）</a></li><li class="lvl-2"><a href="#1-定位与非目标">1. 定位与非目标</a></li><li class="lvl-3"><a href="#1-1-与既有编辑形态的关系">1.1 与既有编辑形态的关系</a></li><li class="lvl-3"><a href="#1-2-明确不做-首期">1.2 明确不做（首期）</a></li><li class="lvl-2"><a href="#2-技术路线依据">2. 技术路线依据</a></li><li class="lvl-2"><a href="#3-架构">3. 架构</a></li><li class="lvl-2"><a href="#4-通道契约">4. 通道契约</a></li><li class="lvl-3"><a href="#4-1-ipc-main-editor-ipc-ts-全部-namespace-action">4.1 IPC（`main/editor/ipc.ts`，全部 `namespace:action`）</a></li><li class="lvl-3"><a href="#4-2-读写的三态-失败矩阵">4.2 读写的三态（失败矩阵）</a></li><li class="lvl-3"><a href="#4-3-全局搜索的上限与预算">4.3 全局搜索的上限与预算</a></li><li class="lvl-3"><a href="#4-4-磁盘变更-watcher">4.4 磁盘变更（watcher）</a></li><li class="lvl-2"><a href="#5-模型与脏判定">5. 模型与脏判定</a></li><li class="lvl-2"><a href="#6-m2-统一写通道收口-已落地-2026-11-11">6. M2：统一写通道收口（已落地 2026-11-11）</a></li><li class="lvl-2"><a href="#7-m3-ai-改动待审-已落地-2026-11-11">7. M3：AI 改动待审（已落地 2026-11-11）</a></li><li class="lvl-3"><a href="#7-1-闸门位置与范围">7.1 闸门位置与范围</a></li><li class="lvl-3"><a href="#7-2-待审状态机">7.2 待审状态机</a></li><li class="lvl-3"><a href="#7-3-diff-来源与块的唯一口径">7.3 diff 来源与块的唯一口径</a></li><li class="lvl-3"><a href="#7-4-缓冲区保护">7.4 缓冲区保护</a></li><li class="lvl-3"><a href="#7-5-实施记录">7.5 实施记录</a></li><li class="lvl-2"><a href="#8-m1-实施记录">8. M1 实施记录</a></li><li class="lvl-2"><a href="#9-治理与登记">9. 治理与登记</a></li><li class="lvl-2"><a href="#10-验证">10. 验证</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-210-内建代码编辑器工作台-人与-ai-共用同一份代码">[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码<a class="anchor" href="#design-arch-210-内建代码编辑器工作台-人与-ai-共用同一份代码" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：v1 设计已定；<strong>M1（可用编辑器）、M2（统一写通道）与 M3（AI 改动待审）均已落地</strong>（2026-11-11）。<br>真源范围：本文档是「桌面端内建代码编辑器」的设计真源（形态、通道契约、上限、<br>冲突三态、待审状态机）。通用工程规范仍以 <code>AGENTS.md</code> 为准。</p></blockquote>
+<h2 id="0-需求五问-runtime-008">0. 需求五问（RUNTIME-008）<a class="anchor" href="#0-需求五问-runtime-008" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>问题</th><th>答案</th><th>source</th></tr></thead><tbody><tr><td>1</td><td>谁用？</td><td>本机开发者（用户本人）在 KhyOS 里直接改工作区代码；同时是 AI 工具循环的写盘对象</td><td>「帮我做个人和ai都可以用的编辑器进去」</td></tr><tr><td>2</td><td>什么时候用？</td><td>不想切外部 IDE、要在 KhyOS 内改代码时；AI 改代码时人要能看见并批准</td><td>「khyos 中缺少 code 编辑器」+ 截图报错「未配置编辑器」</td></tr><tr><td>3</td><td>现在的替代做法？</td><td>右侧 220–640px 窄面板「查看 → 点编辑」，只改不建、读取上限 256KB；或配 <code>KHY_EDITOR</code> 跳外部 VS Code；AI 改动无审阅、与人并发写同一文件会静默互相覆盖</td><td>实测：<code>CodeEditorPane</code> + <code>codeEditor:write</code>；<code>app:openInEditor</code> 只收目录</td></tr><tr><td>4</td><td>成功长什么样？</td><td>打开工作区 → 切编辑器 → 文件树/搜索/多标签编辑并保存 3 个文件；AI 改已打开文件时出现待审 diff，批准前磁盘不变</td><td>用户裁决「文件树 + 多标签 + 全局搜索」「共用写通道 + 改动待审」</td></tr><tr><td>5</td><td>不做会怎样？</td><td>写代码仍要离开 KhyOS；人与 AI 并发写同一文件会静默丢改动</td><td>「主区独立工作台」不为聊天让路</td></tr></tbody></table>
+<p>形态与边界由人裁决（编辑器形态＝主区独立工作台；人机共用＝共用写通道 + 改动待审；<br>首批能力＝文件树 + 多标签 + 全局搜索；首期不做＝跳行/转到定义、LSP 诊断面板、<br>选区加入对话、编辑器内运行脚本）。工程实现（模块切分、上限数值、状态机形状）<br>由 AI 提出，依据写在本文件，可推翻。</p>
+<h2 id="1-定位与非目标">1. 定位与非目标<a class="anchor" href="#1-定位与非目标" aria-label="锚点">#</a></h2>
+<h3 id="1-1-与既有编辑形态的关系">1.1 与既有编辑形态的关系<a class="anchor" href="#1-1-与既有编辑形态的关系" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>形态</th><th>位置</th><th>通道</th><th>本轮处置</th></tr></thead><tbody><tr><td><code>CodeEditorPane</code>（旧）</td><td>右侧 SidePane <code>codeViewer</code> 标签</td><td><code>codeViewer:read</code> / <code>codeEditor:write</code></td><td><strong>保留</strong>，作为窄预览；M2 把写落点收口到同一服务</td></tr><tr><td>工作台（本文件）</td><td>主区 <code>&lt;main&gt;</code> 内，与聊天并列</td><td><code>editor:*</code></td><td>新增；「看代码」的默认落点改为这里</td></tr><tr><td>外部编辑器</td><td><code>app:openInEditor</code></td><td>系统进程</td><td>保留；未配置时（<code>state:'unconfigured'</code>）不报错，TitleBar / AppHeader 的「在编辑器中打开」回落主区内置工作台；不支持 <code>file:line</code>（首期不做）</td></tr></tbody></table>
+<p>两条读通道并存是刻意的：工作台是宽编辑面（标签 / 搜索 / 保存三态），侧栏是<br>「对话里点开看一眼」的窄预览。写通道<strong>不允许</strong>长期双轨，M2 收口（§6）。</p>
+<h3 id="1-2-明确不做-首期">1.2 明确不做（首期）<a class="anchor" href="#1-2-明确不做-首期" aria-label="锚点">#</a></h3>
+<ul><li>跳行 / 转到定义（<code>Ctrl+P</code>、<code>F12</code> 语义）。</li><li>LSP 诊断面板（工作台只用 Monaco 内置语法高亮，不挂 <code>tsserver</code> 诊断面板）。</li><li>选区加入对话。</li><li>编辑器内运行脚本（旧面板的 <code>RUNNERS</code> 保留在侧栏，工作台不接 pty）。</li><li>为「像 VS Code」而 fork VS Code：本方案是 <strong>Monaco 内核 + 一层薄 workbench 壳</strong>，</li></ul>
+<p>零新增 npm 依赖（PROCESS-013）。</p>
+<h2 id="2-技术路线依据">2. 技术路线依据<a class="anchor" href="#2-技术路线依据" aria-label="锚点">#</a></h2>
+<p>VS Code 开源仓 <code>microsoft/vscode</code> 分层为 <code>src/vs/{base,platform,editor,workbench,code,server}</code>：<br><code>editor/</code> 就是 Monaco，<code>workbench/</code> 才是标签、面板、活动栏。因此「像 VS Code」=<br><strong>Monaco 内核 + 一层薄 workbench 壳</strong>，不 fork。</p>
+<table><thead><tr><th>候选</th><th>体积</th><th>结论</th></tr></thead><tbody><tr><td>Monaco（已装）</td><td>≈5MB，含 TS/JSON 语言服务、diff editor、多光标、折叠</td><td><strong>采用</strong>：loader/worker 已本地化（<code>renderer/monacoSetup.ts</code>），换内核是倒退</td></tr><tr><td>CodeMirror 6</td><td>50–200KB 语法层，语言服务另配</td><td>不采用：等于把现有能力推倒重来</td></tr><tr><td>fork VS Code</td><td>数百 MB</td><td>不采用：与本仓体量与维护模型不匹配</td></tr></tbody></table>
+<h2 id="3-架构">3. 架构<a class="anchor" href="#3-架构" aria-label="锚点">#</a></h2>
+<pre><code>渲染层（lazy chunk）  EditorWorkbench = 文件树 240px ‖ 多标签 + Monaco ‖ AI 待审轨（M3）
+        │ window.__KHYOS__.editor*
+主进程  main/editor/{ipc,workspaceRules,readFile,writeFile,search,watcher}.ts
+        │ nodeRequire（既有先例 main/index.ts:1916/1940/1993/2010）
+后端    services/fileWriteService.js  ← 人保存与 AI 工具写盘的唯一落点（M2）
+        │ host 子进程（AI 工具循环）经 fileWriteService 写盘</code></pre>
+<p><strong>状态归属</strong>：标签元数据与 Monaco 模型由工作台 chunk 自己持有；<code>AppLayout</code> 只持<br><code>centerView: 'chat' | 'editor'</code>、<code>editorRequest {filePath, seq}</code>、<code>editorDirty</code> 三个值<br>（用于切视图、外部打开、关窗拦截）。工作台一旦打开就保持挂载，<code>visible</code> 只切 CSS ——<br>卸载会丢标签、未保存缓冲区与 undo 栈。</p>
+<p><strong>首屏预算硬约束</strong>：<code>docs/10_规范/registry/CORE-LAYERS.json</code> 对 <code>App.tsx</code> /<br><code>AppLayout.tsx</code> 的文件数零容差（<code>baseline == max</code>）。工作台只能经 <code>AppLayout.tsx</code><br>内联 <code>lazy()</code> 引入（同 <code>:84</code> 的 CommandCenter 形态），<strong>不得</strong>改成顶层静态 import，<br><strong>不得</strong>新增 Redux slice（<code>state/store.ts</code> 在 AppLayout 冷闭包内）。Monaco 的<br>loader 接线随之从 <code>renderer/main.tsx</code> 移出，改由两个 lazy 入口各自 <code>import</code>。</p>
+<h2 id="4-通道契约">4. 通道契约<a class="anchor" href="#4-通道契约" aria-label="锚点">#</a></h2>
+<h3 id="4-1-ipc-main-editor-ipc-ts-全部-namespace-action">4.1 IPC（<code>main/editor/ipc.ts</code>，全部 <code>namespace:action</code>）<a class="anchor" href="#4-1-ipc-main-editor-ipc-ts-全部-namespace-action" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>通道</th><th>入参</th><th>返回</th><th>说明</th></tr></thead><tbody><tr><td><code>editor:read</code></td><td><code>filePath</code></td><td><code>EditorReadResult</code></td><td>4 MiB 上限；NUL 探测，二进制拒读；返回 <code>eol</code>/<code>bom</code>/<code>mtimeMs</code></td></tr><tr><td><code>editor:write</code></td><td><code>filePath, content, baseMtimeMs?</code></td><td><code>EditorWriteResult</code></td><td>白名单根 + 已存在 + mtime 基线；tmp + rename 原子替换</td></tr><tr><td><code>editor:create-file</code></td><td><code>dirPath, fileName</code></td><td><code>EditorCreateResult</code></td><td><code>'wx'</code> 原子新建；文件名非法字符/结尾空格与点拒收</td></tr><tr><td><code>editor:search</code></td><td><code>query, EditorSearchOptions</code></td><td><code>EditorSearchResult</code></td><td>见 §4.3；进度经 <code>editor:searchProgress</code></td></tr><tr><td><code>editor:search-cancel</code></td><td><code>searchId</code></td><td><code>{ ok }</code></td><td>渲染层预生成 id，结果返回前即可取消</td></tr><tr><td><code>editor:watch-set</code></td><td><code>filePaths[]</code></td><td><code>EditorWatchSetResult</code></td><td>只监听这些文件的父目录（≤64个，超了报 <code>dropped</code>）；同一批路径转给 host 作为待审范围</td></tr><tr><td><code>editor:pending-list</code></td><td>—</td><td><code>EditorPendingItem[]</code></td><td>M3：窗口重载后重建待审卡片（主进程镜像）</td></tr><tr><td><code>editor:pending-decision</code></td><td><code>id, accept, acceptedHunks?</code></td><td><code>{ ok, existed }</code></td><td>M3：只转发决定，落盘由 host 的闸门完成</td></tr><tr><td><code>editor:fileChanged</code>（事件）</td><td><code>EditorFileChanged</code></td><td>—</td><td>main → 渲染层；<code>changed</code> / <code>gone</code></td></tr><tr><td><code>editor:pending</code>（事件）</td><td>待审原文 + 两份内容</td><td>—</td><td>main → 渲染层；主进程已把它算成 <code>EditorPendingItem</code></td></tr><tr><td><code>editor:pendingSettled</code>（事件）</td><td><code>{ id, ok, state, error? }</code></td><td>—</td><td>main → 渲染层；<code>accepted</code> / <code>rejected</code> / <code>timeout</code> / <code>error</code></td></tr></tbody></table>
+<p><strong>白名单根</strong>：与 <code>codeEditor:write</code> 共用 <code>editorWritableRoots</code>，不另立第二份根集合。<br>禁用 <code>fs:readFile</code> / <code>fs:writeFile</code> 两条无白名单孤儿通道。</p>
+<h3 id="4-2-读写的三态-失败矩阵">4.2 读写的三态（失败矩阵）<a class="anchor" href="#4-2-读写的三态-失败矩阵" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>状态</th><th>触发</th><th>渲染层行为</th></tr></thead><tbody><tr><td><code>ok</code></td><td>正常</td><td>载入模型；<code>state:'empty'</code> 也算成功（空文件可编辑）</td></tr><tr><td><code>missing</code></td><td>ENOENT</td><td>标签标 <code>gone</code>，保存会失败；提示「已不在磁盘上」</td></tr><tr><td><code>conflict</code></td><td>磁盘 mtime ≠ 基线</td><td>横幅三选一：覆盖写入 / 重新加载（丢弃我的修改）/ 不动</td></tr><tr><td><code>outsideWorkspace</code></td><td>不在白名单根内</td><td>错误态 + 「重新读取 / 关闭标签」，不重试</td></tr><tr><td><code>tooLarge</code></td><td>超 4 MiB</td><td>错误态并说明上限</td></tr><tr><td><code>binary</code></td><td>前 4KB 含 NUL</td><td>错误态并说明「二进制文件不支持编辑」</td></tr><tr><td><code>error</code></td><td>其余 IO 失败</td><td>错误态，文案带动作 + 目标</td></tr></tbody></table>
+<p><strong>CRLF / BOM</strong>：读时探测，模型内部统一 <code>\n</code>；保存时按原 <code>eol</code> 还原、BOM 原样带出。<br>不认识的编码不猜，按文本读或直接报错 —— 静默改写行尾会让整份文件进 diff。</p>
+<h3 id="4-3-全局搜索的上限与预算">4.3 全局搜索的上限与预算<a class="anchor" href="#4-3-全局搜索的上限与预算" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>值</th><th>理由</th></tr></thead><tbody><tr><td>单文件读取上限</td><td>512 KiB</td><td>大文件（bundle/日志）不参与全文搜索</td></tr><tr><td>累计读取上限</td><td>64 MiB</td><td>防止整仓扫穿磁盘</td></tr><tr><td>命中总数上限</td><td>500</td><td>UI 展示边界</td></tr><tr><td>命中文件数上限</td><td>200</td><td>分组展示边界</td></tr><tr><td>单文件命中上限</td><td>20</td><td>防止一个文件淹没结果</td></tr><tr><td>预算</td><td>15 000 ms</td><td><strong>协作式</strong>：循环内检查 <code>Date.now()</code> 并 <code>await setImmediate</code> 让出事件循环</td></tr></tbody></table>
+<p>不设硬 kill 定时器（RUNTIME-003）：超限返回 <code>truncated + reason</code>，UI 如实显示<br>「还有 N 个文件未扫描」，取消走 <code>editor:search-cancel</code>。</p>
+<h3 id="4-4-磁盘变更-watcher">4.4 磁盘变更（watcher）<a class="anchor" href="#4-4-磁盘变更-watcher" aria-label="锚点">#</a></h3>
+<ul><li>只监听打开标签的父目录，目录数 ≤64（LRU），超了 <code>dropped</code> 如实上报。</li><li>150 ms 去抖；自写自触发用 <code>SELF_WRITE_SUPPRESS_MS = 2000</code> 抑制。</li><li>标签干净 → 自动从磁盘重载并提示；标签脏 → 只标 <code>externalChanged</code>，<strong>不覆盖</strong></li></ul>
+<p>人的未保存内容，横幅提示冲突。</p>
+<h2 id="5-模型与脏判定">5. 模型与脏判定<a class="anchor" href="#5-模型与脏判定" aria-label="锚点">#</a></h2>
+<ul><li>正文唯一真源 = Monaco model（按 <code>file://</code> URI 注册，Windows 盘符大写 + <code>encodeURI</code>）。</li><li>只给 <code>defaultValue</code>，<strong>不给</strong> <code>value</code>：受控 <code>value</code> 会在每次重渲染时 <code>setValue</code>，</li></ul>
+<p>等于把 undo 栈清空。</p>
+<ul><li>脏判定 = <code>model.getAlternativeVersionId() !== savedVersionId</code>（撤销回保存点会自动变干净），</li></ul>
+<p>不做字符串全量比较。</p>
+<ul><li>基线在模型挂载 / 切换时（<code>onDidChangeModel</code>）建立 —— <code>onMount</code> 只触发一次，</li></ul>
+<p>但 <code>path</code> 每次切标签都会换模型。</p>
+<ul><li>关标签时延迟到下一轮再 <code>dispose()</code> 模型（跳过已被重新打开的标签），避免</li></ul>
+<p>dispose 仍挂在编辑器上的模型。</p>
+<h2 id="6-m2-统一写通道收口-已落地-2026-11-11">6. M2：统一写通道收口（已落地 2026-11-11）<a class="anchor" href="#6-m2-统一写通道收口-已落地-2026-11-11" aria-label="锚点">#</a></h2>
+<p>新增 <code>runtime/node/backend/src/services/fileWriteService.js</code>：</p>
+<pre><code>write({ filePath, content, baseMtimeMs?, createIfMissing=false,
+        actor:'tool'|'editor', reason, beforeContent?, turnId?, diagCwd?, skipAudit? })
+  → { ok, state:'ok'|'conflict'|'missing'|'rejected'|'error', mtimeMs?, diskMtimeMs?, error? }</code></pre>
+<p>顺序：校验 → stat → mtime 冲突 →（M3 待审闸门）→ 快照/turn 记录 → 诊断基线 →<br><code>mkdir</code> + tmp/rename → <code>_readTracker.markRead</code>。</p>
+<p>锁：内部复用 <code>tools/_fileLock.acquire(filePath)</code>（同进程可重入；跨进程真互斥）。</p>
+<p>工具侧只改「写盘那一行」，编排留在工具里（<code>ApplyPatchTool</code> 的多文件全成或全回滚、<br><code>MultiEditTool</code> 的 all-or-nothing 不动）。<code>main/editor/writeFile.ts</code> 改为 <code>nodeRequire</code><br>该服务（<code>actor:'editor'</code>），写后向 host 发 <code>editor.fileWritten</code> 让其 <code>_readTracker.markRead</code><br>—— 否则人保存后 AI 的「先读后写」会误判 stale 而拒绝编辑。</p>
+<p>两条落地时的补充判据：</p>
+<ul><li><code>skipAudit</code> 只给 <code>ApplyPatchTool</code>：它 Phase 1 已按批登记快照与 turn，通道侧再记一遍</li></ul>
+<p>会让同一次补丁出现两条历史记录。多文件全成或全回滚仍由工具自己编排。</p>
+<ul><li>新建空文件不走 <code>editor.fileWritten</code>：把「没读过」记成「读过了」会直接废掉 AI 的</li></ul>
+<p>先读后写闸门。人保存已有文件才发通知。</p>
+<p>反证（<code>src/services/fileWriteSinkTools.test.js</code>）：把通道的 <code>write</code> 换成<strong>不落盘</strong>的<br>探针，逐个调用 8 个写盘工具，断言「探针收到调用 + 磁盘内容一字未变」。工具私自<br><code>fs.writeFileSync</code> 会让这两条同时失败。</p>
+<h2 id="7-m3-ai-改动待审-已落地-2026-11-11">7. M3：AI 改动待审（已落地 2026-11-11）<a class="anchor" href="#7-m3-ai-改动待审-已落地-2026-11-11" aria-label="锚点">#</a></h2>
+<h3 id="7-1-闸门位置与范围">7.1 闸门位置与范围<a class="anchor" href="#7-1-闸门位置与范围" aria-label="锚点">#</a></h3>
+<p>闸门放在 <code>fileWriteService</code> 内部（工具链没有干净的 pre-write hook：<code>riskGate</code> /<br><code>PreToolUse</code> 都发生在「新内容算出之前」，<code>_khyWriteDiff</code> 是写后回读）。收口后<br>闸门就是一个 <code>if</code>。</p>
+<p><strong>只审「编辑器打开集合」内的路径</strong>：主进程每次标签开/关发 <code>editor:watch-set</code> →<br>主进程转成 <code>editor.watchSet</code> 给 host；host 维护规范化后的 <code>Set&lt;path&gt;</code>。未打开的<br>路径照旧直写 —— AI 能力不退化。主进程里<strong>不注册</strong>闸门：人保存不该被拦。</p>
+<p>闸门契约（<code>fileWriteService.setPendingGate</code>）：</p>
+<pre><code>(req: { filePath, content, beforeContent?, baseMtimeMs?, actor, reason })
+  → { action: 'write' }                    // 放行，写原 content
+  | { action: 'write', content: string }   // 放行，写子集拼好的内容（逐 hunk 接受）
+  | { action: 'reject', error }</code></pre>
+<p>抛错按拒绝处理（fail-closed）。闸门返回后 <code>fileWriteService</code> <strong>再 stat 一次</strong>：<br>批准期间磁盘被改（mtime 超出 50 ms 容差）→ <code>conflict</code>，不落盘、不猜。</p>
+<h3 id="7-2-待审状态机">7.2 待审状态机<a class="anchor" href="#7-2-待审状态机" aria-label="锚点">#</a></h3>
+<pre><code>         工具发起写（actor='tool' 且路径在打开集合内）
+                     │
+                     ▼
+              ┌─────────────┐  同文件已有待审  ┌──────────────┐
+              │   pending   │ ───────────────▶ │ rejected(dup)│
+              └─────────────┘                  └──────────────┘
+               │     │      │
+     接受(全部/子集) 拒绝   120s 超时 / 关窗
+               │     │      │
+               ▼     ▼      ▼
+           写入磁盘  rejected  rejected(timeout/cancelled)
+        (闸门返回后再校验 mtime，conflict 则不落盘)</code></pre>
+<ul><li><strong>接受</strong>：host 用 <code>utils/diff/structuredHunks</code> 重算 hunk，<code>applyAcceptedHunks</code></li></ul>
+<p>拼出选中的块，作为 <code>verdict.content</code> 交回闸门；落盘仍走 <code>fileWriteService</code><br>  （复用同一把锁与 mtime 校验）。</p>
+<ul><li><strong>拒绝</strong>：不写，工具收到 <code>{ ok:false, state:'rejected', error:'用户未批准该改动（磁盘保持原样）' }</code>。</li><li><strong>超时</strong>：<code>PENDING_REVIEW_TIMEOUT_MS = 120_000</code>，到点 resolve 为 reject 并推</li></ul>
+<p><code>editor:pendingSettled{state:'timeout'}</code>（RUNTIME-003「仅 reject 的 Promise 超时」豁免，不 kill 任务）。</p>
+<ul><li><strong>关窗/退出</strong>：<code>win.on('close')</code> → 主进程 <code>cancelAllPending()</code> → host <code>settleAll()</code></li></ul>
+<p>全部 resolve reject，并清空主进程镜像；文件从未落盘，无需回滚。</p>
+<ul><li><strong>内容无变化</strong>：<code>before === after</code> 时闸门直接放行（没有可审的东西）。</li></ul>
+<h3 id="7-3-diff-来源与块的唯一口径">7.3 diff 来源与块的唯一口径<a class="anchor" href="#7-3-diff-来源与块的唯一口径" aria-label="锚点">#</a></h3>
+<p>主进程 <code>main/editor/pending.ts</code> 用 <code>nodeRequire</code> 的 <code>cli/writeDiffRows.js</code><br><code>buildWriteDiffRows(ctx, true)</code> 生成 <code>DiffRow[]</code>（与 <code>host/index.ts</code> 同一生产者），<br>去掉 <code>stat</code> 行并把 <code>⋯ N unchanged lines</code> 本地化，截断到 <code>MAX_DIFF_ROWS</code>。</p>
+<p>hunk 切分是纯函数 <code>shared/editorDiff.ts</code>：</p>
+<ul><li><code>splitDiffHunks(rows)</code>：在 <code>kind === 'gap'</code> 处切块，<code>stat</code> / <code>more</code> 不进任何块；</li><li><code>applyAcceptedHunks(before, after, hunks, accepted)</code>：按 backend</li></ul>
+<p><code>computeStructuredDiffHunks</code> 的块模型拼接受集；全接受返回 <code>after</code> 原样，<br>  一块不接受返回 <code>before</code> 原样。</p>
+<p><code>tests/editorDiff.test.mjs</code> 守的是最贵的一条不变量：<code>splitDiffHunks(buildWriteDiffRows(...))</code><br>的块数必须等于 <code>computeStructuredDiffHunks(...).hunks.length</code> —— 错一位就等于把<br>用户拒绝的改动写进磁盘。</p>
+<p>行集被截断（&gt; <code>MAX_DIFF_ROWS</code>）时<strong>禁掉逐块勾选</strong>，只给整体接受/拒绝：界面上<br>看不见的块会随子集拼接被静默丢掉，那正是「批准了没看过的改动」的反面。</p>
+<p>渲染层复用 <code>shared/toolDiff.ts</code> + <code>DiffViewer</code> 的行模型；待审面板<br>（<code>PendingReviewPanel.tsx</code>）把每块做成可勾选的卡片，默认全选。</p>
+<h3 id="7-4-缓冲区保护">7.4 缓冲区保护<a class="anchor" href="#7-4-缓冲区保护" aria-label="锚点">#</a></h3>
+<p>标签 <code>dirty</code> 时<strong>禁用「接受」</strong>：待审 diff 基于磁盘内容，接受会让人未保存的修改<br>与 AI 内容互相覆盖。提示先保存或还原。多块勾选后全部取消 → 按拒绝处理。</p>
+<h3 id="7-5-实施记录">7.5 实施记录<a class="anchor" href="#7-5-实施记录" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>位置</th><th>职责</th></tr></thead><tbody><tr><td><code>editorDiff.ts</code></td><td><code>src/shared/</code></td><td>切块 / 子集拼接（纯函数）</td></tr><tr><td><code>editorPending.ts</code></td><td><code>src/host/</code></td><td>待审状态机：打开集合、<code>Map</code> 单文件单审、超时、<code>settleAll</code></td></tr><tr><td><code>pending.ts</code></td><td><code>src/main/editor/</code></td><td>diff 行生成 + <code>EditorPendingItem</code> 组装</td></tr><tr><td><code>PendingReviewPanel.tsx</code></td><td><code>renderer/components/editor/</code></td><td>右轨待审卡片（勾块 / 拒绝 / 接受）</td></tr></tbody></table>
+<p>接线：<code>host/index.ts</code>（注册闸门 + 三条消息）、<code>main/editor/ipc.ts</code>（镜像 + 中继）、<br><code>main/index.ts</code>（host 消息分支 + 关窗取消）、<code>preload/editor.ts</code> 与<br><code>editorApi.ts</code>（两条调用 + 两个事件）、<code>EditorWorkbench.tsx</code>（拉取 / 订阅 / 决定）。</p>
+<p>反证：<code>runtime/node/backend/src/services/fileWriteService.test.js</code> 覆盖<br>「闸门拒绝不落盘」「闸门抛错 = 拒绝」「<code>verdict.content</code> 替换落盘内容」<br>「批准期间磁盘被改 → conflict」四态；<code>apps/khyos-desktop/tests/editorPendingGate.test.mjs</code><br>覆盖闸门状态机五条：「人保存与未打开不拦 / 拒绝收束 / 逐块接受 / 同文件重复拒绝 /<br>关窗全取消」。</p>
+<h2 id="8-m1-实施记录">8. M1 实施记录<a class="anchor" href="#8-m1-实施记录" aria-label="锚点">#</a></h2>
+<p>新增（主进程，<code>apps/khyos-desktop/src/main/editor/</code>）：</p>
+<table><thead><tr><th>文件</th><th>行数</th><th>职责</th></tr></thead><tbody><tr><td><code>workspaceRules.ts</code></td><td>41</td><td><code>SKIP_DIRS</code> / <code>TEXT_EXTS</code> 单一真源（原 <code>main/index.ts</code> 两处副本）</td></tr><tr><td><code>readFile.ts</code></td><td>73</td><td>4 MiB 上限、NUL 探测、eol/bom 探测</td></tr><tr><td><code>writeFile.ts</code></td><td>142</td><td>白名单 + mtime 基线 + tmp/rename + <code>'wx'</code> 新建</td></tr><tr><td><code>search.ts</code></td><td>260</td><td>异步 BFS + 协作式预算 + 四件套上限 + 取消</td></tr><tr><td><code>watcher.ts</code></td><td>129</td><td>父目录监听（≤64 / LRU / 150ms 去抖 / 自写抑制）</td></tr><tr><td><code>ipc.ts</code></td><td>72</td><td>六条通道注册</td></tr></tbody></table>
+<p>新增（共享与渲染层）：</p>
+<table><thead><tr><th>文件</th><th>行数</th><th>职责</th></tr></thead><tbody><tr><td><code>src/shared/editorContract.ts</code></td><td>137</td><td>上限常量 + 五组契约类型</td></tr><tr><td><code>components/editor/editorApi.ts</code></td><td>33</td><td>preload 桥的类型与存在性检查</td></tr><tr><td><code>components/editor/editorModels.ts</code></td><td>46</td><td>路径规范化 / <code>file://</code> URI / <code>toDiskText</code></td></tr><tr><td><code>components/editor/editorLanguages.ts</code></td><td>45</td><td>扩展名 → Monaco 语言 / 运行器（与侧栏共用）</td></tr><tr><td><code>components/editor/EditorTabs.tsx</code></td><td>81</td><td>标签栏（脏点 / 中键关闭 / 阻断态）</td></tr><tr><td><code>components/editor/EditorSurface.tsx</code></td><td>116</td><td>唯一 Monaco 实例 + 状态栏 + <code>Ctrl+S</code></td></tr><tr><td><code>components/editor/SearchPanel.tsx</code></td><td>222</td><td>全局搜索（进度 / 取消 / 截断原因）</td></tr><tr><td><code>components/editor/EditorWorkbench.tsx</code></td><td>689</td><td>外壳：文件树 ‖ 标签 + Monaco ‖ 冲突与新建/关闭确认</td></tr></tbody></table>
+<p>修改：<code>AppLayout.tsx</code>（内联 lazy + 三值状态 + <code>&lt;main&gt;</code> 条件渲染 + <code>khy:open-file-picker</code> 切工作台）、<br><code>TitleBar.tsx</code>（菜单项 + 右侧按钮 + 脏点 + 未配置编辑器回落）、<code>AppHeader.tsx</code><br>（「在编辑器中打开」未配置时回落工作台）、<code>CommandCenter.tsx</code>（命令入口）、<code>FileTree.tsx</code><br>（<code>refreshToken</code> / <code>onCreateFile</code>）、<code>CodeEditorPane.tsx</code>（改用 <code>editorLanguages</code> +<br>自带 <code>monacoSetup</code>）、<code>renderer/main.tsx</code>（移出 <code>monacoSetup</code>）、<code>shared/keymap.ts</code><br>（<code>Ctrl+Shift+E</code>）、<code>preload/index.ts</code>（六通道 + 两个事件）。</p>
+<p>快捷键：<code>Ctrl+Shift+E</code> 切换工作台（登记进 <code>KEY_BINDINGS</code>，命令面板与窗口菜单的<br>徽标都从这张表派生；<code>tests/keymapContract.test.mjs</code> 的<code>KEY_BINDINGS</code>要求每个登记的 action<br>在渲染层有 <code>action === '&lt;name&gt;'</code> 消费点）。</p>
+<p>入口：窗口菜单「代码编辑器」、标题栏右侧代码按钮、命令面板「切换代码编辑器」、<br>侧栏文件树点文件、<code>khy:open-file</code> 事件（消息流「查看文件」）。</p>
+<h2 id="9-治理与登记">9. 治理与登记<a class="anchor" href="#9-治理与登记" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>动作</th></tr></thead><tbody><tr><td>RUNTIME-001</td><td>上限与忽略目录集中到 <code>shared/editorContract.ts</code>、<code>main/editor/workspaceRules.ts</code>；无绝对路径字面量</td></tr><tr><td>RUNTIME-002</td><td>搜索/保存/冲突/重载文案全部「动作 + 目标 + 进度」，禁「处理中」</td></tr><tr><td>RUNTIME-003</td><td>搜索用协作式空闲预算（无硬 kill 定时器）；M3 待审等待以 reject 收束</td></tr><tr><td>RUNTIME-008</td><td>需求五问见 §0</td></tr><tr><td>PROCESS-013</td><td>零新增依赖（不引 ripgrep / chokidar）</td></tr><tr><td>PROCESS-014</td><td>不新增 CLI 命令 / 别名 / handler；新增 IPC 不计入棘轮</td></tr><tr><td>CORE-LAYERS</td><td>不给 <code>App.tsx</code> / <code>AppLayout.tsx</code> 加静态 import，不新增 Redux slice</td></tr><tr><td>FEATURE-OWNERSHIP</td><td>待 M2/M3 登记 <code>code-editor-workbench</code>、<code>file-write-sink</code> 两个能力域；<code>fs:writeFile</code> 记 forbidden</td></tr></tbody></table>
+<h2 id="10-验证">10. 验证<a class="anchor" href="#10-验证" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> apps/khyos-desktop &amp;&amp; node scripts/typecheck-baseline.cjs
+node --experimental-strip-types --<span class="hljs-built_in">test</span> tests/keymapContract.test.mjs tests/editorContract.test.mjs tests/editorDiff.test.mjs
+node --<span class="hljs-built_in">test</span> tests/desktopUiContract.test.cjs
+<span class="hljs-built_in">cd</span> ../.. &amp;&amp; node --<span class="hljs-built_in">test</span> runtime/node/backend/src/services/fileWriteService.test.js
+node --<span class="hljs-built_in">test</span> runtime/node/backend/src/services/fileWriteSinkTools.test.js
+node scripts/ci/check-core-layers.js
+node scripts/ci/check-agent-rules.js --changed</code></pre>
+<p>M1 手工路径：<code>npm run dev</code> → <code>Ctrl+Shift+E</code> → 文件树打开 3 个文件 → 改一个不保存 →<br>切/关标签触发拦截 → 新建文件 → 搜索看进度与取消 → 记事本外部改文件看到「磁盘已变」。</p>
+<p>M2 / M3 手工矩阵见本文件 §6 / §7。2026-11-11 实测：桌面端 317 mjs + 351 cjs 全绿<br>（cjs 含未配置编辑器回落的 D11 契约），<code>fileWriteService.test.js</code> 11/11、<br><code>fileWriteSinkTools.test.js</code> 9/9，类型检查仍为「既有 4 条」，<br><code>check-core-layers</code> 10 条既有 finding 未增，<code>check-agent-rules --changed</code> 0 违规。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-209] 命令索引与原子组装分级方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-209] 命令索引与原子组装分级方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-210] 内建代码编辑器工作台.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

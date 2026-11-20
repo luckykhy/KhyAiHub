@@ -88,7 +88,7 @@ flowchart LR
 | `runtime/node/backend/src` | L2 全部业务逻辑（CLI / 服务 / 路由 / TUI） | 4,190 | — | **必读**（只读核心 10 个文件） |
 | `runtime/node/backend/tests` | 后端测试（2,865 个 `.js`） | 2,865 | — | 按需（改哪测哪） |
 | `runtime/substrate/platform` | L1 Python 启动器 + 共享包 + 插件 SDK | — | — | 必读 `khy_platform/cli.py` |
-| `delivery/web/ai-frontend` | Web 前端（Vue） | — | — | 必读 `src/router` + `src/api` |
+| `delivery/channel/web/ai-frontend` | Web 前端（Vue） | — | — | 必读 `src/router` + `src/api` |
 | `delivery/channel/khyquant` | 独立项目 khyquant 的分发载体 | — | — | 按需 |
 | `delivery/extension` + `tools` | 扩展与扩展工具 | — | 69.3 MB（含 L4） | 按需 |
 | `apps/` | 桌面端等平台应用 | 401 | 647.0 MB | 按需 |
@@ -245,10 +245,10 @@ sequenceDiagram
 |---|---:|---|
 | `runtime/node/backend/server.js` | 1,670 | Express 装配：中间件、鉴权、路由挂载、端口探测 |
 | `runtime/node/backend/src/routes/` | 58 个文件 | 每个领域一个路由文件（`ai.js` / `backtest.js` / `auth.js` …） |
-| `delivery/web/ai-frontend/src/api/` | — | 前端 API 客户端（端点必须来自服务发现/env，不得硬编码） |
-| `delivery/web/ai-frontend/src/router/` | — | 前端路由 |
-| `delivery/web/ai-frontend/src/views/` + `components/` | — | 页面与组件 |
-| `delivery/web/ai-frontend/src/stores/` | — | Pinia 状态 |
+| `delivery/channel/web/ai-frontend/src/api/` | — | 前端 API 客户端（端点必须来自服务发现/env，不得硬编码） |
+| `delivery/channel/web/ai-frontend/src/router/` | — | 前端路由 |
+| `delivery/channel/web/ai-frontend/src/views/` + `components/` | — | 页面与组件 |
+| `delivery/channel/web/ai-frontend/src/stores/` | — | Pinia 状态 |
 
 **流式接口真实存在**：`src/routes/ai.js:407`、`aiGatewayAdmin.js:408/655`、`configSync.js:163`、`wx.js:118` 均含 `text/event-stream`。
 
@@ -374,7 +374,7 @@ stateDiagram-v2
 | 7 | `runtime/node/backend/src/services/gateway/aiGateway.js` | 产品的心脏之一 | 多供应商怎么选路、怎么降级 |
 | 8 | `runtime/node/backend/src/services/tool/toolUseLoopCore.js`（只读前 200 行） | 产品的心脏之二 | 工具调用怎么循环 |
 | 9 | `runtime/node/backend/src/services/domain/state/stateMachine/toolLoopPhases.js` | 把循环看成状态机 | 有哪些阶段、哪些是终态 |
-| 10 | `delivery/web/ai-frontend/src/api/` + `src/router/` | 前端怎么连后端 | 请求从哪发、端点从哪来 |
+| 10 | `delivery/channel/web/ai-frontend/src/api/` + `src/router/` | 前端怎么连后端 | 请求从哪发、端点从哪来 |
 
 ### 路线 2：我要改后端（约 2 小时）
 
@@ -395,13 +395,13 @@ stateDiagram-v2
 
 | # | 文件 | 为什么读 |
 |---:|---|---|
-| 1 | `delivery/web/ai-frontend/src/router/` | 页面从哪进 |
-| 2 | `delivery/web/ai-frontend/src/api/` | 后端端点怎么封装（禁止硬编码 host） |
-| 3 | `delivery/web/ai-frontend/src/stores/` | 状态放哪、谁在改 |
-| 4 | `delivery/web/ai-frontend/src/views/` + `components/` | 页面与组件 |
+| 1 | `delivery/channel/web/ai-frontend/src/router/` | 页面从哪进 |
+| 2 | `delivery/channel/web/ai-frontend/src/api/` | 后端端点怎么封装（禁止硬编码 host） |
+| 3 | `delivery/channel/web/ai-frontend/src/stores/` | 状态放哪、谁在改 |
+| 4 | `delivery/channel/web/ai-frontend/src/views/` + `components/` | 页面与组件 |
 | 5 | `runtime/node/backend/src/routes/<领域>.js` | 对应后端接口 |
-| 6 | `delivery/web/ai-frontend/backendDiscovery.mjs` | 后端不可达时怎么发现/降级 |
-| 7 | `delivery/web/ai-frontend/src/composables/` | SSE、轮询等复用逻辑 |
+| 6 | `delivery/channel/web/ai-frontend/backendDiscovery.mjs` | 后端不可达时怎么发现/降级 |
+| 7 | `delivery/channel/web/ai-frontend/src/composables/` | SSE、轮询等复用逻辑 |
 
 ---
 

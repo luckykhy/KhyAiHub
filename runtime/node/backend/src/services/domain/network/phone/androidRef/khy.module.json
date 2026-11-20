@@ -1,0 +1,19 @@
+{
+  "name": "android-ref",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "fanIn": 1,
+  "tests": [
+    "runtime/node/backend/src/services/domain/network/phone/androidRef/uidrefAdapter.test.js",
+    "runtime/node/backend/src/services/domain/network/phone/androidRef/androidUiPolicy.test.js",
+    "runtime/node/backend/src/services/domain/network/phone/androidRef/index.test.js",
+    "runtime/node/backend/src/tools/AndroidUiTool/index.test.js"
+  ],
+  "_tests_note": "四条路径都是仓库根相对路径。前三条是本单元同名同目录测试；第四条是唯一非测试消费者 AndroidUiTool 的接线测试（在 D1 目录），列在这里是为了让「这个单元的测试面」一眼可查——本字段无守卫消费，entry-buffer 判据另按同名同目录文件存在性判定。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-11-16",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：唯一非测试消费者是 src/tools/AndroidUiTool（本批同时落地的 D1 消费方），尚未经过真机使用期的检验，所以 fanIn 记 1 但仍留 staged。晋级三判据：单元 README ✓、3 个源文件全部同名同目录测试 ✓、整数 fanIn 声明 ✓。出边全部合法：D2 一处（require('../index.js') 取 phone 门面：createAdbTransport 与 buildAdbArgv/redactSecrets 等纯函数），D3 一处（utils/flagRegistry 经惰性 require），CORE 若干（标准库不计域），以及一条到 backend/vendor/android-agent-kit 的静态 require（相对路径 6 级，集中写在 index.js 一处；vendor 目录不在 DOMAIN-DEPS 任何 roots/overrides 里，守卫静默跳过，沿用 runtime/node/backend/vendor/shared 的既有形状）。已知守卫盲区：check-repo-layout 的 d3-purity 不扫 vendor 目标，所以这条边只能靠本注与 README 记录。"
+}

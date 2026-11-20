@@ -1,0 +1,454 @@
+{
+ "id": "semantics-001",
+ "title": "派生语义：effect 的四种结论与覆盖层检测",
+ "cases": [
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "网络",
+      "bounds": [
+       0,
+       0,
+       1080,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/net",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "btn",
+      "label": "返回",
+      "bounds": [
+       0,
+       74,
+       147,
+       221
+      ],
+      "class_name": "",
+      "resource_id": "com.android:id/up",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [],
+    "added": [
+     {
+      "ref": "e1",
+      "role": "btn",
+      "label": "返回"
+     }
+    ],
+    "removed": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "网络"
+     }
+    ],
+    "is_identical": false,
+    "counts": {
+     "matched": 0,
+     "added": 1,
+     "removed": 1,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "点击后目标消失 → effect = target_gone（导航类动作的典型信号）"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "switch",
+      "label": "Wi-Fi",
+      "bounds": [
+       0,
+       0,
+       200,
+       100
+      ],
+      "class_name": "android.widget.Switch",
+      "resource_id": "",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "switch",
+      "label": "Wi-Fi",
+      "bounds": [
+       0,
+       0,
+       200,
+       100
+      ],
+      "class_name": "android.widget.Switch",
+      "resource_id": "",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": true,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": [
+       "state_changed"
+      ]
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 1,
+     "label_changed": 0
+    }
+   },
+   "why": "点击开关 → effect = target_changed, changes = [state_changed]"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "禁用项",
+      "bounds": [
+       0,
+       0,
+       200,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": true,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "禁用项",
+      "bounds": [
+       0,
+       0,
+       200,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": true,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "点了禁用项，界面无变化 → effect = target_unchanged"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "打开",
+      "bounds": [
+       0,
+       0,
+       1080,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/open",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "打开",
+      "bounds": [
+       0,
+       0,
+       1080,
+       200
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/open",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "对话框标题",
+      "bounds": [
+       100,
+       400,
+       980,
+       600
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/dlg",
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "对话框标题"
+     }
+    ],
+    "removed": [],
+    "is_identical": false,
+    "counts": {
+     "matched": 1,
+     "added": 1,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "点击弹出覆盖层：target 本身没变，但有新元素压上来 → added_overlapping_target 非空"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "",
+      "resource_id": "com.x:id/a",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "传一个不在 prev 里的 ref → effect = unknown_target"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "scroll",
+      "label": "",
+      "bounds": [
+       0,
+       0,
+       1080,
+       2337
+      ],
+      "class_name": "",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "scroll",
+      "label": "",
+      "bounds": [
+       0,
+       0,
+       1080,
+       2337
+      ],
+      "class_name": "",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 1,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "只有一个滚动容器且无变化 → is_identical = true"
+  }
+ ]
+}

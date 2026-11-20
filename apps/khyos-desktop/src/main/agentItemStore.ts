@@ -21,7 +21,7 @@ import {
   deleteTerminalItem,
   importTerminalItems,
 } from './terminalSources'
-import { slashCommandItems } from './slashCommandSources'
+import { slashCommandGroups, slashCommandItems, type CommandGroup } from './slashCommandSources'
 
 export const AGENT_ITEM_KINDS = new Set(['command', 'hook', 'skill', 'subagent', 'memory'])
 
@@ -41,6 +41,8 @@ export interface AgentItem {
   readOnly?: boolean
   toggleable?: boolean
   deletable?: boolean
+  // 命令页分组键（groupKey→组）。只有 command kind 的行带值。
+  groupKey?: string
 }
 
 function kindError(kind: string): string | null {
@@ -59,7 +61,7 @@ function failure(err: unknown): string {
 
 export async function listItems(
   kind: string
-): Promise<{ ok: boolean; items?: AgentItem[]; error?: string }> {
+): Promise<{ ok: boolean; items?: AgentItem[]; groups?: CommandGroup[]; error?: string }> {
   const err = kindError(kind)
   if (err) return { ok: false, error: err }
   try {
@@ -68,7 +70,13 @@ export async function listItems(
       // 设置页「命令」页与终端同源：CC 桥/插件行之外，把 khy 斜杠命令面
       // （内置 + 用户技能触发）整列接入。行只读，排序口径与其它 kind 一致。
       const khy = slashCommandItems()
-      return { ok: true, items: [...items, ...khy].sort((a, z) => a.name.localeCompare(z.name)) }
+      // groups 只在 command kind 下发：其余 kind 的响应里它是 undefined，渲染层
+      // 因此走与今日逐字节相同的平铺分支。目录拉不到时返 []，同样回落平铺。
+      return {
+        ok: true,
+        items: [...items, ...khy].sort((a, z) => a.name.localeCompare(z.name)),
+        groups: slashCommandGroups(),
+      }
     }
     return { ok: true, items }
   } catch (e) {

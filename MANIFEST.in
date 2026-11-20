@@ -9,7 +9,7 @@ recursive-include runtime/substrate/platform/packages/shared *
 recursive-include runtime/substrate/platform/packages/moonbit-plugin-sdk *
 recursive-include docs *
 recursive-include delivery/extension *
-recursive-include delivery/web/ai-frontend *
+recursive-include delivery/channel/web/ai-frontend *
 recursive-include delivery/channel/khyquant *
 recursive-include runtime/boot/kernel/src *
 recursive-include runtime/boot/kernel/boot *
@@ -28,7 +28,7 @@ include runtime/substrate/platform/khy_platform/_resources/__init__.py
 include runtime/substrate/platform/khy_platform/_resources/tray-icon.png
 include runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs
 include package-lock.json
-include delivery/web/ai-frontend/package-lock.json
+include delivery/channel/web/ai-frontend/package-lock.json
 include delivery/channel/khyquant/frontend/package-lock.json
 include README.md
 include AGENTS.md
@@ -41,8 +41,8 @@ exclude runtime/node/.env
 exclude backend/.env
 exclude .env
 exclude docs/19_资产/mermaid.min.js
-exclude delivery/web/ai-frontend/build-bg.log
-exclude delivery/web/ai-frontend/coverage/coverage-final.json
+exclude delivery/channel/web/ai-frontend/build-bg.log
+exclude delivery/channel/web/ai-frontend/coverage/coverage-final.json
 exclude runtime/node/backend/TmpKoh.class
 exclude runtime/node/backend/TmpKoh.java
 exclude docs/11_报告/历史/stash_patch.txt
@@ -56,7 +56,7 @@ prune runtime/node/backend/_source
 prune runtime/node/ai-backend/node_modules
 prune delivery/extension/tools/khy-markdown/muya-embed/node_modules
 prune delivery/extension/tools/khy-markdown/vendor
-prune delivery/web/ai-frontend/node_modules
+prune delivery/channel/web/ai-frontend/node_modules
 prune runtime/node/backend/models
 prune runtime/node/backend/logs
 prune runtime/node/backend/temp
@@ -74,9 +74,9 @@ prune delivery/channel/khyquant/ml/data
 prune delivery/channel/khyquant/khy_quant/bundled
 prune .tmp
 prune dist
-prune delivery/web/ai-frontend/dist
+prune delivery/channel/web/ai-frontend/dist
 prune delivery/channel/khyquant/frontend/dist
-prune delivery/web/ai-frontend/public/vendor
+prune delivery/channel/web/ai-frontend/public/vendor
 prune docs/_ref
 prune runtime/node/backend/tests
 prune runtime/node/backend/test
@@ -85,7 +85,7 @@ prune runtime/node/ai-backend/test
 prune delivery/channel/khyquant/tests
 prune runtime/substrate/platform/packages/shared/tests
 prune delivery/extension/tools/khy-markdown/test
-prune delivery/web/ai-frontend/test
+prune delivery/channel/web/ai-frontend/test
 prune runtime/boot/kernel/build
 prune runtime/boot/kernel/iso/output
 prune runtime/substrate/platform/packages/moonbit-plugin-sdk/node_modules
@@ -101,7 +101,7 @@ prune runtime/node/backend/.khy
 prune runtime/node/backend/src/.khy
 prune runtime/node/backend/test-data-criterion-1
 prune runtime/node/backend/test-data-criterion-2
-prune delivery/web/ai-frontend/.vscode
+prune delivery/channel/web/ai-frontend/.vscode
 prune runtime/node/backend/.cursor
 
 # Extension-specific recursive excludes.
@@ -151,7 +151,7 @@ global-exclude *[[]*
 
 # Re-add real runtime files killed by the broad rules above.
 # MUST stay last: MANIFEST.in applies its directives in order.
-include delivery/web/ai-frontend/index.html
+include delivery/channel/web/ai-frontend/index.html
 include delivery/channel/khyquant/frontend/index.html
 include delivery/channel/khyquant/frontend/ml-test.html
 include delivery/channel/khyquant/frontend/public/offline.html

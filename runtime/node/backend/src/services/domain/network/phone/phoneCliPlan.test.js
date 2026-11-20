@@ -66,6 +66,44 @@ test('pull 子命令解析设备路径与主机路径；缺设备路径时明确
   assert.equal(missing.code, 'missing_args');
 });
 
+test('record 子命令解析秒数与主机目录；非数字秒数被拒', () => {
+  const parsed = leaf.parsePhoneArgv(['record', '15', 'out/audio'], {});
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.action, 'record');
+  assert.equal(parsed.seconds, '15');
+  assert.equal(parsed.localDir, 'out/audio');
+
+  // 缺省：10 秒，主机目录留空由调用方决定
+  const def = leaf.parsePhoneArgv(['record'], {});
+  assert.equal(def.ok, true);
+  assert.equal(def.seconds, '10');
+  assert.equal(def.localDir, '');
+
+  const bad = leaf.parsePhoneArgv(['record', 'abc'], {});
+  assert.equal(bad.ok, false);
+  assert.equal(bad.code, 'invalid_args');
+});
+test('collect 允许省略主机目录（落默认位置）或写 - 作占位', () => {
+  const onlyRemote = leaf.parsePhoneArgv(['collect', '/sdcard/DCIM'], {});
+  assert.equal(onlyRemote.ok, true);
+  assert.equal(onlyRemote.action, 'collect');
+  assert.equal(onlyRemote.remoteDir, '/sdcard/DCIM');
+  assert.equal(onlyRemote.localDir, '');
+  assert.deepEqual(onlyRemote.types, []);
+
+  const dash = leaf.parsePhoneArgv(['collect', '/sdcard/DCIM', '-', 'image', '7d'], {});
+  assert.equal(dash.ok, true);
+  assert.equal(dash.localDir, '-');
+  assert.deepEqual(dash.types, ['image']);
+  assert.equal(dash.since, '7d');
+
+  const explicit = leaf.parsePhoneArgv(['collect', '/sdcard/DCIM', 'out/dcim'], {});
+  assert.equal(explicit.localDir, 'out/dcim');
+
+  const none = leaf.parsePhoneArgv(['collect'], {});
+  assert.equal(none.ok, false);
+  assert.equal(none.code, 'missing_args');
+});
 test('call 的参数必须是 JSON 对象', () => {
   const notJson = leaf.parsePhoneArgv(['call', 'ls', '/sdcard'], {});
   assert.equal(notJson.ok, false);
@@ -105,9 +143,49 @@ test('状态渲染带上配置里的序列号与信箱目录', () => {
   assert.match(text, /192\.168\.2\.46:33743/);
   assert.match(text, /lite/);
   assert.match(text, /22/);
-  // 令牌只报「已读取」，不回显
-  assert.match(text, /已从设备读取/);
+  // 凭据只报「可用」，不回显（断点二之后设备上已无明文令牌）
+  assert.match(text, /凭据：设备签发的证书可用/);
   assert.doesNotMatch(text, /[0-9a-f]{32}/);
+});
+
+test('状态渲染带出向链路登记结论（reg_state / last_reg_ms / registration_source）', () => {
+  const text = leaf.renderStatusText({
+    config: { serial: 'S' },
+    status: {},
+    state: {
+      registration: {
+        reg_state: 're_registered',
+        last_reg_ms: 1700000000000,
+        registration_source: 'auto',
+        deviceId: 'aabbccdd11223344',
+        code: null,
+      },
+    },
+  });
+  assert.match(text, /reg_state=re_registered/);
+  assert.match(text, /registration_source=auto/);
+  assert.match(text, /last_reg_ms=1700000000000/);
+});
+
+test('状态渲染在登记被拒时把 code 一起报出来，没确认过就写未确认', () => {
+  const rejected = leaf.renderStatusText({
+    config: { serial: 'S' },
+    status: {},
+    state: {
+      registration: {
+        reg_state: 'unregistered',
+        last_reg_ms: null,
+        registration_source: null,
+        deviceId: 'aabbccdd11223344',
+        code: 'device_slots_full',
+      },
+    },
+  });
+  assert.match(rejected, /reg_state=unregistered/);
+  assert.match(rejected, /device_slots_full/);
+
+  const unknown = leaf.renderStatusText({ config: { serial: 'S' }, status: {}, state: { registration: null } });
+  assert.match(unknown, /reg_state=unregistered（未确认）/);
 });
 
 test('授权清单渲染出可复制的 adb 命令与 lite 不适用项', () => {
@@ -214,4 +292,41 @@ test('工具清单把不可用的助手协同组单列，形态同 UI 工具', (
   // 没有 assistant 段（true / null）时不多渲染这一段。
   const none = leaf.renderToolListText({ tools: [{ bridgeName: 'ping' }] });
   assert.doesNotMatch(none, /不可用/);
+});
+
+
+// ── S1：result 唯一消费方的操作员入口与 status 渲染 ─────────────────────────
+
+test('mailbox-clean 是登记过的子命令，未知子命令文案自动带上它', () => {
+  assert.ok(leaf.ACTIONS.includes('mailbox-clean'));
+  const bad = leaf.parsePhoneArgv(['no-such-action'], {});
+  assert.equal(bad.ok, false);
+  assert.match(bad.error, /mailbox-clean/);
+});
+
+test('parsePhoneArgv 对 mailbox-clean 透传 --confirm（dryRun=未带 confirm）', () => {
+  const planned = leaf.parsePhoneArgv(['mailbox-clean'], {});
+  assert.equal(planned.ok, true);
+  assert.equal(planned.action, 'mailbox-clean');
+  assert.equal(planned.confirm, false);
+  const confirmed = leaf.parsePhoneArgv(['mailbox-clean'], { confirm: true });
+  assert.equal(confirmed.confirm, true);
+});
+
+test('状态渲染：信箱深度与 oldest/dropped 上屏，缺块写未上报', () => {
+  const withMailbox = leaf.renderStatusText({
+    config: { serial: 'S' },
+    status: { mailbox: { pending: 1, processing: 2, results: 3, tmp: 0, oldest_result_age_ms: 90000000, dropped: 4 } },
+    state: {},
+  });
+  assert.match(withMailbox, /信箱/);
+  assert.match(withMailbox, /pending 1/);
+  assert.match(withMailbox, /processing 2/);
+  assert.match(withMailbox, /results 3/);
+  assert.match(withMailbox, /tmp 0/);
+  assert.match(withMailbox, /oldest_result_age_ms=90000000/);
+  assert.match(withMailbox, /dropped=4/);
+
+  const without = leaf.renderStatusText({ config: { serial: 'S' }, status: {}, state: {} });
+  assert.match(without, /信箱：未上报/);
 });

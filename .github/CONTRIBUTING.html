@@ -77,9 +77,9 @@ npx eslint &lt;你改动或新增的文件...&gt; --max-warnings 0   <span class
 npm <span class="hljs-built_in">test</span>
 npm run <span class="hljs-built_in">test</span>:node
 
-<span class="hljs-comment"># 8) 前端（改了 delivery/web/ai-frontend 或 delivery/channel/khyquant/frontend 时）</span>
-<span class="hljs-built_in">cd</span> delivery/web/ai-frontend &amp;&amp; npm <span class="hljs-built_in">test</span> &amp;&amp; npm run <span class="hljs-built_in">test</span>:node   <span class="hljs-comment"># vitest 14 文件 / 162 用例 + node:test</span>
-npm run build --prefix delivery/web/ai-frontend
+<span class="hljs-comment"># 8) 前端（改了 delivery/channel/web/ai-frontend 或 delivery/channel/khyquant/frontend 时）</span>
+<span class="hljs-built_in">cd</span> delivery/channel/web/ai-frontend &amp;&amp; npm <span class="hljs-built_in">test</span> &amp;&amp; npm run <span class="hljs-built_in">test</span>:node   <span class="hljs-comment"># vitest 14 文件 / 162 用例 + node:test</span>
+npm run build --prefix delivery/channel/web/ai-frontend
 node scripts/ci/check-frontend-size.js                 <span class="hljs-comment"># 产物体积对比基线（报告态）</span>
 
 <span class="hljs-comment"># 9) 依赖体积预算（动了任何 package.json 就跑一次，见 §11）</span>

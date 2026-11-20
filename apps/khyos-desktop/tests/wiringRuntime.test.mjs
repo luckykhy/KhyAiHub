@@ -39,11 +39,16 @@ const { registerKeyManagerIpc } = await import('../src/main/keyManager/ipc.ts')
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const read = (p) => (existsSync(join(projectRoot, p)) ? readFileSync(join(projectRoot, p), 'utf-8') : '')
 
-// preload 侧真实暴露的 25 个通道（真源：src/preload/index.ts:176-212）
+// preload 侧真实暴露的 32 个通道（真源：src/preload/index.ts:176-212）
+// 2026-11-19：新增模型管理页的 7 个 models:* 通道（managed/add/update/remove/
+// apply/probe/catalog）后由 25 涨到 32。改前已核对：ipc.ts 的 handle()+on()
+// 实际注册 32 个，且 32 个在 preload 全部有暴露（无死通道）。
 const PRELOAD_CHANNELS = [
   'keys:list', 'keys:add', 'keys:update', 'keys:remove', 'keys:toggle', 'keys:reveal', 'keys:import',
   'providers:list', 'providers:add', 'providers:remove',
   'endpoints:presets', 'endpoints:validate', 'models:fetch',
+  'models:managed', 'models:add', 'models:update', 'models:remove',
+  'models:apply', 'models:probe', 'models:catalog',
   'cards:list', 'cards:add', 'cards:update', 'cards:remove',
   'agents:matrix', 'agents:apply', 'agents:revert',
   'proxy:status', 'proxy:start',
@@ -57,10 +62,10 @@ function captureRegistration() {
   return handlers
 }
 
-test('运行态：registerKeyManagerIpc 实际注册 preload 暴露的全部 25 个通道', () => {
+test('运行态：registerKeyManagerIpc 实际注册 preload 暴露的全部 32 个通道', () => {
   const handlers = captureRegistration()
   const missing = PRELOAD_CHANNELS.filter((ch) => !handlers.has(ch))
-  assert.equal(handlers.size, 25, `实际注册 ${handlers.size} 个，期望 25`)
+  assert.equal(handlers.size, 32, `实际注册 ${handlers.size} 个，期望 32`)
   assert.deepEqual(missing, [], `未注册：${missing.join(', ')}`)
 })
 
@@ -72,7 +77,7 @@ test('运行态：注册无重复（重复注册静默覆盖，是真实事故�
   assert.deepEqual(dup, [], `重复注册：${dup.join(', ')}`)
 })
 
-test('运行态：25 个 handler 全是函数（非 undefined 占位）', () => {
+test('运行态：32 个 handler 全是函数（非 undefined 占位）', () => {
   const handlers = captureRegistration()
   for (const ch of PRELOAD_CHANNELS) {
     assert.equal(typeof handlers.get(ch), 'function', `${ch} 的 handler 不是函数`)

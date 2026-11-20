@@ -37,6 +37,10 @@ test('doctor 阶段用只读 --check,绝不用会自愈写盘的裸 doctor', () 
   const d = gate.STAGES.find((s) => s.id === 'doctor-preflight');
   assert.ok(d, 'doctor-preflight 阶段应存在');
   assert.match(d.command, /doctor\s+--check\b/);
+  // 必须是不依赖 PATH 的形态:发布门在干净 runner 上跑,那里 PATH 上没有装本仓的 khy
+  // (CI 只装依赖,不装 bin),裸命令必然 ENOENT ⇒ must 阶段恒红、发布门读数恒为 NO-GO。
+  assert.doesNotMatch(d.command, /^khy\b/, '不得依赖 PATH 上的 khy:干净 runner 会 ENOENT');
+  assert.match(d.command, /node\s+runtime\/node\/backend\/bin\/khy\.js/, '应走仓库内 node 入口');
 });
 
 test('离机还原门:restore-readiness / install-integrity 为 must 确定性阶段', () => {
@@ -82,6 +86,7 @@ test('selectStages(must): 仅 must 确定性阶段 + 全部环境门', () => {
   // recommended 的确定性阶段在 must 下被排除
   assert.ok(!runnable.some((s) => s.id === 'maintainer-tests'));
   assert.ok(!runnable.some((s) => s.id === 'pip-purity'));
+  assert.ok(!runnable.some((s) => s.id === 'dependency-audit'));
   // 环境门始终保留
   assert.ok(manual.every((s) => s.kind === 'environment'));
   assert.ok(manual.some((s) => s.id === 'fresh-install'));
@@ -91,6 +96,7 @@ test('selectStages(all): 纳入 recommended 确定性阶段', () => {
   const { runnable } = gate.selectStages('all');
   assert.ok(runnable.some((s) => s.id === 'maintainer-tests'));
   assert.ok(runnable.some((s) => s.id === 'pip-purity'));
+  assert.ok(runnable.some((s) => s.id === 'dependency-audit'));
 });
 
 test('computeVerdict: must 失败 => NO-GO', () => {
@@ -168,3 +174,91 @@ test('makeResult 不改入参 stage', () => {
   gate.makeResult(stage, { status: 'pass', ms: 1 });
   assert.strictEqual(JSON.stringify(stage), snapshot, 'makeResult 必须是纯函数');
 });
+
+test('dependency-audit: recommended 档,失败只进 warnings', () => {
+  const s = gate.STAGES.find((x) => x.id === 'dependency-audit');
+  assert.ok(s, 'dependency-audit 阶段应存在');
+  assert.strictEqual(s.tier, 'recommended', '漏洞数受上游影响,不得阻断发布');
+  assert.strictEqual(s.kind, 'deterministic');
+  assert.match(s.command, /scripts\/release\/audit-deps\.js/);
+  assert.strictEqual(s.skipExitCode, gate.SKIP_EXIT_CODE, 'SKIP 必须是独立退出码');
+  assert.strictEqual(s.showDetailOnPass, true, '干净跑完也要显示计数摘要');
+
+  const v = gate.computeVerdict([
+    gate.makeResult(s, { status: 'fail', code: 1, detail: 'high=2' }),
+  ]);
+  assert.strictEqual(v.automatedGo, true, 'recommended 失败不得翻 NO-GO');
+  assert.strictEqual(v.warnings.length, 1);
+  assert.strictEqual(v.blockers.length, 0);
+});
+
+test('dependency-audit 执行器跑的就是 --omit=dev --audit-level=high --json', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const src = fs.readFileSync(
+    path.join(__dirname, '..', 'release', 'audit-deps.js'),
+    'utf8',
+  );
+  assert.match(src, /npm audit --omit=dev --audit-level=high --json/);
+});
+
+test('skip 状态:既不算 pass,也不算 warning/blocker', () => {
+  const s = gate.STAGES.find((x) => x.id === 'dependency-audit');
+  const r = gate.makeResult(s, { status: 'skip', code: gate.SKIP_EXIT_CODE, detail: 'SKIP: offline' });
+  const v = gate.computeVerdict([r]);
+  assert.strictEqual(v.automatedGo, true);
+  assert.strictEqual(v.warnings.length, 0, 'SKIP 不是失败');
+  assert.strictEqual(v.blockers.length, 0);
+
+  const json = gate.toJson([r], v);
+  assert.strictEqual(json.counts.pass, 0, 'SKIP 绝不计为 pass');
+  assert.strictEqual(json.stages[0].status, 'skip');
+});
+
+test('formatResultLine: PASS 带一行读数,FAIL 不带', () => {
+  const s = gate.STAGES.find((x) => x.id === 'dependency-audit');
+  const pass = gate.formatResultLine(
+    gate.makeResult(s, {
+      status: 'pass',
+      ms: 12,
+      detail: '依赖漏洞: critical=0 high=0 moderate=3\n第二行',
+    }),
+  );
+  assert.match(pass, /\[PASS\]/);
+  assert.match(pass, /critical=0 high=0 moderate=3/);
+  assert.doesNotMatch(pass, /第二行/, '只取第一行');
+
+  const fail = gate.formatResultLine(
+    gate.makeResult(s, { status: 'fail', code: 1, detail: '定位信息' }),
+  );
+  assert.doesNotMatch(fail, /定位信息/, '失败定位由报告段落展示');
+});
+
+test('runStage: skipExitCode 映射成 skip,不是 pass 也不是 fail', () => {
+  const { runStage } = require('../release/release-gate');
+  const hrNow = () => Number(process.hrtime.bigint() / 1000000n);
+  const skipStage = {
+    id: 'skip-probe',
+    title: 'skip probe',
+    tier: 'recommended',
+    kind: 'deterministic',
+    command: 'node -e "process.exit(78)"',
+    skipExitCode: gate.SKIP_EXIT_CODE,
+  };
+  const r = runStage(skipStage, { hrNow });
+  assert.strictEqual(r.status, 'skip');
+  assert.strictEqual(r.code, gate.SKIP_EXIT_CODE);
+
+  const passStage = {
+    id: 'pass-probe',
+    title: 'pass probe',
+    tier: 'recommended',
+    kind: 'deterministic',
+    command: 'node -e "console.log(\'critical=0 high=0\')"',
+    showDetailOnPass: true,
+  };
+  const p = runStage(passStage, { hrNow });
+  assert.strictEqual(p.status, 'pass');
+  assert.match(p.detail, /critical=0 high=0/);
+});
+

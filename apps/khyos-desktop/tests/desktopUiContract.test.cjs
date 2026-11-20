@@ -31,6 +31,9 @@ const mainSrc = existsSync(mainSrcPath) ? readFileSync(mainSrcPath, 'utf-8') : '
 // include it in the D6 main-side scan so preload↔main channel parity holds.
 const keyManagerIpcPath = join(projectRoot, 'src', 'main', 'keyManager', 'ipc.ts');
 const keyManagerIpcSrc = existsSync(keyManagerIpcPath) ? readFileSync(keyManagerIpcPath, 'utf-8') : '';
+// Editor workbench IPC (DESIGN-ARCH-210) — same dedicated-module pattern.
+const editorIpcPath = join(projectRoot, 'src', 'main', 'editor', 'ipc.ts');
+const editorIpcSrc = existsSync(editorIpcPath) ? readFileSync(editorIpcPath, 'utf-8') : '';
 const preloadSrc = existsSync(preloadSrcPath) ? readFileSync(preloadSrcPath, 'utf-8') : '';
 const menuSrc = existsSync(menuSrcPath) ? readFileSync(menuSrcPath, 'utf-8') : '';
 const titleBarSrc = existsSync(titleBarPath) ? readFileSync(titleBarPath, 'utf-8') : '';
@@ -132,15 +135,27 @@ test('D6: IPC 通道使用 namespace:action 命名约定', () => {
       `KeyManager IPC 通道 "${name}" 应使用 namespace:action 命名约定`
     );
   }
+  // Editor workbench channels (DESIGN-ARCH-210)
+  const editorChannels = editorIpcSrc.match(/handle\('([^']+)'/g) || [];
+  for (const channel of editorChannels) {
+    const name = channel.match(/'([^']+)'/)[1];
+    assert.match(
+      name,
+      /^[a-z][a-z-]*:[a-z][a-z-]*$/,
+      `Editor IPC 通道 "${name}" 应使用 namespace:action 命名约定`
+    );
+  }
 });
 
 test('D6: preload invoke 使用与主进程一致的通道名', () => {
   const preloadInvokes = preloadSrc.match(/ipcRenderer\.invoke\(['"`]([^'"`]+)['"`]/g) || [];
   const mainHandles = mainSrc.match(/ipcMain\.handle\(['"`]([^'"`]+)['"`]/g) || [];
   const keyManagerHandles = keyManagerIpcSrc.match(/handle\('([^']+)'/g) || [];
+  const editorHandles = editorIpcSrc.match(/handle\('([^']+)'/g) || [];
   const mainNames = [
     ...mainHandles.map((h) => h.match(/['"`]([^'"`]+)['"`]/)[1]),
     ...keyManagerHandles.map((h) => h.match(/'([^']+)'/)[1]),
+    ...editorHandles.map((h) => h.match(/'([^']+)'/)[1]),
   ];
   for (const invoke of preloadInvokes) {
     const name = invoke.match(/['"`]([^'"`]+)['"`]/)[1];
@@ -149,6 +164,30 @@ test('D6: preload invoke 使用与主进程一致的通道名', () => {
       `preload 调用通道 "${name}" 在主进程中未注册（API 漂移）`
     );
   }
+});
+
+// ── D11: 外部编辑器未配置 → 内置工作台回落（DESIGN-ARCH-210 §1.1）────
+
+test('D11: 「在编辑器中打开」未配置外部编辑器时回落内置工作台', () => {
+  const appHeaderPath = join(projectRoot, 'src', 'renderer', 'components', 'message', 'AppHeader.tsx');
+  const appLayoutPath = join(projectRoot, 'src', 'renderer', 'components', 'layout', 'AppLayout.tsx');
+  for (const [label, file] of [['TitleBar', titleBarPath], ['AppHeader', appHeaderPath]]) {
+    const src = readFileSync(file, 'utf-8');
+    assert.ok(
+      src.includes("r.state === 'unconfigured'") || src.includes("r?.state === 'unconfigured'"),
+      `${label} 应识别 app:openInEditor 返回的 unconfigured 状态`
+    );
+    assert.ok(
+      src.includes("new Event('khy:open-file-picker')"),
+      `${label} 未配置外部编辑器时应派发 khy:open-file-picker（回落内置工作台），不得只弹错误`
+    );
+  }
+  const layoutSrc = readFileSync(appLayoutPath, 'utf-8');
+  assert.match(
+    layoutSrc,
+    /onOpenPicker[\s\S]{0,240}setCenterView\('editor'\)/,
+    'AppLayout 收到 khy:open-file-picker 后应把主区切到编辑器工作台'
+  );
 });
 
 // ── D7: 菜单结构 ────────────────────────────────────────────────

@@ -153,9 +153,9 @@ function resolvePython() {
   return null;
 }
 
-/** dist/ 下最新的非空 wheel。 */
+/** entries/pip/ 下最新的非空 wheel（pip 产物的唯一落点，LAYOUT-005）。 */
 function newestWheel() {
-  const dir = path.join(ROOT, 'dist');
+  const dir = path.join(ROOT, 'entries', 'pip');
   let entries;
   try {
     entries = fs.readdirSync(dir);
@@ -217,7 +217,7 @@ function cleanup() {
  * pypi 通道：声明的 goldenPath 形如
  *   `pip install khy-os && khy doctor --check`
  * 本地可验证的等价物：**安装刚构建出的那个 wheel**，再跑同一条 doctor 自检。
- * 用 dist/*.whl 而不是从 PyPI 拉，是因为发布门要判的是"这一批产物能不能装"，
+ * 用 entries/pip/*.whl 而不是从 PyPI 拉，是因为发布门要判的是"这一批产物能不能装"，
  * 而不是"已经发布的旧版还能不能装"。
  *
  * 优先用 venv 装（最接近用户：独立的 site-packages + 真正的 khy 控制台脚本）。
@@ -232,7 +232,7 @@ function verifyPypi(declared) {
   if (!wheel) {
     return {
       status: 'SKIP',
-      reason: 'dist/ 下没有非空 *.whl —— 先跑：npm run build:pip（或 bash scripts/release/build-and-audit-pip-purity.sh）',
+      reason: 'entries/pip/ 下没有非空 *.whl —— 先跑：npm run build:pip（或 bash scripts/release/build-and-audit-pip-purity.sh）',
     };
   }
   const expected = expectedPipVersion();

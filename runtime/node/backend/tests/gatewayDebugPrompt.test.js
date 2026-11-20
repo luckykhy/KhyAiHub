@@ -37,6 +37,10 @@ describe('gateway debug prompt command', () => {
     jest.doMock('../src/utils/dataHome', () => ({
       getDataHome: () => '/tmp/khy-data-home',
       getLegacyDataHome: () => '/tmp/khy-data-home-legacy',
+      // handlers/gatewayManageDaemon.js 在模块顶层就取址（resolveDataPath），
+      // 少导出这两个函数会让整条 gateway require 链炸在 require 时，而不是断言时。
+      getDataDir: (name) => `/tmp/khy-data-home/${name}`,
+      resolveDataPath: (...segments) => ['/tmp/khy-data-home', ...segments].join('/'),
     }));
 
     jest.doMock('../src/cli/formatters', () => ({

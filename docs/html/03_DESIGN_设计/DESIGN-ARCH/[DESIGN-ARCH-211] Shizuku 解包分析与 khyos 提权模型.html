@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型.md -->
+<title>[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-211-shizuku-解包分析与-khyos-提权模型">[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-取证方法-可独立复核">1. 取证方法（可独立复核）</a></li><li class="lvl-2"><a href="#2-解包得到的事实">2. 解包得到的事实</a></li><li class="lvl-3"><a href="#2-1-清单事实">2.1 清单事实</a></li><li class="lvl-3"><a href="#2-2-dex-事实">2.2 dex 事实</a></li><li class="lvl-3"><a href="#2-3-协议常量-三个关键类的字符串常量">2.3 协议常量（三个关键类的字符串常量）</a></li><li class="lvl-2"><a href="#3-端到端时序-真机实测">3. 端到端时序（真机实测）</a></li><li class="lvl-2"><a href="#4-本轮真机踩到的三个坑-都是静默失败">4. 本轮真机踩到的三个坑（都是静默失败）</a></li><li class="lvl-2"><a href="#5-khyos-侧的落点-代码位置">5. khyos 侧的落点（代码位置）</a></li><li class="lvl-2"><a href="#6-边界-为什么不把-shizuku-的代码搬进-khyos-追加式说明-不改写-207-的裁决">6. 边界：为什么不把 Shizuku 的代码搬进 khyos（追加式说明，不改写 207 的裁决）</a></li><li class="lvl-2"><a href="#7-两条提权通道的现状-2026-11-11-真机">7. 两条提权通道的现状（2026-11-11 真机）</a></li><li class="lvl-2"><a href="#8-验收与复现">8. 验收与复现</a></li><li class="lvl-2"><a href="#9-未决事项-交人裁决-本文不代劳">9. 未决事项（交人裁决，本文不代劳）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-ARCH-211 | 阶段: 取证 / 分析（结论已落到代码） --&gt;<br>&lt;!-- IMPL-STATUS: partial --&gt;<br>&lt;!-- 证据时效: 2026-11-11 取证（官方 release v13.6.0 + 真机 PZ261A/Android 16）。样本 SHA-256 与脚本路径写在本文件内，可独立复核。 --&gt;</p>
+<h1 id="design-arch-211-shizuku-解包分析与-khyos-提权模型">[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型<a class="anchor" href="#design-arch-211-shizuku-解包分析与-khyos-提权模型" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：<strong>分析完成，结论已落到代码</strong>（2026-11-11）。<br>真源范围：本文是「khyos 手机端如何接官方 Shizuku、官方 Shizuku 到底怎么把权限发到第三方 App、<br>以及为什么 khyos 不自己实现一遍 Shizuku」的取证真源。<strong>上游源码不入本仓</strong>（B-S3），<br>本文只承载<strong>事实、标识符与结论</strong>。<br>上游既有归属裁定见 <code>[DESIGN-ARCH-207]</code>（Shizuku 以 <code>adapter</code> 档登记）；本文<strong>不改写</strong>那份裁决，<br>只在 §6 追加式说明「解包后是否改变裁定」。</p></blockquote>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p><strong>「装了 khyos 就不必再装 Shizuku」这件事有两层，现状与人们的直觉都不一样：</strong></p>
+<ol><li><strong>khyos 自己要的权限，它早就有自己的实现</strong>——内置的 sidecar（<code>dalvikvm</code> 拉起的 uid 2000 进程），</li></ol>
+<p>与 Shizuku 同级。<strong>不需要 Shizuku</strong>，这是仓库既有能力，本次只是把它武装起来并实测跑通。</p>
+<ol><li><strong>khyos 想用官方 Shizuku 通道，此前根本没接上</strong>——不是「Shizuku 没启动」，而是</li></ol>
+<p><strong>客户端 provider 没接线 + 从不申请授权</strong>。这两个缺口让 khyos 在 Shizuku 明明「正在运行」时<br>   依然报「IPC 未建立」，并把提示指向了错误的方向（详见 §4）。</p>
+<p>⇒ 因此本轮<strong>不引入任何上游代码</strong>（§6），只做两件事：<strong>把接线补上</strong>，并<strong>把这份分析固化成可复现的脚本</strong>。</p>
+<h2 id="1-取证方法-可独立复核">1. 取证方法（可独立复核）<a class="anchor" href="#1-取证方法-可独立复核" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>值</th></tr></thead><tbody><tr><td>样本</td><td>官方 release <code>v13.6.0</code>，资产 <code>shizuku-v13.6.0.r1086.2650830c-release.apk</code></td></tr><tr><td>样本 SHA-256</td><td><code>6E273AB0E991C4E79BC8B1BBB9B9DD739CCAC1A8712A541A214078886B7B790F</code></td></tr><tr><td>样本体积</td><td>2,571,773 字节</td></tr><tr><td>解包工具</td><td>Android SDK <code>cmdline-tools/latest/bin/apkanalyzer</code>（<code>manifest print</code> / <code>dex packages</code> / <code>dex code</code>）</td></tr><tr><td>客户端 API 工具</td><td><code>javap</code>（对 Maven Central 的 <code>dev.rikka.shizuku:{api,aidl,provider}:13.1.5</code> 三个 AAR 逐个核签名）</td></tr><tr><td>真机</td><td>PZ261A / StepOS <code>pandora</code> / Android 16 (SDK 36) / arm64-v8a</td></tr><tr><td>复现脚本</td><td><code>delivery/mobile/khy-os-client-app/scripts/analyze-shizuku-apk.ps1</code></td></tr></tbody></table>
+<p>脚本三种输入方式，均已实测：</p>
+<pre><code class="language-powershell">pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\analyze<span class="hljs-literal">-shizuku-apk</span>.ps1 <span class="hljs-literal">-Version</span> v13.<span class="hljs-number">6.0</span>   <span class="hljs-comment"># 下载官方件并分析</span>
+pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\analyze<span class="hljs-literal">-shizuku-apk</span>.ps1 <span class="hljs-literal">-ApkPath</span> &lt;apk&gt;    <span class="hljs-comment"># 分析本地件</span>
+pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\analyze<span class="hljs-literal">-shizuku-apk</span>.ps1 <span class="hljs-literal">-FromDevice</span>      <span class="hljs-comment"># 拉手机上已装的那份</span></code></pre>
+<p>脚本产物（<code>manifest.xml</code> / <code>classes.txt</code> / <code>key-classes.txt</code> / <code>analysis.json</code>）<strong>默认写在仓库外</strong><br>（<code>%TEMP%\shizuku-analysis</code>）：它们是分析产物，不是仓库内容（B-S3）。</p>
+<h2 id="2-解包得到的事实">2. 解包得到的事实<a class="anchor" href="#2-解包得到的事实" aria-label="锚点">#</a></h2>
+<h3 id="2-1-清单事实">2.1 清单事实<a class="anchor" href="#2-1-清单事实" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>实测值</th></tr></thead><tbody><tr><td>包名</td><td><code>moe.shizuku.privileged.api</code>（v10 起改名；v9 及以前是 <code>moe.shizuku.server</code>）</td></tr><tr><td>版本</td><td><code>13.6.0.r1086.2650830c</code>，versionCode <code>1086</code></td></tr><tr><td>SDK</td><td>min 24 / target 36 / compile 36</td></tr><tr><td>uses-permission</td><td><code>RECEIVE_BOOT_COMPLETED</code>、<code>FOREGROUND_SERVICE</code>、<code>INTERNET</code>、<code>POST_NOTIFICATIONS</code>、<code>WRITE_SECURE_SETTINGS</code></td></tr><tr><td>自定义权限</td><td><code>moe.shizuku.manager.permission.MANAGER</code>（protectionLevel <code>0x2</code> = signature）、<code>moe.shizuku.manager.permission.API_V23</code>（<code>0x1</code> = normal），归属 permission-group <code>moe.shizuku.manager.permission-group.API</code></td></tr><tr><td>对外 provider</td><td><code>moe.shizuku.manager.ShizukuManagerProvider</code>，authority <code>moe.shizuku.privileged.api.shizuku</code>，<code>exported=true</code>，<code>permission=android.permission.INTERACT_ACROSS_USERS_FULL</code></td></tr><tr><td>meta-data</td><td><code>moe.shizuku.client.V3_SUPPORT=true</code>（客户端探测 v3 能力的标记）</td></tr></tbody></table>
+<h3 id="2-2-dex-事实">2.2 dex 事实<a class="anchor" href="#2-2-dex-事实" aria-label="锚点">#</a></h3>
+<ul><li>全部 <strong>2412 个类</strong>；应用本体经 R8 混淆（<code>rikka.shizuku.*</code> 下一堆 <code>a1/Qc/xh</code> 之流）。</li><li><strong>未被混淆、可读名的只有 20 个 <code>moe.shizuku.*</code> 类</strong>——它们是入口，恰好构成完整的协议面：</li></ul>
+<table><thead><tr><th>类</th><th>角色</th></tr></thead><tbody><tr><td><code>moe.shizuku.starter.ServiceStarter</code></td><td>server 侧入口：与「管理 App」握手、把 binder 交出去</td></tr><tr><td><code>moe.shizuku.manager.ShizukuManagerProvider</code></td><td>管理 App 的对外 provider：第三方 App 从这里取 binder</td></tr><tr><td><code>moe.shizuku.manager.authorization.RequestPermissionActivity</code></td><td>授权弹窗（用户点「允许」的那一屏）</td></tr><tr><td><code>moe.shizuku.manager.adb.AdbPairingClient</code> / <code>AdbPairingService</code></td><td>无线调试配对（Shizuku 自带 adb 客户端）</td></tr><tr><td><code>moe.shizuku.manager.starter.StarterActivity</code></td><td>「启动 Shizuku」的 UI</td></tr><tr><td><code>moe.shizuku.manager.shell.Shell</code></td><td>Shell（root 模式那条路）</td></tr><tr><td><code>moe.shizuku.manager.management.ApplicationManagementActivity</code></td><td>「已授权的应用」名单页</td></tr><tr><td><code>moe.shizuku.manager.receiver.BootCompleteReceiver</code></td><td>开机自启（root 模式）</td></tr><tr><td><code>moe.shizuku.api.BinderContainer</code></td><td>binder 的单点存放处（客户端库与管理 App 共用）</td></tr></tbody></table>
+<blockquote><p>注意：<strong>server 的实现类不在这个 APK 的可读名里</strong>。真机实测，server 进程<br>（<code>ps -A</code> 显示名 <code>shizuku_server</code>）的 classloader 指向的正是本 APK 的 <code>base.apk</code>——<br>也就是说 server 是<strong>用 app_process 加载同一个 APK 的 dex 跑起来的</strong>，权限是 adbd 给的 uid 2000。</p></blockquote>
+<h3 id="2-3-协议常量-三个关键类的字符串常量">2.3 协议常量（三个关键类的字符串常量）<a class="anchor" href="#2-3-协议常量-三个关键类的字符串常量" aria-label="锚点">#</a></h3>
+<p>这些字符串就是协议本身，抄下来即可复原交互，无需看源码：</p>
+<p><strong><code>ServiceStarter</code>（server 侧）</strong></p>
+<table><thead><tr><th>常量</th><th>含义</th></tr></thead><tbody><tr><td><code>ShizukuServiceStarter</code></td><td>server 的进程名</td></tr><tr><td><code>moe.shizuku.privileged.api</code></td><td>管理 App 包名</td></tr><tr><td><code>moe.shizuku.privileged.api.shizuku</code></td><td>管理 App 的 provider authority</td></tr><tr><td><code>moe.shizuku.privileged.api.intent.extra.BINDER</code></td><td>binder 的 extra key</td></tr><tr><td><code>send binder to %s in user %d</code></td><td><strong>server 把 binder 交给管理 App 时的日志</strong></td></tr><tr><td><code>server binder not received</code> / <code>failed send binder to %s in user %d</code></td><td>交接失败</td></tr><tr><td><code>provider is null %s %d</code> / <code>provider is dead %s %d</code> / <code>kill %s in user %d and try again</code></td><td>管理 App 没起来时的自愈：杀掉重试</td></tr><tr><td><code>sendUserService</code> / <code>shizuku:user-service-arg-token</code></td><td>v11+ 的 user service 通道</td></tr></tbody></table>
+<p><strong><code>ShizukuManagerProvider</code>（管理 App 侧）</strong></p>
+<table><thead><tr><th>常量</th><th>含义</th></tr></thead><tbody><tr><td><code>getBinder</code> / <code>sendBinder</code></td><td>provider 的两个方法名</td></tr><tr><td><code>android:exported must be true</code></td><td><strong>管理 App 会校验客户端 provider 的清单属性</strong></td></tr><tr><td><code>android:multiprocess must be false</code></td><td>同上</td></tr><tr><td><code>Binder not received in 5s</code></td><td>等 binder 的超时</td></tr><tr><td><code>Provider called when Sui is available. Are you using Shizuku and Sui at the same time?</code></td><td>与 Sui 冲突时的提示</td></tr></tbody></table>
+<p><strong><code>RequestPermissionActivity</code>（授权弹窗）</strong></p>
+<table><thead><tr><th>常量</th><th>含义</th></tr></thead><tbody><tr><td><code>uid</code> / <code>pid</code> / <code>requestCode</code></td><td>弹窗收到的调用方身份</td></tr><tr><td><code>dispatchPermissionConfirmationResult</code></td><td>结果回传给客户端的 AIDL 方法</td></tr><tr><td><code>shizuku:request-permission-reply-allowed</code> / <code>shizuku:request-permission-reply-is-onetime</code></td><td>回传参数</td></tr></tbody></table>
+<p><strong>客户端库（<code>dev.rikka.shizuku:api:13.1.5</code>，javap 实测）</strong></p>
+<ul><li><code>Shizuku.getBinder()</code> <strong>只是读一个静态字段</strong>——它不发起任何请求。</li><li><code>Shizuku.requestPermission(int)</code> → <code>requireService().requestPermission(int)</code>（**没有 binder 会抛</li></ul>
+<p><code>IllegalStateException: binder haven't been received</code>**）。</p>
+<ul><li><code>Shizuku.checkSelfPermission()</code>；<code>Shizuku.addRequestPermissionResultListener(OnRequestPermissionResultListener)</code></li></ul>
+<p>（回调 <code>onRequestPermissionResult(int, int)</code>）；<code>Shizuku.dispatchPermissionConfirmationResult(int,int,int,Bundle)</code>。</p>
+<ul><li><strong>provider 类不在 api 包里</strong>：它单独住在 <code>dev.rikka.shizuku:provider:13.1.5</code></li></ul>
+<p>（<code>rikka.shizuku.ShizukuProvider</code> + <code>moe.shizuku.api.BinderContainer</code>），<br>  其 AAR 清单自带 <code>uses-permission moe.shizuku.manager.permission.API_V23</code> 与 meta-data <code>V3_SUPPORT</code>。</p>
+<ul><li>客户端 provider 的 <code>onCreate</code> 会去问 <strong>自己包的</strong> authority <code>&lt;自己包名&gt;.shizuku</code> 取 binder</li></ul>
+<p>（同进程多进程场景），并注册广播 <code>moe.shizuku.api.action.BINDER_RECEIVED</code> 接收管理 App 送来的 binder。</p>
+<h2 id="3-端到端时序-真机实测">3. 端到端时序（真机实测）<a class="anchor" href="#3-端到端时序-真机实测" aria-label="锚点">#</a></h2>
+<pre><code>[PC]  adb shell /data/app/~~&lt;hash&gt;==/moe.shizuku.privileged.api-&lt;hash&gt;==/lib/arm64/libshizuku.so
+        │  这个二进制是「启动器」：starter begin → killing old process → starting server
+        │  → shizuku_server pid is N → shizuku_starter exit with 0
+        ▼
+[手机] shizuku_server（uid 2000，由 adbd 授权）
+        │  server 反过来找管理 App 的 provider（authority moe.shizuku.privileged.api.shizuku）
+        │  logcat（tag Service）: &quot;send binder to user app moe.shizuku.privileged.api in user 0&quot;
+        ▼
+[手机] Shizuku 管理 App 收到 binder
+        │  客户端 App 的 ShizukuProvider（exported=true, multiprocess=false）被 sendBinder 命中
+        ▼
+[客户端] rikka.shizuku.Shizuku.getBinder() → 非空
+        │  checkSelfPermission() → 未授权
+        │  requestPermission(code) → server 转交管理 App → RequestPermissionActivity 弹窗
+        │  用户点「允许」→ dispatchPermissionConfirmationResult 回传 → checkSelfPermission() == 0
+        ▼
+[客户端] IShizukuService.newProcess(...) 以 uid 2000 执行命令</code></pre>
+<p><strong>两个只有实测才知道的点：</strong></p>
+<ul><li>server 的进程实名是 <strong><code>shizuku_server</code></strong>，不是 <code>libshizuku.so</code>（后者是启动器）。</li></ul>
+<p>按二进制名去 <code>pidof</code> 会得出「server 没起来」的错误结论——本轮第一版脚本就是这么错的。</p>
+<ul><li>server 的日志<strong>进 logcat</strong>（tag <code>Service</code>），<strong>不进</strong>启动器的 stdout 重定向文件。</li></ul>
+<p>只看文件会得出「没握手」的错误结论。</p>
+<h2 id="4-本轮真机踩到的三个坑-都是静默失败">4. 本轮真机踩到的三个坑（都是静默失败）<a class="anchor" href="#4-本轮真机踩到的三个坑-都是静默失败" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>症状</th><th>真因</th><th>为什么静默</th></tr></thead><tbody><tr><td>1</td><td>Shizuku 明明「正在运行」，khyos 报「IPC 未建立」</td><td>客户端<strong>没注册 provider</strong>：既没引 <code>dev.rikka.shizuku:provider</code>，清单里也没有 <code>&lt;provider android:name=&quot;rikka.shizuku.ShizukuProvider&quot;&gt;</code></td><td><code>getBinder()</code> 只是读静态字段，没人填就是 null；构建不报错、测试不报错</td></tr><tr><td>2</td><td>提示「此 App 未获得 Shizuku 授权，请在 Shizuku 中授权」——<strong>照做找不到本 App</strong></td><td>代码只读 <code>checkSelfPermission()</code>，<strong>从不调 <code>requestPermission()</code></strong>；而 Shizuku 的「已授权的应用」只列<strong>申请过</strong>的 App（真机实测：名单里只有 Aurora Store）</td><td>那句提示在真机上是一句<strong>无法执行的指示</strong></td></tr><tr><td>3</td><td>状态文案把「没接线」说成「没启动」</td><td><code>ensureConnected</code> 把两种 null 合并成一句「IPC 未建立」</td><td>把人引向错误的方向：去反复重启 Shizuku，而它早就跑着了</td></tr></tbody></table>
+<p>三个坑的共同形状：<strong>报错信息指的是「你可能做了什么」，而不是「系统缺了什么」</strong>——所以现场调试绕了很久才回到「查上游到底怎么发 binder」。</p>
+<h2 id="5-khyos-侧的落点-代码位置">5. khyos 侧的落点（代码位置）<a class="anchor" href="#5-khyos-侧的落点-代码位置" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>改动</th><th>为什么</th></tr></thead><tbody><tr><td><code>android/app/build.gradle</code></td><td>增 <code>implementation(&quot;dev.rikka.shizuku:provider:13.1.5&quot;)</code></td><td>provider 类不在 api 包里（§2.3）</td></tr><tr><td><code>android/app/src/main/AndroidManifest.xml</code></td><td>声明 <code>rikka.shizuku.ShizukuProvider</code>，authority <code>${applicationId}.shizuku</code>，<code>exported=true</code>、<code>multiprocess=false</code>、permission <code>moe.shizuku.manager.permission.API_V23</code></td><td>管理 App <strong>会校验</strong>这两个属性（§2.3 的两条报错常量）；authority 必须是 <code>&lt;包名&gt;.shizuku</code>，那是管理 App 回送 binder 的地址</td></tr><tr><td><code>.../ShizukuServiceManager.kt</code></td><td>①<code>ensureConnected</code> 区分「没启动 / 没注册 provider / 没授权」三种原因并给出各自可执行的下一步；②新增 <code>requestPermission()</code>：未授权时主动申请，被拒则重开申请闸</td><td>§4 的坑 1 与坑 2</td></tr><tr><td><code>.../src/test/.../ShizukuProviderWiringTest.kt</code>（新）</td><td>守住上面两处接线（清单里有 provider / authority 正确 / build.gradle 有 provider 依赖）</td><td>故障形态是<strong>少一行</strong>，不是行为错；没有设备就没有可测的行为，只有源码可守</td></tr></tbody></table>
+<p><strong>为什么值得单独写一个测试</strong>：这三个坑当时<strong>没有任何测试或构建失败</strong>能发现它们——一个断言抓不到「少了一行声明」。</p>
+<h2 id="6-边界-为什么不把-shizuku-的代码搬进-khyos-追加式说明-不改写-207-的裁决">6. 边界：为什么不把 Shizuku 的代码搬进 khyos（追加式说明，不改写 207 的裁决）<a class="anchor" href="#6-边界-为什么不把-shizuku-的代码搬进-khyos-追加式说明-不改写-207-的裁决" aria-label="锚点">#</a></h2>
+<p><code>[DESIGN-ARCH-207]</code> 已把 Shizuku 定为 <code>adapter</code> 档（只调官方分发版本，不搬代码）。解包之后，这条裁决<strong>不变</strong>，理由反而更硬了：</p>
+<table><thead><tr><th>阻断点</th><th>事实依据</th></tr></thead><tbody><tr><td><strong>B-S3 绝对红线</strong></td><td><code>[DESIGN-SOURCING-001]</code> §1：只借鉴「用自己写的代码实现的功能」，不搬上游源码。本仓根目录又无 LICENSE 文件（B-S4.1），连 <code>verbatim</code> 档都走不了</td></tr><tr><td><strong>上游许可证额外三条</strong></td><td>Apache-2.0 + Section 6：不得用 <code>moe.shizuku.privileged.api</code> 作 applicationId、不得以 <code>Shizuku</code> 作 App 名、不得复用其 launcher 图标</td></tr><tr><td><strong>能力上没有增量</strong></td><td>khyos 自带的 sidecar 已经是 <strong>uid 2000 shell</strong>，与 Shizuku 同级；复制一遍 server 不会多出任何能力</td></tr><tr><td><strong>平台不同</strong></td><td>上游是 Kotlin/Android 工程，本仓手机端是 Flutter + 原生壳，桌面端是 Electron（207 §5 已列）</td></tr><tr><td><strong>第三方 App 的官方 API 唯一</strong></td><td>那个 binder 由<strong>官方 App</strong> 以官方包名发布；khyos 既不能占用该包名，也无法伪造它的签名 ⇒ <strong>别的 App 想用 Shizuku API，只能靠官方 Shizuku App</strong></td></tr></tbody></table>
+<p>⇒ 结论：<strong>分析结论入库，上游源码不入库</strong>；本仓在「官方通道」上的角色是<strong>正确接线并诚实降级</strong>的客户端，<br>在「自带通道」上的角色是<strong>不依赖任何第三方 App 的 sidecar</strong>。这两条都不需要抄上游一行代码。</p>
+<h2 id="7-两条提权通道的现状-2026-11-11-真机">7. 两条提权通道的现状（2026-11-11 真机）<a class="anchor" href="#7-两条提权通道的现状-2026-11-11-真机" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>通道</th><th>需要装 Shizuku？</th><th>需要电脑？</th><th>权限</th><th>状态</th></tr></thead><tbody><tr><td><strong>khyos 内置 sidecar</strong>（<code>provision-shell-sidecar.ps1</code> 武装）</td><td><strong>不需要</strong></td><td>需要（一次 adb）</td><td>uid 2000 shell</td><td>✅ 实测：<code>exec</code> 走 <code>via:&quot;sidecar&quot;</code>，<code>id -u</code> → <code>2000</code>，<code>elevated=true</code></td></tr><tr><td><strong>官方 Shizuku</strong>（<code>start-shizuku-service.ps1</code> 拉起）</td><td>需要（官方 App）</td><td>需要（一次 adb）</td><td>uid 2000 shell</td><td>✅ 实测：server pid 25356 / uid 2000，管理 App 显示「正在运行」；客户端接线与授权待新构建验证</td></tr></tbody></table>
+<blockquote><p>两条通道都<strong>不随重启保留</strong>——这是平台事实（无线调试不跨重启），脚本与提示都不粉饰。</p></blockquote>
+<h2 id="8-验收与复现">8. 验收与复现<a class="anchor" href="#8-验收与复现" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 1) 解包取证（产物在仓库外）</span>
+pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\analyze<span class="hljs-literal">-shizuku-apk</span>.ps1 <span class="hljs-literal">-Version</span> v13.<span class="hljs-number">6.0</span>
+
+<span class="hljs-comment"># 2) 官方通道</span>
+pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\<span class="hljs-built_in">start-shizuku</span><span class="hljs-literal">-service</span>.ps1 <span class="hljs-literal">-Serial</span> &lt;serial&gt;
+
+<span class="hljs-comment"># 3) 自带通道（不装 Shizuku 也能提权）</span>
+pwsh <span class="hljs-operator">-File</span> delivery\mobile\khy<span class="hljs-literal">-os-client-app</span>\scripts\provision<span class="hljs-literal">-shell-sidecar</span>.ps1 <span class="hljs-literal">-FromDevice</span> <span class="hljs-literal">-Serial</span> &lt;serial&gt;
+
+<span class="hljs-comment"># 4) 客户端接线回归测试</span>
+node scripts/ci/check<span class="hljs-literal">-change-safety</span>.js &lt;本次改动文件…&gt;
+node scripts/ci/check<span class="hljs-literal">-agent-rules</span>.js &lt;本次改动文件…&gt;</code></pre>
+<h2 id="9-未决事项-交人裁决-本文不代劳">9. 未决事项（交人裁决，本文不代劳）<a class="anchor" href="#9-未决事项-交人裁决-本文不代劳" aria-label="锚点">#</a></h2>
+<ol><li><strong>是否把官方 Shizuku APK 内置进 khyos</strong>（构建期下载并打包）——「装了 khyos 就不用另外下载 Shizuku」彻底成立，</li></ol>
+<p>代价是包体 +约 10MB 与三方二进制分发策略。</p>
+<ol><li><strong>是否改 App 内「激活 Shizuku」引导页</strong>——现有文案与实测不符（Shizuku 在跑，卡片却写「已安装但没运行」），</li></ol>
+<p>且主线应改为「khyos 自带通道优先」。</p>
+<ol><li><strong>官方通道的客户端授权</strong>需新构建后真机验证：provider 接线 + <code>requestPermission</code> 弹窗 → 授权名单出现 khyos。</li></ol>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-210] 内建代码编辑器工作台.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-210] 内建代码编辑器工作台 — 人与 AI 共用同一份代码</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-212] khyos 自举提权代理-完全脱离Shizuku.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-212] khyos 自举提权代理 —— 完全脱离 Shizuku</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

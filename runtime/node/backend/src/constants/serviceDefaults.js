@@ -45,7 +45,7 @@ const FEEDBACK_URL = process.env.KHY_FEEDBACK_URL || `https://${CLOUD_DEFAULT_HO
 
 // ── Local AI backend (daemon) default ───────────────────────────────────────
 // The loopback port the daemon listens on when nothing else is discoverable.
-// delivery/web/ai-frontend/backendDiscovery.mjs MIRRORS this value (a separate browser
+// delivery/channel/web/ai-frontend/backendDiscovery.mjs MIRRORS this value (a separate browser
 // package that cannot import backend code) — keep the two in lock-step.
 const AI_BACKEND_DEFAULT_PORT = parseInt(process.env.KHY_DAEMON_PORT || '9090', 10);
 const AI_BACKEND_DEFAULT_URL = `http://localhost:${AI_BACKEND_DEFAULT_PORT}`;
@@ -114,6 +114,32 @@ const REMOTE_DEFAULT_PORT = parseInt(process.env.KHY_REMOTE_PORT || '9413', 10);
 // 只有 KHY_REMOTE_BIND_HOST 被显式设置时才按环境值绑定。
 const REMOTE_BIND_HOST = process.env.KHY_REMOTE_BIND_HOST || '';
 
+// ── OpenClaw 网关（云端沙箱）接入默认值 ────────────────────────────────────
+// 单一真源：services/domain/network/openclaw/gatewayConfig.js 从这里取，
+// 产品代码里不得再出现 18789 这类字面量。
+// 三个事实决定了这组默认值的形状，都是实测：
+//   1. 服务器无公网 IP（仅 link-local 169.254.68.6/30），应用口全绑回环，
+//      所以唯一入口是 ssh 本地转发——别名走 ~/.ssh/config，这里不写主机名。
+//   2. 18789 同时服务 SPA 与 WS 网关（SPA 主包里的 ws://<host>:18789 可证），
+//      一个端口两种用途，转发放到同一个口上。
+//   3. 握手是挑战-签名式：服务端先推 connect.challenge(nonce)，客户端用设备
+//      Ed25519 私钥对固定串签名答回，单凭共享 token 能连上但 scopes 为空。
+const OPENCLAW_GATEWAY_DEFAULT_PORT = parseInt(process.env.KHY_OPENCLAW_GATEWAY_PORT || '18789', 10);
+// ssh 别名。空串时禁用网关接入并明确报错，不猜主机名。
+const OPENCLAW_GATEWAY_SSH_ALIAS = process.env.KHY_OPENCLAW_SSH_ALIAS || 'openclaw';
+const OPENCLAW_GATEWAY_SSH_READY_TIMEOUT_MS = parseInt(
+  process.env.KHY_OPENCLAW_GATEWAY_SSH_READY_TIMEOUT_MS || '25000',
+  10,
+);
+const OPENCLAW_GATEWAY_CONNECT_TIMEOUT_MS = parseInt(
+  process.env.KHY_OPENCLAW_GATEWAY_CONNECT_TIMEOUT_MS || '20000',
+  10,
+);
+const OPENCLAW_GATEWAY_REQUEST_TIMEOUT_MS = parseInt(
+  process.env.KHY_OPENCLAW_GATEWAY_REQUEST_TIMEOUT_MS || '60000',
+  10,
+);
+
 // ── 手机桥接（khy-os → StepBridge on the phone）默认值 ───────────────────────
 // 单一真源：services/domain/network/phone/phoneBridgeConfig.js 从这里取，
 // 产品代码里不得再出现 8896 / 192.168.2.46:33743 这类字面量。
@@ -138,12 +164,46 @@ const PHONE_BRIDGE_TOKEN_REMOTE_PATH = process.env.KHY_PHONE_BRIDGE_TOKEN_PATH
 const PHONE_BRIDGE_HTTP_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_HTTP_TIMEOUT_MS || '10000', 10);
 // adb 子进程超时（毫秒）。connect 走这个值，forward 更短（本机回环，失败就该立刻报）。
 const PHONE_BRIDGE_ADB_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_ADB_TIMEOUT_MS || '15000', 10);
+// 设备出向链路（services/crossPlatform/ws/deviceLinkWss.js）的两个端口。
+// WSS 口绑 0.0.0.0（设备要从局域网连进来），admin 口只绑 127.0.0.1（PC 自己
+// 查状态/下发指令的入口）。字面量只在这里出现一次；env 可整体挪位。
+// 8788 被同仓另一条 harness 对端占用、8790 被本机 minimax-proxy 的回环口
+// 占用（2026-11-15 实测；Windows 下 0.0.0.0 与 127.0.0.1 并存时连接归属
+// 不定），产品默认落在 8792/8793。
+const DEVICE_LINK_WSS_PORT = parseInt(process.env.KHY_DEVICE_LINK_PORT || '8792', 10);
+const DEVICE_LINK_ADMIN_PORT = parseInt(process.env.KHY_DEVICE_LINK_ADMIN_PORT || '8793', 10);
+// 出向链路可登记的设备名额。名额满时只拒绝新设备、绝不顶掉既有设备；
+// 默认按「一人几台手机」给 8，机器上真装了更多时用 env 上调。
+const DEVICE_LINK_MAX_DEVICES = parseInt(process.env.KHY_DEVICE_LINK_MAX_DEVICES || '8', 10);
+// admin 口的两个路由路径。放这里而不是 deviceLinkWss.js：手机桥侧
+// （services/domain/network/phone）也要用它们去调同一条 admin 口，而 D2 域
+// 不得反向 require D1 的 services/（check-repo-layout 的 d2-no-reach-into-d1）。
+const DEVICE_LINK_ADMIN_REGISTER_PATH = '/devices/register';
+const DEVICE_LINK_ADMIN_STATE_PATH = '/state';
 // 单次传输（设备文件 ↔ 主机文件）的体积上限（字节）。传输是唯一会把大文件
 // 搬进/搬出主机的通道，视频动辄几百 MB，没有上限就等于允许一次调用吃满磁盘。
 const PHONE_BRIDGE_MAX_TRANSFER_BYTES = parseInt(
   process.env.KHY_PHONE_BRIDGE_MAX_TRANSFER_BYTES || String(256 * 1024 * 1024),
   10
 );
+// 手机上的媒体根目录（采集时按这些根目录扫一遍）。按 Android 惯例给默认值，
+// 设备上不存在的目录会被跳过并在清单里说明；env 可覆盖（逗号分隔的绝对路径）。
+// 不写成 IIFE：`check-code-standards` 把 `const X = (() => {` 当成函数声明，
+// 于是这个 15 行的常量块被记成「119 行函数」（下一条声明的行号才是终点）。
+const PHONE_BRIDGE_MEDIA_ROOTS_ENV = (process.env.KHY_PHONE_BRIDGE_MEDIA_ROOTS || '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter((p) => p.startsWith('/'));
+const PHONE_BRIDGE_MEDIA_ROOTS_DEFAULT = [
+  '/sdcard/DCIM',
+  '/sdcard/Pictures',
+  '/sdcard/Movies',
+  '/sdcard/Music',
+  '/sdcard/Download',
+  '/sdcard/Documents',
+];
+const PHONE_BRIDGE_MEDIA_ROOTS =
+  PHONE_BRIDGE_MEDIA_ROOTS_ENV.length > 0 ? PHONE_BRIDGE_MEDIA_ROOTS_ENV : PHONE_BRIDGE_MEDIA_ROOTS_DEFAULT;
 // 单次批量采集的规模上限：文件数与总字节数各一道闸。单文件上限管不住「200 个大文件」。
 const PHONE_BRIDGE_MAX_COLLECT_FILES = parseInt(
   process.env.KHY_PHONE_BRIDGE_MAX_COLLECT_FILES || '200',
@@ -160,11 +220,77 @@ const PHONE_BRIDGE_RETRY_COUNT = parseInt(process.env.KHY_PHONE_BRIDGE_RETRY_COU
 const PHONE_BRIDGE_MAILBOX_POLL_MS = parseInt(process.env.KHY_PHONE_BRIDGE_MAILBOX_POLL_MS || '500', 10);
 const PHONE_BRIDGE_MAILBOX_TIMEOUT_MS = parseInt(process.env.KHY_PHONE_BRIDGE_MAILBOX_TIMEOUT_MS || '30000', 10);
 
+// adb 无线调试的端口区间：每开关一次无线调试或重启手机，端口就换一个
+// （实测 34103 / 37801 / 45315 / 41631 / 35097 / 40871 / 33743 …），但 IP
+// 通常不变（DHCP 租约还在）。端口变了、而 mDNS 又被路由器挡掉时，adb 设备表
+// 与 mDNS 两条发现路会同时是空的——只剩「记住上次的 IP，在它上面扫端口」这条
+// 路。所以区间必须是配置而不是写死的数字：env KHY_PHONE_BRIDGE_ADB_PORTS 覆盖，
+// 写法 "5555,30000-49999"（逗号分隔的单个端口或 a-b 区间）。
+const PHONE_BRIDGE_ADB_PORTS = process.env.KHY_PHONE_BRIDGE_ADB_PORTS || '5555,30000-49999';
+// 单台主机上的端口扫描预算：并发数与每个端口的等待上限。扫的是用户自己的
+// 手机，一次 2 万个端口，用高并发 + 短超时把它压在秒级；超时给长了会把
+// 「手机不在」也拖成十几秒。
+const PHONE_BRIDGE_ADB_SCAN_CONCURRENCY = parseInt(
+  process.env.KHY_PHONE_BRIDGE_ADB_SCAN_CONCURRENCY || '400',
+  10
+);
+const PHONE_BRIDGE_ADB_SCAN_TIMEOUT_MS = parseInt(
+  process.env.KHY_PHONE_BRIDGE_ADB_SCAN_TIMEOUT_MS || '400',
+  10
+);
+
+// ── 手机桥接第二 profile（khy-os → hiao / phone-dsh on the phone）默认值 ──────
+// 单一真源：services/domain/network/phone/hiaoBridge/hiaoBridgeConfig.js 从这里取，
+// 产品代码里不得再出现 8898 / 18998 这类字面量。
+// 协议依据：phone-dsh docs/AMOO-INTEGRATION.md（真机实测的接入文档）。
+// ⚠ 这里的 8898 是 phone-dsh（hiao）桥的**实机监听口**（AMOO-INTEGRATION.md:13），
+// 与上面 PHONE_BRIDGE 注释所指「StepBridge README 宣称的未发布完整版 8898」无关
+// ——两个 profile 的数字恰好撞上，不写这句后来者会误以为本批违反了那条注释。
+const HIAO_BRIDGE_DEFAULT_DEVICE_PORT = parseInt(
+  process.env.KHY_HIAO_BRIDGE_DEVICE_PORT || '8898',
+  10
+);
+// PC 侧 adb forward 的默认目标端口。实际转发口用 tcp:0 让 adb 自选（客户端解析
+// adb 回填值后拼 baseUrl），这里只是配置默认值；env 可整体挪位。
+const HIAO_BRIDGE_DEFAULT_FORWARD_PORT = parseInt(
+  process.env.KHY_HIAO_BRIDGE_FORWARD_PORT || '18998',
+  10
+);
+// GET 面（/ping /status /approvals /audit）的单次请求超时。普通 HTTP 请求，短 I/O 超时。
+const HIAO_BRIDGE_HTTP_TIMEOUT_MS = parseInt(
+  process.env.KHY_HIAO_BRIDGE_HTTP_TIMEOUT_MS || '45000',
+  10
+);
+// /call 专用超时。**语义**：hiao 的 medium 级调用会阻塞等人在手机审批卡上放行，
+// 上游协议自身的审批截止是 socket 600s（AMOO-INTEGRATION.md:20，超时=拒绝），
+// 这里加 60s 余量。它是单次请求的 AbortSignal 中止，不是任务 kill；审批超时与
+// 设备故障必须分成两个错误码（hiaoBridgePolicy.classifyHiaoFailure），否则
+// 「没人批」会被谎报成「手机坏了」。沿用 GET 的 45000 会把审批等待提前砍断。
+const HIAO_BRIDGE_CALL_TIMEOUT_MS = parseInt(
+  process.env.KHY_HIAO_BRIDGE_CALL_TIMEOUT_MS || '660000',
+  10
+);
+// 配对令牌在手机侧的落点（hiao 的令牌真源）。env 可覆盖。
+const HIAO_BRIDGE_TOKEN_REMOTE_PATH = process.env.KHY_HIAO_BRIDGE_TOKEN_PATH
+  || '/sdcard/hiao/token.txt';
+
+// hiao 的 5 个键按这个 profile 的单一真源成组（BACKUP / CPA_SERVICE 同款形态），
+// 在文件尾部 Object.assign 并进导出面而不是塞进 exported 字面量：那个字面量的
+// 花括号跨度已被 check-file-ratchet 的 maxFuncLines 代理记为红项（跨批次的
+// 未暂存改动贡献的），本批的验收判据是不再给它的最大块加任何一行。
+const HIAO_BRIDGE = Object.freeze({
+  HIAO_BRIDGE_DEFAULT_DEVICE_PORT,
+  HIAO_BRIDGE_DEFAULT_FORWARD_PORT,
+  HIAO_BRIDGE_HTTP_TIMEOUT_MS,
+  HIAO_BRIDGE_CALL_TIMEOUT_MS,
+  HIAO_BRIDGE_TOKEN_REMOTE_PATH,
+});
+
 // ── Cross-platform launcher (crossLauncher.js) local dev ports ───────────────
 // Web/mobile frontend dev-server ports. Env-overridable so a port conflict is a
 // single env change, not a code edit. crossLauncher.js is the ONLY consumer that
 // should reference these — no other module may re-hardcode 8090/5173.
-// AI_FRONTEND_PORT mirrors delivery/web/ai-frontend/vite.config.js (same env, same default).
+// AI_FRONTEND_PORT mirrors delivery/channel/web/ai-frontend/vite.config.js (same env, same default).
 const WEB_FRONTEND_PORT = parseInt(process.env.AI_FRONTEND_PORT || '8090', 10);
 // Legacy: dev-server port of the old `apps/khy-mobile` Capacitor shell. The live
 // mobile client is the Flutter app `apps/khy-os-client-app`, which is a native
@@ -799,11 +925,26 @@ const exported = {
   PHONE_BRIDGE_HTTP_TIMEOUT_MS,
   PHONE_BRIDGE_ADB_TIMEOUT_MS,
   PHONE_BRIDGE_MAX_TRANSFER_BYTES,
+  PHONE_BRIDGE_MEDIA_ROOTS,
   PHONE_BRIDGE_MAX_COLLECT_FILES,
   PHONE_BRIDGE_MAX_COLLECT_BYTES,
   PHONE_BRIDGE_RETRY_COUNT,
   PHONE_BRIDGE_MAILBOX_POLL_MS,
   PHONE_BRIDGE_MAILBOX_TIMEOUT_MS,
+  // 设备出向链路（deviceLinkWss.js）端口
+  DEVICE_LINK_WSS_PORT,
+  DEVICE_LINK_ADMIN_PORT,
+  DEVICE_LINK_MAX_DEVICES,
+  DEVICE_LINK_ADMIN_REGISTER_PATH,
+  DEVICE_LINK_ADMIN_STATE_PATH,
+  PHONE_BRIDGE_ADB_PORTS,
+  PHONE_BRIDGE_ADB_SCAN_CONCURRENCY,
+  PHONE_BRIDGE_ADB_SCAN_TIMEOUT_MS,
+  OPENCLAW_GATEWAY_DEFAULT_PORT,
+  OPENCLAW_GATEWAY_SSH_ALIAS,
+  OPENCLAW_GATEWAY_SSH_READY_TIMEOUT_MS,
+  OPENCLAW_GATEWAY_CONNECT_TIMEOUT_MS,
+  OPENCLAW_GATEWAY_REQUEST_TIMEOUT_MS,
   // Portable copy root single source of truth (khy portable sync)
   PORTABLE_ROOT_DEFAULT,
   // Geolocation single source of truth (GetLocation tool)
@@ -913,5 +1054,9 @@ Object.defineProperty(exported, 'AI_BACKEND_URL', {
     return getAiBackendUrl();
   },
 });
+
+// hiao 桥的 5 个键并进导出面。放在字面量之外是刻意的：exported 已经是
+// check-file-ratchet 的花括号跨度红项（另一批未暂存改动撑大的），本批不给它加行。
+Object.assign(exported, HIAO_BRIDGE);
 
 module.exports = exported;

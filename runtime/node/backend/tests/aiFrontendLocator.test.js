@@ -53,7 +53,7 @@ function closeHttpServer(server) {
   });
 }
 
-/** A peer that answers like delivery/web/ai-frontend does (identity endpoint + KHY title). */
+/** A peer that answers like delivery/channel/web/ai-frontend does (identity endpoint + KHY title). */
 function frontendHandler({ app = locator.FRONTEND_APP_ID, title = 'KHY AI 管理平台', withIdentity = true } = {}) {
   return (req, res) => {
     res.setHeader('Connection', 'close');
@@ -227,7 +227,7 @@ test('discoverKhyFrontend: no KHY frontend anywhere returns null', async () => {
 });
 
 test('contract parity: the frontend module publishes exactly what the locator reads', async () => {
-  const mod = await import(pathToFileURL(path.join(REPO_ROOT, 'delivery/web/ai-frontend/frontendRuntime.mjs')).href);
+  const mod = await import(pathToFileURL(path.join(REPO_ROOT, 'delivery/channel/web/ai-frontend/frontendRuntime.mjs')).href);
   assert.equal(mod.FRONTEND_APP_ID, locator.FRONTEND_APP_ID);
   assert.equal(mod.FRONTEND_RUNTIME_FILENAME, locator.FRONTEND_RUNTIME_FILENAME);
   assert.equal(mod.FRONTEND_IDENTITY_PATH, locator.FRONTEND_IDENTITY_PATH);
@@ -242,7 +242,7 @@ test('contract parity: the frontend module publishes exactly what the locator re
 });
 
 test('the frontend module never turns its runtime file into a directory', async () => {
-  const mod = await import(pathToFileURL(path.join(REPO_ROOT, 'delivery/web/ai-frontend/frontendRuntime.mjs')).href);
+  const mod = await import(pathToFileURL(path.join(REPO_ROOT, 'delivery/channel/web/ai-frontend/frontendRuntime.mjs')).href);
   const published = mod.publishFrontendRuntime({ host: HOST, port: 8125, env: { KHY_DATA_HOME: tempHome } });
   assert.equal(published.ok, true);
   // A `getAppDataDir('*.json')` style call would mkdir a directory of that name and

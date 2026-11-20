@@ -80,6 +80,60 @@ const PROTOCOL_DEFAULT_MODELS = Object.freeze({
 const DATA_FILE = 'cc_switch.json';
 const SCHEMA_VERSION = 1;
 
+// ── 卡片自有 key 在 apiKeyPool 里的命名空间 ───────────────────────────────
+// 这个字符串会被网关当成「pool 名」用：apiAdapter.parseProviderModel /
+// aiGateway._resolveApiPoolProviderForRequest 的三段式正则只认
+// /^api[:/]([a-z0-9_-]+)[:/](.+)$/ —— 池名段**不允许冒号**。
+//
+// 历史版本用 `cc-switch:<cardId>`（store.js:_poolProvider），于是：
+//   1. `api:cc-switch:c_ab12:gpt-4o-mini` 的池段被截成 `cc-switch`，
+//      apiKeyPool.pick('cc-switch') 精确匹配不到任何 key/endpoint；
+//   2. 模型 id 被污染成 `<cardId>:<model>`；
+//   3. proxyAccess 的池扫描原样返回这个非法名，拼出的三名同样解不出。
+// 统一改成 `cc_switch_<cardId>`（下划线在字符类内），并对旧命名空间做只读别名
+// 兼容（见 apiKeyPool._poolProviderAliases）——已落盘的 api_keys.json 不做迁移。
+const CARD_POOL_NAMESPACE = 'cc_switch';
+const LEGACY_CARD_POOL_NAMESPACE = 'cc-switch';
+
+/**
+ * 卡片自有 key 的 apiKeyPool 命名空间（唯一真源）。
+ * @param {string} cardId
+ * @returns {string} 形如 `cc_switch_c_ab12cd34`，必匹配 /^[a-z0-9_-]+$/
+ */
+function cardPoolProvider(cardId) {
+  return `${CARD_POOL_NAMESPACE}_${String(cardId || '').trim()}`;
+}
+
+/**
+ * 历史命名空间（只读兼容：读得到，不再写入）。
+ * @param {string} cardId
+ * @returns {string} 形如 `cc-switch:c_ab12cd34`
+ */
+function legacyCardPoolProvider(cardId) {
+  return `${LEGACY_CARD_POOL_NAMESPACE}:${String(cardId || '').trim()}`;
+}
+
+/**
+ * 把一个池名收敛成网关三段式正则认得的形态（幂等）。
+ * 已是合法名 → 原样返回；否则把字符类外字符折叠为 `_`。
+ * 绝不抛、绝不返回空串之外的假值（空入参 → 空串）。
+ * @param {string} raw
+ * @returns {string}
+ */
+function normalizePoolProviderName(raw) {
+  let text = '';
+  try {
+    text = String(raw || '')
+      .trim()
+      .toLowerCase();
+  } catch {
+    return ''; // Symbol / toString 抛错的怪对象 → 空串（调用方按「扫不到」处理）
+  }
+  return text
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 module.exports = {
   PROTOCOLS,
   APPS,
@@ -88,4 +142,9 @@ module.exports = {
   PROTOCOL_DEFAULT_MODELS,
   DATA_FILE,
   SCHEMA_VERSION,
+  CARD_POOL_NAMESPACE,
+  LEGACY_CARD_POOL_NAMESPACE,
+  cardPoolProvider,
+  legacyCardPoolProvider,
+  normalizePoolProviderName,
 };

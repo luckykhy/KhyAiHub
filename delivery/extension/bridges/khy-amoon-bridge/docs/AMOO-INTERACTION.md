@@ -293,7 +293,7 @@ hint 中的 CLI 命令用真实路径插值：`node "D:\...\khy-amoon-bridge\bin
 | `src/renderer/components/message/CommandCenter.tsx:99` | 命令条目 |
 | `package.json` scripts.test | 第一段加 `tests/amooBridge.test.mjs`；第二段加 `tests/amooPanel.test.cjs tests/amooUiContract.test.cjs` |
 
-### 6.2 APK（`delivery/mobile/khy-os-client-app`）
+### 6.2 APK（`delivery/channel/mobile/khy-os-client-app`）
 
 新增：
 
@@ -421,7 +421,7 @@ npm.cmd run build
 命令：
 
 ```
-cd D:\Portable\khy-os\delivery\mobile\khy-os-client-app
+cd D:\Portable\khy-os\delivery\channel\mobile\khy-os-client-app
 set ANDROID_HOME=C:\Users\25789\.khyos\android_sdk
 set ANDROID_SDK_ROOT=C:\Users\25789\.khyos\android_sdk
 D:\Portable\2-tools\flutter\flutter\bin\flutter.bat test --no-pub test\amoo_service_test.dart test\amoo_ui_test.dart
@@ -473,7 +473,7 @@ APK 真机侧（本轮新增，仍未执行）：安装 release APK（`CN=khy-os
 | # | 检查 | 精确命令 | 结果 |
 |---|---|---|---|
 | D1 | 仓库/分支/HEAD | `git -C D:\Portable\khy-os rev-parse --show-toplevel` / `branch --show-current` / `log -1 --format=%H` | `D:/Portable\khy-os` / `chore/hygiene-20261010` / `ed684bfe76baf2be757371ee9a18b40391a1070d` → **本轮没有 commit** |
-| D2 | 三个 APK 原生文件的暂存状态 | `git -C D:\Portable\khy-os status --porcelain -- delivery/mobile/khy-os-client-app/android/app/src/main/` | `A  .../bridge/KhyUi.java`、`A  .../bridge/Tools.java`、`A  .../kotlin/.../MainActivity.kt`（**均已是索引中的新增**）；工作树对这三条路径无未暂存差异（`git diff --stat -- <三条路径>` 输出为空） |
+| D2 | 三个 APK 原生文件的暂存状态 | `git -C D:\Portable\khy-os status --porcelain -- delivery/channel/mobile/khy-os-client-app/android/app/src/main/` | `A  .../bridge/KhyUi.java`、`A  .../bridge/Tools.java`、`A  .../kotlin/.../MainActivity.kt`（**均已是索引中的新增**）；工作树对这三条路径无未暂存差异（`git diff --stat -- <三条路径>` 输出为空） |
 | D3 | 暂存区改动量 | `git -C D:\Portable\khy-os diff --cached --stat`（**注意：本轮期间索引内容发生过变化，见 D3b**） | 当前索引共 **4 个文件**：`KhyUi.java` 282+ / `Tools.java` 413+ / `MainActivity.kt` 1185+（合计 1880 insertions，首次入库的整文件新增）+ `apps/khyos-desktop/src/renderer/components/ui/Tooltip.tsx`（-58，即**暂存的删除**） |
 | D3b | 索引里那个无关的删除 | `git -C D:\Portable\khy-os diff --cached -- apps/khyos-desktop/src/renderer/components/ui/Tooltip.tsx` | 是一整个 58 行的 `Tooltip` 组件被**暂存删除**（`deleted file mode 100644`），**与 amoo 无关**。本轮开始时 `git diff --cached --stat` 只有 3 个文件、没有这一条——**它是本轮进行期间被别的环节加进索引的**（本轮没有执行任何 `git add`）。**提交前必须确认这一条是否真的要一起提交**，否则会把一个无关的删除混进 amoo 的提交 |
 | D4 | 暂存版 `MainActivity.kt` 的 FLAG 常量 | `git show :<MainActivity.kt> \| findstr /n "FLAG_ACTIVITY_NEW_TASK"` 与 `... \| findstr /n /c:"Intent.FLAG_NEW_TASK"` | 183/197/360/656/748/762/**817**/892/926/949/961 共 11 处，**全部是 `FLAG_ACTIVITY_NEW_TASK`**；`Intent.FLAG_NEW_TASK` **无匹配**（`findstr` exit 1）→ 暂存版第 817 行已是正确常量 |
@@ -561,7 +561,7 @@ APK 真机侧（本轮新增，仍未执行）：安装 release APK（`CN=khy-os
 | 命令 | 结果 |
 |---|---|
 | `cd D:\Portable\khy-os\apps\khyos-desktop && node --experimental-strip-types --test tests/amooBridge.test.mjs` | **13 tests / 13 pass / 0 fail** |
-| `cd D:\Portable\khy-os\delivery\mobile\khy-os-client-app && flutter.bat test --no-pub test/amoo_service_test.dart test/amoo_ui_test.dart` | **+17 / All tests passed!** |
+| `cd D:\Portable\khy-os\delivery\channel\mobile\khy-os-client-app && flutter.bat test --no-pub test/amoo_service_test.dart test/amoo_ui_test.dart` | **+17 / All tests passed!** |
 
 v3 轮**未重跑**：`npm.cmd run typecheck`、`npm.cmd run build`、`flutter analyze`、`flutter build apk --debug`。§10.1 中这些结果来自实现轮次，保留原样，不与本轮复跑混写。
 

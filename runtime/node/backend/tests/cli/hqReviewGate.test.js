@@ -957,3 +957,35 @@ test('交付面裁决：只有 UNKNOWN 时同样点名；无报告时不伪造�
   assert.deepStrictEqual(missing.gaps, []);
   assert.strictEqual(missing.reason, '无缓存报告（加 --run-delivery 现跑）');
 });
+
+// 记分板自己已补 SKIPPED 档（check-delivery-baseline counts），但消费侧仍只重建
+// 四键：D1 在 --changed 快档返回 SKIPPED 时既不进计数也不进裁决，「本次没量」会被
+// 读成 pass。ok 同理：不带它时渲染侧的三元恒走 else，来源与测量时间永不显示。
+
+test('交付面裁决：SKIPPED 计入读数且不被读成通过', () => {
+  const v = HQH._deliveryVerdict({
+    ok: true,
+    report: {
+      at: '2026-11-18T00:00:00.000Z',
+      source: 'cache',
+      counts: { PASS: 11, PARTIAL: 0, GAP: 0, UNKNOWN: 0, SKIPPED: 1 },
+      results: [
+        { id: 'D1', title: '仓库完整性', status: 'SKIPPED', detail: '--changed 档不测全仓读数' },
+      ],
+    },
+  });
+  assert.strictEqual(v.counts.SKIPPED, 1, 'SKIPPED 必须在 counts 里可见，不得静默少一条');
+  assert.strictEqual(v.status, 'unknown', '只有「没量」时不得判 pass');
+  assert.deepStrictEqual(v.skipped.map((s) => s.id), ['D1']);
+  assert.strictEqual(v.skipped[0].detail, '--changed 档不测全仓读数');
+  assert.match(v.reason, /1 项本次未测量/);
+});
+
+test('交付面裁决：取到报告时带 ok，供渲染侧区分「取不到」与「取到了但没量」', () => {
+  const good = HQH._deliveryVerdict({ ok: true, report: { counts: { PASS: 12 }, results: [] } });
+  assert.strictEqual(good.ok, true);
+  assert.strictEqual(good.status, 'pass');
+  const bad = HQH._deliveryVerdict({ ok: false, reason: '缓存损坏' });
+  assert.strictEqual(bad.ok, false);
+  assert.deepStrictEqual(bad.skipped, []);
+});

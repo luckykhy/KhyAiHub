@@ -385,36 +385,13 @@ Usage:
         return { success: false, error: staleCheck.reason };
       }
 
+      // 基线必须在读内容**之前**取：读取之后、写盘之前的任何外部改动，
+      // 都要靠这个 mtime 在 fileWriteService 里被认成 conflict（不静默覆盖）。
+      const baseMtimeMs = fs.statSync(absPath).mtimeMs;
       const original = fs.readFileSync(absPath, 'utf-8');
 
-      // Pre-edit snapshot for /rollback recovery
-      try {
-        const fh = require('../../services/fileHistoryService');
-        fh.takeSnapshot(absPath, { reason: 'FileEditTool', content: original });
-      } catch {
-        /* non-critical */
-      }
-      // Turn-grouped rollback manifest (DESIGN-ARCH-096 §2-A) — fail-soft no-op
-      // when no active turn id reaches this tool via context.traceContext.turnId.
-      try {
-        const _turnId = context && context.traceContext && context.traceContext.turnId;
-        if (_turnId) {
-          require('../../services/turnCheckpointService').recordMutatedFile(_turnId, absPath, {
-            reason: 'FileEditTool',
-            content: original,
-          });
-        }
-      } catch {
-        /* non-critical */
-      }
-
-      // Pre-edit diagnostics baseline (CC beforeFileEdited 口径,门控 KHY_POST_EDIT_DIAGNOSTICS)。
-      // 在写盘前(此刻磁盘仍是编辑前内容)给文件的语法诊断打基线,编辑后由 toolUseLoop 求「新增」。
-      try {
-        require('../../services/postEditDiagnostics').captureBaseline(absPath, cwd);
-      } catch {
-        /* diagnostics baseline is best-effort; never blocks the edit */
-      }
+      // 快照 / turn 记录 / 诊断基线已收进 fileWriteService（DESIGN-ARCH-210 §6）：
+      // 只有真正落盘时才记，dry-run 与「没匹配上」不再留下空快照。
 
       // Count NON-OVERLAPPING occurrences — this must match the split().join()
       // replace below, which is non-overlapping. Stepping the cursor by 1 counted
@@ -460,9 +437,19 @@ Usage:
             message: `[dry-run] Would replace ${replacements} occurrence${replacements > 1 ? 's' : ''} in ${path.basename(absPath)}`,
           };
         }
-        fs.writeFileSync(absPath, updated, 'utf-8');
-        // 刷新 readState 时间戳 — 防止连续编辑触发误报
-        tracker.markRead(absPath);
+        const applied = await require('../../services/fileWriteService').write({
+          filePath: absPath,
+          content: updated,
+          baseMtimeMs,
+          actor: 'tool',
+          reason: 'FileEditTool',
+          beforeContent: original,
+          turnId: context && context.traceContext && context.traceContext.turnId,
+          diagCwd: cwd,
+        });
+        if (!applied.ok) {
+          return { success: false, file: absPath, error: applied.error };
+        }
         const result = {
           success: true,
           file: absPath,
@@ -507,8 +494,19 @@ Usage:
                 message: `[dry-run] Would replace in ${path.basename(absPath)} after stripping a Read-style line-number gutter from old_string`,
               };
             }
-            fs.writeFileSync(absPath, updated, 'utf-8');
-            tracker.markRead(absPath);
+            const applied = await require('../../services/fileWriteService').write({
+              filePath: absPath,
+              content: updated,
+              baseMtimeMs,
+              actor: 'tool',
+              reason: 'FileEditTool',
+              beforeContent: original,
+              turnId: context && context.traceContext && context.traceContext.turnId,
+              diagCwd: cwd,
+            });
+            if (!applied.ok) {
+              return { success: false, file: absPath, error: applied.error };
+            }
             const gutterResult = {
               success: true,
               file: absPath,
@@ -585,8 +583,19 @@ Usage:
               message: `[dry-run] Would fuzzy-replace in ${path.basename(absPath)} (${pct}% similarity)`,
             };
           }
-          fs.writeFileSync(absPath, updated, 'utf-8');
-          tracker.markRead(absPath);
+          const applied = await require('../../services/fileWriteService').write({
+            filePath: absPath,
+            content: updated,
+            baseMtimeMs,
+            actor: 'tool',
+            reason: 'FileEditTool',
+            beforeContent: original,
+            turnId: context && context.traceContext && context.traceContext.turnId,
+            diagCwd: cwd,
+          });
+          if (!applied.ok) {
+            return { success: false, file: absPath, error: applied.error };
+          }
           const fuzzyResult = {
             success: true,
             file: absPath,

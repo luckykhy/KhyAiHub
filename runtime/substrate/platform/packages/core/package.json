@@ -13,6 +13,7 @@
     "./client":             { "types": "./src/client/index.d.ts",      "default": "./src/client/index.js" },
     "./locator-host":       { "types": "./src/locator-host.d.ts",      "default": "./src/locator-host.js" },
     "./server":             { "types": "./src/server/index.d.ts",      "default": "./src/server/index.js" },
+    "./server/events":      { "types": "./src/server/events/index.d.ts", "default": "./src/server/events/index.js" },
     "./package.json": "./package.json"
   },
   "files": [

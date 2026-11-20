@@ -149,7 +149,7 @@ test('VERSION_TRACK_SOURCES points at files that exist in this repo', () => {
 
 const DART_PATH = path.join(
   REPO_ROOT,
-  'delivery/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart',
+  'delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart',
 );
 
 function readGeneratedDart() {

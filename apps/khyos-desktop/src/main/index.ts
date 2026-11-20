@@ -1,16 +1,21 @@
 // khy-canary: Khy-20261102-259-GYN5NSGG
-import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell, type IpcMain } from 'electron'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import { execFile, fork } from 'child_process'
 import { openKeyManagerWindow } from './keyManagerWindow'
+import { openModelsWindow } from './modelsWindow'
 import { registerKeyManagerIpc } from './keyManager/ipc'
+import { registerEditorIpc, type EditorIpcHandle } from './editor/ipc'
+import { MAX_INDEX_DEPTH, MAX_INDEX_FILES, SKIP_DIRS, TEXT_EXTS } from './editor/workspaceRules'
 import { ptyCreate, ptyWrite, ptyResize, ptyKill, disposeAllPtys } from './ptyHost'
 import { createRemoteHub, type RemoteHub } from './remote/index'
 import { createAmoonHub, resolveBridgeRoot, type AmoonHub } from './amoon/index'
 import { handleAmooSecretaryHostMessage, installAmooSecretaryBridge, releaseAmooSecretary } from './amooSecretaryBridge'
+import { createAgentbusHub, type AgentbusHub } from './agentbus/index'
+import { installAgentbusBridge } from './agentbusBridge'
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore'
 import { getDataHome, baseHomeFile, dataHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
 import {
@@ -130,6 +135,29 @@ let schedulerProcess: ReturnType<typeof fork> | null = null
 let remoteHub: RemoteHub | null = null
 // amoo 桥接：HTTP/operator token 全在主进程，渲染层只经 amoon:* 通道拿脱敏状态。
 let amoonHub: AmoonHub | null = null
+// 「电脑端 AI」车道（AgentBus 直连）：进程级单例，理由同 amoonHub——一轮的生命比任何
+// 单个窗口都长，窗口全关也不收起进行中的轮次。整条车道在 ./agentbus，installAgentbusBridge
+// 自己 removeHandler 四通道，createWindow 二次调用不抛。laneLog 是两条 amoo 车道共用的
+// 诊断出口：只写主进程控制台，不回传 IPC（src/main/amoon/index.ts:104 同款口径）。
+let agentbusHub: AgentbusHub | null = null
+const laneLog = (line: string) => console.log(line)
+// The serial fallback has exactly one narrow door: both env vars must be blank.
+// resolveAgentbusConfig lets KHY_AGENTBUS_SERIAL win over KHY_PHONE_BRIDGE_SERIAL
+// (agentbusProtocol.ts:146-154), so injecting the settings value while either env
+// is set would let a stored setting quietly override what the user exported.
+function agentbusLaneEnv(serialFromSettings: unknown): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env }
+  const explicit = typeof env.KHY_AGENTBUS_SERIAL === 'string' ? env.KHY_AGENTBUS_SERIAL.trim() : ''
+  const fallback = typeof env.KHY_PHONE_BRIDGE_SERIAL === 'string' ? env.KHY_PHONE_BRIDGE_SERIAL.trim() : ''
+  const fromSettings = typeof serialFromSettings === 'string' ? serialFromSettings.trim() : ''
+  if (!explicit && !fallback && fromSettings) env.KHY_AGENTBUS_SERIAL = fromSettings
+  return env
+}
+function installAgentbusLane(ipc: IpcMain, serialFromSettings: unknown): void {
+  const env = agentbusLaneEnv(serialFromSettings)
+  agentbusHub = createAgentbusHub({ logger: laneLog, env })
+  installAgentbusBridge({ ipc, hub: agentbusHub })
+}
 // 主窗引用。second-instance（用户重复点图标）要把它恢复/置前，而不是新建一个 ——
 // createWindow 返回的 win 原先没人保存，所以重复启动除了再建一个窗口别无选择。
 let mainWindow: BrowserWindow | null = null
@@ -425,6 +453,9 @@ function unrefSockets(proc: { stdout?: NodeJS.ReadableStream; stderr?: NodeJS.Re
   }
 }
 
+// 编辑器待审车道的桥（whenReady 时装配）；host 消息与窗口关闭都要用到它。
+let editorIpcHandle: EditorIpcHandle | null = null
+
 function handleHostMessage(msg: unknown): void {
   const m = msg as { type?: string; id?: string; [k: string]: unknown }
   if (!m || typeof m !== 'object') return
@@ -533,6 +564,16 @@ function handleHostMessage(msg: unknown): void {
       resultMap.delete(m.id)
       entry.resolve(m)
     }
+    return
+  }
+  // AI 改动待审（DESIGN-ARCH-210 M3）：host 报告一笔待批准写盘 / 一处待审结束。
+  // 主进程只装配 diff 行、镜像与转发；接受与否由 host 那个 await 决定。
+  if (m.type === 'editor.pendingRequest') {
+    editorIpcHandle?.handleHostPendingRequest(m as unknown as Parameters<EditorIpcHandle['handleHostPendingRequest']>[0])
+    return
+  }
+  if (m.type === 'editor.pendingSettled') {
+    editorIpcHandle?.handleHostPendingSettled(m)
     return
   }
   // amooSecretary 的 result 认领与 event 广播都在 ./amooSecretaryBridge，这里只留挂钩。
@@ -890,6 +931,11 @@ async function createWindow() {
     })
   }
   win.on('close', persistGeometry)
+  // 关窗把 host 的待审 promise 全部按拒绝收束：文件从未落盘、无需回滚，
+  // 挂着的工具循环也不用等 120s 超时。用户下次打开会看到工具如实返回未批准。
+  win.on('close', () => {
+    editorIpcHandle?.cancelAllPending()
+  })
 
   // dev-server URL from env (electron-vite injects VITE_DEV_SERVER_URL); the
   // port falls back to a variable (zero-hardcoding exemption class)
@@ -978,7 +1024,7 @@ async function createWindow() {
   // 从 out/main 上溯到仓库根找桥源码；打包后找不到时 cliFound=false，UI 给提示。
   amoonHub = createAmoonHub({
     bridgeRoot: resolveBridgeRoot(process.env, __dirname),
-    logger: (line) => console.log(line),
+    logger: laneLog,
   })
   const amoonSafe = async (fn: () => Promise<unknown>): Promise<unknown> => {
     try {
@@ -1000,11 +1046,11 @@ async function createWindow() {
   ipcMain.handle('amoon:stop', () => amoonSafe(() => amoonHub!.stop()))
 
   // ── Amoo 秘书（桌面端问 Amoo 一句 + 中止 + 共享记忆 + 循环状态）─────────
-  // 六个渲染层通道、pending 表与无主事件广播整体在 ./amooSecretaryBridge
-  // （错误形状的归一也在那里：normalizeAmooReply 只在 pending 认领这一处包）。
-  // 这里只留一次安装；host fork 句柄每次调用现取——这些通道在 startHostProcess
-  // 之前就已注册，安装时快照会拿到 null。
+  // 六个渲染层通道、pending 表与无主事件广播整体在 ./amooSecretaryBridge（错误形状的
+  // 归一也在那里：normalizeAmooReply 只在 pending 认领这一处包）；这里只留一次安装，
+  // host fork 句柄每次调用现取——这些通道在 startHostProcess 之前就已注册。
   installAmooSecretaryBridge(ipcMain, () => hostProcess)
+  installAgentbusLane(ipcMain, settings.agentbusSerial)
 
   // ── 工作空间选择（[DESIGN-ARCH-125] P-01/P-02）──
   // 读：当前根 + 最近打开候选集 + 项目登记。当前值一律经 getWorkspaceRoot() 的唯一真源
@@ -1320,19 +1366,14 @@ async function createWindow() {
   // 深度/数量有界（Rule 3 精神：单次遍历，无长任务）；忽略 node_modules 等噪声目录。
   ipcMain.handle('workspace:listFiles', async (_e, query: string) => {
     const root = await getWorkspaceRoot()
-    const SKIP_DIRS = new Set([
-      'node_modules', '.git', 'dist', 'out', 'build', '.khy', 'coverage', '.next', '.turbo',
-    ])
-    const TEXT_EXTS = new Set([
-      '.md', '.markdown', '.txt', '.json', '.js', '.jsx', '.ts', '.tsx', '.vue', '.css',
-      '.html', '.yml', '.yaml', '.toml', '.ini', '.sh', '.bat', '.ps1', '.py', '.cjs', '.mjs',
-    ])
-    const MAX_FILES = 5000
+    // 忽略目录 / 文本扩展名 / 索引上限已收敛到 ./editor/workspaceRules：
+    // 文件树、文件索引、全局搜索必须看到同一批文件，否则会出现
+    // 「树里没有、搜索能搜到」的口径分裂。
     const results: { path: string; name: string }[] = []
     const q = (query || '').trim().toLowerCase()
     try {
       const walk = (dir: string, depth: number) => {
-        if (results.length >= MAX_FILES || depth > 8) return
+        if (results.length >= MAX_INDEX_FILES || depth > MAX_INDEX_DEPTH) return
         let entries: fs.Dirent[]
         try {
           entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -1340,7 +1381,7 @@ async function createWindow() {
           return // unreadable subdir: skip, don't fail the whole index
         }
         for (const ent of entries) {
-          if (results.length >= MAX_FILES) return
+          if (results.length >= MAX_INDEX_FILES) return
           const full = path.join(dir, ent.name)
           if (ent.isDirectory()) {
             if (!SKIP_DIRS.has(ent.name.toLowerCase()) && !ent.name.startsWith('.')) {
@@ -1370,9 +1411,6 @@ async function createWindow() {
     const root = (typeof dirPath === 'string' && dirPath.trim()) ? path.resolve(dirPath.trim()) : await getWorkspaceRoot()
     // 登记合法展开过的根：编辑器写通道的白名单据此纳入会话级工作区
     browsedTreeRoots.add(root)
-    const SKIP_DIRS = new Set([
-      'node_modules', '.git', 'dist', 'out', 'build', '.khy', 'coverage', '.next', '.turbo',
-    ])
     const q = (query || '').trim().toLowerCase()
     try {
       const entries = fs.readdirSync(root, { withFileTypes: true })
@@ -1810,7 +1848,7 @@ async function createWindow() {
   ipcMain.handle('plugin:setEnabled', (_e, id: string, enabled: boolean) => setPluginEnabled(id, enabled))
   ipcMain.handle('plugin:uninstall', (_e, id: string) => uninstallPlugin(id))
   ipcMain.handle('plugin:checkUpdates', async () => checkPluginUpdates())
-  // 发现 tab — 多生态勘察编目（delivery/market，只读）。force 跳过服务端 TTL。
+  // 发现 tab — 多生态勘察编目（works/market，只读）。force 跳过服务端 TTL。
   ipcMain.handle('plugin:ecoMarket', async (_e, force?: boolean) => getEcoMarketCatalog(!!force))
   // 发现 tab — 条目安装/卸载（技能目录与 mcp.json 由后端服务写入，台账记住产物）
   ipcMain.handle('plugin:marketInstall', async (_e, entry: Record<string, unknown>, values?: Record<string, unknown>) =>
@@ -1965,7 +2003,7 @@ async function createWindow() {
   })
   // 网页版地址：设置里填了就用设置，否则用本机网页版端口。网页 UI 不在后端
   // 端口上 —— 它由 `khy gateway manage start` 的 daemon 在 WEB_FRONTEND_PORT
-  // 托管 delivery/web/ai-frontend/dist 并反代 API；后端 3000 只服务 API 与
+  // 托管 delivery/channel/web/ai-frontend/dist 并反代 API；后端 3000 只服务 API 与
   // （已不存在的）runtime/node/frontend/dist。端口读 serviceDefaults，不写死。
   ipcMain.handle('app:webVersion', async () => {
     let configured = ''
@@ -2142,12 +2180,51 @@ app.whenReady().then(() => {
   // Key/Endpoint Manager IPC (DESIGN-ARCH-091 §6) — global, registered once
   registerKeyManagerIpc(ipcMain)
 
+  // 内建代码编辑器工作台（DESIGN-ARCH-210）：读写白名单与现有 codeEditor:write
+  // 共用 editorWritableRoots，不另立第二份根集合。
+  editorIpcHandle = registerEditorIpc(ipcMain, {
+    getWritableRoots: editorWritableRoots,
+    getWorkspaceRoot,
+    getWindow: () => mainWindow,
+    // host 自己维护 _readTracker；人保存后不同步，AI 下一步编辑会被误判成
+    // 「磁盘已变」而拒绝。只发通知、不等回执（host 未起/已断就静默丢弃）。
+    notifyHostFileWritten: (filePath, mtimeMs) => {
+      if (!hostProcess || !hostProcess.connected) return
+      hostProcess.send({ type: 'editor.fileWritten', path: filePath, mtimeMs })
+    },
+    notifyHostWatchSet: (filePaths) => {
+      if (!hostProcess || !hostProcess.connected) return
+      hostProcess.send({ type: 'editor.watchSet', paths: filePaths })
+    },
+    notifyHostPendingDecision: (decision) => {
+      if (!hostProcess || !hostProcess.connected) return
+      hostProcess.send({
+        type: 'editor.pendingDecision',
+        id: decision.id,
+        accept: decision.accept === true,
+        acceptedHunks: decision.acceptedHunks,
+      })
+    },
+    notifyHostCancelAllPending: () => {
+      if (!hostProcess || !hostProcess.connected) return
+      hostProcess.send({ type: 'editor.cancelAllPending' })
+    },
+  })
+
   // [DESIGN-ARCH-091] §5.1 入口①「主窗菜单 → 密钥与端点管理」：打开独立管理窗口。
   // 此前该入口只存在于 src/main/menu.ts 的菜单项里，而那份菜单从未接线 —— 独立
   // 管理窗口除 `--key-manager` 启动（入口③）外无路可入。入口②（设置页内嵌）一直是
   // 通的，缺的是这个独立窗口入口。键位 Ctrl+Shift+K 沿用 091/旧菜单的既有值。
   ipcMain.handle('keymanager:openWindow', () => {
     openKeyManagerWindow()
+  })
+
+  // [DESIGN-ARCH-091] 同址同形态：模型管理独立窗口（#/model-manager）。页面
+  // 本体由 src/main/modelsWindow.ts 创建；主窗内的整屏 #/model-manager 路由
+  // 走侧栏入口，本通道服务 Ctrl+Shift+M / 窗口菜单入口。不新增 --models
+  // 独立启动分支（入口③ 只属于密钥管理）。
+  ipcMain.handle('models:openWindow', () => {
+    openModelsWindow()
   })
 
   // 窗口级键位（F11 全屏 / F12 开发者工具）：原先只写在 src/main/menu.ts 的菜单项里，

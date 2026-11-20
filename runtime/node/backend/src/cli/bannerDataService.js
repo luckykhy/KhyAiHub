@@ -68,7 +68,25 @@ function getBannerData(opts = {}) {
     const active = gateway.getActiveAdapter();
     if (active) {
       adapterName = active.name || active.type || '';
-      modelName = active.activeModel || process.env.GATEWAY_PREFERRED_MODEL || '';
+      // Auto 偏好只写 ADAPTER=auto；getActiveAdapter() 会解析出一个具体通道供展示，
+      // 直接取 activeModel 会把「Auto」横幅写成上一次成功的模型。
+      let autoIntent = false;
+      try {
+        const autoSelect = require('../services/gateway/autoModelSelect');
+        autoIntent =
+          autoSelect.isEnabled() &&
+          autoSelect.isAutoSelection({
+            adapter: process.env.GATEWAY_PREFERRED_ADAPTER,
+            model: process.env.GATEWAY_PREFERRED_MODEL,
+          });
+      } catch {
+        /* fail-soft: keep legacy banner */
+      }
+      modelName = require('./footerModelIntent').resolveFooterModel({
+        activeModel: active.activeModel,
+        preferredModel: process.env.GATEWAY_PREFERRED_MODEL,
+        autoIntent,
+      });
     }
     // Gateway status
     const statuses = typeof gateway.getStatus === 'function' ? gateway.getStatus() : [];
@@ -106,7 +124,7 @@ function getBannerData(opts = {}) {
   try {
     const fn = require('./ccModelName').formatModelLabel;
     if (typeof fn === 'function') {
-      modelName = fn(modelName);
+      modelName = String(modelName).trim().toLowerCase() === 'auto' ? '★ Auto' : fn(modelName);
     }
   } catch {
     /* keep raw slug */

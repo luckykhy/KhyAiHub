@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-LAY-010] 目录结构唯一原则-位置与语义双射.md -->
+<title>[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-LAY<span class="sep">›</span>[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射</div>
+      <header class="hero reveal"><h1>[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-010-目录结构唯一原则-位置与语义双射">[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射</a></li><li class="lvl-2"><a href="#一-原则">一、原则</a></li><li class="lvl-2"><a href="#二-唯一测试">二、唯一测试</a></li><li class="lvl-2"><a href="#三-机械推论-同层同轴">三、机械推论：同层同轴</a></li><li class="lvl-2"><a href="#四-轴的选择-第一层必须是-变更原因">四、轴的选择：第一层必须是「变更原因」</a></li><li class="lvl-2"><a href="#五-本仓实测证物-2026-11-18">五、本仓实测证物（2026-11-18）</a></li><li class="lvl-2"><a href="#六-落地动作-守卫若开工-判据按此写">六、落地动作（守卫若开工，判据按此写）</a></li><li class="lvl-2"><a href="#七-验收">七、验收</a></li><li class="lvl-2"><a href="#附-与既有规范的关系">附：与既有规范的关系</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-LAY-010 | 阶段: 设计 | 原路径: 新建 --&gt;<br>&lt;!-- IMPL-STATUS: todo --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：本文只给判据，尚无守卫执行器；落地动作见 §六。</p></blockquote>
+<h1 id="design-lay-010-目录结构唯一原则-位置与语义双射">[DESIGN-LAY-010] 目录结构唯一原则：位置与语义双射<a class="anchor" href="#design-lay-010-目录结构唯一原则-位置与语义双射" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>原则 · 「什么算好的目录结构」的唯一判据</strong> · 先用一句话回答「好的结构长什么样」，再给一条可双向验证的测试，最后列本仓实测证物与落地动作。</p>
+<p><strong>定位（必读，防重叠）</strong>：本篇<strong>不登记任何目录、不复制任何名册</strong>。目录清单与依赖方向的真源仍是 <code>[DESIGN-LAY-005]</code>（层级名册）、<code>[DESIGN-LAY-002]</code>（层内可见性）、<code>[DESIGN-LAY-004]</code>（产物落点）、<code>[DESIGN-LAY-009]</code>（数据 SSOT）。本篇管的是这些规范共同服务的<strong>那个判据</strong>：凭什么说一棵树是好的。按 <code>[MGMT-STD-008]</code> §2.2「重叠即违规」，本篇只出判据，名册一律指回上述四篇。</p>
+<p><strong>效力</strong>：无规则 ID、无守卫（规则 12 的棘轮：规则数只降不升，新增一条须先退役一条）。它约束<strong>评审时的判断</strong>，不进提交流程。</p>
+<p><strong>谁该读</strong>：设计新目录、评审目录迁移、被问「这个文件放哪」的人与 AI。</p></blockquote>
+<hr>
+<h2 id="一-原则">一、原则<a class="anchor" href="#一-原则" aria-label="锚点">#</a></h2>
+<p><strong>位置 = f(语义)，f 必须存在、单射，且 f⁻¹ 只用目录名就能执行。</strong></p>
+<p>口号版——同一映射的三个面：</p>
+<blockquote><p>一个字节只有一个家；一个家只有一个理由；只看名字就懂这个理由。</p></blockquote>
+<table><thead><tr><th>双射的要求</th><th>失效叫什么</th><th>现场症状</th></tr></thead><tbody><tr><td><strong>存在性</strong>：任何内容都有家</td><td>无家可归</td><td>临时物 / 生成物落根上，与真层并列</td></tr><tr><td><strong>唯一性</strong>：只有一个家、一个理由</td><td>别名 / 混家 / 上帝目录</td><td>同一内容两条可写路径；一个目录两个职责</td></tr><tr><td><strong>可读性</strong>：理由只读名字就懂</td><td>名字不表意</td><td>需要注释解释「这目录为什么在根上」</td></tr></tbody></table>
+<p>前两行是逻辑，第三行是视觉。<strong>它们不是两套标准</strong>——视觉是 f⁻¹ 的可执行性，逻辑是 f 的单射性，同一个映射的正反两向。</p>
+<h2 id="二-唯一测试">二、唯一测试<a class="anchor" href="#二-唯一测试" aria-label="锚点">#</a></h2>
+<p>给一个没看过代码的人，两向各做一次，<strong>两次试错以内命中即为合格</strong>：</p>
+<table><thead><tr><th>方向</th><th>怎么问</th><th>测的是</th></tr></thead><tbody><tr><td>反向（视觉）</td><td>只给 <code>tree -L 2</code>：「要改 X，动哪些目录？」</td><td>f⁻¹ 能否只靠名字走通</td></tr><tr><td>正向（逻辑）</td><td>随机指一个目录：「什么变更会落到这里？」</td><td>f 是否单射；答案出现「和」即破裂</td></tr></tbody></table>
+<p>只做通一向的仓库是半瘫的。常见形态是正向基本通（有真源意识）、反向靠人传人——那正是「治理很重、新人五分钟找不到地方」的成因。</p>
+<h2 id="三-机械推论-同层同轴">三、机械推论：同层同轴<a class="anchor" href="#三-机械推论-同层同轴" aria-label="锚点">#</a></h2>
+<p><strong>每一层的兄弟节点必须共享同一个分类轴。</strong> 位置是坐标，第 n 位是第 n 层轴的一个取值；同层混两个轴，这一位就不可判定（「这层是按技术栈分还是按产品分？」答不出 = 只看名字算不出位置）。</p>
+<p>视觉规则不必另立，全部是它的 fallout：</p>
+<table><thead><tr><th>视觉特征</th><th>为什么必然成立</th></tr></thead><tbody><tr><td>一眼可数</td><td>一个轴的取值集合有限、可枚举</td></tr><tr><td>平行命名</td><td>同轴取值用同一语法</td></tr><tr><td>深度均匀</td><td>轴每下移一层才切换一次</td></tr><tr><td>无杂物</td><td>临时物没有语义，拿不到坐标</td></tr><tr><td>不写序号前缀</td><td><code>01_</code> 是排序意图（呈现轴），不是语义；重排即全树改名</td></tr></tbody></table>
+<h2 id="四-轴的选择-第一层必须是-变更原因">四、轴的选择：第一层必须是「变更原因」<a class="anchor" href="#四-轴的选择-第一层必须是-变更原因" aria-label="锚点">#</a></h2>
+<p>双射不替你决定各层选什么轴。只规定一条：</p>
+<p><strong>顶层轴必须是「引起变化的原因」（业务域 / 变更源），不是技术栈。</strong></p>
+<p>顶层按 <code>runtime/</code>、<code>delivery/</code>、<code>apps/</code> 切，等于用「用什么写」当坐标第一位；而变更的语义第一位是「为什么变」。后果是一个需求的 diff 撒满全仓。</p>
+<h2 id="五-本仓实测证物-2026-11-18">五、本仓实测证物（2026-11-18）<a class="anchor" href="#五-本仓实测证物-2026-11-18" aria-label="锚点">#</a></h2>
+<ol><li><strong>唯一性破裂（最重）</strong>：根 <code>khy-Trajectory/</code> 与 <code>runtime/khy-Trajectory/</code> 都是 junction，均指向 <code>works/data/khy</code>（各 246 项）。一份内容两个家，还分属两层；名字像代码层，实际是数据主目录别名。写入方从任一路径出发都「看起来对」。</li><li><strong>同层混轴</strong>：<code>docs/</code> 下 <code>01_INIT_立项</code> … <code>19_资产</code> 是文档类型轴，<code>html/</code> 是生成物落点（<code>scripts/docs/build_docs_site.js</code> 产出），<code>tui-interaction-optimize/</code> 是一个工作项——三个轴并列。<code>html/</code> 的位置必须靠「落点由 <code>htmlRelFor</code> 单一定义」的说明交代，而不能靠位置自解释。<strong>需要解释，就是 f⁻¹ 走不通的物证。</strong></li><li><strong>同层混轴 + 层粒度不一致</strong>：<code>delivery/</code> 下 <code>channel</code> / <code>extension</code> 是层级轴（<code>scripts/ci/check-repo-layout.js</code> 的 <code>LAYERS</code> 里 L4 / L5），<code>web</code> / <code>mobile</code> / <code>market</code> / <code>brand</code> 是形态 / 资产轴，守卫名册只登记前两个，其余被吞进粗粒度的 <code>delivery</code>＝D4。同层兄弟不同轴时，按目录前缀判层这件事自身失效。</li><li><strong>命名不平行</strong>：<code>runtime/</code> 下 <code>boot</code> / <code>node</code> / <code>substrate</code> 与 <code>khy-Trajectory</code> 同层，PascalCase 混在小写单词里。<strong>视觉上「多出来的那个」与逻辑上「不属于这个轴的那个」是同一个东西</strong>——一条正则盖不住全部兄弟，即有异物。这是最便宜的轴污染检测器。</li><li><strong>存在性失败</strong>：根上 <code>$TEMP</code>、<code>%EV%</code>、<code>-p</code>、<code>cd</code>、<code>done</code>、<code>echo</code>、<code>mkdir</code>（shell 引号事故残留，2026-11-13～18）+ 80 个 <code>.tmp-*</code> 残留 + 14 个 diff 文本。没有语义 ⇒ 拿不到坐标 ⇒ 只能落根上，与真层并列。</li></ol>
+<h2 id="六-落地动作-守卫若开工-判据按此写">六、落地动作（守卫若开工，判据按此写）<a class="anchor" href="#六-落地动作-守卫若开工-判据按此写" aria-label="锚点">#</a></h2>
+<ol><li><strong>目录名册 = 轴名册</strong>：每个目录断言它在第 n 层轴上取哪个值；同层语法一致性用一条正则覆盖全部兄弟；新增取值须改名册。</li><li><strong>禁别名（含 junction / symlink / 硬链接，2026-11-18 用户裁决）</strong>：每份内容只有一个可写路径，且这个路径必须是<strong>磁盘上真实的目录项</strong>——链接把「家」变成指路牌，<code>dir</code>/<code>tree</code> 看到的东西和磁盘上真实存在的东西不一致，视觉层就开始说谎。兼容需求只能走「生成 + 登记」（<code>DATA-SSOT.json</code>），不得以真源身份出现在层级名册里。</li><li><strong>用 f 判据替换体积判据</strong>：断言「位置可算」比断言「全部源文件带生命周期清单」便宜得多，也更贴根因——位置能算出来，才谈得上往里塞东西。</li></ol>
+<h2 id="七-验收">七、验收<a class="anchor" href="#七-验收" aria-label="锚点">#</a></h2>
+<p><strong>把 <code>scripts/ci/check-repo-layout.js</code> 里 <code>CROSSCUTTING</code> 的解释性注释删掉，树还读得懂吗？</strong></p>
+<p>读不懂，说明位置 ⟺ 语义是靠注释与人传人撑着的，不是靠结构本身——那就是「结构还没做好」的定义。</p>
+<hr>
+<h2 id="附-与既有规范的关系">附：与既有规范的关系<a class="anchor" href="#附-与既有规范的关系" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问题</th><th>去哪</th></tr></thead><tbody><tr><td>有哪些层、每层担什么责</td><td><code>[DESIGN-LAY-005]</code></td></tr><tr><td>层内怎么分、谁能看见谁</td><td><code>[DESIGN-LAY-002]</code></td></tr><tr><td>生成的东西放哪</td><td><code>[DESIGN-LAY-004]</code></td></tr><tr><td>同一份数据只写一遍</td><td><code>[DESIGN-LAY-009]</code></td></tr><tr><td><strong>凭什么说这棵树是好的</strong></td><td><strong>本篇</strong></td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-009] 数据单一真源与影子副本归并规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-009] 数据单一真源与影子副本归并规范</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-011] 新增文件落位与命名规程.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-LAY-011] 新增文件落位与命名规程</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-LAY/[DESIGN-LAY-010] 目录结构唯一原则-位置与语义双射.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -31,7 +31,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { getDataHome } = require('../../../../utils/dataHome');
+const { getDataDir } = require('../../../../utils/dataHome');
 
 const SCHEMA_VERSION = 1;
 
@@ -86,7 +86,7 @@ let _gitMissingWarned = false;
 
 /** Root that holds every agent directory: `<dataHome>/agents`. */
 function getAgentsRoot() {
-  return path.join(getDataHome(), 'agents');
+  return getDataDir('agents');
 }
 
 /**

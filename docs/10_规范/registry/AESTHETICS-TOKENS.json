@@ -39,10 +39,10 @@
     ],
     "surfaces": {
       "tui": "runtime/node/backend/src/cli/（ccTheme.js 等）",
-      "web": "delivery/web/ai-frontend/src/styles/newapi-theme.css（--khy-*）",
+      "web": "delivery/channel/web/ai-frontend/src/styles/newapi-theme.css（--khy-*）",
       "khyquant": "delivery/channel/khyquant/frontend/src/styles/theme.css（--khy-*；独立项目，随平台分发）",
       "desktop": "apps/khyos-desktop/src/renderer/theme/globals.css（Tailwind @theme --color-*）",
-      "mobile": "delivery/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart（Dart）"
+      "mobile": "delivery/channel/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart（Dart）"
     },
     "sources": {
       "r1": ".khy/aesthetics/research/1-设计系统与设计令牌.md",
@@ -73,8 +73,8 @@
         "mobile": "AppColors.primary"
       },
       "required": true,
-      "rationale": "品牌/强调主色。**平台基准值** = Web 现状（亮 --khy-primary = #9c4116 / 暗 #f0a868，同属基准端，暗色配对不算偏离）。取值来自 Khy OS 品牌琥珀族（真源 delivery/brand/khy-brand-geometry.js 的 PALETTE）。2026-10-25 品牌主色由工程蓝整族换成琥珀：蓝→紫→品红是 2023 年后 AI 产品的通用色系，五端各画各的（Web 蓝 / 移动蓝紫 / TUI 橙 / 桌面蓝），本轮收敛为同一族。khyquant 保持金融蓝 —— 它是**独立项目**（量化交易终端），红色/绿色另有 A 股涨跌语义，不随平台品牌迁移。mobile / desktop 与基准同值，仍登记在 endDeviations 里以示「本轮同步过」而非「未映射」。见 standard §7 Q1。",
-      "source": "r1 §2.1/§2.2; newapi-theme.css 的 --khy-primary; ccTheme.js 的 SEMANTIC.accent; theme.css 的 --khy-primary; globals.css 的 --color-brand; app_colors.dart 的 AppColors.primary; delivery/brand/khy-brand-geometry.js 的 PALETTE"
+      "rationale": "品牌/强调主色。**平台基准值** = Web 现状（亮 --khy-primary = #9c4116 / 暗 #f0a868，同属基准端，暗色配对不算偏离）。取值来自 Khy OS 品牌琥珀族（真源 works/brand/khy-brand-geometry.js 的 PALETTE）。2026-10-25 品牌主色由工程蓝整族换成琥珀：蓝→紫→品红是 2023 年后 AI 产品的通用色系，五端各画各的（Web 蓝 / 移动蓝紫 / TUI 橙 / 桌面蓝），本轮收敛为同一族。khyquant 保持金融蓝 —— 它是**独立项目**（量化交易终端），红色/绿色另有 A 股涨跌语义，不随平台品牌迁移。mobile / desktop 与基准同值，仍登记在 endDeviations 里以示「本轮同步过」而非「未映射」。见 standard §7 Q1。",
+      "source": "r1 §2.1/§2.2; newapi-theme.css 的 --khy-primary; ccTheme.js 的 SEMANTIC.accent; theme.css 的 --khy-primary; globals.css 的 --color-brand; app_colors.dart 的 AppColors.primary; works/brand/khy-brand-geometry.js 的 PALETTE"
     },
     "accent-strong": {
       "surfaces": {

@@ -3,8 +3,12 @@ import os
 import sqlite3
 import hashlib
 
-# khyquant DB lives inside the project data home (repo root/.khy/khyquant/data/)
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '.khy', 'khyquant', 'data', 'khy-quant.db')
+# khyquant DB lives inside the project data home (works/data/khy — this checkout
+# is portable). dataHome.js is Node-only and has no Python counterpart, so the
+# home is spelled out here instead of resolved; keep it in sync with
+# scripts/admin/_insert-user.js and scripts/maintenance/organize.py.
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.path.join(REPO_ROOT, 'works', 'data', 'khy', 'khyquant', 'data', 'khy-quant.db')
 PASSWORD = "testpass123"
 
 # Hash the password with bcrypt-compatible format for testing

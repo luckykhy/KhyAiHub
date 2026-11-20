@@ -27,7 +27,13 @@ const ACTIONS = Object.freeze([
   'pull',
   'push',
   'collect',
+  'collect-media',
+  'capture',
   'scan',
+  'doctor',
+  'mailbox-clean',
+  'record',
+  'pair',
   'setup',
   'revive',
   'connect',
@@ -163,6 +169,17 @@ function parsePhoneArgv(tokens = [], options = {}) {
   if (action === 'help') {
     return base;
   }
+  if (action === 'pair') {
+    // 配对不需要参数：码从手机通知栏取（本机有 adb 时），或从 KHY_PAIR_CODE 读。
+    if (rest.length > 0) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 pair 不接受参数：${rest.join(' ')}`,
+      };
+    }
+    return { ...base, force: opts.force === true };
+  }
   if (action === 'pull') {
     // 设备路径必给，主机路径可省（默认当前目录同名文件）。
     if (rest.length === 0) {
@@ -182,25 +199,63 @@ function parsePhoneArgv(tokens = [], options = {}) {
     return { ...base, remotePath: rest[0], localPath: rest[1] || '' };
   }
   if (action === 'collect') {
-    // 设备目录与主机目录必给；类型可选（逗号分隔），时间窗可选（7d/48h/2w）。
-    if (rest.length < 2) {
+    // 设备目录必给；主机目录可省（或写 '-'）→ 落默认位置；类型与时间窗可选。
+    if (rest.length === 0) {
       return {
         ok: false,
         code: 'missing_args',
-        error: '子命令 collect 需要「设备目录 主机目录」，例：khy phone collect /sdcard/DCIM out/dcim [image,video] [7d]',
+        error: '子命令 collect 需要设备侧目录，例：khy phone collect /sdcard/DCIM [主机目录|-] [image,video] [7d]',
       };
     }
     if (rest.length > 4) {
       return {
         ok: false,
         code: 'unexpected_args',
-        error: `子命令 collect 只接受「设备目录 主机目录 [类型] [时间窗]」四个参数：${rest.join(' ')}`,
+        error: `子命令 collect 只接受「设备目录 [主机目录] [类型] [时间窗]」四个参数：${rest.join(' ')}`,
       };
     }
     const types = rest[2]
       ? rest[2].split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
       : [];
-    return { ...base, remoteDir: rest[0], localDir: rest[1], types, since: rest[3] || '' };
+    return { ...base, remoteDir: rest[0], localDir: rest[1] || '', types, since: rest[3] || '' };
+  }
+  if (action === 'collect-media') {
+    // 主机目录可省（或写 -）→ 落默认位置；时间窗可选。
+    if (rest.length > 2) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 collect-media 只接受「[主机目录|-] [时间窗]」两个参数：${rest.join(' ')}`,
+      };
+    }
+    const since = rest[1] === undefined ? '' : String(rest[1]).trim().toLowerCase();
+    if (since !== '' && !/^\d+[dhw]?$/.test(since)) {
+      return {
+        ok: false,
+        code: 'invalid_args',
+        error: `时间窗必须是形如 7d / 48h 的正整数：${rest[1]}`,
+      };
+    }
+    return { ...base, localDir: rest[0] || '', since };
+  }  if (action === 'capture') {
+    // capture [photo|video] [主机目录|-] [秒数]
+    const mode = (rest[0] || 'photo').toLowerCase();
+    if (!['photo', 'video'].includes(mode)) {
+      return {
+        ok: false,
+        code: 'invalid_args',
+        error: `capture 只支持 photo / video：${rest[0]}`,
+      };
+    }
+    const seconds = rest[2] === undefined ? '30' : String(rest[2]).trim();
+    if (!/^\d+$/.test(seconds) || Number(seconds) < 3 || Number(seconds) > 300) {
+      return {
+        ok: false,
+        code: 'invalid_args',
+        error: `等待秒数必须是 3-300 的整数：${rest[2]}`,
+      };
+    }
+    return { ...base, mode, localDir: rest[1] || '', seconds };
   }
   if (action === 'scan') {
     // 只枚举不下载：设备目录必给，类型与时间窗可选。
@@ -241,6 +296,25 @@ function parsePhoneArgv(tokens = [], options = {}) {
     }
     return { ...base, localPath: rest[0], remotePath: rest[1] };
   }
+  if (action === 'record') {
+    // 录制秒数可选（默认 10，上限以手机侧为准）；主机目录可选，缺省进系统临时目录。
+    if (rest.length > 2) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 record 只接受「[秒数] [主机目录]」两个参数：${rest.join(' ')}`,
+      };
+    }
+    const seconds = rest[0] === undefined ? '' : String(rest[0]).trim().toLowerCase();
+    if (seconds !== '' && !/^\d+[dhw]?$/.test(seconds)) {
+      return {
+        ok: false,
+        code: 'invalid_args',
+        error: `秒数必须是正整数：${rest[0]}`,
+      };
+    }
+    return { ...base, seconds: seconds === '' ? '10' : seconds, localDir: rest[1] || '' };
+  }
   if (action !== 'call') {
     if (rest.length > 0) {
       return {
@@ -272,7 +346,12 @@ function renderPhoneHelp() {
     '  khy phone pull <设备路径> [主机路径]  把设备上的文件拉下来（图片/视频/音频/JSON 通用）',
     '  khy phone push <主机文件> <设备路径>  把本地文件推到手机（构建产物/脚本/配置）',
     '  khy phone collect <设备目录> <主机目录> [类型]  按类型批量采集并落清单（image,audio,video,json,text）',
+    '  khy phone capture [photo|video] [主机目录|-] [等待秒数]  开相机拍一张（默认 photo，30s 等待）',
+    '  khy phone collect-media [主机目录|-] [时间窗]  按类型采齐手机媒体目录（图片/音频/视频/文本/其它）',
     '  khy phone scan <设备目录> [类型] [时间窗]  只列清单不下载（7d/48h/2w）',
+    '  khy phone record [秒数] [主机目录]  录一段手机麦克风的声音并拉回主机',
+    '  khy phone doctor                 一页体检：这台手机现在能不能当开发机',
+    '  khy phone pair                与手机配对（换一张 24 小时有效的证书；码在手机通知栏）',
     '  khy phone call <工具> --channel mailbox   强制走文件信箱兜底',
     '  khy phone devices             列出 adb 看到的设备',
     '  khy phone connect             执行 adb connect（设备掉线时）',
@@ -314,18 +393,50 @@ function renderStatusText(input = {}) {
   lines.push(`HTTP 通道：${cfg.baseUrl || '未解析'}`);
   lines.push(`信箱目录：${cfg.mailboxDir || '未解析'}（仅兜底）`);
   if (input.tokenReady) {
-    lines.push('令牌：已从设备读取（不回显）');
+    // 断点二之后设备上不再有明文令牌（token.txt 已退役）：PC 用的是设备签发的
+    // 证书。说「令牌」会让人以为还能从设备上读到那个文件——那是过时的说法。
+    lines.push('凭据：设备签发的证书可用（私钥只在本机，不回显）');
   } else {
-    lines.push(`令牌：不可用（${input.tokenError || '未读取'}）`);
+    lines.push(`凭据：不可用（${input.tokenError || '未配对'}）——先 khy phone pair`);
   }
   const tools = Number(status.tools);
   lines.push(
     `桥：${status.up === false ? '未回应' : '在线'}，模式 ${status.mode || '未知'}，`
     + `工具 ${Number.isFinite(tools) ? tools : '未知'} 个`
   );
+  // S1：信箱队列深度 + result 的年龄与 GC 丢弃数。旧版桥没报这四项/两数时
+  // 写「未上报」，不替桥编 0 —— 目录空可能是被消费了，也可能是被 GC 丢了。
+  const mb = _isPlainObject(status.mailbox) ? status.mailbox : null;
+  if (mb) {
+    const fmt = (value) => (Number.isFinite(Number(value)) ? String(Number(value)) : '?');
+    const age = mb.oldest_result_age_ms;
+    const ageText = Number.isFinite(Number(age))
+      ? (Number(age) < 0 ? '-1（无回执）' : fmt(age))
+      : '未上报';
+    const dropped = mb.dropped;
+    lines.push(
+      `信箱：pending ${fmt(mb.pending)}，processing ${fmt(mb.processing)}，`
+      + `results ${fmt(mb.results)}，tmp ${fmt(mb.tmp)}；`
+      + `oldest_result_age_ms=${ageText}，dropped=${Number.isFinite(Number(dropped)) ? fmt(dropped) : '未上报'}`
+    );
+  } else {
+    lines.push('信箱：未上报');
+  }
   lines.push(
     `进程内计数：调用 ${Number(state.totalCalls) || 0} 次，最近通道 ${state.lastChannel || '无'}`
   );
+  // 出向链路登记（S0）：reg_state/last_reg_ms/registration_source 是机器可读的
+  // 三个字段；没确认过就如实写「未确认」，不替 admin 口编一个 registered。
+  const reg = _isPlainObject(state.registration) ? state.registration : null;
+  if (reg) {
+    const parts = [`reg_state=${reg.reg_state || 'unregistered'}`];
+    if (reg.registration_source) parts.push(`registration_source=${reg.registration_source}`);
+    if (Number.isFinite(reg.last_reg_ms)) parts.push(`last_reg_ms=${reg.last_reg_ms}`);
+    const code = reg.code ? `（${reg.code}）` : '';
+    lines.push(`出向链路登记：${parts.join(' · ')}${code}`);
+  } else {
+    lines.push('出向链路登记：reg_state=unregistered（未确认）');
+  }
   return lines.join('\n');
 }
 

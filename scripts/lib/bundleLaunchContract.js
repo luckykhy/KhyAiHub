@@ -48,7 +48,7 @@
 //   runtime/node/backend/server.js        —— 管理后端服务入口。
 //   runtime/node/backend/src/models/index.js —— 后端启动早期即 require 的数据模型入口。
 //   runtime/node/ai-backend/src/middleware/auth.js —— 缺它曾让 bundled 安装的每条 proxy/user-gateway 路由 500。
-//   delivery/web/ai-frontend/src/main.js      —— 前端 SPA 入口，缺则管理页白屏。
+//   delivery/channel/web/ai-frontend/src/main.js      —— 前端 SPA 入口，缺则管理页白屏。
 //   delivery/channel/khyquant/frontend/src/main.js —— khyquant 前端入口，同上。
 // pip(wheel/sdist) 早已三处钉死前 6 条；npm audit-purity 历史只钉了前 2 条——本契约
 // 就是把这条渠道非对称逼成硬门（三份清单必须都钉死同一份启动地板）。

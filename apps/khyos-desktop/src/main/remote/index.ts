@@ -29,7 +29,7 @@ export type RemoteHub = {
   revoke: (deviceId: string) => Promise<Record<string, unknown>>
   consume: (m: HostMessage) => boolean
   running: () => boolean
-  probeBridge: () => Promise<Record<string, unknown>>
+  probeBridge: (opts?: { basePort?: number }) => Promise<Record<string, unknown>>
 }
 
 type Deps = {
@@ -131,11 +131,19 @@ export function createRemoteHub(deps: Deps): RemoteHub {
         async loadSession({ sessionId }: { sessionId: string }) {
           return askHost('session.messages', { sessionId }, 30000)
         },
-        async sendMessage({ text }: { text: string }) {
+        async sendMessage({ sessionId, text }: { sessionId?: string; text: string }) {
           if (!deps.hostAlive()) throw new Error('host 进程未启动：请重启 KhyOS Desktop 后重试')
           const id = nextId('remote_gen')
           activeGeneration = id
-          deps.sendToHost({ type: 'ai.generate', id, prompt: text, options: { cwd: await deps.getWorkspaceRoot() } })
+          // sessionId 必须透传：手机选的是哪条任务，这一轮就得续在哪条 .khy/sessions
+          // 链上；丢掉它会在桌面侧另开一条新会话，手机与电脑各看各的。
+          const sid = typeof sessionId === 'string' ? sessionId.trim() : ''
+          deps.sendToHost({
+            type: 'ai.generate',
+            id,
+            prompt: text,
+            options: { cwd: await deps.getWorkspaceRoot(), ...(sid ? { sessionId: sid } : {}) },
+          })
           return { ok: true, generationId: id }
         },
         async abort() {
@@ -198,13 +206,18 @@ export function createRemoteHub(deps: Deps): RemoteHub {
     },
     // 控制对象 = 后端 CLI 会话：bridge 服务器活在 CLI 进程里，桌面端既不代它启动，
     // 也拿不到它打印的 PIN —— 探测到就出地址二维码，探测不到就如实说。
-    async probeBridge() {
-      let base = 0
-      try {
-        const src = resolveBackendSrc()
-        base = nodeRequire(path.join(src, 'constants', 'serviceDefaults.js')).BRIDGE_DEFAULT_PORT
-      } catch (err) {
-        return { found: false, error: `未读取到 bridge 默认端口：${String((err as Error).message || err)}` }
+    async probeBridge(opts?: { basePort?: number }) {
+      // 两处都要带 ?.：守卫句已经用 opts?.basePort 判过 > 0，右侧再写 opts.basePort
+      // 在 strict 下是 TS18048（'opts' is possibly 'undefined'）—— 运行时因守卫
+      // 不可达，但类型门会红。
+      let base = Number(opts?.basePort) > 0 ? Math.floor(Number(opts?.basePort)) : 0
+      if (!base) {
+        try {
+          const src = resolveBackendSrc()
+          base = nodeRequire(path.join(src, 'constants', 'serviceDefaults.js')).BRIDGE_DEFAULT_PORT
+        } catch (err) {
+          return { found: false, error: `未读取到 bridge 默认端口：${String((err as Error).message || err)}` }
+        }
       }
       for (let i = 0; i <= 3; i += 1) {
         const port = base + i
@@ -212,10 +225,16 @@ export function createRemoteHub(deps: Deps): RemoteHub {
           const ctrl = new AbortController()
           const timer = setTimeout(() => ctrl.abort(), 1200)
           timer.unref?.()
-          const res = await fetch(`http://127.0.0.1:${port}/`, { signal: ctrl.signal })
+          // 只认 bridge 自己的 /health：端口段里常坐着别的 200 页面（实测本机 9223
+          // 是某应用的 WebView devtools 页），按「有 HTTP 响应就算命中」会把二维码
+          // 指到毫不相干的端口上，扫码后必然连不上。
+          const res = await fetch(`http://127.0.0.1:${port}/health`, { signal: ctrl.signal })
           clearTimeout(timer)
-          if (res.ok || res.status === 401) {
-            return { found: true, port, url: `http://${lanIPv4()}:${port}` }
+          if (res.ok) {
+            const body = (await res.json().catch(() => null)) as { status?: unknown; clients?: unknown } | null
+            if (body && body.status === 'ok' && typeof body.clients === 'number') {
+              return { found: true, port, url: `http://${lanIPv4()}:${port}` }
+            }
           }
         } catch {
           /* 该端口没在监听，试下一个 */
@@ -265,6 +284,9 @@ export function createRemoteHub(deps: Deps): RemoteHub {
           ok: m.ok !== false,
           text: typeof m.text === 'string' ? m.text : '',
           error: typeof m.error === 'string' ? m.error : undefined,
+          // 手机首次发消息时还没有会话 id（新任务由 host 铸），靠这一帧认领，
+          // 否则它下一条消息又落回「无 sessionId → 再开一条新会话」。
+          sessionId: typeof m.sessionId === 'string' ? m.sessionId : undefined,
         })
         return false
       }

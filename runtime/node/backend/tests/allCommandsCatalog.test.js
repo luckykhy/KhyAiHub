@@ -10,6 +10,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const ui = require('../src/cli/commandCatalogUi');
+const { CATEGORIES } = require('../src/cli/commandRegistry');
 const { handleCommands, allCommandsEnabled } = require('../src/cli/handlers/commands');
 
 function capture(fn) {
@@ -66,6 +67,30 @@ describe('buildAllCommands', () => {
         assert.notEqual(it.description.toLowerCase(), it.command);
       }
     }
+  });
+
+  it('analysis 组的标签取自收编后的 CATEGORIES（组名真源只有注册表这一处）', () => {
+    // labelFix 收编（2026-11-12）：analysis 从 commandCatalogUi.js 的私有
+    // _EXTRA_CATEGORY_LABELS 副本收进 commandRegistry.CATEGORIES 末尾，该键已从
+    // 副本删除。单看 label 抓不到「收编被回退」—— 副本在时 || 顺序让注册表优先，
+    // 标签值一模一样；所以钉的是出处：这一组的 label 必须等于注册表里的值，
+    // 且 _EXTRA_CATEGORY_LABELS 里不得再出现 analysis 键。
+    const analysis = data.groups.find((g) => g.key === 'analysis');
+    assert.ok(analysis, 'commands --all 必须含 analysis 组');
+    assert.ok(analysis.items.length > 0, `analysis 组不得为空（${analysis.items.length} 项）`);
+    assert.equal(
+      analysis.label,
+      CATEGORIES.analysis,
+      'analysis 组标签必须来自 CATEGORIES；回退到 _EXTRA_CATEGORY_LABELS 副本即本断言红'
+    );
+    const extra = /const _EXTRA_CATEGORY_LABELS = \{([\s\S]*?)\};/.exec(
+      require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src', 'cli', 'commandCatalogUi.js'), 'utf8')
+    );
+    assert.ok(extra, 'commandCatalogUi.js 必须能解析出 _EXTRA_CATEGORY_LABELS 字面量');
+    assert.ok(
+      !/^\s*analysis\s*:/m.test(extra[1]),
+      'analysis 已收编进 CATEGORIES，_EXTRA_CATEGORY_LABELS 不得再留副本（那是静默分叉源）'
+    );
   });
 });
 

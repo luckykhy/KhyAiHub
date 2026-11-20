@@ -1340,7 +1340,7 @@ function reviewDoneBlockers(task, repoRoot, fbRoot, opts) {
  * 从 scope_guard 条目里抽出**机器可核对的路径前缀**。
  *
  * 与 `auditAcceptancePaths` 不同：边界前缀通常是**目录**（`runtime/node/backend`、
- * `delivery/web/ai-frontend`），没有扩展名，故不要求扩展名。含盘符的 token
+ * `delivery/channel/web/ai-frontend`），没有扩展名，故不要求扩展名。含盘符的 token
  * （`D:/Portable`）不是仓内相对路径，剔除。抽不出前缀的条目是**语义约束**
  * （「不动 keyStore 的对外契约」），机器核不了，由调用方标注「需人工」。
  *

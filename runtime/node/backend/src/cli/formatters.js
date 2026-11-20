@@ -944,16 +944,35 @@ function printLiteBanner(version, aiProvider) {
   try {
     const gateway = require('../services/gateway/aiGateway');
     const active = gateway.getActiveAdapter();
-    modelName = active?.activeModel || '';
+    // Auto 偏好没有具体模型；直接取 activeModel 会把 banner 写成别的模型名。
+    let autoIntent = false;
+    try {
+      const autoSelect = require('../services/gateway/autoModelSelect');
+      autoIntent =
+        autoSelect.isEnabled() &&
+        autoSelect.isAutoSelection({
+          adapter: process.env.GATEWAY_PREFERRED_ADAPTER,
+          model: process.env.GATEWAY_PREFERRED_MODEL,
+        });
+    } catch {
+      /* fail-soft */
+    }
+    modelName = require('./footerModelIntent').resolveFooterModel({
+      activeModel: active?.activeModel,
+      preferredModel: process.env.GATEWAY_PREFERRED_MODEL,
+      autoIntent,
+    });
   } catch {
     /* best effort */
   }
 
   const providerText = String(aiProvider || 'AI');
   const modelText = String(modelName || '');
+  // Auto 是模式名，不是模型 slug；banner 与页脚用同一个可见标签。
+  const modelLabel = modelText.trim().toLowerCase() === 'auto' ? '★ Auto' : modelText;
   const providerPart =
     modelText && !providerText.toLowerCase().includes(modelText.toLowerCase())
-      ? `${modelText} · ${providerText}`
+      ? `${modelLabel} · ${providerText}`
       : providerText;
 
   const petLines = getClassicMonsterPetLines(orange);

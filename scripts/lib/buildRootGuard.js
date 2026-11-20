@@ -96,11 +96,13 @@ const SKIP_TOP = Object.freeze([
  *   runtime/node/backend/src/services/.../build          后端业务模块（domain/build）
  *   runtime/node/backend/src/services/.../deploy/publish 后端业务模块
  *   runtime/node/backend/vendor, runtime/boot/kernel/vendor           构建期镜像的源码副本（[DESIGN-LAY-002] §2）
+ *   apps/khyos-desktop/scripts/build                桌面端脚本分类目录（图标生成等源码，非产物；2026-11-19 补登）
  */
 const SOURCE_DIR_ALLOWLIST = Object.freeze([
   'works/ship/build',
   'works/build',
   'apps/khyos-desktop/zcode-analysis/unpacked/out',
+  'apps/khyos-desktop/scripts/build',
   'scripts/release',
   'scripts/release/publish',
   'runtime/node/backend/src/services/domain/build',
@@ -118,7 +120,7 @@ const SOURCE_DIR_ALLOWLIST = Object.freeze([
  * 权威的 `hook` / `sunset` 以 BUILD-OUTPUTS.json 为准，本清单是它的走盘投影。
  */
 const DEFAULT_PARASITIC = Object.freeze({
-  'delivery/web/ai-frontend/public/vendor': '必须被 Vite dev server 与 build 直接服务',
+  'delivery/channel/web/ai-frontend/public/vendor': '必须被 Vite dev server 与 build 直接服务',
   'delivery/extension/tools/khy-markdown/vendor': '必须在拓展包内被 prepack 打进产物',
   'delivery/extension/tools/khy-dsh-compat/vendor': '必须在拓展包内被 prepack 打进产物',
   'docs/19_资产/site/mermaid.min.js': '必须被文档站以相对路径引用',

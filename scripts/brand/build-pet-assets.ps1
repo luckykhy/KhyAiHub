@@ -1,13 +1,13 @@
 # Khy OS desktop-pet asset compositor (Windows / PowerShell 5.1+)
 #
 # Purpose: stamp the REAL Khy OS trademark (from the brand geometry source of truth,
-#          delivery/brand/png/khy-os-mark-256.png) into the blank gold plates that the
+#          works/brand/png/khy-os-mark-256.png) into the blank gold plates that the
 #          pet artwork reserves (omamori face / chest badge), producing pet images that
 #          carry an undistorted trademark.
 #
 # Why not let the image model paint the logo: generative models distort logos into
 #          look-alike-but-wrong marks. A trademark must be pixel-exact from the
-#          geometry source of truth (delivery/brand/khy-brand-geometry.js).
+#          geometry source of truth (works/brand/khy-brand-geometry.js).
 #
 # Usage (from repo root):
 #   powershell -ExecutionPolicy Bypass -File scripts/brand/build-pet-assets.ps1
@@ -29,7 +29,7 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $srcDir = Join-Path $repo 'works\design\khy-mascot'
 $outDir = Join-Path $srcDir 'pet'
 $thumbDir = Join-Path $outDir '512'
-$markPath = Join-Path $repo 'delivery\brand\png\khy-os-mark-256.png'
+$markPath = Join-Path $repo 'works\brand\png\khy-os-mark-256.png'
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 New-Item -ItemType Directory -Force -Path $thumbDir | Out-Null

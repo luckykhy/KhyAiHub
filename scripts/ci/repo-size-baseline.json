@@ -1,0 +1,12 @@
+{
+  "$comment": "仓库体积预算基线（[DESIGN-SIZE-002] §3.2 P1-b）。tracked/workdir/bundle 走容差报告，residueCount 走硬预算（必须为 0）。用 --update 重写。",
+  "tolerancePct": 10,
+  "budgets": {
+    "trackedBytes": 426007031,
+    "trackedFiles": 13856,
+    "workdirBytes": 11952515913,
+    "residueCount": 0,
+    "bundleBytes": 0,
+    "measuredAt": "2026-11-20"
+  }
+}

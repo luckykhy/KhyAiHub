@@ -37,6 +37,7 @@ import {
 } from './slashCommandMerge'
 import { getDataHome } from './keyManager/keyStore'
 import { listTerminalItems, resolveBackendSrcRoot, terminalProjectRoot, type TerminalItem } from './terminalSources'
+import type { CommandGroup } from '../shared/commandGroup'
 
 type AnyModule = Record<string, any>
 
@@ -122,7 +123,9 @@ function collectAliases(m: CliModules): SlashAliasEntry[] {
   return out
 }
 
-function describeRow(row: SlashCommandRow, runnable: SlashRunnable): string {
+// 只读 cmd/desc 两字段：extras 行没有 category（RegistryRow 里它是可选的），
+// describeRow 若按 SlashCommandRow 收参会把「category 必有」这个假事实传染进来。
+function describeRow(row: Pick<SlashCommandRow, 'cmd' | 'desc'>, runnable: SlashRunnable): string {
   const parts = [row.cmd]
   if (row.desc) parts.push(row.desc)
   if (runnable === 'routed') parts.push('khy 命令')
@@ -159,13 +162,30 @@ function ccRowsFromTerminalItems(items: Awaited<ReturnType<typeof listTerminalIt
 export interface SlashListResult {
   ok: boolean
   commands?: SlashMenuRow[]
+  groups?: CommandGroup[]
   error?: string
 }
 
 // 列表路径与设置页「命令」页共用的 khy 行收集：registry + extras + 别名，
 // 不含 CC 桥/插件行（那一节设置页由 terminalSources.listCommands 自己给）。
-function collectKhyRows(m: CliModules): SlashMenuRow[] {
-  const rows = m.slashExtra.mergeExtraCommands(m.commandRegistry.toSlashCommands()) as SlashCommandRow[]
+// category 是后端注册表的原值（toSlashCommands 出口），只在本模块内用于分组，
+// 不外泄到 slash:list 载荷。它在类型层必须是可选的：register() 的 'system' 兜底
+// 只覆盖注册表行，extras 那几条（slashExtraCommands.js:33-55）运行时就没有该字段
+// → 归「其它」组。与 SlashCommandRow 取交集不放宽它（那里 category 是必填
+// string，「必有」是把真相写反），Omit 掉再声明可选才是运行时真相。
+// source 四路映射，文件字段优先：用户技能与 CC 桥在后端同是 source 'user'
+// （commandRegistry.js:330/355 都用 registerBulk(list, 'user')），只有
+// _skillDir/_commandFile 分得开；插件经 contextFactory.js:76 入册时带 source 'plugin'
+// （与 mcp 合并成桌面 'plugin'）。旧后端不透传 source 时整表落 'khy'，与收编前
+// 逐字节一致 —— 是退化不是新错。
+// **已申报的用户可见变化**：注册表插件行此前被这条旧派生一律映成 'khy'，在设置页
+// 顶「Khy 内置」、组键走插件命名空间 category（英文组头）；现在归「命令插件」组。
+// 这是 source 透传的必然结果，不是回归 —— G6 钉着新旧两个标签值。
+type RegistryRow = Omit<SlashCommandRow, 'category'> & { category?: string }
+type KhyRow = SlashMenuRow & { category?: string }
+
+function collectKhyRows(m: CliModules): KhyRow[] {
+  const rows = m.slashExtra.mergeExtraCommands(m.commandRegistry.toSlashCommands()) as RegistryRow[]
   const aliases = collectAliases(m)
   return rows.map((row) => {
     const runnable = classifySlashRunnable(row)
@@ -175,10 +195,78 @@ function collectKhyRows(m: CliModules): SlashMenuRow[] {
       label: String(row.label || String(row.cmd).slice(1)),
       description: describeRow(row, runnable),
       runnable,
-      source: row._commandFile ? 'claude-code' : row._skillDir ? 'khy-skill' : 'khy',
+      source: row._skillDir ? 'khy-skill' : row._commandFile ? 'claude-code' : row.source === 'plugin' || row.source === 'mcp' ? 'plugin' : 'khy',
       aliases: aliasTermsForRow(row.route, aliases),
+      category: row.category,
     }
   })
+}
+
+// 命令页分组目录（展示序）。前段直接取后端 CATEGORIES 的运行时键序与中文标签 ——
+// 组名真源是后端（终端 / 菜单同一份），桌面复制一份就是影子副本；键序同理：getAll() 的
+// catOrder 就是 Object.keys(CATEGORIES)（未知分类 999 排最后，commandRegistry.js:177），
+// 桌面跟的是注册表自己的口径。**本文件从来没有过 analysis 私标签** —— 那份副本一直在
+// 后端 commandCatalogUi.js 的 _EXTRA_CATEGORY_LABELS（全史只存在于那里），2026-11-12
+// 已由 commandRegistry.js:38 收编进 CATEGORIES **末尾**、并删掉 _EXTRA_CATEGORY_LABELS
+// 里的 analysis 键。system 本是最后一个键、未知分类本就排尾，「移到 system 后」等于
+// 原地不动，故这是零用户可见变化的纯去重。末尾这条约束有闸门守着 ——
+// runtime/node/backend/tests/cli/commandRegistry.test.js 断
+// Object.keys(CATEGORIES).at(-1)==='analysis'：插中部会让 getAll 把它前面的组整体挪到
+// 它之后，那才会真改终端两个菜单的平铺序。
+// **不跟** `khy commands --all` 的展示序 —— 那是 commandCatalogUi.js:228 的私有
+// _CATEGORY_ORDER（analysis 排第 3，system/security/dev 的相对位置全不同，还带
+// trading/extension 两个斜杠行永远不会带的域），复制它才是影子副本。两套序逐组错位
+// 是已知事实，记在这里（实测 buildAllCommands 组序 model,data,analysis,system,
+// security,dev,workflow）。
+// 后 4 组是后端没有对应概念的桌面补丁，仅在该键未被 CATEGORIES 收录时追加。
+// 绝不抛：拉不到命令源时命令页回落平铺，与 khy 行缺席是同一条降级路径。
+const GROUP_LABEL_PATCH: Record<string, string> = {
+  skill: '技能命令',
+  'claude-code': 'Claude Code 命令',
+  plugin: '命令插件',
+  other: '其它',
+}
+
+// 追加序跟随注册表自己的惯例：getAll() 对未知分类 indexOf===-1 → 排最后。
+// [DESIGN-ARCH-209] 命令索引与原子组装分级方案（提案稿，2026-11-11，docs/03_DESIGN_设计/
+// DESIGN-ARCH/）的 12 类目（dm/am/cs/mk/st/cv/rh/sa/ao/pl/ui/hs）与这 4 个补丁键不同构
+// —— 它的 mk「记忆与知识」会吸走 /memory /prompt（现归 workflow/data），且没有 Claude Code
+// 命令/命令插件/其它的槽位；该文档落地时这 4 个键需一次重新映射裁决，否则桌面成为第三套
+// 分类名。tests/slashCommandGroups.test.cjs 的 G7 直接读真源 CATEGORIES 做绊线：12 键
+// 一旦进注册表即红，不靠人记得回来重裁。
+const GROUP_KEY_ORDER = ['skill', 'claude-code', 'plugin', 'other']
+
+// 定义在 src/shared/commandGroup.ts（renderer 也要消费，不能从 main 模块 import）；
+// 这里再导出一份给 main 侧既有消费方（agentItemStore.ts）。
+export type { CommandGroup }
+
+// 组键唯一口径：设置页（slashCommandItems）与 slash:list 载荷共用这一处。
+// 技能/插件/CC 桥按 source 归桌面补丁组 —— 它们的后端 category 分别是 register() 的
+// 'system' 兜底与插件命名空间（contextFactory.js:69），跟着走会涌进「系统」组或顶英文
+// 组头；其余跟后端原值，无 category 的（extras 行）归「其它」。
+export function groupKeyFor(source: string | undefined, category: string | undefined): string {
+  if (source === 'khy-skill') return 'skill'
+  if (source === 'plugin') return 'plugin'
+  if (source === 'claude-code') return 'claude-code'
+  return category || 'other'
+}
+
+export function slashCommandGroups(): CommandGroup[] {
+  try {
+    const cats = (cli().commandRegistry.CATEGORIES || {}) as Record<string, string>
+    // 前段不去重：Object.entries 遍历对象字面量，键恒唯一（后端 CATEGORIES 是
+    // 字面量不是 Map，不存在重复键输入）。seen 只服务后段补丁键避让前段。
+    const out: CommandGroup[] = Object.entries(cats).map(([key, label]) => ({ key, label: String(label) }))
+    const seen = new Set(out.map((g) => g.key))
+    for (const key of GROUP_KEY_ORDER) {
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({ key, label: GROUP_LABEL_PATCH[key] })
+    }
+    return out
+  } catch {
+    return []
+  }
 }
 
 export async function listSlashCommands(): Promise<SlashListResult> {
@@ -196,7 +284,20 @@ export async function listSlashCommands(): Promise<SlashListResult> {
     } catch {
       // CC/插件面拉不到不挡 khy 面：菜单少一节比整页空态好。
     }
-    return { ok: true, commands: mergeSlashMenuRows(collectKhyRows(m), ccRows) }
+    const merged = mergeSlashMenuRows(collectKhyRows(m), ccRows)
+    // category 是分组用的内部字段，显式剥掉再下发：mergeSlashMenuRows 按引用 push
+    // 同一批对象，IPC 结构化克隆会把它带进渲染层的 slash:list 响应 —— 不靠「消费方
+    // 恰好不读」来保证载荷形状不变。（KhyRow 标注：merge 的签名丢掉了 category。）
+    // 组键与组目录随行/随响应下发：渲染层不自己编中文组名（真源是后端，见
+    // slashCommandGroups），目录里没有的键由渲染层回落键名。
+    return {
+      ok: true,
+      groups: slashCommandGroups(),
+      commands: merged.map((row: KhyRow) => {
+        const { category: _category, ...rest } = row
+        return { ...rest, groupKey: groupKeyFor(row.source, row.category) }
+      }),
+    }
   } catch (err) {
     return {
       ok: false,
@@ -215,15 +316,23 @@ export function slashCommandItems(): TerminalItem[] {
     refreshRegistry(m)
     const out: TerminalItem[] = []
     for (const row of collectKhyRows(m)) {
-      if (row.source !== 'khy' && row.source !== 'khy-skill') continue
+      // CC 桥行由 terminalSources.listCommands 那一节给，本路径不重复
+      if (!['khy', 'khy-skill', 'plugin'].includes(row.source)) continue
+      // 组键唯一口径在 groupKeyFor（slash:list 载荷共用同一处）
+      const groupKey = groupKeyFor(row.source, row.category)
+      // 行内执行说明。none 分两支：插件命令是普通终端命令（contextFactory.js:67
+      // route 恒 null，靠 _pluginHandler 经 router.js:3182 派发），不是「执行体在
+      // REPL 闭包里」那类会话状态/交互面板命令 —— 别让它顶下面那句文案。
+      // 同类文案在 noChannelResult（:398）与 Composer.tsx 里各还有一份，插件行走
+      // slash:run 时仍会看到旧措辞；那是本次之前就有的失真，未在本次范围内改。
       const usage =
         row.runnable === 'routed'
           ? '在输入框敲该命令执行；输出以消息卡形式回到当前会话'
           : row.runnable === 'prompt'
             ? '发送为提示词：命令正文拼进消息发给 AI'
-            : row.runnable === 'none'
-              ? '仅 khy 终端内生效（会话状态/交互面板）：桌面端不可执行，请打开终端面板运行 khy 后使用'
-              : ''
+            : row.source === 'plugin'
+              ? '命令插件：桌面端不代执行，请在终端面板运行 khy 后输入该命令'
+              : '仅 khy 终端内生效（会话状态/交互面板）：桌面端不可执行，请打开终端面板运行 khy 后使用'
       out.push({
         id: `khy-slash:${row.cmd.toLowerCase()}`,
         kind: 'command',
@@ -232,12 +341,13 @@ export function slashCommandItems(): TerminalItem[] {
         content: [usage, row.aliases.length > 0 ? `别名: ${row.aliases.join(', ')}` : ''].filter(Boolean).join('\n'),
         enabled: true,
         source: 'khy',
-        sourceLabel: row.source === 'khy-skill' ? 'Khy · 技能' : 'Khy 内置',
+        sourceLabel: row.source === 'khy-skill' ? 'Khy · 技能' : row.source === 'plugin' ? '命令插件' : 'Khy 内置',
         createdAt: 0,
         updatedAt: 0,
         readOnly: true,
         toggleable: false,
         deletable: false,
+        groupKey,
       })
     }
     return out

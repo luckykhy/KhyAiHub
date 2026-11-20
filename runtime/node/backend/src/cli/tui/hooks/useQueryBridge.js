@@ -4384,9 +4384,10 @@ updateContextTokens,
 
 /**
  * [DESIGN-ARCH-181] D3-2：回合结束后把「发生过跨通道兜底」作为**独立 notice 行**追加。
+ * 块 B2：UCB 选路读数（routeFact.bandit）同样走这里，各自独立成行。
  *
  * 只读 `result.routeFact`（网关在 finishResult 挂载的路由事实单一真源）；文案由
- * routeFact 叶子的 `formatCascadeNotice` 提供（仅「成功 + 真切换」时非空）。
+ * routeFact 叶子的 `formatCascadeNotice` / `formatBanditNotice` 提供（无内容时为空串）。
  * **不注入回复正文** —— notice 是独立行，避免污染复制/解析（设计红线）。
  * fail-soft：任何异常 → 原样返回入参数组，绝不因披露失败影响回合。
  *
@@ -4402,10 +4403,10 @@ function _withCascadeNotice(messages, result) {
   try {
     const fact = result && typeof result === 'object' ? result.routeFact : null;
     if (!fact) return list;
-    const { formatCascadeNotice } = require('../../../services/gateway/routeFact');
-    const text = formatCascadeNotice(fact);
-    if (!text) return list;
-    return [...list, { role: 'notice', content: text, timestamp: Date.now() }];
+    const { formatCascadeNotice, formatBanditNotice } = require('../../../services/gateway/routeFact');
+    const texts = [formatCascadeNotice(fact), formatBanditNotice(fact)].filter(Boolean);
+    if (texts.length === 0) return list;
+    return [...list, ...texts.map((content) => ({ role: 'notice', content, timestamp: Date.now() }))];
   } catch {
     return list;
   }

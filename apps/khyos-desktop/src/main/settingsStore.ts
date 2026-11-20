@@ -64,10 +64,11 @@ const DEFAULTS: Record<string, unknown> = {
   cuaActionInterval: '500',
   // 品牌背景（外观 → 背景）：内置预设 id / 自定义图片或 GIF 的绝对路径。
   // 渲染层 theme/background.ts 是唯一的读取与写入 DOM 变量处；这里只存选择。
-  // 深浅各一套选中项（浅色默认「素笺」），切主题不会把另一套顶掉；
-  // 自定义图两套共用同一个路径。
-  desktopBackground: 'brand-ring',
-  desktopBackgroundLight: 'light-paper',
+  // 深浅各一套选中项，切主题不会把另一套顶掉；自定义图两套共用同一个路径。
+  // 默认「khyos 活场景」：3D 世界实时渲染在桌面背后（webview 托管成品页），
+  // 静态预设仍在 theme/background.ts 的预设表里可选。
+  desktopBackground: 'khyos-live',
+  desktopBackgroundLight: 'khyos-live',
   desktopBackgroundImage: '',
   // Model selection (P3-7②): option id (`<provider>` or `<provider>/<model>`)
   // persisted by the renderer via setSetting; empty string = no selection yet.
@@ -122,6 +123,12 @@ const DEFAULTS: Record<string, unknown> = {
   // Editor binary for 在编辑器中打开 (e.g. "code"). Empty = fall back to
   // KHY_EDITOR env; both empty → the action reports how to configure it.
   desktopEditor: '',
+  // Phone serial (adb serial) for the desktop-AI lane. Empty = unset. main fills
+  // it into the lane env only when both KHY_AGENTBUS_SERIAL and
+  // KHY_PHONE_BRIDGE_SERIAL are blank (env wins; see the dual-env precedence in
+  // agentbusProtocol.ts). The hub resolves its config when the window is created,
+  // so a new value lands only after the desktop app restarts.
+  agentbusSerial: '',
   // 网页版地址（窗口菜单 → 打开网页版）。空 = 本机后端同源地址，端口取自
   // backend serviceDefaults，不在渲染层写死。
   webVersionUrl: '',

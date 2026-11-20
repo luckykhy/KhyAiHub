@@ -5,8 +5,9 @@
  * to the system. Works across all models and IDEs (Ollama, Claude, Cursor,
  * Kiro, Codex, API relay, etc.).
  *
- * Growth: all habit data lives in ~/.khyquant/growth/habits.json
- * which is portable (copy to another machine via growth export/import).
+ * Growth: all habit data lives in growth/habits.json under the khy data home
+ * ('growth' is a registered DATA_PATHS name — same tiered dir growthService.js
+ * writes to), which is portable (copy to another machine via growth export/import).
  *
  * Tracks:
  * 1. Time patterns — when user is active (time of day, day of week)
@@ -18,19 +19,17 @@
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
-// Portable-aware app home resolved at load (legacy const semantics preserved).
-function _appHome() {
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
-  } catch {
-    return path.join(os.homedir(), '.khyquant');
-  }
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
+
+// Probing (existsSync/read) must not create anything, so _load resolves through
+// the pure mapper; _save goes through the creating resolver. Resolved per call
+// rather than frozen at load — the app home may still converge from the legacy
+// ~/.khyquant fork onto the unified data home later in the process.
+function _habitsFile() {
+  return resolveDataPath('growth', 'habits.json');
 }
-const HABITS_FILE = path.join(_appHome(), 'growth', 'habits.json');
 
 // ─── Default Structure ──────────────────────────────────────────────────────
 
@@ -522,8 +521,9 @@ function refreshTrends() {
 
 function _load() {
   try {
-    if (fs.existsSync(HABITS_FILE)) {
-      const raw = fs.readFileSync(HABITS_FILE, 'utf-8');
+    const file = _habitsFile();
+    if (fs.existsSync(file)) {
+      const raw = fs.readFileSync(file, 'utf-8');
       const data = JSON.parse(raw);
       // Merge with defaults (in case new fields were added)
       return { ..._defaultHabits(), ...data };
@@ -536,11 +536,8 @@ function _load() {
 
 function _save(habits) {
   try {
-    const dir = path.dirname(HABITS_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(HABITS_FILE, JSON.stringify(habits, null, 2));
+    const dir = getDataDir('growth');
+    fs.writeFileSync(path.join(dir, 'habits.json'), JSON.stringify(habits, null, 2));
   } catch {
     /* best effort */
   }

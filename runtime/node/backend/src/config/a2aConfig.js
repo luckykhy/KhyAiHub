@@ -53,17 +53,9 @@ function buildConfig(env = process.env) {
       workspaceBaseDir: env.KHY_A2A_WORKSPACE_DIR ||
         // Was require('path').resolve(process.cwd(), '.khy', 'agent-workspaces')
         // — cwd-relative, so the config forked a second workspace tree per cwd.
-        // dataHome decides it now; KHY_A2A_WORKSPACE_DIR still wins.
-        (() => {
-          try {
-            return require('path').join(
-              require('../utils/dataHome').getDataHome(),
-              'agent-workspaces',
-            );
-          } catch {
-            return require('path').resolve(process.cwd(), '.khy', 'agent-workspaces');
-          }
-        })(),
+        // getDataDir maps 'agent-workspaces' onto its registered tier, same root
+        // a2aAgentLifecycle writes to; KHY_A2A_WORKSPACE_DIR still wins.
+        require('../utils/dataHome').getDataDir('agent-workspaces'),
     },
     
     // Router settings

@@ -5,8 +5,8 @@ packages:
   - runtime/substrate/platform/packages/plugin-sdk
   - runtime/node/backend
   - runtime/node/ai-backend
-  - delivery/web/ai-frontend
-  - delivery/web/provider-hub
+  - delivery/channel/web/ai-frontend
+  - delivery/channel/web/provider-hub
   - delivery/channel/khyquant/frontend
   - delivery/extension/tools/khy-markdown
 

@@ -459,6 +459,7 @@ const {
   _decisionFromControl,
   _resolveToolBehavior,
   requestPermission,
+  lastPermissionRule,
   _ACCEPT_EDITS_TOOLS,
   setPreflightContext,
   clearPreflightContext,
@@ -2472,6 +2473,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
             params: normalizedParams,
             result: { success: false },
             permission: 'deny',
+            permissionRule: 'capability-floor',
             elapsedMs: 0,
             stepType: stepAssessment.stepType,
             risk: stepAssessment.riskLevel,
@@ -2497,6 +2499,9 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
     normalizedParams,
     typeof traceContext?.onControlRequest === 'function' ? traceContext.onControlRequest : null
   );
+  // 旁路读取「谁放行的」。与 permission 同一次判定产出的 rule 标签写进审计与回执；
+  // 没有该字段的老记录由读取端按缺省处理。
+  const permissionRule = lastPermissionRule(normalizedParams);
   if (permission === 'deny') {
     emitWrapper('end', {
       tool: permissionKey,
@@ -2513,6 +2518,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result: { success: false },
         permission: 'deny',
+        permissionRule,
         elapsed: 0,
       });
     } catch {
@@ -2525,6 +2531,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result: { success: false },
         permission: 'deny',
+        permissionRule,
         elapsedMs: 0,
         stepType: stepAssessment.stepType,
         risk: stepAssessment.riskLevel,
@@ -3037,6 +3044,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
             params: normalizedParams,
             result: structured,
             permission,
+            permissionRule,
             elapsed: Date.now() - start,
           });
         } catch {
@@ -3049,6 +3057,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
             params: normalizedParams,
             result: structured,
             permission,
+            permissionRule,
             elapsedMs: Date.now() - start,
             stepType: stepAssessment.stepType,
             risk: stepAssessment.riskLevel,
@@ -3092,6 +3101,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result,
         permission,
+        permissionRule,
         elapsed: Date.now() - start,
       });
     } catch {
@@ -3104,6 +3114,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result,
         permission,
+        permissionRule,
         elapsedMs: Date.now() - start,
         stepType: stepAssessment.stepType,
         risk: stepAssessment.riskLevel,
@@ -3242,6 +3253,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result: structuredResult,
         permission,
+        permissionRule,
         elapsed,
       });
     } catch {
@@ -3254,6 +3266,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         params: normalizedParams,
         result: structuredResult,
         permission,
+        permissionRule,
         elapsedMs: elapsed,
         stepType: stepAssessment.stepType,
         risk: stepAssessment.riskLevel,
@@ -3655,6 +3668,7 @@ module.exports = {
 
   // Permissions
   requestPermission,
+  lastPermissionRule,
   _decisionFromControl,
   enableDangerousMode,
   disableDangerousMode,

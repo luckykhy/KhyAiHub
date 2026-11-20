@@ -1,0 +1,234 @@
+{
+ "id": "determinism-001",
+ "title": "确定性：同分配对顺序与幂等",
+ "cases": [
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e2",
+      "changes": []
+     },
+     {
+      "prev_ref": "e2",
+      "cur_ref": "e1",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 2,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "两元素标签互换：按 (prev_index, cur_index) 配对，不得按标签凑对"
+  },
+  {
+   "in": {
+    "prev": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ],
+    "cur": [
+     {
+      "ref": "e1",
+      "role": "item",
+      "label": "甲",
+      "bounds": [
+       0,
+       0,
+       100,
+       100
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     },
+     {
+      "ref": "e2",
+      "role": "item",
+      "label": "乙",
+      "bounds": [
+       0,
+       100,
+       100,
+       200
+      ],
+      "class_name": "android.view.View",
+      "resource_id": "",
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "editable": false,
+      "checked": false,
+      "disabled": false,
+      "password": false
+     }
+    ]
+   },
+   "out": {
+    "matched": [
+     {
+      "prev_ref": "e1",
+      "cur_ref": "e1",
+      "changes": []
+     },
+     {
+      "prev_ref": "e2",
+      "cur_ref": "e2",
+      "changes": []
+     }
+    ],
+    "added": [],
+    "removed": [],
+    "is_identical": true,
+    "counts": {
+     "matched": 2,
+     "added": 0,
+     "removed": 0,
+     "moved": 0,
+     "state_changed": 0,
+     "label_changed": 0
+    }
+   },
+   "why": "相同输入重复计算，结果必须一致"
+  }
+ ]
+}

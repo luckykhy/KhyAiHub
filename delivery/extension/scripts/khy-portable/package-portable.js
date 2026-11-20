@@ -103,7 +103,7 @@ function requirePath(target, label, installHint, type = 'dir') {
 
 function checkRuntimePrerequisites() {
   requirePath(path.join(ROOT, 'node_modules'), 'root dependencies', 'corepack pnpm install');
-  requirePath(path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', 'corepack pnpm install --filter khy-ai-frontend...');
+  requirePath(path.join(ROOT, 'delivery', 'channel', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', 'corepack pnpm install --filter khy-ai-frontend...');
   requirePath(path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', 'corepack pnpm install --filter quant-trading-frontend...');
 }
 
@@ -212,7 +212,7 @@ function createStages(options, runtimeInputs) {
 
   if (options.kind === 'runtime' && !options.skipBuild) {
     stages.push(
-      { name: 'Build AI frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'delivery/web/ai-frontend'] },
+      { name: 'Build AI frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'delivery/channel/web/ai-frontend'] },
       { name: 'Build quant frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'delivery/channel/khyquant/frontend'] },
     );
   }

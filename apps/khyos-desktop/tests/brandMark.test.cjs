@@ -2,7 +2,7 @@
 
 // brandMark.test.cjs — 桌面端品牌主标与几何真源的一致性契约。
 //
-// 真源：delivery/brand/khy-brand-geometry.js（CJS，仓内唯一）。
+// 真源：works/brand/khy-brand-geometry.js（CJS，仓内唯一）。
 // 组件里是副本（TSX 跨目录 import 真源会让 vite dev / build 行为不一致），
 // 故用断言锁住漂移：改形状只能改真源后跑 `node scripts/brand/build-brand-assets.js`。
 
@@ -12,7 +12,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
 
 const repoRoot = join(__dirname, '..', '..', '..');
-const geo = require(join(repoRoot, 'delivery', 'brand', 'khy-brand-geometry.js'));
+const geo = require(join(repoRoot, 'works', 'brand', 'khy-brand-geometry.js'));
 const parts = geo.markParts();
 
 const brandMarkPath = join(repoRoot, 'apps', 'khyos-desktop', 'src', 'renderer', 'components', 'ui', 'BrandMark.tsx');

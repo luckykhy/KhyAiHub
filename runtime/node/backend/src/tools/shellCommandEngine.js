@@ -269,6 +269,59 @@ function isShellAvailable(shellOverride) {
 // ── 共享执行函数 ────────────────────────────────────────────────────
 
 /**
+ * AGT-04：把 toolSandbox 的 OS 级隔离接到真实执行路径。
+ *
+ * 此前 buildSandboxCommand / sandboxedShell 只有定义、没有任何生产消费方，
+ * 于是 agent 执行的每条 shell 命令都以 backend 进程的完整权限运行，而
+ * `isOsSandboxEnabled()` 在 auto 模式下宣称隔离 —— 「宣称与控制面偏差」比
+ * 没有沙箱更危险。本函数按平台接入：
+ *   - Windows：buildWindowsJobLaunch() 直接 spawn powershell（脚本文件 + env 传参；
+ *     经 cmd 转发会因嵌套引号损坏，实测 parse error）；
+ *   - Linux/macOS：buildSandboxCommand() 包成一条 bwrap/seatbelt 命令串，
+ *     替换 shellCfg 参数里的最后一项（命令本体）；
+ *   - 沙箱模块不可用、或显式网关签发的逃逸凭据齐备（_shouldSkipOsSandbox）→ 原样执行。
+ *
+ * @param {{bin:string, args:string[], env:object, execCommand:string, cwd:string, context?:object}} input
+ * @returns {{bin:string, args:string[], env:object, sandboxed:boolean}}
+ */
+function _applyOsSandbox({ bin, args, env, execCommand, cwd, context }) {
+  try {
+    const toolSandbox = require('../services/tool/toolSandbox');
+    if (
+      typeof toolSandbox.isOsSandboxEnabled !== 'function' ||
+      typeof toolSandbox.buildSandboxCommand !== 'function' ||
+      typeof toolSandbox._shouldSkipOsSandbox !== 'function'
+    ) {
+      return { bin, args, env, sandboxed: false };
+    }
+    const limits = context && context.limits ? context.limits : undefined;
+    if (!toolSandbox.isOsSandboxEnabled() || toolSandbox._shouldSkipOsSandbox(limits)) {
+      return { bin, args, env, sandboxed: false };
+    }
+    if (process.platform === 'win32') {
+      if (typeof toolSandbox.buildWindowsJobLaunch !== 'function') {
+        return { bin, args, env, sandboxed: false };
+      }
+      const launch = toolSandbox.buildWindowsJobLaunch(execCommand, { cwd });
+      return {
+        bin: launch.bin,
+        args: launch.args,
+        env: { ...env, ...launch.env },
+        sandboxed: true,
+      };
+    }
+    const wrapped = toolSandbox.buildSandboxCommand(execCommand, { cwd });
+    if (!wrapped || wrapped === execCommand) {
+      return { bin, args, env, sandboxed: false };
+    }
+    return { bin, args: [...args.slice(0, -1), wrapped], env, sandboxed: true };
+  } catch {
+    // 沙箱模块故障不应拒绝执行：保持原路径（fail-soft，与既有降级纪律一致）
+    return { bin, args, env, sandboxed: false };
+  }
+}
+
+/**
  * 执行 shell 命令的核心逻辑。
  * @param {object} params  { command, cwd, timeout, idleTimeout, run_in_background }
  * @param {object} context  { onActivity, traceContext }
@@ -372,9 +425,19 @@ async function executeShellCommand(params, context, shellOverride = null) {
       const entry = { status: 'running', command: params.command, startedAt: Date.now(), kind: 'shell' };
       _backgroundShells.set(bgId, entry);
 
-      spawnWithIdleTimeout(shellCfg.executable, [...shellCfg.argsPrefix, execCommand], {
+      // AGT-04：后台路径与前台同一套沙箱接线
+      const _bgSandboxed = _applyOsSandbox({
+        bin: shellCfg.executable,
+        args: [...shellCfg.argsPrefix, execCommand],
+        env: bgEnv,
+        execCommand,
+        cwd,
+        context,
+      });
+
+      spawnWithIdleTimeout(_bgSandboxed.bin, _bgSandboxed.args, {
         idleMs: bgIdleMs,
-        spawnOpts: { cwd, env: bgEnv, windowsHide: true },
+        spawnOpts: { cwd, env: _bgSandboxed.env, windowsHide: true },
         label: `shellCommand[bg]:${baseCmd || 'command'}`,
         maxOutputBytes: MAX_OUTPUT,
         outputEncoding: forcedEnc,
@@ -424,9 +487,20 @@ async function executeShellCommand(params, context, shellOverride = null) {
       let spawnEnv = { ...process.env, ...(traceCtx && typeof traceCtx === 'object' ? traceCtx.env || {} : {}) };
       if (_childEnvPolicy && _childEnvPolicy.isEnabled(process.env)) spawnEnv = _childEnvPolicy.buildChildEnv(spawnEnv);
       if (shellCfg.shell !== 'cmd') spawnEnv = normalizePathEnvForWindows(spawnEnv);
-      const shellBin = shellCfg.executable;
-      const shellArgs = [...shellCfg.argsPrefix, execCommand];
       const label = `shellCommand:${baseCmd || 'command'}`;
+
+      // AGT-04：OS 级沙箱接线（win32 走 Job 包装，Linux/macOS 走 bwrap/seatbelt）
+      const _sandboxed = _applyOsSandbox({
+        bin: shellCfg.executable,
+        args: [...shellCfg.argsPrefix, execCommand],
+        env: spawnEnv,
+        execCommand,
+        cwd,
+        context,
+      });
+      const shellBin = _sandboxed.bin;
+      const shellArgs = _sandboxed.args;
+      spawnEnv = _sandboxed.env;
 
       let advisory;
       if (_adaptiveOutput && context && typeof context.onActivity === 'function') {

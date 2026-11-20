@@ -784,6 +784,22 @@ function observeSelection(ctx, env = process.env) {
         // §5.6 软失败原因。null = 本轮没发生。**这个字段必须真的会被写**：
         // route-replay 读它统计软失败数，若写入端恒缺，统计就是一条恒 0 的假绿。
         softFail: ctx.softFail ? String(ctx.softFail) : null,
+        // [DESIGN-ARCH-218] 单模型直通的可解释字段。缺席时不写这个键，
+        // 既有样本逐字节不变；route-replay 读到 path/reason 即可区分直通与打分。
+        explain: ctx.explain && typeof ctx.explain === 'object'
+          ? {
+              candidateCount: Number.isFinite(ctx.explain.candidateCount) ? ctx.explain.candidateCount : null,
+              path: ctx.explain.path ? String(ctx.explain.path) : null,
+              reason: ctx.explain.reason ? String(ctx.explain.reason) : null,
+              tier: ctx.explain.tier ? String(ctx.explain.tier) : null,
+              filter: ctx.explain.filter ? String(ctx.explain.filter) : null,
+              scores: ctx.explain.scores && typeof ctx.explain.scores === 'object' ? ctx.explain.scores : {},
+              fallbackChain: Array.isArray(ctx.explain.fallbackChain) ? ctx.explain.fallbackChain : [],
+              sessionLock: ctx.explain.sessionLock ? String(ctx.explain.sessionLock) : null,
+              capabilityGap: ctx.explain.capabilityGap ? String(ctx.explain.capabilityGap) : null,
+              probes: ctx.explain.probes && typeof ctx.explain.probes === 'object' ? ctx.explain.probes : null,
+            }
+          : null,
         cost: ctx.cost && typeof ctx.cost === 'object'
           ? {
               participated: !!ctx.cost.participated,

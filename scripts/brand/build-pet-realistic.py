@@ -20,8 +20,8 @@
 #   --up z   原始模型是 Z-up 时加：绕 X 轴转 -90° 把它立起来
 #
 # 产出：
-#   delivery/brand/pet/models/khy-pet-<角色>-realistic.glb
-#   delivery/brand/pet/models/khy-pet-<角色>-realistic-turntable.png
+#   works/brand/pet/models/khy-pet-<角色>-realistic.glb
+#   works/brand/pet/models/khy-pet-<角色>-realistic-turntable.png
 #   works/design/khy-mascot/model/khy-pet-<角色>-realistic-preview-*.png
 #   works/design/khy-mascot/model/frames/<前缀>_NNN.png（中间帧，可删）
 
@@ -34,7 +34,7 @@ import numpy as np
 from mathutils import Vector
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT_DIR = os.path.join(REPO, 'delivery', 'brand', 'pet', 'models')
+OUT_DIR = os.path.join(REPO, 'works', 'brand', 'pet', 'models')
 PREVIEW_DIR = os.path.join(REPO, 'works', 'design', 'khy-mascot', 'model')
 FRAME_DIR = os.path.join(PREVIEW_DIR, 'frames')
 

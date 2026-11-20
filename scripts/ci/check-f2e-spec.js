@@ -25,7 +25,7 @@
  *
  * Usage:
  *   node scripts/ci/check-f2e-spec.js <file1.js> <file2.vue> ...
- *   node scripts/ci/check-f2e-spec.js           # scans delivery/web/ai-frontend/src
+ *   node scripts/ci/check-f2e-spec.js           # scans delivery/channel/web/ai-frontend/src
  *                                                # + runtime/node/backend/src/bridge
  */
 
@@ -37,7 +37,7 @@ const args = process.argv.slice(2);
 function defaultScope() {
   const out = [];
   const roots = [
-    'delivery/web/ai-frontend/src',
+    'delivery/channel/web/ai-frontend/src',
     'runtime/node/backend/src/bridge',
   ];
   for (const root of roots) {

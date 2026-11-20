@@ -99,9 +99,9 @@ npx eslint <你改动或新增的文件...> --max-warnings 0   # 新增文件必
 npm test
 npm run test:node
 
-# 8) 前端（改了 delivery/web/ai-frontend 或 delivery/channel/khyquant/frontend 时）
-cd delivery/web/ai-frontend && npm test && npm run test:node   # vitest 14 文件 / 162 用例 + node:test
-npm run build --prefix delivery/web/ai-frontend
+# 8) 前端（改了 delivery/channel/web/ai-frontend 或 delivery/channel/khyquant/frontend 时）
+cd delivery/channel/web/ai-frontend && npm test && npm run test:node   # vitest 14 文件 / 162 用例 + node:test
+npm run build --prefix delivery/channel/web/ai-frontend
 node scripts/ci/check-frontend-size.js                 # 产物体积对比基线（报告态）
 
 # 9) 依赖体积预算（动了任何 package.json 就跑一次，见 §11）

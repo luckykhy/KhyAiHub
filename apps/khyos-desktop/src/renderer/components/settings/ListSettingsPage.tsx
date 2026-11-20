@@ -1,5 +1,8 @@
 // khy-canary: Khy-20261102-310-19HAS183
+import { errText } from '../../utils/errText'
+import { Icon } from '../ui/Icon'
 import { useCallback, useEffect, useState } from 'react'
+import type { CommandGroup } from '../../../shared/commandGroup'
 
 // ── Reusable list settings page (Pattern B, ZC-ALIGN-003 §2 → P13 真实化) ──
 // Covers: 命令/钩子/技能/子智能体/记忆 — all backed by agentItemStore via
@@ -23,10 +26,14 @@ interface AgentItem {
   readOnly?: boolean
   toggleable?: boolean
   deletable?: boolean
+  // Grouping key for the 命令 page, same source as the catalog main sends down
+  // (model/data/… /skill/claude-code/plugin/other). Rows of the other four kinds
+  // never carry it, so they never reach the grouped branch.
+  groupKey?: string
 }
 
 interface KhyosAgentApi {
-  agentList?: (kind: string) => Promise<{ ok: boolean; items?: AgentItem[]; error?: string }>
+  agentList?: (kind: string) => Promise<{ ok: boolean; items?: AgentItem[]; groups?: CommandGroup[]; error?: string }>
   agentCreate?: (kind: string, input: { name: string; description?: string; content?: string }) =>
     Promise<{ ok: boolean; item?: AgentItem; error?: string }>
   agentSetEnabled?: (kind: string, id: string, enabled: boolean) => Promise<{ ok: boolean; error?: string }>
@@ -62,6 +69,7 @@ export function ListSettingsPage({
   emptyLabel,
 }: ListSettingsPageProps) {
   const [items, setItems] = useState<AgentItem[] | null>(null)
+  const [groups, setGroups] = useState<CommandGroup[]>([])
   const [loadError, setLoadError] = useState('')
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
@@ -88,19 +96,49 @@ export function ListSettingsPage({
     a.agentList(kind).then((res) => {
       if (res?.ok && res.items) {
         setItems(res.items)
+        // Only the command kind ships a catalog; for every other kind this is []
+        // and the grouping gate stays shut.
+        setGroups(res.groups || [])
         setLoadError('')
       } else {
         setLoadError(res?.error || `${noun}列表读取失败：请重启应用后重试`)
       }
-    }).catch(() => {
-      setLoadError(`${noun}列表读取失败：主进程无响应，请重启应用`)
+    }).catch((err: unknown) => {
+      setLoadError(`${noun}列表读取失败：${errText(err)}。若持续失败请重启应用`)
     })
   }, [kind, noun])
 
   useEffect(() => { load() }, [load])
 
   const q = search.trim().toLowerCase()
-  const rows = (items || []).filter((it) => !q || it.name.toLowerCase().includes(q) || it.description.toLowerCase().includes(q))
+  // A group-name hit is a UNION, not a restriction: it brings the whole group in,
+  // while a name/desc hit brings only that row (「安全」 thus also surfaces dev rows
+  // whose description mentions it). Without the group name in the haystack the
+  // grouping would look broken for words no row spells out.
+  const labelOfGroup = (key?: string): string =>
+    (key && (groups.find((g) => g.key === key)?.label || key)) || ''
+  const rows = (items || []).filter(
+    (it) =>
+      !q ||
+      it.name.toLowerCase().includes(q) ||
+      it.description.toLowerCase().includes(q) ||
+      labelOfGroup(it.groupKey).toLowerCase().includes(q)
+  )
+  // Bucketing only — no re-sorting: the in-group order stays main's
+  // name.localeCompare. A row that somehow carries no key mirrors main's own
+  // fallback into 'other'; keys the catalog doesn't know are appended in order of
+  // appearance and fall back to the key itself as label (no invented 中文名).
+  // 与 CLI `khy commands --all` 的未知键口径不同是已知的：那边按字母序排最后
+  // （commandCatalogUi.js:299-300）。这里的触发源是插件注册命令的 category 取插件
+  // 命名空间（contextFactory.js:69，不在 CATEGORIES）——顶英文组头好过编一个中文名。
+  const groupOrder: CommandGroup[] = [...groups]
+  for (const it of rows) {
+    const key = it.groupKey || 'other'
+    if (!groupOrder.some((g) => g.key === key)) groupOrder.push({ key, label: key })
+  }
+  const groupedRows = groupOrder
+    .map((group) => ({ group, members: rows.filter((it) => (it.groupKey || 'other') === group.key) }))
+    .filter((bucket) => bucket.members.length > 0)
 
   const handleCreate = useCallback(async (name: string, description: string, content: string) => {
     const a = api()
@@ -114,8 +152,8 @@ export function ListSettingsPage({
       } else {
         flash(res?.error || `创建失败：请检查名称后重试`, true)
       }
-    } catch {
-      flash(`创建失败：主进程无响应，请重启应用`, true)
+    } catch (err) {
+      flash(`创建失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -128,8 +166,8 @@ export function ListSettingsPage({
       const res = await a.agentSetEnabled?.(kind, id, enabled)
       if (!res?.ok) flash(res?.error || '切换失败：请重试', true)
       else load()
-    } catch {
-      flash('切换失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`切换失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -142,8 +180,8 @@ export function ListSettingsPage({
       const res = await a.agentDelete?.(kind, id)
       if (!res?.ok) flash(res?.error || '删除失败：请重试', true)
       else { flash(`已删除${noun} ${name}`); load() }
-    } catch {
-      flash('删除失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`删除失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -168,8 +206,8 @@ export function ListSettingsPage({
       } else {
         flash(res?.error || '导入失败：请检查 JSON 内容后重试', true)
       }
-    } catch {
-      flash('导入失败：主进程无响应，请重启应用', true)
+    } catch (err) {
+      flash(`导入失败：${errText(err)}（主进程无响应时请重启应用）`, true)
     } finally {
       setPendingAction('')
     }
@@ -248,6 +286,22 @@ export function ListSettingsPage({
               {search ? `没有匹配搜索的${noun}` : emptyLabel || `尚未安装${noun}`}
             </p>
             <p className="text-xs text-foreground-muted">{description}</p>
+          </div>
+        ) : kind === 'command' && groups.length > 0 ? (
+          <div className="space-y-3">
+            {groupedRows.map(({ group, members }) => (
+              <CommandGroupSection
+                key={group.key}
+                group={group}
+                members={members}
+                noun={noun}
+                searching={!!q}
+                detailId={detailId}
+                onDetail={(id) => setDetailId(detailId === id ? null : id)}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
         ) : (
           <div className="space-y-3">
@@ -400,6 +454,57 @@ function ItemCard({ item, noun, expanded, onDetail, onToggle, onDelete }: {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── 命令分组块 ──
+// Collapsed by default on purpose: one expanded group of 20+ cards pushes the
+// group map off the first screen (model has 23 cards here). Searching force-opens
+// every visible group and clearing the box folds them again — the fold is
+// component state, not persisted (same contract as PluginMarketplace cards).
+function CommandGroupSection({ group, members, noun, searching, detailId, onDetail, onToggle, onDelete }: {
+  group: CommandGroup
+  members: AgentItem[]
+  noun: string
+  searching: boolean
+  detailId: string | null
+  onDetail: (id: string) => void
+  onToggle: (id: string, enabled: boolean) => void
+  onDelete: (id: string, name: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const bodyOpen = open || searching
+  return (
+    <div className="bg-card border border-card-border rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={bodyOpen}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-hover transition-colors"
+      >
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-medium text-foreground">{group.label}</span>
+          <span className="text-xs text-foreground-muted">
+            {searching ? `匹配 ${members.length} 条` : `${members.length} 条`}
+          </span>
+        </span>
+        <Icon name={bodyOpen ? 'chevron-up' : 'chevron-down'} size={14} />
+      </button>
+      {bodyOpen && (
+        <div className="px-4 pb-4 space-y-3">
+          {members.map((item) => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              noun={noun}
+              expanded={detailId === item.id}
+              onDetail={() => onDetail(item.id)}
+              onToggle={onToggle}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

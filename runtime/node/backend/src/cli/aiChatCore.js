@@ -4993,12 +4993,14 @@ async function chat(userMessage, opts = {}) {
 
   try {
     const { recordUsage, estimateTokens } = require('../services/tokenUsageService');
+    let tokensEstimated = false;
     if (!tokenUsage) {
       tokenUsage = {
         inputTokens: estimateTokens(conversationPrompt),
         outputTokens: estimateTokens(reply),
         totalTokens: estimateTokens(conversationPrompt) + estimateTokens(reply),
       };
+      tokensEstimated = true;
     }
     recordUsage(
       result.provider || 'unknown',
@@ -5007,7 +5009,8 @@ async function chat(userMessage, opts = {}) {
       tokenUsage.outputTokens,
       0,
       tokenUsage.cacheReadInputTokens || 0,
-      tokenUsage.cacheWriteInputTokens || 0
+      tokenUsage.cacheWriteInputTokens || 0,
+      tokensEstimated ? { estimated: true } : undefined
     );
   } catch {}
 
@@ -5164,17 +5167,30 @@ async function chat(userMessage, opts = {}) {
     const modelName = result.model || '';
     const adapterName = result.adapter || result.provider || '';
     let turnCostUSD = 0;
+    let turnCostState = '';
     try {
       const tokenSvc = require('../services/tokenUsageService');
-      turnCostUSD = tokenSvc.estimateCost(
+      const mp = require('../services/modelPricing');
+      const detail = mp.estimateCostDetailed(
         tokenUsage?.inputTokens || 0,
         tokenUsage?.outputTokens || 0,
         modelName || adapterName
       );
+      turnCostState = detail.state;
+      turnCostUSD = detail.costUSD == null ? 0 : detail.costUSD;
+      // flat/assumed has no token price by design; show the legacy default rate
+      // only as a rough marker, never as the measured session total.
+      if (detail.costUSD == null && (detail.state === 'flat' || detail.state === 'assumed')) {
+        turnCostUSD = tokenSvc.estimateCost(
+          tokenUsage?.inputTokens || 0,
+          tokenUsage?.outputTokens || 0,
+          modelName || adapterName
+        );
+      }
     } catch {
       /* cost estimation not critical */
     }
-    hud.updateModelInfo(modelName, adapterName, turnCostUSD);
+    hud.updateModelInfo(modelName, adapterName, turnCostUSD, turnCostState);
   } catch {}
 
   const tuneResult = _recordLatencySample({

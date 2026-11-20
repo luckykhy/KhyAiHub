@@ -174,7 +174,11 @@ function FooterBar({
 
   // Model status: if backend reports the model is unavailable/error, show warning
   const modelWarning = modelStatus && modelStatus.status === 'error' ? '⚠ ' : '';
-  const modelLabel = modelWarning + formatModelLabel(model);
+  // Auto 是模式名，不是模型 slug；formatModelLabel 的契约是「未知 slug 原样返回」，
+  // 直接交给它会在页脚留下一个小写 `auto`，与模型列表里的 `★ Auto` 对不上。
+  const rawModel = String(model == null ? '' : model).trim();
+  const modelLabel =
+    modelWarning + (rawModel.toLowerCase() === 'auto' ? '★ Auto' : formatModelLabel(model));
   const leftParts = [modelLabel, effortStr].filter(Boolean).join(' · ');
 
   // 钉选通道被跳过（2026-09-17「页脚 agnes / 报错 windsurf」事故）：

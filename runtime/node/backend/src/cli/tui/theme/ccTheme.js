@@ -60,7 +60,7 @@ const CC_COLORS = Object.freeze({
   link: '#00B4B4',           // 超链接（下划线）
 
   // 品牌色（橙色，低饱和度）
-  // Khy 品牌色：琥珀族（真源 delivery/brand/khy-brand-geometry.js 的 PALETTE）。
+  // Khy 品牌色：琥珀族（真源 works/brand/khy-brand-geometry.js 的 PALETTE）。
   // 旧的 CC/Khy 橙色品牌色 #C97557 已收拢进同一族 —— TUI 此前是五端里唯一的暖色，
   // 现在它是品牌色本身，不再是「另一支橙色」。
   // 暗色终端上 brand #f0a868 对 #171920 约 8.78:1，亮色端用 brandDark #9c4116。

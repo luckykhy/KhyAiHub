@@ -67,7 +67,7 @@ const RAND_LEN = 8;
 const RAND_CHARSET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const MARKER_RE = /^Khy-\d{8}-\d{3,}-[0-9ABCDEFGHJKMNPQRSTVWXYZ]{8}$/;
 
-const MOBILE_ROOT = 'delivery/mobile/khy-os-client-app/';
+const MOBILE_ROOT = 'delivery/channel/mobile/khy-os-client-app/';
 const BACKEND_SERVICES = 'runtime/node/backend/src/services/';
 const KHY_PLATFORM = 'runtime/substrate/platform/khy_platform/';
 const DESKTOP_ROOT = 'apps/khyos-desktop/src/';

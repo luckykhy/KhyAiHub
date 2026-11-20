@@ -1,0 +1,57 @@
+{
+  "_comment": [
+    "tsconfig.node.json（electron.vite.config.ts + src/main + src/preload + src/shared）的既有类型错误基线。",
+    "npm run typecheck:node 只在出现**不在此列**的错误时判红。",
+    "",
+    "为什么需要这份基线：方案 S7③ 说「models.ts 等 main 侧主力代码只能靠 electron-vite build",
+    "兜底类型检查」—— 这个前提是假的。electron.vite.config.ts 的 main/preload 段只有",
+    "externalizeDepsPlugin()，esbuild 的 syntax:'typescript' 只做转译、不跑 tsc；",
+    "而 tsconfig.check.json（npm run typecheck）的 include 只有 src/host + src/renderer，",
+    "src/main / src/preload 谁都不管。于是新增 models.ts（10 个载荷类型 + 5 个函数）、",
+    "ipc.ts 的 7 个新 handler、preload 的 8 个新方法的类型错误可以静默上线。",
+    "",
+    "本轮把同一套基线机制搬到 main 侧：既有错误照旧只报不改，新增错误判红。",
+    "行号以 2026-11-19 工作树为准（slashCommandSources 的 449 → 559 是行号漂移，码没变）。",
+    "electron.vite.config.ts 的 45 → 54 同理：outDir 迁 entries/ 又回退，文件头加了 9 行",
+    "「out/ 为何必须在 app 目录内」的警告注释，把既有的 worker/RendererBuildOptions 那条",
+    "TS2769 挤了下去。错误本身没变，别顺手去修它。"
+  ],
+  "known": [
+    {
+      "file": "electron.vite.config.ts",
+      "line": 54,
+      "code": "TS2769",
+      "message": "No overload matches this call."
+    },
+    {
+      "file": "src/main/index.ts",
+      "line": 584,
+      "code": "TS2559",
+      "message": "Type '{ [k: string]: unknown; type?: string | undefined; id?: string | undefined; }' has no properties in common with type '{ ok?: boolean | undefined; error?: string | undefined; text?: string | undefined; }'."
+    },
+    {
+      "file": "src/main/index.ts",
+      "line": 642,
+      "code": "TS2345",
+      "message": "Argument of type 'ChildProcess | null' is not assignable to parameter of type '{ stdout?: ReadableStream | undefined; stderr?: ReadableStream | undefined; }'."
+    },
+    {
+      "file": "src/main/slashCommandSources.ts",
+      "line": 559,
+      "code": "TS2552",
+      "message": "Cannot find name 'routed'. Did you mean 'router'?"
+    },
+    {
+      "file": "src/main/terminalSources.ts",
+      "line": 270,
+      "code": "TS2349",
+      "message": "This expression is not callable."
+    },
+    {
+      "file": "src/main/terminalSources.ts",
+      "line": 1222,
+      "code": "TS2349",
+      "message": "This expression is not callable."
+    }
+  ]
+}

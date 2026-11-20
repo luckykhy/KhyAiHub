@@ -102,6 +102,7 @@
   "dependencies": {
     "@aws/codewhisperer-streaming-client": "^1.0.45",
     "@babel/parser": "^7.29.8",
+    "@khy/core": "workspace:*",
     "@khy/shared": "file:./vendor/shared",
     "@simplewebauthn/server": "^13.3.0",
     "axios": "^1.20.0",
@@ -164,7 +165,6 @@
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.0.0",
     "@khy-os/khy-chain": "*",
-    "@khy/core": "*",
     "@khy/plugin-sdk": "*",
     "@opentelemetry/exporter-trace-otlp-http": "^0.207.0",
     "@opentelemetry/instrumentation-express": "^0.56.0",

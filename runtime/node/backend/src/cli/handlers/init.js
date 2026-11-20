@@ -1136,8 +1136,8 @@ function _isDoctorDeepDefault() {
  */
 function _preflightCacheFile() {
   try {
-    const { getDataHome } = require('../../utils/dataHome');
-    return path.join(getDataHome(), 'cache', 'preflight.json');
+    const { getDataDir } = require('../../utils/dataHome');
+    return path.join(getDataDir('cache'), 'preflight.json');
   } catch {
     return path.join(ROOT, 'works', 'data', 'khy', 'cache', 'preflight.json');
   }
@@ -1276,6 +1276,90 @@ function _residentResourceChecks(opts = {}) {
   }));
 }
 
+function _readDeclaredNodeEngines() {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf-8'));
+    return String(pkg?.engines?.node || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function _isNodeVersionBelow(current, min) {
+  if (!current || !min) {
+    return false;
+  }
+  if (current.major !== min.major) {
+    return current.major < min.major;
+  }
+  if (current.minor !== min.minor) {
+    return current.minor < min.minor;
+  }
+  return current.patch < min.patch;
+}
+
+/**
+ * Node 版本寿命读数（老化判据，只提示不阻断）。
+ *
+ * 「够不够新」由既有的 Node.js 项回答；本项回答「还能被维护多久」。数据全部是离线
+ * 的：process.version + package.json engines 下限 + constants/nodeEol.js 的官方日程
+ * 快照。表外版本如实报「未收录」，不猜。EOL 已过或 90 天内到期判 warn，绝不用
+ * level='error' —— 过期不等于这台机器现在就跑不起来。
+ *
+ * 参数可注入（version / now / enginesRange）只为单测，生产调用方无参。
+ */
+function _buildNodeLifetimeCheck({
+  version = process.version,
+  now = new Date(),
+  enginesRange = _readDeclaredNodeEngines(),
+} = {}) {
+  const { getNodeEolInfo, parseNodeVersion, parseMinNodeVersion, NODE_EOL_UPDATED_AT } =
+    require('../../constants/nodeEol');
+  const info = getNodeEolInfo(version, now);
+  const min = parseMinNodeVersion(enginesRange);
+  const enginesText = min
+    ? `engines≥${min.major}.${min.minor}.${min.patch}`
+    : enginesRange
+      ? `engines=${enginesRange}`
+      : 'engines 未声明';
+
+  if (!info.known) {
+    return {
+      category: '运行环境',
+      label: 'Node 版本寿命',
+      ok: true,
+      detail: `${version} · EOL 表未收录 v${info.major ?? '?'}（表更新于 ${NODE_EOL_UPDATED_AT}）· ${enginesText}`,
+      level: 'info',
+      summary: `Node ${info.major ?? '?'} 不在离线 EOL 表内`,
+      note: '更新 runtime/node/backend/src/constants/nodeEol.js（来源 nodejs/Release）后再判断寿命',
+    };
+  }
+
+  const daysText =
+    info.daysLeft >= 0 ? `距 EOL ${info.daysLeft} 天` : `已过 EOL ${-info.daysLeft} 天`;
+  const belowEngines = _isNodeVersionBelow(parseNodeVersion(version), min);
+  const expiringSoon = info.daysLeft <= 90;
+  const ok = !expiringSoon && !belowEngines;
+  const summary = ok
+    ? `Node ${info.major} 维护期至 ${info.eol}`
+    : info.expired
+      ? `Node ${info.major} 已过 EOL ${-info.daysLeft} 天`
+      : expiringSoon
+        ? `Node ${info.major} 距 EOL 仅 ${info.daysLeft} 天`
+        : `Node ${info.major} 低于 engines 下限`;
+  return {
+    category: '运行环境',
+    label: 'Node 版本寿命',
+    ok,
+    detail: `${version} · 维护期至 ${info.eol} · ${daysText} · ${enginesText}${belowEngines ? ' · 低于下限' : ''}`,
+    level: ok ? 'info' : 'warn',
+    summary,
+    ...(ok
+      ? {}
+      : { note: '本项只提示、不阻断：升级到仍在维护且满足 engines 的 Node LTS 后重跑 khy doctor' }),
+  };
+}
+
 /**
  * 本地快检：只看本机磁盘与 PATH，不联网、不探测网关、不跑烟雾测试。
  *
@@ -1308,6 +1392,7 @@ function _runLocalFastChecks(options = {}) {
     summary: nodeMajor >= 16 ? `Node ${nodeVer}，满足 ≥16 要求` : `Node ${nodeVer}，低于要求的 16`,
     fix: nodeMajor >= 16 ? undefined : '安装 Node.js ≥16（nodejs.org LTS）后重跑 khy doctor',
   });
+  results.push(_buildNodeLifetimeCheck());
 
   // Python
   let pythonCmd = null;
@@ -2318,6 +2403,7 @@ module.exports = {
   handleInit,
   handleDoctor,
   runDoctorChecks,
+  _buildNodeLifetimeCheck,
   inspectClaudeSettingsConflict,
   fixClaudeSettingsConflict,
   [MANIFEST_EXPORT_KEY]: {

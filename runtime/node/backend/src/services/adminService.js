@@ -16,7 +16,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { getAppHome, _appHomeLiveResolveEnabled } = require('../utils/dataHome');
+const {
+  getAppHome,
+  _appHomeLiveResolveEnabled,
+  getDataDir,
+  resolveDataPath,
+} = require('../utils/dataHome');
 
 const ADMIN_PASSWORD = process.env.KHY_ADMIN_PASSWORD || 'khyguanli0203';
 
@@ -29,6 +34,10 @@ const ADMIN_PASSWORD = process.env.KHY_ADMIN_PASSWORD || 'khyguanli0203';
 //
 // Gate off (KHY_APP_HOME_LIVE_RESOLVE={0,false,off,no}) → freeze on first access,
 // byte-identical to the historical module-load freeze behavior.
+//
+// This is now the second candidate of _probePath (below) rather than the only
+// root, but it must stay lazy for the same reason: a producer can establish the
+// legacy home mid-process.
 let _frozenDataDir = null;
 function _dataDir() {
   if (_appHomeLiveResolveEnabled()) {
@@ -41,7 +50,22 @@ function _dataDir() {
 }
 
 function _telemetryDir() {
-  return path.join(_dataDir(), 'telemetry');
+  return getDataDir('telemetry');
+}
+
+// Probe/read candidate selection: the resolver's tiered path first (DATA_PATHS,
+// pure mapping — no mkdir side effect), then the flat app-home path. Producers
+// such as growthService/tokenUsageService have not converged onto the tiered
+// paths yet (dataHome.js [Eco-Arch-Unresolved]); recognizing only the tiered
+// path would leave the admin panel reading an empty store on installs where the
+// legacy app home is established.
+function _probePath(...segments) {
+  const mapped = resolveDataPath(...segments);
+  if (fs.existsSync(mapped)) {
+    return mapped;
+  }
+  const appFlat = path.join(_dataDir(), ...segments);
+  return fs.existsSync(appFlat) ? appFlat : null;
 }
 
 /**
@@ -86,8 +110,8 @@ function collectUsageData() {
 
   // Collect training data stats (not raw data)
   try {
-    const trainingFile = path.join(_dataDir(), 'training', 'interaction_records.jsonl');
-    if (fs.existsSync(trainingFile)) {
+    const trainingFile = _probePath('training', 'interaction_records.jsonl');
+    if (trainingFile) {
       const lines = fs.readFileSync(trainingFile, 'utf-8').split(/\r?\n/).filter(Boolean);
       data.interactionCount = lines.length;
       data.lastInteraction =
@@ -99,8 +123,8 @@ function collectUsageData() {
 
   // Collect growth summary
   try {
-    const growthFile = path.join(_dataDir(), 'growth', 'manifest.json');
-    if (fs.existsSync(growthFile)) {
+    const growthFile = _probePath('growth', 'manifest.json');
+    if (growthFile) {
       const manifest = JSON.parse(fs.readFileSync(growthFile, 'utf-8'));
       data.totalInteractions = manifest.totalInteractions;
     }
@@ -119,8 +143,8 @@ function exportTrainingData(password, options = {}) {
     return { success: false, error: '密码错误' };
   }
 
-  const trainingFile = path.join(_dataDir(), 'training', 'interaction_records.jsonl');
-  if (!fs.existsSync(trainingFile)) {
+  const trainingFile = _probePath('training', 'interaction_records.jsonl');
+  if (!trainingFile) {
     return { success: false, error: '无训练数据' };
   }
 
@@ -142,8 +166,10 @@ function exportTrainingData(password, options = {}) {
     filtered = records.filter((r) => new Date(r.timestamp).getTime() >= since);
   }
 
-  // Export as JSONL
-  const outputPath = options.output || path.join(_dataDir(), 'admin_export.jsonl');
+  // Export as JSONL. The output is a FILE path, so it goes through the
+  // pure-mapping resolver: getDataDir would mkdir the last segment and the
+  // subsequent writeFileSync would fail with EISDIR.
+  const outputPath = options.output || resolveDataPath('admin_export.jsonl');
   fs.writeFileSync(outputPath, filtered.map((r) => JSON.stringify(r)).join('\n'));
 
   return { success: true, count: filtered.length, path: outputPath };
@@ -159,7 +185,8 @@ function exportGrowthData(password) {
 
   try {
     const growthService = require('./growthService');
-    const outputPath = path.join(_dataDir(), 'admin_growth_export.tar.gz');
+    // File path: pure-mapping resolver (getDataDir would mkdir the last segment).
+    const outputPath = resolveDataPath('admin_growth_export.tar.gz');
     const exported = growthService.exportGrowth(outputPath);
     return { success: true, path: exported };
   } catch (err) {
@@ -181,8 +208,8 @@ function getAdminStats(password) {
 
   // Security events
   try {
-    const secLog = path.join(_dataDir(), 'security.log');
-    if (fs.existsSync(secLog)) {
+    const secLog = _probePath('security.log');
+    if (secLog) {
       const lines = fs.readFileSync(secLog, 'utf-8').split(/\r?\n/).filter(Boolean);
       stats.securityEvents = lines.length;
     }
@@ -192,8 +219,8 @@ function getAdminStats(password) {
 
   // Model registry
   try {
-    const registry = path.join(_dataDir(), 'training', 'model_registry.json');
-    if (fs.existsSync(registry)) {
+    const registry = _probePath('training', 'model_registry.json');
+    if (registry) {
       stats.models = JSON.parse(fs.readFileSync(registry, 'utf-8'));
     }
   } catch {
@@ -202,8 +229,8 @@ function getAdminStats(password) {
 
   // Token usage
   try {
-    const tokenFile = path.join(_dataDir(), 'token_usage.json');
-    if (fs.existsSync(tokenFile)) {
+    const tokenFile = _probePath('token_usage.json');
+    if (tokenFile) {
       const usage = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'));
       stats.tokenUsage = {
         totalTokens: usage.allTime?.totalTokens || 0,
@@ -227,8 +254,8 @@ function prepareTelemetryPayload() {
 
   // Add anonymous strategy performance data
   try {
-    const perfFile = path.join(_dataDir(), 'growth', 'strategy_performance.json');
-    if (fs.existsSync(perfFile)) {
+    const perfFile = _probePath('growth', 'strategy_performance.json');
+    if (perfFile) {
       const perf = JSON.parse(fs.readFileSync(perfFile, 'utf-8'));
       payload.strategyUsage = (perf.records || []).length;
       payload.bestStrategies = perf.insights?.bestStrategyByCondition || {};
@@ -239,8 +266,8 @@ function prepareTelemetryPayload() {
 
   // Add knowledge level
   try {
-    const knFile = path.join(_dataDir(), 'growth', 'knowledge.json');
-    if (fs.existsSync(knFile)) {
+    const knFile = _probePath('growth', 'knowledge.json');
+    if (knFile) {
       const kn = JSON.parse(fs.readFileSync(knFile, 'utf-8'));
       payload.knowledgeLevel = kn.level;
       payload.knowledgeXP = kn.xp;
@@ -258,8 +285,8 @@ function prepareTelemetryPayload() {
  */
 async function syncTelemetry() {
   try {
-    const configFile = path.join(_dataDir(), 'config.json');
-    if (!fs.existsSync(configFile)) {
+    const configFile = _probePath('config.json');
+    if (!configFile) {
       return { synced: false, reason: 'no_config' };
     }
 

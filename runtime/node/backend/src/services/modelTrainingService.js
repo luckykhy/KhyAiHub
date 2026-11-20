@@ -35,7 +35,7 @@ const { findPython } = require('../utils/pythonPath');
 const os = require('os');
 const path = require('path');
 
-const { getDataHome } = require('../utils/dataHome');
+const { resolveDataPath, getLegacyDataHome } = require('../utils/dataHome');
 
 function isWritableDir(dir) {
   try {
@@ -89,11 +89,11 @@ function resolveTrainingDir() {
     candidates.push(process.env.KHY_TRAINING_DIR);
   }
   try {
-    candidates.push(path.join(getDataHome(), 'training'));
+    candidates.push(resolveDataPath('training'));
   } catch {
     // continue fallback
   }
-  candidates.push(path.join(os.homedir(), '.khyquant', 'training'));
+  candidates.push(path.join(getLegacyDataHome(), 'training'));
   candidates.push(path.join(os.tmpdir(), 'khyquant', 'training'));
 
   for (const candidate of candidates) {
@@ -102,7 +102,7 @@ function resolveTrainingDir() {
     }
   }
   // Keep legacy default path; subsequent writes may fail and be reported explicitly.
-  return path.join(os.homedir(), '.khyquant', 'training');
+  return path.join(getLegacyDataHome(), 'training');
 }
 
 const TRAINING_DIR = resolveTrainingDir();
@@ -1789,8 +1789,8 @@ function verifyExportPassword(_password) {
   try {
     const fs = require('fs');
     const path = require('path');
-    const { getDataHome } = require('../utils/dataHome');
-    const auditDir = path.join(getDataHome(), 'audit');
+    const { getDataDir } = require('../utils/dataHome');
+    const auditDir = getDataDir('audit');
     fs.mkdirSync(auditDir, { recursive: true });
     fs.appendFileSync(
       path.join(auditDir, 'export-audit.jsonl'),
@@ -1817,10 +1817,7 @@ function verifyExportPassword(_password) {
     try {
       const fs = require('fs');
       const path = require('path');
-      const configPath = path.join(
-        process.env.KHY_DATA_HOME || require('../utils/dataHome').getDataHome(),
-        'config.json'
-      );
+      const configPath = resolveDataPath('config.json');
       if (fs.existsSync(configPath)) {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
         expectedPassword = config.exportPassword || '';

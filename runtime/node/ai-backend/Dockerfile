@@ -71,8 +71,8 @@ COPY runtime/substrate/platform/packages/ui-shared/package.json runtime/substrat
 COPY runtime/substrate/platform/packages/plugin-sdk/package.json runtime/substrate/platform/packages/plugin-sdk/
 COPY runtime/node/backend/package.json runtime/node/backend/
 COPY runtime/node/ai-backend/package.json runtime/node/ai-backend/
-COPY delivery/web/ai-frontend/package.json delivery/web/ai-frontend/
-COPY delivery/web/provider-hub/package.json delivery/web/provider-hub/
+COPY delivery/channel/web/ai-frontend/package.json delivery/channel/web/ai-frontend/
+COPY delivery/channel/web/provider-hub/package.json delivery/channel/web/provider-hub/
 COPY delivery/channel/khyquant/frontend/package.json delivery/channel/khyquant/frontend/
 COPY delivery/extension/tools/khy-markdown/package.json delivery/extension/tools/khy-markdown/
 

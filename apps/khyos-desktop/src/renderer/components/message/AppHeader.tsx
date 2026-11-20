@@ -72,15 +72,15 @@ export function AppHeader({ sessionId = '', sessionJsonlPath = '', workspacePath
     }).__KHYOS__
     if (!api?.openInEditor) { toast('编辑器打开不可用：preload 未注入 __KHYOS__，请重启应用', 'error'); return }
     void api.openInEditor(workspacePath).then((r) => {
-      if (!r?.ok) {
-        toast(r.error || '编辑器启动失败', 'error')
-        // 未配置外部编辑器不再是死路：落到内置文件选择器（AppLayout 监听后
-        // 打开「打开文件」标签），用户直接从工作区选文件进内置编辑器。
-        if (r.state === 'unconfigured') {
-          window.dispatchEvent(new Event('khy:open-file-picker'))
-        }
+      // 未配置外部编辑器不再报错：落到内置代码编辑器工作台（AppLayout 监听
+      // khy:open-file-picker 后把主区切到编辑器，文件树按工作区根展示）。
+      if (r?.state === 'unconfigured') {
+        toast('未配置外部编辑器：已打开内置代码编辑器，在文件树中选择文件即可编辑')
+        window.dispatchEvent(new Event('khy:open-file-picker'))
+        return
       }
-      else toast(`已在编辑器 ${r.editor ?? ''} 中打开 ${workspacePath}`)
+      if (!r?.ok) { toast(r.error || '编辑器启动失败', 'error'); return }
+      toast(`已在编辑器 ${r.editor ?? ''} 中打开 ${workspacePath}`)
     }).catch((err: unknown) => toast(`编辑器启动失败：${String(err)}`, 'error'))
   }
 

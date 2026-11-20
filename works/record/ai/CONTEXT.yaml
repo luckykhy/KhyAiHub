@@ -3,11 +3,12 @@
 generated:
   mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
   tool: "khy-metadata/4"
-  fingerprint: a16aa572854940ba
+  fingerprint: f87cc549fea7fda8
 project: "khy-os"
 stack: [node, monorepo, python, docker, "docker-compose"]
 entry_points:
   - { path: runtime/substrate/platform/packages/shared/src/index.js, kind: "node-main", hint: "workspace:@khy/shared#main" }
+  - { path: runtime/substrate/platform/packages/core/src/contracts/index.js, kind: "node-main", hint: "workspace:@khy/core#main" }
   - { path: "runtime/substrate/platform/packages/ui-shared/src/index.js", kind: "node-main", hint: "workspace:@khy/ui-shared#main" }
   - { path: "runtime/substrate/platform/packages/plugin-sdk/index.js", kind: "node-main", hint: "workspace:@khy/plugin-sdk#main" }
   - { path: runtime/node/backend/server.js, kind: "node-main", hint: "workspace:khy-os-backend#main" }
@@ -15,17 +16,16 @@ entry_points:
   - { path: runtime/node/backend/bin/khy.js, kind: "cli-bin", hint: "workspace:khy-os-backend bin:khy-os" }
   - { path: runtime/node/backend/bin/khy.js, kind: "cli-bin", hint: "workspace:khy-os-backend bin:khy" }
   - { path: "runtime/node/ai-backend/server.js", kind: "node-main", hint: "workspace:khy-ai-backend#main" }
-  - { path: "delivery/web/provider-hub/dist/main/index.js", kind: "node-main", hint: "workspace:khy-provider-hub#main" }
+  - { path: "delivery/channel/web/provider-hub/dist/main/index.js", kind: "node-main", hint: "workspace:khy-provider-hub#main" }
   - { path: "delivery/extension/tools/khy-markdown/khyos-md-bridge.js", kind: "node-main", hint: "workspace:khyos-markdown#main" }
   - { path: "delivery/extension/tools/khy-markdown/khyos-md-bridge.js", kind: "cli-bin", hint: "workspace:khyos-markdown bin:khyos-markdown" }
-  - { path: "delivery/extension/tools/khy-markdown/khyos-md-bridge.js", kind: "cli-bin", hint: "workspace:khyos-markdown bin:khyosmd" }
 build:
   install: [npm install, "pip install -e ."]
   build:   []
   run:     []
   test:    ["npm test --workspaces --if-present", pytest]
 deps:
-  primary: [bcryptjs, dotenv, "express-rate-limit", redis, jsonwebtoken, pg, "@aws/codewhisperer-streaming-client", "@babel/parser", "@khy/shared", "@simplewebauthn/server", axios, chalk, cors, express, "js-yaml", "@element-plus/icons-vue", "@khy/ui-shared", "@vue-flow/background", "@vue-flow/controls", "@vue-flow/core", "@vue-flow/minimap", "@capacitor/android", "@capacitor/core", "@capacitor/splash-screen", "@capacitor/status-bar"]
+  primary: [bcryptjs, dotenv, "express-rate-limit", redis, jsonwebtoken, pg, zod, "@aws/codewhisperer-streaming-client", "@babel/parser", "@khy/core", "@khy/shared", "@simplewebauthn/server", axios, chalk, cors, express, "js-yaml", "@element-plus/icons-vue", "@khy/ui-shared", "@vue-flow/background", "@vue-flow/controls", "@vue-flow/core", "@vue-flow/minimap", "@capacitor/android", "@capacitor/core", "@capacitor/splash-screen", "@capacitor/status-bar"]
 config_files:
   - .env.example
   - "docker-compose.yml"
@@ -34,29 +34,29 @@ config_files:
   - "pnpm-workspace.yaml"
   - pyproject.toml
   - "apps/khyos-desktop/electron.vite.config.ts"
-  - "apps/khyos-desktop/vite.config.js"
   - "apps/khyos-desktop/vite.host.config.ts"
   - "apps/khyos-desktop/vite.scheduler.config.ts"
   - runtime/node/.env
   - "scripts/ci/file-ratchet.config.json"
   - "scripts/quality-gate/c8.config.json"
   - works/ship/.env
-  - "apps/khyos-desktop/dist-electron/builder-debug.yml"
-  - "apps/khyos-desktop/dist-electron/latest.yml"
   - "apps/khyos-desktop/dist-ts/electron.vite.config.d.ts"
   - "apps/khyos-desktop/dist-ts/electron.vite.config.d.ts.map"
   - "apps/khyos-desktop/dist-ts/electron.vite.config.js"
   - delivery/channel/khyquant/pyproject.toml
-  - "delivery/mobile/khy-os-client-app/analysis_options.yaml"
-  - "delivery/mobile/khy-os-client-app/pubspec.yaml"
-  - "delivery/web/ai-frontend/.env.example"
-  - "delivery/web/ai-frontend/vite.config.js"
-  - "delivery/web/provider-hub/electron.vite.config.1790238272970.mjs"
-  - "delivery/web/provider-hub/electron.vite.config.1790238291707.mjs"
-  - "delivery/web/provider-hub/electron.vite.config.1790238642419.mjs"
-  - "delivery/web/provider-hub/electron.vite.config.ts"
+  - delivery/channel/mobile/_pubspec.1.1.46.bak.yaml
+  - "entries/electron/dist-electron/latest.yml"
+  - "works/backup/build-artifacts-20261120/khyos-electron-variants/dist-electron-3d/builder-debug.yml"
+  - "works/backup/build-artifacts-20261120/khyos-electron-variants/dist-electron-pet/builder-debug.yml"
+  - "works/backup/build-artifacts-20261120/khyos-electron-variants/dist-electron-pet/latest.yml"
+  - "works/backup/build-artifacts-20261120/khyos-electron-variants/dist-electron-pkg/builder-debug.yml"
+  - "works/backup/build-artifacts-20261120/khyos-electron-variants/dist-electron-pkg/latest.yml"
   - "entries/tools/deepseek-eyes/.env.example"
   - "entries/tools/deepseek-eyes/pyproject.toml"
+  - runtime/node/backend/.env
+  - "runtime/node/backend/.env.bak-20260914-codexpin"
+  - "runtime/node/backend/.env.bak-20261009-fix"
+  - "runtime/node/backend/.env.bak-20261010"
 symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   khy.sh:
     lang: shell
@@ -104,17 +104,8 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "scripts/test-replace.js":
     lang: javascript
     decls: []
-  "apps/khyos-desktop/.build_run.cjs":
-    lang: javascript
-    decls: []
-  "apps/khyos-desktop/.launch_verify.cjs":
-    lang: javascript
-    decls: []
   "apps/khyos-desktop/electron.vite.config.ts":
     lang: typescript
-    decls: []
-  "apps/khyos-desktop/vite.config.js":
-    lang: javascript
     decls: []
   "apps/khyos-desktop/vite.host.config.ts":
     lang: typescript
@@ -122,21 +113,188 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "apps/khyos-desktop/vite.scheduler.config.ts":
     lang: typescript
     decls: []
-  "delivery/brand/khy-brand-geometry.js":
+  "entries/research/archer-geo.js":
     lang: javascript
     decls:
-      - { kind: fn, name: f }
-      - { kind: fn, name: polar }
-      - { kind: const, name: a }
-      - { kind: fn, name: orient }
-      - { kind: fn, name: toPath }
-      - { kind: fn, name: ringBladePaths }
-      - { kind: fn, name: kSlotPaths }
-      - { kind: fn, name: corePath }
-      - { kind: fn, name: markParts }
-  "delivery/brand/khy-brand-wordmark.js":
+      - { kind: fn, name: creased }
+      - { kind: const, name: v3 }
+      - { kind: fn, name: hull }
+      - { kind: fn, name: cbox }
+      - { kind: fn, name: superPts }
+      - { kind: const, name: f }
+      - { kind: const, name: cyl }
+      - { kind: const, name: cylZ }
+      - { kind: const, name: cylX }
+      - { kind: const, name: ring }
+      - { kind: const, name: ball }
+      - { kind: fn, name: ribs }
+      - { kind: fn, name: extrude }
+      - { kind: fn, name: crSample }
+      - { kind: fn, name: tube }
+      - { kind: const, name: fr }
+      - { kind: fn, name: orientTri }
+      - { kind: const, name: mx }
+      - { kind: fn, name: patch }
+      - { kind: const, name: uvAt }
+      - { kind: const, name: P }
+      - { kind: const, name: rOf }
+      - { kind: const, name: uvOf }
+      - { kind: const, name: top }
+      - { kind: const, name: tri }
+      - { kind: const, name: G }
+      - { kind: const, name: k2 }
+      - { kind: const, name: ti }
+      - { kind: fn, name: solid }
+      - { kind: const, name: p }
+  entries/research/engine.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: fsMat }
+      - { kind: class, name: Engine }
+      - { kind: const, name: blur }
+  entries/research/glsl.js:
     lang: javascript
     decls: []
+  "entries/research/lev-anim.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: of }
+      - { kind: fn, name: vecCurve }
+      - { kind: fn, name: layCurve }
+      - { kind: const, name: get }
+      - { kind: const, name: f }
+      - { kind: fn, name: atDist }
+      - { kind: const, name: mid }
+      - { kind: const, name: f }
+      - { kind: fn, name: layBody }
+      - { kind: const, name: brP }
+      - { kind: const, name: fk }
+      - { kind: fn, name: flipFall }
+      - { kind: fn, name: stageFleet }
+      - { kind: fn, name: hideAll }
+      - { kind: fn, name: animate }
+      - { kind: const, name: y }
+      - { kind: const, name: run }
+      - { kind: const, name: surge }
+      - { kind: const, name: x }
+      - { kind: const, name: spin }
+      - { kind: const, name: u }
+      - { kind: const, name: u }
+  "entries/research/lev-body.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: ss }
+      - { kind: const, name: gauss }
+      - { kind: fn, name: curve }
+      - { kind: fn, name: section }
+      - { kind: fn, name: scuteH }
+      - { kind: fn, name: sculpt }
+      - { kind: const, name: bellyOf }
+      - { kind: fn, name: loftBody }
+      - { kind: const, name: place }
+      - { kind: const, name: addV }
+      - { kind: const, name: arcLen }
+      - { kind: fn, name: addSpike }
+      - { kind: fn, name: addEye }
+      - { kind: const, name: a }
+      - { kind: const, name: b }
+      - { kind: const, name: lipW }
+      - { kind: fn, name: jawWeight }
+      - { kind: const, name: back }
+      - { kind: fn, name: buildMonsterGeometry }
+      - { kind: const, name: secF }
+      - { kind: const, name: lipX }
+      - { kind: const, name: a }
+      - { kind: const, name: a }
+      - { kind: const, name: lipPts }
+      - { kind: const, name: gr }
+      - { kind: const, name: tooth }
+      - { kind: const, name: topY }
+      - { kind: const, name: h }
+      - { kind: const, name: lenB }
+      - { kind: const, name: h }
+  "entries/research/lev-mat.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: VS }
+      - { kind: fn, name: hideMaterial }
+      - { kind: class, name: Geo }
+      - { kind: fn, name: addTube }
+      - { kind: const, name: th }
+  "entries/research/lev-spine.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: spineGLSL }
+      - { kind: class, name: Spine }
+      - { kind: const, name: baseQuat }
+      - { kind: class, name: ArcPath }
+  entries/research/main.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: dept }
+      - { kind: const, name: num3 }
+      - { kind: fn, name: stateFor }
+      - { kind: fn, name: renderState }
+  entries/research/materials.js:
+    lang: javascript
+    decls:
+      - { kind: const, name: base }
+      - { kind: fn, name: mat }
+      - { kind: fn, name: celMaterial }
+      - { kind: fn, name: overlayMaterial }
+  "entries/research/passes-env.js":
+    lang: javascript
+    decls: []
+  entries/research/render.mjs:
+    lang: javascript
+    decls:
+      - { kind: const, name: stamp }
+      - { kind: fn, name: log }
+      - { kind: fn, name: logOnly }
+      - { kind: const, name: fmtT }
+      - { kind: const, name: pad5 }
+      - { kind: fn, name: sourceHash }
+      - { kind: const, name: walk }
+      - { kind: fn, name: reapOrphan }
+      - { kind: fn, name: noteErrors }
+      - { kind: const, name: n }
+      - { kind: fn, name: startBrowser }
+      - { kind: const, name: prof }
+      - { kind: fn, name: openPage }
+      - { kind: fn, name: planSegments }
+      - { kind: const, name: encodeKey }
+      - { kind: fn, name: segStatus }
+      - { kind: fn, name: ffprobeFrames }
+      - { kind: fn, name: x264Args }
+      - { kind: fn, name: tick }
+      - { kind: fn, name: renderSegment }
+      - { kind: const, name: sec }
+      - { kind: fn, name: worker }
+      - { kind: fn, name: concatSegments }
+      - { kind: const, name: vdur }
+      - { kind: fn, name: cleanupAndExit }
+      - { kind: const, name: done }
+  entries/research/util.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: mulberry32 }
+      - { kind: class, name: Rng }
+      - { kind: const, name: clamp }
+      - { kind: const, name: lerp }
+      - { kind: const, name: invLerp }
+      - { kind: const, name: smooth }
+      - { kind: const, name: smoother }
+      - { kind: const, name: easeIn }
+      - { kind: const, name: easeOut }
+      - { kind: const, name: easeInOut }
+      - { kind: const, name: deg }
+      - { kind: const, name: onTwos }
+      - { kind: const, name: onThrees }
+      - { kind: fn, name: track }
+      - { kind: const, name: u }
+      - { kind: fn, name: noise1 }
+      - { kind: const, name: h }
+      - { kind: fn, name: hexToRgb }
   "scripts/admin/_check-credentials.js":
     lang: javascript
     decls: []
@@ -197,254 +355,259 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: const, name: swatch }
       - { kind: fn, name: filingHtml }
       - { kind: fn, name: main }
-  "scripts/brand/convert-wordmark-to-outlines.js":
+      - { kind: fn, name: walkModels }
+  "scripts/brand/build-pet-model.py":
+    lang: python
+    decls:
+      - { kind: def, name: srgb }
+      - { kind: def, name: make_mat }
+      - { kind: def, name: set_input }
+      - { kind: def, name: make_mark_mat }
+      - { kind: def, name: shade_smooth }
+      - { kind: def, name: add_sphere }
+      - { kind: def, name: add_cyl }
+      - { kind: def, name: add_cone }
+      - { kind: def, name: add_cube }
+      - { kind: def, name: add_torus }
+      - { kind: def, name: add_plane }
+      - { kind: def, name: add_octa }
+      - { kind: def, name: add_capsule }
+      - { kind: def, name: add_strand }
+      - { kind: def, name: add_face }
+      - { kind: def, name: add_coins }
+      - { kind: def, name: build_female }
+      - { kind: def, name: build_male }
+      - { kind: def, name: build_materials }
+      - { kind: def, name: setup_scene }
+      - { kind: def, name: normalize_scale }
+      - { kind: def, name: export_glb }
+      - { kind: def, name: aim_camera }
+      - { kind: def, name: rot }
+      - { kind: def, name: render_views }
+      - { kind: def, name: render_turntable }
+      - { kind: def, name: main }
+  "scripts/brand/build-pet-realistic-relief.py":
+    lang: python
+    decls:
+      - { kind: def, name: linear_to_srgb }
+      - { kind: def, name: dilate }
+      - { kind: def, name: erode_std }
+      - { kind: def, name: erode }
+      - { kind: def, name: morph_close }
+      - { kind: def, name: flood_from_border }
+      - { kind: def, name: cutout_background }
+      - { kind: def, name: write_cutout }
+      - { kind: def, name: setup_scene }
+      - { kind: def, name: build_relief }
+      - { kind: def, name: mask }
+      - { kind: def, name: render_roundtrip }
+      - { kind: def, name: render_turntable }
+      - { kind: def, name: assemble_sheet }
+      - { kind: def, name: main }
+  "scripts/brand/build-pet-realistic.py":
+    lang: python
+    decls:
+      - { kind: def, name: parse_args }
+      - { kind: def, name: clear_scene }
+      - { kind: def, name: setup_scene }
+      - { kind: def, name: aim_camera }
+      - { kind: def, name: rot }
+      - { kind: def, name: world_bounds }
+      - { kind: def, name: strip_stray_geometry }
+      - { kind: def, name: bake_and_normalize }
+      - { kind: def, name: export_glb }
+      - { kind: def, name: render_previews }
+      - { kind: def, name: render_turntable }
+      - { kind: def, name: assemble_sheet }
+      - { kind: def, name: main }
+  "works/brand/khy-brand-geometry.js":
     lang: javascript
     decls:
-      - { kind: fn, name: fail }
-      - { kind: class, name: Ttf }
-      - { kind: fn, name: contourToPath }
-      - { kind: const, name: P }
       - { kind: fn, name: f }
-      - { kind: fn, name: findFont }
-      - { kind: fn, name: main }
-  "scripts/ci/annotate-patterns.js":
+      - { kind: fn, name: polar }
+      - { kind: const, name: a }
+      - { kind: fn, name: orient }
+      - { kind: fn, name: toPath }
+      - { kind: fn, name: ringBladePaths }
+      - { kind: fn, name: kSlotPaths }
+      - { kind: fn, name: corePath }
+      - { kind: fn, name: markParts }
+  "works/brand/khy-brand-wordmark.js":
     lang: javascript
-    decls:
-      - { kind: fn, name: hasPatternTag }
-      - { kind: fn, name: addPatternToJS }
-      - { kind: fn, name: addPatternToPython }
-      - { kind: fn, name: addPatternToVue }
-      - { kind: fn, name: addPatternToC }
-      - { kind: fn, name: addPatternToASM }
-      - { kind: fn, name: addPatternToShell }
-      - { kind: fn, name: addPatternToCSS }
-      - { kind: fn, name: addPatternToMoonBit }
-  "scripts/ci/check-aesthetics.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: addFinding }
-      - { kind: fn, name: severityFor }
-      - { kind: fn, name: readText }
-      - { kind: fn, name: changedTouchesRelevant }
-      - { kind: fn, name: isIdentifier }
-      - { kind: fn, name: isWebToken }
-      - { kind: fn, name: isColorToken }
-      - { kind: fn, name: collectWebTokens }
-      - { kind: fn, name: collectColorTokens }
-      - { kind: fn, name: hasIdentifier }
-      - { kind: fn, name: checkSchema }
-      - { kind: fn, name: checkCrossEnd }
-      - { kind: fn, name: blockBody }
-      - { kind: fn, name: declarations }
-      - { kind: fn, name: resolveToken }
-      - { kind: fn, name: clamp01 }
-      - { kind: fn, name: parseColor }
-      - { kind: const, name: chan }
-      - { kind: const, name: alpha }
-      - { kind: fn, name: composite }
-      - { kind: fn, name: relativeLuminance }
-      - { kind: const, name: f }
-      - { kind: fn, name: contrastRatio }
-      - { kind: fn, name: runContrast }
-      - { kind: fn, name: checkContrast }
-      - { kind: fn, name: main }
-  "scripts/ci/check-agent-authz.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: add }
-      - { kind: fn, name: readText }
-      - { kind: fn, name: readJson }
-      - { kind: fn, name: checkA2_2_readOnlyProfileHasNoShell }
-      - { kind: fn, name: checkA2_2_readOnlyAgentsDenyShell }
-      - { kind: fn, name: checkA2_3_noFailOpen }
-      - { kind: fn, name: checkA2_1_undeclaredIsNotAllTools }
-      - { kind: fn, name: checkA2_4_executionBoundaryEnforcesScope }
-      - { kind: fn, name: checkA2_5_singleRoleSet }
-      - { kind: fn, name: checkA2_7_noSilentDegradation }
-      - { kind: fn, name: main }
-  "scripts/ci/check-agent-docs.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: findRepoRoot }
-      - { kind: fn, name: readBudgets }
-      - { kind: const, name: read }
-      - { kind: const, name: pick }
-      - { kind: fn, name: readFilenameTruth }
-      - { kind: const, name: arr }
-      - { kind: fn, name: readRootWhitelist }
-      - { kind: fn, name: readRootDocExt }
-      - { kind: fn, name: readCliTruth }
-      - { kind: const, name: walk }
-      - { kind: fn, name: readNpmScripts }
-      - { kind: fn, name: readWorkspaces }
-      - { kind: fn, name: readRegistry }
-      - { kind: fn, name: scriptsOfPackage }
-      - { kind: fn, name: nearestPackageScripts }
-      - { kind: fn, name: buildRepoIndex }
-      - { kind: fn, name: walk }
-      - { kind: fn, name: classify }
-      - { kind: fn, name: collectTargets }
-      - { kind: fn, name: add }
-      - { kind: fn, name: lineAtCharOffset }
-      - { kind: fn, name: checkBudget }
-      - { kind: const, name: visible }
-      - { kind: fn, name: checkPrecedence }
-      - { kind: fn, name: illustrativeLines }
-      - { kind: fn, name: checkDeadPointers }
-      - { kind: fn, name: checkMarker }
-      - { kind: fn, name: checkMirror }
-      - { kind: fn, name: checkManagedBlock }
-      - { kind: const, name: starts }
-  "scripts/ci/check-agent-feedback.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: labelOf }
-      - { kind: fn, name: degradeForStage }
-      - { kind: fn, name: argValue }
-      - { kind: fn, name: detectMode }
-      - { kind: const, name: add }
-      - { kind: fn, name: readEvidence }
-      - { kind: fn, name: evidenceElsewhere }
-      - { kind: fn, name: auditFiveQuestions }
-      - { kind: fn, name: isCodePath }
-      - { kind: fn, name: isDesignDoc }
-      - { kind: fn, name: docsBackedTokens }
-      - { kind: const, name: walk }
-      - { kind: fn, name: customerSpeech }
-      - { kind: fn, name: collectChanges }
-      - { kind: const, name: st }
-      - { kind: const, name: rel }
-      - { kind: fn, name: anchorOf }
-      - { kind: fn, name: check }
-      - { kind: const, name: add }
-      - { kind: fn, name: main }
-  "scripts/ci/check-agent-rules.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: makeVueTemplateContext }
-      - { kind: const, name: textNodes }
-      - { kind: const, name: attrValues }
-      - { kind: const, name: templateCloses }
-      - { kind: fn, name: run }
-      - { kind: fn, name: gitUsable }
-      - { kind: fn, name: listChangedFiles }
-      - { kind: fn, name: shouldIgnore }
-      - { kind: fn, name: isSubmoduleGitlink }
-      - { kind: fn, name: collectFilesFromTarget }
-      - { kind: fn, name: gatherFiles }
-      - { kind: fn, name: pushFinding }
-      - { kind: fn, name: quotedLiteralsInLine }
-      - { kind: fn, name: hasStatusDetail }
-      - { kind: fn, name: isTestLikePath }
-      - { kind: fn, name: makePowerShellBlockCommentLines }
-      - { kind: fn, name: isExampleConfigPath }
-      - { kind: fn, name: isLikelyUserFacingStatusLine }
-      - { kind: fn, name: isSelfScript }
-      - { kind: fn, name: _skipJsString }
-      - { kind: fn, name: _findJsBlockEnd }
-      - { kind: fn, name: checkFile }
-      - { kind: const, name: textNodes }
-      - { kind: const, name: attrValues }
-      - { kind: const, name: baseIndent }
-      - { kind: const, name: indent }
-      - { kind: fn, name: printFindings }
-      - { kind: fn, name: printFindingsJson }
-      - { kind: fn, name: main }
+    decls: []
   "apps/khyos-desktop/dist-ts/electron.vite.config.d.ts":
     lang: typescript
     decls: []
   "apps/khyos-desktop/dist-ts/electron.vite.config.js":
     lang: javascript
     decls: []
-  "apps/khyos-desktop/docs/extract_asar.py":
+  "apps/khyos-desktop/tests/agentWriters.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: makeProxyFiles }
+      - { kind: const, name: card }
+      - { kind: const, name: card }
+      - { kind: const, name: card }
+  "apps/khyos-desktop/tests/agentbusClient.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: load }
+      - { kind: const, name: sleep }
+      - { kind: fn, name: startFakeBus }
+      - { kind: fn, name: reply }
+      - { kind: fn, name: emitEvent }
+      - { kind: fn, name: closeBus }
+      - { kind: const, name: finish }
+      - { kind: fn, name: writeFailingConnect }
+      - { kind: const, name: connectImpl }
+      - { kind: fn, name: fakeAdb }
+      - { kind: const, name: spawnImpl }
+      - { kind: fn, name: makeConfig }
+      - { kind: fn, name: seqHex }
+      - { kind: fn, name: makeClient }
+      - { kind: const, name: forwardsOf }
+      - { kind: const, name: removesOf }
+      - { kind: fn, name: hooks }
+      - { kind: fn, name: happyScript }
+      - { kind: fn, name: fakeClient }
+      - { kind: fn, name: settle }
+      - { kind: const, name: tick }
+      - { kind: const, name: timeoutOf }
+      - { kind: const, name: preloadLoad }
+      - { kind: fn, name: fakeIpc }
+  "apps/khyos-desktop/tests/agentbusPanel.harness.tsx":
+    lang: typescript
+    decls:
+      - { kind: type, name: Root }
+      - { kind: type, name: Loose }
+      - { kind: fn, name: setStatus }
+      - { kind: fn, name: setResult }
+      - { kind: fn, name: setAsk }
+      - { kind: fn, name: setSettingsReply }
+      - { kind: fn, name: emitEvent }
+      - { kind: fn, name: mount }
+      - { kind: fn, name: unmount }
+  "apps/khyos-desktop/tests/agentbusPanel.test.cjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: flush }
+      - { kind: const, name: text }
+      - { kind: const, name: buttons }
+      - { kind: const, name: byText }
+      - { kind: const, name: click }
+      - { kind: const, name: type }
+      - { kind: const, name: typeInput }
+      - { kind: const, name: read }
+      - { kind: const, name: hits }
+  "apps/khyos-desktop/tests/agentbusProtocol.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: load }
+      - { kind: const, name: frame }
+      - { kind: const, name: msg }
+      - { kind: const, name: sessionOf }
+  "apps/khyos-desktop/tests/amooBridge.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: tempState }
+      - { kind: fn, name: writeRuntime }
+      - { kind: fn, name: writeToken }
+      - { kind: fn, name: startFakeBridge }
+      - { kind: const, name: send }
+      - { kind: fn, name: startUnhealthyBridge }
+      - { kind: fn, name: fakeSpawn }
+      - { kind: fn, name: tempBridgeRoot }
+  "apps/khyos-desktop/tests/amooPanel.harness.tsx":
+    lang: typescript
+    decls:
+      - { kind: type, name: Root }
+      - { kind: type, name: Loose }
+      - { kind: fn, name: runningStatus }
+      - { kind: fn, name: setStatus }
+      - { kind: fn, name: setSend }
+      - { kind: fn, name: setInbox }
+      - { kind: fn, name: mount }
+      - { kind: fn, name: unmount }
+  "apps/khyos-desktop/tests/amooPanel.test.cjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: flush }
+      - { kind: const, name: text }
+      - { kind: const, name: buttons }
+      - { kind: const, name: byText }
+      - { kind: const, name: click }
+      - { kind: const, name: type }
+  "apps/khyos-desktop/tests/amooSecretary.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: withRepoRoot }
+      - { kind: fn, name: fakeClient }
+      - { kind: fn, name: getPayload }
+      - { kind: fn, name: coreTimer }
+      - { kind: const, name: drain }
+      - { kind: fn, name: walkClock }
+      - { kind: fn, name: coreClient }
+      - { kind: fn, name: coreHarness }
+      - { kind: fn, name: refusal }
+      - { kind: const, name: probeWith }
+      - { kind: fn, name: contractEntry }
+      - { kind: const, name: entry }
+      - { kind: fn, name: doneRoundLane }
+  "apps/khyos-desktop/tests/amooSecretaryLedger.test.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: tmpLedgerFile }
+      - { kind: fn, name: rowOf }
+      - { kind: fn, name: manualTimer }
+      - { kind: const, name: drain }
+      - { kind: fn, name: laneWith }
+      - { kind: const, name: entry }
+      - { kind: const, name: entry }
+  "apps/khyos-desktop/tests/amooSecretaryMemory.harness.tsx":
+    lang: typescript
+    decls:
+      - { kind: type, name: Root }
+      - { kind: type, name: MemoryLimits }
+      - { kind: fn, name: mount }
+      - { kind: fn, name: unmount }
+  "apps/khyos-desktop/tests/amooSecretaryUiContract.test.cjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: read }
+      - { kind: fn, name: sectionBetween }
+      - { kind: fn, name: HistorySection }
+      - { kind: fn, name: HistoryEntryRow }
+      - { kind: fn, name: HistorySection }
+      - { kind: const, name: flush }
+      - { kind: const, name: memRootText }
+      - { kind: const, name: memButtons }
+      - { kind: const, name: memButtonByLabel }
+      - { kind: const, name: idInput }
+      - { kind: const, name: contentBox }
+      - { kind: fn, name: typeInto }
+      - { kind: fn, name: ReceiptHeader }
+      - { kind: fn, name: ReceiptHeader }
+      - { kind: fn, name: FailureBlock }
+      - { kind: fn, name: HistoryEntryRow }
+  "apps/khyos-desktop/tests/amooUiContract.test.cjs":
+    lang: javascript
+    decls:
+      - { kind: const, name: read }
+  delivery/channel/akshare_scripts/akshare_data.py:
     lang: python
     decls:
-      - { kind: def, name: extract_dir }
-  "apps/khyos-desktop/docs/parse_asar.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_all_js.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_complete.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_context.cjs":
-    lang: javascript
-    decls: []
-  "apps/khyos-desktop/docs/search_css.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_detailed.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_detailed2.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_final.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_intl.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_js.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_main_js.py":
-    lang: python
-    decls: []
-  "apps/khyos-desktop/docs/search_mention_ui.py":
-    lang: python
-    decls: []
+      - { kind: def, name: setup_session }
+      - { kind: def, name: patched_get }
+      - { kind: def, name: patched_post }
+      - { kind: def, name: get_stock_realtime }
+      - { kind: def, name: get_stock_kline }
+      - { kind: def, name: get_index_realtime }
   delivery/channel/khyquant/setup.py:
     lang: python
     decls:
       - { kind: class, name: BuildWithBundle }
       - { kind: def, name: run }
       - { kind: def, name: _prune }
-  "delivery/web/ai-frontend/.eslintrc.cjs":
-    lang: javascript
-    decls: []
-  "delivery/web/ai-frontend/backendDiscovery.mjs":
-    lang: javascript
-    decls:
-      - { kind: fn, name: isPidAlive }
-      - { kind: fn, name: portOf }
-      - { kind: fn, name: isTargetReachable }
-      - { kind: const, name: done }
-      - { kind: fn, name: readApiPortCandidates }
-      - { kind: fn, name: readPointerDataHomes }
-      - { kind: const, name: resolvePortable }
-      - { kind: fn, name: resolveDataHomes }
-      - { kind: fn, name: resolveBackendTarget }
-      - { kind: fn, name: resolveWebBackendTarget }
-  "delivery/web/ai-frontend/frontendRuntime.mjs":
-    lang: javascript
-    decls:
-      - { kind: fn, name: validPort }
-      - { kind: fn, name: canBindPort }
-      - { kind: fn, name: resolveServePort }
-      - { kind: fn, name: primaryDataHome }
-      - { kind: fn, name: publishFrontendRuntime }
-      - { kind: fn, name: clearFrontendRuntime }
-      - { kind: fn, name: khyFrontendIdentityPlugin }
-      - { kind: const, name: identity }
-      - { kind: const, name: attach }
-  "delivery/web/ai-frontend/vite.config.js":
-    lang: javascript
-    decls: []
-  "delivery/web/provider-hub/electron.vite.config.1790238272970.mjs":
-    lang: javascript
-    decls: []
-  "delivery/web/provider-hub/electron.vite.config.1790238291707.mjs":
-    lang: javascript
-    decls: []
-  "delivery/web/provider-hub/electron.vite.config.1790238642419.mjs":
-    lang: javascript
-    decls: []
-  "delivery/web/provider-hub/electron.vite.config.ts":
-    lang: typescript
-    decls: []
   "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-119] 应用内自绘选择-真渲染器验证-2026-09-17.js":
     lang: javascript
     decls:
@@ -550,6 +713,41 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "docs/19_资产/site/nav-data.js":
     lang: javascript
     decls: []
+  "entries/apk-unpack/tools/analyze.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: top }
+  "entries/apk-unpack/tools/androidpkgs.js":
+    lang: javascript
+    decls: []
+  "entries/apk-unpack/tools/arsc-dump-all.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: u16 }
+      - { kind: const, name: u32 }
+      - { kind: fn, name: readPool }
+      - { kind: const, name: isUtf8 }
+      - { kind: const, name: readLen }
+      - { kind: const, name: rid }
+      - { kind: const, name: isComplex }
+  "entries/apk-unpack/tools/arsc-string-codepoints.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: u16 }
+      - { kind: const, name: u32 }
+      - { kind: fn, name: readPool }
+      - { kind: const, name: isUtf8 }
+      - { kind: const, name: rv }
+  "entries/apk-unpack/tools/arsc.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: u16 }
+      - { kind: const, name: u32 }
+      - { kind: fn, name: readPool }
+      - { kind: const, name: isUtf8 }
+      - { kind: const, name: readLen }
+      - { kind: const, name: rid }
+      - { kind: const, name: isComplex }
   runtime/boot/kernel/tools_gen_blob.sh:
     lang: shell
     decls: []
@@ -684,10 +882,6 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: startPostgreSQL }
       - { kind: fn, name: startBackend }
       - { kind: fn, name: main }
-  "runtime/node/backend/test-db-connection.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: main }
   works/ship/installer/build_installer.js:
     lang: javascript
     decls:
@@ -743,43 +937,169 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   delivery/channel/khyquant/frontend/vite.config.js:
     lang: javascript
     decls: []
-  "entries/tools/deepseek-eyes/deepseek_eyes/__init__.py":
-    lang: python
-    decls: []
-  "entries/tools/deepseek-eyes/deepseek_eyes/__main__.py":
-    lang: python
-    decls: []
-  "entries/tools/deepseek-eyes/deepseek_eyes/clipboard.py":
-    lang: python
-    decls:
-      - { kind: class, name: ClipboardError }
-      - { kind: def, name: _temp_path }
-      - { kind: def, name: save_clipboard_image }
-      - { kind: def, name: _grab_with_pil }
-      - { kind: def, name: _grab_macos_pngpaste }
-      - { kind: def, name: _grab_linux }
-  "entries/tools/deepseek-eyes/deepseek_eyes/server.py":
-    lang: python
-    decls:
-      - { kind: def, name: _validate_image_path }
-      - { kind: def, name: _validate_magic }
-      - { kind: class, name: VisionClient }
-      - { kind: def, name: __init__ }
-      - { kind: def, name: _image_tool }
-      - { kind: def, name: run }
-  "entries/tools/deepseek-eyes/examples/smoke_test.py":
-    lang: python
-    decls:
-      - { kind: def, name: main }
-  runtime/boot/kernel/bridge/index.js:
+  delivery/channel/khyquant/frontend/vitest.config.js:
     lang: javascript
     decls: []
-  "runtime/boot/kernel/bridge/khy-agent-run.js":
+  delivery/channel/khyquant/handlers/bootstrap.js:
     lang: javascript
     decls:
-      - { kind: fn, name: log }
+      - { kind: fn, name: findBackendCli }
+  delivery/channel/khyquant/handlers/data.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: handleQuote }
+      - { kind: fn, name: handleDataFetch }
+      - { kind: fn, name: handleDataList }
+      - { kind: fn, name: handleCacheClear }
+  delivery/channel/khyquant/handlers/formatters.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: findFormatters }
+  delivery/channel/khyquant/khy_quant/__init__.py:
+    lang: python
+    decls: []
+  delivery/channel/khyquant/khy_quant/_bootstrap.py:
+    lang: python
+    decls:
+      - { kind: def, name: _subprocess_kwargs }
+      - { kind: def, name: _write_marker }
+      - { kind: def, name: _path_exists_safe }
+      - { kind: def, name: _pkg_has_content }
+      - { kind: def, name: _node_env }
+      - { kind: def, name: ensure_bootstrapped }
+      - { kind: def, name: _ensure_npm_install }
+      - { kind: def, name: _ensure_env_file }
+      - { kind: def, name: _ensure_db_init }
+      - { kind: def, name: _register_app }
+  "works/brand/khyos-desktop/scripts/assemble.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: run }
+      - { kind: fn, name: readScenes }
+      - { kind: fn, name: listFrames }
+      - { kind: fn, name: wavDurationSec }
+      - { kind: fn, name: stageClip }
+      - { kind: const, name: offset }
+  "works/brand/khyos-desktop/scripts/build.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: integrationPlugin }
+      - { kind: const, name: inject }
+  "works/brand/khyos-desktop/scripts/capture.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: parseArgs }
+      - { kind: fn, name: readScenes }
+      - { kind: fn, name: framePath }
+      - { kind: fn, name: gpuArgs }
+      - { kind: fn, name: executablePath }
+      - { kind: fn, name: lumaStddev }
+      - { kind: fn, name: decode }
+      - { kind: fn, name: openPage }
+      - { kind: fn, name: selftest }
       - { kind: fn, name: main }
-      - { kind: const, name: shutdown }
+  "works/brand/khyos-desktop/scripts/contact.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: fillRect }
+      - { kind: const, name: o }
+      - { kind: fn, name: drawText }
+      - { kind: fn, name: timecode }
+      - { kind: const, name: p }
+      - { kind: fn, name: readSceneIds }
+      - { kind: fn, name: scalePng }
+      - { kind: const, name: so }
+      - { kind: const, name: to }
+  "works/brand/khyos-desktop/scripts/extract-check.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: readSceneIds }
+      - { kind: fn, name: listPng }
+      - { kind: fn, name: luma }
+      - { kind: fn, name: meanAbsDiff }
+      - { kind: fn, name: chromaHalf }
+      - { kind: const, name: o }
+      - { kind: fn, name: chromaStats }
+  "works/brand/khyos-desktop/scripts/jumpcut.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: readScenes }
+      - { kind: fn, name: blockDelta }
+      - { kind: const, name: o }
+      - { kind: fn, name: blockDeltaAt }
+      - { kind: const, name: ra }
+      - { kind: const, name: rb }
+      - { kind: const, name: oa }
+      - { kind: const, name: ob }
+      - { kind: fn, name: blockMeans }
+      - { kind: const, name: o }
+      - { kind: const, name: idx }
+      - { kind: fn, name: meanDist }
+      - { kind: fn, name: hasNearbyMatch }
+      - { kind: fn, name: recursNearby }
+      - { kind: const, name: by }
+      - { kind: fn, name: patchCandidates }
+      - { kind: const, name: by }
+      - { kind: const, name: by }
+      - { kind: const, name: row }
+      - { kind: const, name: record }
+      - { kind: const, name: resolvePending }
+      - { kind: const, name: o }
+  "works/brand/khyos-desktop/scripts/render-audio.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: executablePath }
+      - { kind: fn, name: gpuArgs }
+      - { kind: fn, name: newestSrcMtime }
+      - { kind: fn, name: stripDataUrl }
+      - { kind: fn, name: readWavInfo }
+      - { kind: fn, name: openPage }
+      - { kind: fn, name: main }
+  "works/brand/khyos-desktop/src/audio.js":
+    lang: javascript
+    decls: []
+  "works/brand/khyos-desktop/src/director.js":
+    lang: javascript
+    decls: []
+  "works/brand/khyos-desktop/src/main.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: report }
+      - { kind: fn, name: fail }
+      - { kind: const, name: sceneTitle }
+      - { kind: const, name: slotSec }
+      - { kind: const, name: midT }
+      - { kind: fn, name: resize }
+      - { kind: fn, name: renderAt }
+      - { kind: fn, name: renderSceneAt }
+      - { kind: fn, name: captureDataURL }
+      - { kind: fn, name: captureTransitionDataURL }
+      - { kind: fn, name: renderScoreWav }
+      - { kind: fn, name: anchorAudioClock }
+      - { kind: fn, name: ensureAudio }
+      - { kind: fn, name: clockNow }
+      - { kind: fn, name: toggleMute }
+      - { kind: fn, name: startScore }
+      - { kind: const, name: play }
+      - { kind: fn, name: on }
+      - { kind: fn, name: updateHud }
+      - { kind: fn, name: buildDock }
+      - { kind: fn, name: updateDock }
+      - { kind: fn, name: toggleHud }
+      - { kind: fn, name: toggleFullscreen }
+      - { kind: fn, name: markActive }
+      - { kind: fn, name: applyParallax }
+      - { kind: fn, name: beginScene }
+      - { kind: fn, name: nextSceneId }
+      - { kind: fn, name: applyScene }
+      - { kind: fn, name: nextScene }
+      - { kind: const, name: loop }
+  "works/brand/khyos-desktop/src/models.js":
+    lang: javascript
+    decls: []
+  "works/brand/khyos-desktop/src/pipeline.js":
+    lang: javascript
+    decls: []
   "works/ship/modules/entries/khy-ai-entry.js":
     lang: javascript
     decls:
@@ -788,89 +1108,3 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "works/ship/modules/entries/khy-full-entry.js":
     lang: javascript
     decls: []
-  "works/ship/modules/entries/khy-gateway-entry.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: bootstrap }
-      - { kind: fn, name: main }
-  "works/ship/modules/entries/khy-quant-entry.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: bootstrap }
-      - { kind: fn, name: main }
-  "works/ship/modules/entries/khy-server-entry.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: bootstrap }
-      - { kind: fn, name: main }
-  "works/ship/modules/entries/khy-tools-entry.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: bootstrap }
-      - { kind: fn, name: main }
-  "works/ship/modules/entries/standalone-info.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: handleStandaloneInfo }
-  works/ship/modules/runtime/modeDetector.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: getCurrentModule }
-      - { kind: fn, name: getMode }
-      - { kind: fn, name: isStandalone }
-      - { kind: fn, name: isCombined }
-      - { kind: fn, name: isModuleActive }
-      - { kind: fn, name: validateModule }
-  works/ship/modules/runtime/moduleProxy.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: findExecutable }
-      - { kind: fn, name: on }
-      - { kind: fn, name: call }
-      - { kind: fn, name: callDirect }
-      - { kind: fn, name: callViaExec }
-  works/ship/npm/scripts/assemble.js:
-    lang: javascript
-    decls: []
-  "works/ship/npm/scripts/audit-purity.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: parseArgs }
-      - { kind: const, name: distDir }
-      - { kind: const, name: platformFilter }
-      - { kind: const, name: packageRoot }
-      - { kind: fn, name: log }
-      - { kind: fn, name: fail }
-      - { kind: fn, name: fnmatch }
-      - { kind: fn, name: isForbiddenFile }
-      - { kind: fn, name: checkDir }
-      - { kind: fn, name: assertNoResourceStore }
-      - { kind: fn, name: walk }
-      - { kind: fn, name: auditPlatform }
-      - { kind: fn, name: walk }
-      - { kind: fn, name: auditPackage }
-      - { kind: fn, name: walk }
-      - { kind: fn, name: main }
-  "works/ship/npm/scripts/postinstall-compress.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: spawnDetached }
-  "works/ship/npm/test/manifest-contract.test.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: declared }
-  "works/deploy/free-test/supabase/functions/khyos-ai/index.ts":
-    lang: typescript
-    decls: []
-  "works/deploy/free-test/supabase/functions/khyos-api/index.ts":
-    lang: typescript
-    decls:
-      - { kind: fn, name: corsHeaders }
-      - { kind: fn, name: json }
-      - { kind: fn, name: extractAuth }
-      - { kind: fn, name: handleInstruments }
-      - { kind: fn, name: handleWatchlist }
-      - { kind: fn, name: handleStrategies }
-      - { kind: fn, name: handleBacktests }
-      - { kind: fn, name: handleSettings }
-      - { kind: fn, name: handleDashboard }

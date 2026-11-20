@@ -5,7 +5,7 @@
  *
  * 目标（承 goal「khy uninstall 后可以完整地把所有历史残留版本清理干净」）：
  * 把 khy/khyquant/khyos 在**用户家目录**里历史上铺设过的所有数据家/运行时/
- * 指针/可见别名，收敛成一份**确定性、可枚举**的清单，供 handler 逐条核对存在
+ * 指针，收敛成一份**确定性、可枚举**的清单，供 handler 逐条核对存在
  * 性并清理。绝不用「黑名单」思路瞎删——这里只声明**已知由本程序生成**的位置，
  * 名单之外的一律不碰（对齐 diskCleanup/junkCatalog 的允许清单原则）。
  *
@@ -18,8 +18,11 @@
  *   3. ~/.khyos            生态底座数据家（getBaseHome）
  *   4. ~/.khy-runtime      大任务运行时（largeTaskRuntimeStore，历史上落在家目录）
  *   5. 迁移后的异盘数据家   <drive>/.khy、<drive>/.khy-project（记录在 pointer 里）
- *   6. khy-Trajectory      数据家父目录旁的可见别名 symlink（_ensureVisibleAlias）
- *   7. ~/.khy/.location.json 指针（若选择保留数据家则单列，否则随 ~/.khy 一并删）
+ *   6. ~/.khy/.location.json 指针（若选择保留数据家则单列，否则随 ~/.khy 一并删）
+ *
+ * 2026-11-19 用户裁决仓库不再使用 junction/symlink，dataHome 的 khy-Trajectory
+ * 可见别名机制已整体拆除——本程序不再生成该别名，故按上文「只声明已知由本程序
+ * 生成的位置」原则不再枚举它；存量磁盘别名不碰（名单之外一律不碰）。
  *
  * 门控 KHY_UNINSTALL 默认开；关 → buildUninstallTargets 返回 []（handler 据此
  * 逐字节回退到「命令不可用」提示，不触碰任何文件）。
@@ -66,13 +69,11 @@ function _norm(p) {
  *   data      真实用户数据家（删除不可逆 → 需显式确认）
  *   runtime   运行时/大任务临时（可重建）
  *   pointer   位置指针/breadcrumb（元数据）
- *   alias     可见别名 symlink（无独立数据）
  */
 const KIND = {
   DATA: 'data',
   RUNTIME: 'runtime',
   POINTER: 'pointer',
-  ALIAS: 'alias',
 };
 
 /**
@@ -221,17 +222,7 @@ function buildUninstallTargets(facts, env = process.env) {
     );
   }
 
-  // ── 4. 可见别名 symlink（khy-Trajectory，落在各数据家父目录旁；家目录侧最常见） ──
-  add(
-    'visible-alias-home',
-    'khy 可见别名 (~/khy-Trajectory)',
-    path.join(home, 'khy-Trajectory'),
-    KIND.ALIAS,
-    true,
-    '指向数据家的可见 symlink（本身无数据）'
-  );
-
-  // ── 5. 指针文件：随 ~/.khy 一起删；但若用户选择保留数据家，仍应能单独清指针 ──
+  // ── 4. 指针文件：随 ~/.khy 一起删；但若用户选择保留数据家，仍应能单独清指针 ──
   const pf = _norm(f.pointerFile) || path.join(home, '.khy', '.location.json');
   add(
     'location-pointer',

@@ -1493,8 +1493,10 @@ function _deliveryReport(flags) {
 }
 
 function _deliveryVerdict(delivery) {
+  // ok 区分「报告取到了」与「取不到」：不带它时渲染侧的三元恒走 else，
+  // 来源与 at 永远不会显示（:1746），读数看起来像「有一点坏但不知道哪天量的」。
   if (!delivery.ok) {
-    return { status: 'unknown', reason: delivery.reason, gaps: [], unknowns: [] };
+    return { ok: false, status: 'unknown', reason: delivery.reason, gaps: [], unknowns: [], skipped: [], counts: {} };
   }
   const rep = delivery.report || {};
   const counts = rep.counts || {};
@@ -1507,8 +1509,14 @@ function _deliveryVerdict(delivery) {
   const unknowns = list
     .filter((r) => r && r.status === 'UNKNOWN')
     .map((r) => ({ id: r.id, title: r.title, detail: r.detail || '' }));
+  // SKIPPED 与 UNKNOWN 同为「没量」，但来源不同：UNKNOWN 是判不了，SKIPPED 是这次
+  // 根本没跑（如 --changed 快档不测 D1）。吞掉它会让「本次没量」被读成 pass。
+  const skipped = list
+    .filter((r) => r && r.status === 'SKIPPED')
+    .map((r) => ({ id: r.id, title: r.title, detail: r.detail || '' }));
   const gap = Number(counts.GAP) || 0;
   const unk = Number(counts.UNKNOWN) || 0;
+  const skip = Number(counts.SKIPPED) || 0;
   // GAP 与未测同时存在时两句都要出现：早先的三元在有 GAP 时把未测整个吞掉。
   const reasons = [];
   if (gap) {
@@ -1517,13 +1525,18 @@ function _deliveryVerdict(delivery) {
   if (unk) {
     reasons.push(`${unk} 项未测（见下方清单）`);
   }
+  if (skip) {
+    reasons.push(`${skip} 项本次未测量（不计入通过，见下方清单）`);
+  }
   return {
-    status: gap ? 'gap' : (unk ? 'unknown' : 'pass'),
+    ok: true,
+    status: gap ? 'gap' : (unk || skip ? 'unknown' : 'pass'),
     at: rep.at || null,
     source: rep.source || null,
-    counts: { PASS: counts.PASS || 0, PARTIAL: counts.PARTIAL || 0, GAP: gap, UNKNOWN: unk },
+    counts: { PASS: counts.PASS || 0, PARTIAL: counts.PARTIAL || 0, GAP: gap, UNKNOWN: unk, SKIPPED: skip },
     gaps,
     unknowns,
+    skipped,
     reason: reasons.join(' · '),
   };
 }
@@ -1790,6 +1803,13 @@ async function cmdClose(ctx, positional, flags) {
       console.log(c.yellow(`  交付未测 ${delivery.unknowns.length} 项（记分板判为 UNKNOWN —— 没量，不等于没问题）：`));
       for (const u of delivery.unknowns) {
         console.log(c.dim(`    - ${u.id} ${u.title}${u.detail ? ` —— ${u.detail}` : ''}`));
+      }
+    }
+    if (delivery.skipped && delivery.skipped.length) {
+      console.log('');
+      console.log(c.yellow(`  交付本次未测量 ${delivery.skipped.length} 项（快档跳过或前置缺失 —— 不计入通过）：`));
+      for (const s of delivery.skipped) {
+        console.log(c.dim(`    - ${s.id} ${s.title}${s.detail ? ` —— ${s.detail}` : ''}`));
       }
     }
     console.log('');

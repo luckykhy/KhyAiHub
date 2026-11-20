@@ -138,16 +138,25 @@ jobs:
       - name: Sign npm package contents (sigstore)
         if: ${{ inputs.skip_npm != 'true' }}
         run: |
-          # Create a tarball of what npm would publish and sign it.
-          # This signs the exact artifact users download, not a transient build.
-          ( cd works/ship/npm && npm pack --dry-run > /dev/null 2>&1 )
-          PACK_TARBALL=$(cd works/ship/npm && npm pack --dry-run 2>/dev/null | tail -1)
-          if [ -z "$PACK_TARBALL" ]; then
-            echo "::error::npm pack 未产出 tarball（works/ship/npm）—— 无可签名产物，发布中止"
+          # 签真实产物。`npm pack --dry-run` 只在 stdout 打印一行文件名、不落盘，
+          # 拿那行文件名当路径去签 = 签一个不存在的文件（REL-03）。
+          # --pack-destination 把 tarball 真写到指定目录；签完把 .sig 收进
+          # publish/payloads —— 那是 Release 资产的唯一出口，不收进去等于没签。
+          PACK_DIR="$RUNNER_TEMP/npm-pack"
+          mkdir -p "$PACK_DIR"
+          ( cd works/ship/npm && npm pack --pack-destination "$PACK_DIR" > /dev/null )
+          PACK_TARBALL="$(find "$PACK_DIR" -maxdepth 1 -name '*.tgz' | head -1)"
+          if [ -z "$PACK_TARBALL" ] || [ ! -f "$PACK_TARBALL" ]; then
+            echo "::error::npm pack 未产出 tarball（$PACK_DIR）—— 无可签名产物，发布中止"
             exit 1
           fi
           echo "Signing npm package: $PACK_TARBALL"
           sigstore sign --yes "$PACK_TARBALL"
+          if [ ! -f "$PACK_TARBALL.sig" ]; then
+            echo "::error::签名产物 $PACK_TARBALL.sig 未生成 —— 签名链断裂，发布中止"
+            exit 1
+          fi
+          cp "$PACK_TARBALL.sig" publish/payloads/
           echo "签名完成：npm 包 $PACK_TARBALL 已签名"
 
       # ── Generate SBOMs ────────────────────────────────────────────────────────

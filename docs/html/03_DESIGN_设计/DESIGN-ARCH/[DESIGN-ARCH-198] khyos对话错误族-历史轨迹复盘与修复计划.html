@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-198] khyos对话错误族-历史轨迹复盘与修复计划.md -->
+<title>[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-198-khyos-对话错误族-历史轨迹复盘与修复计划">[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划</a></li><li class="lvl-2"><a href="#0-结论先行">0. 结论先行</a></li><li class="lvl-2"><a href="#1-复盘方法-为什么结论可信">1. 复盘方法（为什么结论可信）</a></li><li class="lvl-2"><a href="#2-根因详述-逐条附实测证据">2. 根因详述（逐条附实测证据）</a></li><li class="lvl-3"><a href="#2-1-r1-轮次计数器自污染-永远-第-2-次">2.1 R1 · 轮次计数器自污染 → 永远「第 2 次」</a></li><li class="lvl-3"><a href="#2-2-r2-失败墙被压扁-截断-叠标签">2.2 R2 · 失败墙被压扁、截断、叠标签</a></li><li class="lvl-3"><a href="#2-3-r3-上游真因认不出-只剩-输入-继续">2.3 R3 · 上游真因认不出 → 只剩「输入「继续」」</a></li><li class="lvl-3"><a href="#2-4-r4-旁白-occurrence-未接线-并行调用同一句">2.4 R4 · 旁白 occurrence 未接线 → 并行调用同一句</a></li><li class="lvl-3"><a href="#2-5-最关键-cli-失败信封被绕过-runtime-005-的执行缺口">2.5 ★ 最关键：CLI 失败信封被绕过（RUNTIME-005 的执行缺口）</a></li><li class="lvl-2"><a href="#3-全库量化-246-份会话-1268-轮">3. 全库量化（246 份会话 / 1268 轮）</a></li><li class="lvl-2"><a href="#4-修复计划">4. 修复计划</a></li><li class="lvl-3"><a href="#4-0-通用纪律-每条都遵守-勿跳">4.0 通用纪律（每条都遵守，勿跳）</a></li><li class="lvl-3"><a href="#4-1-w1-把-tui-失败路径接回-cli-失败信封-最高优先">4.1 W1 · 把 TUI 失败路径接回 CLI 失败信封（**最高优先**）</a></li><li class="lvl-3"><a href="#4-2-w2-修-r1-轮次计数不再被自己污染">4.2 W2 · 修 R1：轮次计数不再被自己污染</a></li><li class="lvl-3"><a href="#4-3-w3-修-r2-失败墙不再压扁-截断-双标签">4.3 W3 · 修 R2：失败墙不再压扁 / 截断 / 双标签</a></li><li class="lvl-3"><a href="#4-4-w4-修-r3-上游真因认得出-失败必给可执行建议">4.4 W4 · 修 R3：上游真因认得出 + 失败必给可执行建议</a></li><li class="lvl-3"><a href="#4-5-w5-修-r4-旁白-occurrence-接回-loop-侧">4.5 W5 · 修 R4：旁白 occurrence 接回 loop 侧</a></li><li class="lvl-3"><a href="#4-6-w6-失败墙信息分层-治-看起来很吵">4.6 W6 · 失败墙信息分层（治「看起来很吵」）</a></li><li class="lvl-3"><a href="#4-7-w7-旁白去重兜底-防复发">4.7 W7 · 旁白去重兜底（防复发）</a></li><li class="lvl-3"><a href="#4-8-波次顺序与依赖">4.8 波次顺序与依赖</a></li><li class="lvl-3"><a href="#4-9-每波次的验收门-红-绿-必须逐条通过">4.9 每波次的验收门（红→绿，必须逐条通过）</a></li><li class="lvl-3"><a href="#4-10-本计划-不做-的事-明确划界-防范围蔓延">4.10 本计划**不做**的事（明确划界，防范围蔓延）</a></li><li class="lvl-2"><a href="#5-风险与对策">5. 风险与对策</a></li><li class="lvl-2"><a href="#6-附录-本轮跑过的探针-可复现">6. 附录 · 本轮跑过的探针（可复现）</a></li><li class="lvl-2"><a href="#7-实施记录-2026-11-01-自我对抗式修复">7. 实施记录（2026-11-01 · 自我对抗式修复）</a></li><li class="lvl-3"><a href="#7-1-方法-先证伪-再修-再对抗">7.1 方法：先证伪，再修，再对抗</a></li><li class="lvl-3"><a href="#7-2-计划与实现的-一处偏差-比原计划更准">7.2 计划与实现的**一处偏差**（比原计划更准）</a></li><li class="lvl-3"><a href="#7-3-落地清单">7.3 落地清单</a></li><li class="lvl-3"><a href="#7-9-安全补正-复核发现-本轮引入的越界-被暴露的既有漏洞">7.9 安全补正（复核发现，本轮引入的越界 + 被暴露的既有漏洞）</a></li><li class="lvl-3"><a href="#7-10-复核指出的其余偏差-已逐条改正">7.10 复核指出的其余偏差（已逐条改正）</a></li><li class="lvl-3"><a href="#7-4-轨迹复盘结果-真实截图那一轮-逐条判据">7.4 轨迹复盘结果（真实截图那一轮，逐条判据）</a></li><li class="lvl-3"><a href="#7-5-新增测试-红-绿证据链">7.5 新增测试（红→绿证据链）</a></li><li class="lvl-3"><a href="#7-6-回归与守卫">7.6 回归与守卫</a></li><li class="lvl-3"><a href="#7-7-与基线的对照-防-把既有红算成我的">7.7 与基线的对照（防「把既有红算成我的」）</a></li><li class="lvl-3"><a href="#7-8-本轮-不做-的事-划界">7.8 本轮**不做**的事（划界）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: partial --&gt;<br>&lt;!-- RULES-REGISTRY: RUNTIME-005, RUNTIME-002 --&gt;</p>
+<h1 id="design-arch-198-khyos-对话错误族-历史轨迹复盘与修复计划">[DESIGN-ARCH-198] khyos 对话错误族 — 历史轨迹复盘与修复计划<a class="anchor" href="#design-arch-198-khyos-对话错误族-历史轨迹复盘与修复计划" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>定位</strong>：本文是<strong>修复计划 + 实施记录</strong>。2026-11-01 用户报「khyos 对话中有大量错误」并附截图，<br>本文用<strong>真实会话轨迹</strong>（非推理）定位根因、给出修复波次，并回填<strong>实施结果与偏差</strong>（§7）。<br>语义真源关系：本文补 <code>[DESIGN-ARCH-114]</code>（CLI 错误标准化 / RUNTIME-005）的<strong>执行缺口</strong>——<br>那篇规范冻结了失败块的<strong>契约</strong>，但<strong>契约在 khyos 主路径上被绕过</strong>（本文 §2.5 实测）。</p>
+<p><strong>存证</strong>：<code>works/data/khy/feedback/khyos-conversation-errors-20261101/</code><br>（<code>transcript.txt</code> 完整转录 / <code>defect-evidence.txt</code> 逐条证据 / <code>corpus-stats.json</code> 全库频次）。</p>
+<p><strong>关联</strong>：<code>[DESIGN-ARCH-114]</code> CLI 错误标准化规范、<code>[DESIGN-ARCH-181]</code> 通道兜底族资格与统一策略、<br><code>[DESIGN-ARCH-028]</code> Agent 通信防御（零静默失败与精准归因）。</p></blockquote>
+<h2 id="0-结论先行">0. 结论先行<a class="anchor" href="#0-结论先行" aria-label="锚点">#</a></h2>
+<p>用户截图里的「大量错误」<strong>不是多个独立 bug</strong>，而是 <strong>4 个根因</strong>在一条会话里叠出来的<strong>次生噪音</strong>：</p>
+<table><thead><tr><th>#</th><th>根因</th><th>用户看到的样子</th><th>一句话根因</th></tr></thead><tbody><tr><td><strong>R1</strong></td><td>轮次计数器被自己注入的提示词<strong>污染</strong>，饱和在 2</td><td>反复发同一问题，永远显示「第 2 次」</td><td>注入文本回灌进历史，下一轮自己跟自己不相似了</td></tr><tr><td><strong>R2</strong></td><td>失败墙被<strong>压成一行 + 截断 + 双标签</strong></td><td>「具体原因：真实失败原因: - kiro … - cursor …」挤成一坨</td><td>清洗函数折叠换行 + 220 字截断 + 标签叠标签</td></tr><tr><td><strong>R3</strong></td><td>上游真因<strong>认不出</strong>，只剩通用「输入「继续」」</td><td>限额/缺 key 都说「说『继续』即可」</td><td>真因叶子不认 <code>FreeUsageLimitError</code>；<code>auth</code> 类被规则表排除</td></tr><tr><td><strong>R4</strong></td><td>旁白 <code>occurrence</code> <strong>没接线</strong>，并行调用拿同一句</td><td>同一句「我把要点整理出来再回到正题」重复 3 次</td><td>loop 侧调用漏传 occurrence，TUI 侧传了</td></tr></tbody></table>
+<p><strong>最关键的一条（不在用户截图里，但是根因之根）</strong>：</p>
+<blockquote><p><strong>RUNTIME-005 已明文要求「CLI/TUI 失败展示必须由结构化失败信封渲染」，<code>cliFailureEnvelope.js</code> 也已实现且工作正常<br>—— 但 khyos 的失败路径根本没走它。</strong> 实测：同一份 attempts 数据，<br>信封渲染出的是 <code>⚠ 本次请求未能完成 —— 认证失败 / [AUTH_FAILED] / 通道: OpenCode Zen [auth] / → 运行 ai config 检查…</code>，<br>而用户实际看到的是<strong>一行挤扁的散文墙</strong>。规范没写错，是<strong>接线断了</strong>。</p></blockquote>
+<p><strong>因此本计划的主线不是「加新逻辑」，而是「把已有的正确实现接回主路径 + 堵住会污染自己的那一处」。</strong></p>
+<h2 id="1-复盘方法-为什么结论可信">1. 复盘方法（为什么结论可信）<a class="anchor" href="#1-复盘方法-为什么结论可信" aria-label="锚点">#</a></h2>
+<p>用户只给了一张截图。截图能证明「有问题」，不能证明「为什么」。故本轮<strong>不用推理</strong>，全部用实测：</p>
+<ol><li><strong>定位真身会话</strong>：截图标题「今日新闻查询与断点续写」→ 在 <code>works/data/khy/sessions/D-Portable/</code> 下按</li></ol>
+<p>今日 mtime 找到 <code>d7cb5772-6deb-463a-a727-449aee1edd58.jsonl</code>，<strong>10 条消息逐字节读出</strong>，与截图逐行对上<br>   （首轮失败墙、第 2/3 轮的 <code>[SYSTEM] 重复请求识别</code> 注入、旁白三连、末轮 <code>Missing API key</code>）。</p>
+<ol><li><strong>全库量化</strong>：<code>works/data/khy/sessions/</code> 下 <strong>246 份会话 / 1268 轮</strong>全量扫描，得到各缺陷的<strong>真实频次</strong></li></ol>
+<p>（§3）。这排除了「单次偶发」的解释——双标签 <strong>31/31 失败墙全中</strong>，是<strong>必现</strong>。</p>
+<ol><li><strong>根因验真</strong>：每条根因都写了<strong>独立探针</strong>（<code>works/data/khy/T4-transient/tmp/verify-hypotheses.cjs</code>、</li></ol>
+<p><code>verify-wall-chain.cjs</code>、<code>verify-envelope.cjs</code>），直接调用产品模块复现截图里的<strong>逐字节输出</strong>。<br>   <strong>没有一条根因是靠读代码猜的。</strong></p>
+<blockquote><p>本轮只写计划，<strong>未改任何产品代码</strong>（探针只在 <code>T4-transient/tmp/</code>，按 B8 不入仓）。</p></blockquote>
+<h2 id="2-根因详述-逐条附实测证据">2. 根因详述（逐条附实测证据）<a class="anchor" href="#2-根因详述-逐条附实测证据" aria-label="锚点">#</a></h2>
+<h3 id="2-1-r1-轮次计数器自污染-永远-第-2-次">2.1 R1 · 轮次计数器自污染 → 永远「第 2 次」<a class="anchor" href="#2-1-r1-轮次计数器自污染-永远-第-2-次" aria-label="锚点">#</a></h3>
+<p><strong>现象</strong>（截图 + 转录 <code>[2]</code>、<code>[6]</code>）：用户连发 3 次「今天有些什么新闻？」，<br>系统两次都注入「用户已第 <strong>2</strong> 次发送基本相同的请求（这是第二轮）」。模型于是说「这是<strong>第三轮</strong>同一请求」<br>（转录 <code>[7]</code>）——<strong>系统说 2，模型说 3，两者互相矛盾</strong>。</p>
+<p><strong>根因链</strong>：</p>
+<pre><code>repeatedPromptRounds.countRound()            ← 用「历史 user 轮」数重复
+  └─ priorUserTextsFrom(initialMessages)      ← 历史里存的是**被注入过的**那条
+       └─ toolUseLoopCore.js:1738  currentMessage = `${_roundHint}\n\n${currentMessage}`
+            └─ 这条污染过的文本被 conversationMessages.push({role:'user'}) 回灌
+                 └─ 下一轮 countRound 拿它跟**干净的**新提示词比
+                      └─ similarity(干净, 被注入) = 0.0476  ≪ 阈值 0.9
+                           └─ 判「不同请求」→ 重复计数不增 → 恒为 2</code></pre>
+<p><strong>实测</strong>（<code>verify-hypotheses.cjs</code> H4）：</p>
+<pre><code>请求#1 → 轮次=1
+请求#2 → 轮次=2
+请求#3 → 轮次=2      ← 应为 3
+请求#4 → 轮次=2      ← 应为 4
+→ 计数器饱和于 2（真值应为 1/2/3/4）</code></pre>
+<p><strong>旁证</strong>：转录 <code>[2]</code> 与 <code>[6]</code> 两条 user 消息<strong>逐字节相同</strong>（已断言 <code>===</code> 为 true）。</p>
+<p><strong>次生伤害</strong>：<code>sessionPersistence._SYNTHETIC_USER_PREFIXES</code> 收的是 <code>'[SYSTEM:'</code>（带冒号），<br>而注入前缀是 <code>'[SYSTEM] '</code>（无冒号）→ <strong>不被识别为合成消息</strong> →<br>这条提示词会参与<strong>会话标题选取</strong>（<code>_pickTitleCandidate</code>）与历史污染判定。</p>
+<h3 id="2-2-r2-失败墙被压扁-截断-叠标签">2.2 R2 · 失败墙被压扁、截断、叠标签<a class="anchor" href="#2-2-r2-失败墙被压扁-截断-叠标签" aria-label="锚点">#</a></h3>
+<p><strong>现象</strong>：截图中一行到底 ——「具体原因：真实失败原因: - kiro [unavailable]: Kiro IDE unavailable - cursor …」。</p>
+<p><strong>三处叠加</strong>（全部实测）：</p>
+<table><thead><tr><th>#</th><th>动作</th><th>位置</th><th>后果</th></tr></thead><tbody><tr><td>a</td><td><code>sanitizeCause</code> 里 <code>s.replace(/\s+/g, ' ')</code></td><td><code>honestFailureReason.js:76</code></td><td><strong>多行墙被折成一行</strong>，列表结构全失</td></tr><tr><td>b</td><td><code>sanitizeCause(raw, maxLen=220)</code> + <code>…</code></td><td><code>honestFailureReason.js:77-79</code></td><td>尾部截断，末条适配器只余「cursor [unavail…」</td></tr><tr><td>c</td><td><code>resolveFriendlyFailureMessage</code> 前置「具体原因：」</td><td><code>honestFailureReason.js:110/112</code></td><td>与墙自带标签叠成「<strong>具体原因：真实失败原因:</strong>」</td></tr></tbody></table>
+<p><strong>实测</strong>（<code>verify-wall-chain.cjs</code>）：<code>含换行? false | 末尾省略号? true | 双标签? true | 是单行? true</code>。<br>注意 a 是<strong>元凶</strong>：折叠发生在标签拼接<strong>之前</strong>，所以后面再怎么拼都救不回列表。</p>
+<p><strong>同类已修先例</strong>：<code>visionFailureSummary.js</code> 早就有 <code>KHY_VISION_FAILURE_CAUSE_DEDUP</code> 门<br>（<code>:275</code> 剥自带标签）——<strong>同一类 stutter，视觉路径修过，通用路径没修</strong>。</p>
+<h3 id="2-3-r3-上游真因认不出-只剩-输入-继续">2.3 R3 · 上游真因认不出 → 只剩「输入「继续」」<a class="anchor" href="#2-3-r3-上游真因认不出-只剩-输入-继续" aria-label="锚点">#</a></h3>
+<p><strong>现象</strong>：截图首轮真因是 <code>FreeUsageLimitError</code>（免费额度用尽），末轮是 <code>Missing API key</code>（缺 key）。<br>两条都是<strong>用户自己能修</strong>的问题，系统却都只给「输入「继续」即可从断点续写未完成的内容。」</p>
+<p><strong>实测</strong>（<code>verify-wall-chain.cjs</code> §4、§6）：</p>
+<pre><code>describeUpstream(FreeUsageLimitError, errorType=network)
+  → {label:'上游 FreeUsageLimitError', advice:'', transient:false}   ← advice 为空
+describeUpstream(AuthError, errorType=auth)
+  → null                                                          ← 完全认不出
+isResumableError('auth') = true    ← 且 auth 不在 NON_RESUMABLE 里</code></pre>
+<p><strong>两层原因</strong>：</p>
+<ol><li><code>upstreamTruthLabel._RULES</code> 无 <code>FreeUsageLimitError</code> 规则 → 落到 generic 分支，</li></ol>
+<p>拿得到 label 拿不到 <code>advice</code>；而 <code>_honestContinueHint</code>（<code>aiChatCore.js:3487-3499</code>）<strong>只在 <code>advice</code> 非空时</strong>才给具体建议，<br>   否则回落通用 <code>CONTINUE_HINT</code>。</p>
+<ol><li><code>auth</code> 属 <code>_RULE_ONLY_TYPES</code>（<code>:38</code>）——「只有命中已知语义时才改写」。</li></ol>
+<p><code>AuthError</code>/<code>Missing API key</code> 不在规则表里 → <strong>认不出</strong> → 连标签都没有。</p>
+<p><strong>同时</strong>：<code>honestFailureReason.buildKeyConfigInvite</code> 明明就会为 auth 类生成<br>「需要我帮你换一个新 key 吗?」——但它挂在 <code>toolUseLoopCore.js:3460</code>，<br><strong>读的是 <code>aiResult.errorType</code></strong>；而 khyos 走的是 <code>aiChatCore</code> 那条，<strong>没走那个分支</strong>。</p>
+<blockquote><p>顺带暴露一个<strong>规范冲突</strong>：<code>aiChatCore</code> 的失败分支同时调用<br><code>resolveFriendlyFailureMessage</code>（前置标签）与 <code>buildKeyConfigInvite</code>（追加建议），<br>而 <code>buildKeyConfigInvite</code> 只认 <code>auth/no_key/pool_exhausted</code>。<br>缺 key 的 <code>AuthError</code> 被分类成 <code>auth</code> 时<strong>应该</strong>拿到邀约——但真因叶子先认不出它，标签都退化成裸 <code>[auth]</code>。</p></blockquote>
+<h3 id="2-4-r4-旁白-occurrence-未接线-并行调用同一句">2.4 R4 · 旁白 occurrence 未接线 → 并行调用同一句<a class="anchor" href="#2-4-r4-旁白-occurrence-未接线-并行调用同一句" aria-label="锚点">#</a></h3>
+<p><strong>现象</strong>（转录 <code>[4]</code>）：三路并行 <code>webSearch</code> 的旁白是<br>「外部查到 10 条，我把要点整理出来再回到正题。 外部查到 7 条，我把要点整理出来再回到正题。 外部查到 7 条，…」——<br><strong>同一句重复 3 次</strong>。</p>
+<p><strong>根因</strong>：<code>toolUseLoopCore._buildOutcomeReflectionHint</code>（<code>:286</code>）调用<br><code>toolOutcomeNarration(tr.tool, tr.result||{}, tr.params||{})</code> —— <strong>第四个参数 <code>options</code> 没传</strong>，<br>于是 <code>options.occurrence</code> 为 <code>undefined</code> → <code>_voice</code>（<code>toolPrefaceVoice.js:23-29</code>）取 <code>occ=0</code> → 永远返回<strong>首发句</strong>。</p>
+<p><strong>实测</strong>（<code>verify-hypotheses.cjs</code> H3）：</p>
+<pre><code>loop 侧(不传 occurrence) 三连 → 三句全同 → true
+TUI 侧(传 occurrence 0/1/2) → 三句各异 → false</code></pre>
+<p><strong>即</strong>：TUI 侧（<code>queryBridgeTimeline.js:753</code>）<strong>接线是对的</strong>，loop 侧（喂给模型的参考旁白）<strong>漏了</strong>。<br>两边行为不一致，这正是「同一件事两处实现」的典型漂移。</p>
+<h3 id="2-5-最关键-cli-失败信封被绕过-runtime-005-的执行缺口">2.5 ★ 最关键：CLI 失败信封被绕过（RUNTIME-005 的执行缺口）<a class="anchor" href="#2-5-最关键-cli-失败信封被绕过-runtime-005-的执行缺口" aria-label="锚点">#</a></h3>
+<p><code>[DESIGN-ARCH-114]</code> / <strong>RUNTIME-005</strong> 白纸黑字：</p>
+<blockquote><p>「CLI / TUI 的失败展示<strong>必须</strong>由<strong>一个结构化对象</strong>渲染，禁止再对 <code>result.content</code> 做字符串截断拼接。」</p></blockquote>
+<p><code>cliFailureEnvelope.js</code> 已实现（<code>buildCliFailureEnvelope</code> / <code>renderCliFailureEnvelope</code>），<br>门 <code>KHY_CLI_FAILURE_ENVELOPE</code> <strong>默认开</strong>（实测 <code>isFlagEnabled → true</code>，env 未显式设置）。</p>
+<p><strong>但 khyos 的失败路径不走它。</strong> 同一份 attempts 数据，两条路产出天壤之别（<code>verify-envelope.cjs</code>）：</p>
+<pre><code>【信封渲染（规范要求的）】
+⚠ 本次请求未能完成 —— 认证失败
+[AUTH_FAILED]
+通道: OpenCode Zen [auth] — {&quot;type&quot;:&quot;error&quot;,...}
+→ 运行 `ai config` 检查/更新该通道的 API key
+→ 确认账号余额与权限后重试
+
+【用户实际看到的（截图）】
+具体原因：真实失败原因: - OpenCode Zen +1 个适配器 [auth]: {...} - relay_api [unavailable]: ... - kiro ...
+输入「继续」即可从断点续写未完成的内容。</code></pre>
+<p><strong>接线现状</strong>：<code>cliFailureEnvelope</code> 全仓<strong>只有 2 个调用点</strong>，都在 <code>aiChatCore.js</code>（<code>:3355</code>/<code>:3548</code>）——<br>即<strong>REPL 路径</strong>。而截图这条是 <strong>TUI 路径</strong>（<code>useQueryBridge</code> → <code>toolUseLoopCore</code>），<br>其失败文案走 <code>toolUseLoopCore.js:3409</code> 的 <code>resolveFriendlyFailureMessage</code> → <strong>完全不经过信封</strong>。</p>
+<p><strong>结论</strong>：规范没写错、实现没写错、门也开着——<strong>是 TUI 这条路没接线</strong>。<br>这解释了 R2/R3 的<strong>全部</strong>症状：既然没走信封，就必然落到散文拼接 + 截断 + 通用提示的老路上。</p>
+<p><strong>旁证</strong>：<code>failureReasonRanking</code> / <code>buildChannelFailureAdvice</code> / <code>upstreamTruthLabel</code><br>这些为信封准备真因的叶子<strong>都工作正常</strong>，只是<strong>输出给了一个没人读的出口</strong>。</p>
+<h2 id="3-全库量化-246-份会话-1268-轮">3. 全库量化（246 份会话 / 1268 轮）<a class="anchor" href="#3-全库量化-246-份会话-1268-轮" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>症状</th><th>出现次数</th><th>判读</th></tr></thead><tbody><tr><td>失败墙出现</td><td>31</td><td>—</td></tr><tr><td><strong>双标签「具体原因：真实失败原因:」</strong></td><td><strong>31 / 31</strong></td><td><strong>100% 必现</strong>，非偶发</td></tr><tr><td>附通用「输入「继续」」提示</td><td>31</td><td>与失败墙同数（同一出口）</td></tr><tr><td>其中<strong>无任何可执行建议</strong></td><td>30 / 31</td><td>97% 的失败只给了一个无效动作</td></tr><tr><td>IDE 适配器噪音行（kiro/cursor/trae unavailable）</td><td>17</td><td>淹没真因</td></tr><tr><td><code>FreeUsageLimitError</code> 出现</td><td>9</td><td>全部落到无建议分支</td></tr><tr><td>裸 JSON 泄进用户可见文案</td><td>2</td><td><code>{&quot;type&quot;:&quot;error&quot;,...}</code> 直出</td></tr><tr><td>旁白重复（同一句 ≥2 次）</td><td>8</td><td>R4</td></tr><tr><td><code>[SYSTEM] 重复请求识别</code> 泄进 <strong>user 角色</strong></td><td>7</td><td>R1</td></tr></tbody></table>
+<p><strong>关键读数</strong>：31 个失败墙<strong>无一例外</strong>中双标签；30/31 的失败<strong>没有一个</strong>给出可执行建议。<br><strong>这不是「偶尔出错」，是这条路径的结构性输出。</strong></p>
+<h2 id="4-修复计划">4. 修复计划<a class="anchor" href="#4-修复计划" aria-label="锚点">#</a></h2>
+<h3 id="4-0-通用纪律-每条都遵守-勿跳">4.0 通用纪律（每条都遵守，勿跳）<a class="anchor" href="#4-0-通用纪律-每条都遵守-勿跳" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>纪律</th><th>具体做法</th></tr></thead><tbody><tr><td><strong>门控回退</strong></td><td>每个行为变更挂独立 env 门（<code>KHY_*</code>），<strong>默认开</strong>、可关；关 → <strong>逐字节</strong>回退今日行为</td></tr><tr><td><strong>纯叶子优先</strong></td><td>新逻辑放<strong>纯函数叶子</strong>（零 IO / 确定性 / 绝不抛 / 可单测），不塞进 <code>toolUseLoopCore</code> 这类巨型文件（R4 上帝文件门）</td></tr><tr><td><strong>不碰红区</strong></td><td>失败墙里<strong>绝不</strong>新增/回显任何真 key/token（R2 密钥防泄露）；现有脱敏路径不得放宽</td></tr><tr><td><strong>不擅自动版本</strong></td><td>MINOR/MAJOR 递增<strong>必须</strong>人点头（B7）；本计划本身不改版本号</td></tr><tr><td><strong>不自动提交</strong></td><td>改动落地后<strong>不</strong> <code>commit</code>/<code>push</code>（R1 分支纪律），交给人裁决</td></tr><tr><td><strong>回归可判定</strong></td><td>每条修复都要有<strong>红→绿</strong>的自动化断言，不靠「看着对了」</td></tr></tbody></table>
+<h3 id="4-1-w1-把-tui-失败路径接回-cli-失败信封-最高优先">4.1 W1 · 把 TUI 失败路径接回 CLI 失败信封（<strong>最高优先</strong>）<a class="anchor" href="#4-1-w1-把-tui-失败路径接回-cli-失败信封-最高优先" aria-label="锚点">#</a></h3>
+<blockquote><p><strong>为什么第一</strong>：R2/R3 的症状<strong>全部</strong>源于此。接回去，它们多半<strong>自动消失</strong>，后续几刀才不用反复重写文案。</p></blockquote>
+<ul><li><strong>改动点</strong>：<code>toolUseLoopCore.js</code> 的失败收口（约 <code>:3409</code> / <code>:3450</code> 附近）——</li></ul>
+<p>在 <code>resolveFriendlyFailureMessage</code> 之前先问信封：<br>  <code>buildCliFailureEnvelope({result, env})</code>，命中则用 <code>renderCliFailureEnvelope</code> 的首屏，<br>  旧散文降级为<strong>展开层</strong>（与 <code>aiChatCore.js:3552-3559</code> 已有的两层结构<strong>对齐</strong>，不发明第三种形状）。</p>
+<ul><li><strong>接线口径</strong>：<code>aiChatCore</code> 与 <code>toolUseLoopCore</code> <strong>共用同一个渲染入口</strong></li></ul>
+<p>（建议抽 <code>cli/renderGatewayFailure.js</code> 薄壳），杜绝第三次漂移。</p>
+<ul><li><strong>门</strong>：<code>KHY_TUI_FAILURE_ENVELOPE</code>（默认开）。</li><li><strong>验证</strong>：<ul><li>断言 TUI 失败首屏含 <code>[AUTH_FAILED]</code> <strong>且不含</strong>「具体原因：真实失败原因」；</li><li>断言 <code>FreeUsageLimitError</code> 场景首屏含<strong>可执行建议</strong>（不再只有「输入「继续」」）；</li><li>断言旧散文<strong>仍在</strong>（展开层可见）——不丢信息。</li></ul></li></ul>
+<h3 id="4-2-w2-修-r1-轮次计数不再被自己污染">4.2 W2 · 修 R1：轮次计数不再被自己污染<a class="anchor" href="#4-2-w2-修-r1-轮次计数不再被自己污染" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>（二选一，<strong>推荐 b</strong>）：<ul><li><strong>a（治表）</strong>：<code>repeatedPromptRounds.priorUserTextsFrom</code> 抽取历史时<strong>剥掉</strong>已知的系统注入前缀</li></ul></li></ul>
+<p>（<code>'[SYSTEM] '</code> 等）再比对；</p>
+<ul><li><strong>b（治本，推荐）</strong>：<strong>注入不进历史</strong>——<code>toolUseLoopCore.js:1738</code> 的注入改为<strong>只喂模型</strong>，</li></ul>
+<p><strong>不回灌</strong> <code>conversationMessages</code> / <code>initialMessages</code>。<br>    语义上更对：那条提示词是<strong>给模型的旁注</strong>，不是<strong>用户说的话</strong>，用户消息里不该有它。</p>
+<ul><li><strong>顺带</strong>：<code>sessionPersistence._SYNTHETIC_USER_PREFIXES</code> 补 <code>'[SYSTEM] '</code>（无冒号形态），</li></ul>
+<p>让旁注<strong>不参与</strong>标题选取与合成消息判定。</p>
+<ul><li><strong>门</strong>：<code>KHY_PROMPT_ROUND_UNPOLLUTED</code>（默认开）。</li><li><strong>验证</strong>：连发 4 次同款 → 轮次依次 <strong>1/2/3/4</strong>（红→绿）；历史 user 轮<strong>不含</strong> <code>[SYSTEM] 重复请求识别</code>。</li></ul>
+<h3 id="4-3-w3-修-r2-失败墙不再压扁-截断-双标签">4.3 W3 · 修 R2：失败墙不再压扁 / 截断 / 双标签<a class="anchor" href="#4-3-w3-修-r2-失败墙不再压扁-截断-双标签" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>：<ul><li><code>honestFailureReason.sanitizeCause</code>：<strong>保留换行</strong>（列表是结构化信息，不该被折叠）；</li></ul></li></ul>
+<p>长度上限<strong>提高并改为按行截断</strong>（保住每行完整，而不是把末行腰斩成「cursor [unavail…」）。</p>
+<ul><li><code>resolveFriendlyFailureMessage</code>：cause <strong>已自带</strong>「真实失败原因:」标签时<strong>不再叠加</strong>「具体原因：」</li></ul>
+<p>——与 <code>visionFailureSummary.js:275</code> 的既有去重门<strong>同款</strong>（把那个门的口径<strong>提到通用路径</strong>）。</p>
+<ul><li><strong>门</strong>：<code>KHY_FAILURE_CAUSE_DEDUP</code>（默认开）+ <code>KHY_FAILURE_WALL_KEEP_LINES</code>（默认开）。</li><li><strong>验证</strong>：构造 4 组适配器的失败 → 文案<strong>保留换行</strong>、<strong>无</strong>双标签、<strong>末组不被腰斩</strong>。</li></ul>
+<h3 id="4-4-w4-修-r3-上游真因认得出-失败必给可执行建议">4.4 W4 · 修 R3：上游真因认得出 + 失败必给可执行建议<a class="anchor" href="#4-4-w4-修-r3-上游真因认得出-失败必给可执行建议" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>：<ul><li><code>upstreamTruthLabel._RULES</code> <strong>补规则</strong>：<code>FreeUsageLimitError</code> / <code>free usage limit</code> →</li></ul></li></ul>
+<p>label「上游免费额度用尽」、<strong>非瞬态</strong>、advice「等配额恢复或换付费通道」；<br>    <code>AuthError</code> / <code>Missing API key</code> → label「缺少 API Key」、advice「配置 key 或换通道」。</p>
+<ul><li><code>auth</code> 类的 <code>_RULE_ONLY_TYPES</code> 例外：<strong>上游明写「缺 key」时必须能改写</strong>（否则用户永远看不到该修哪）。</li><li><code>honestFailureReason.buildKeyConfigInvite</code> 的<strong>可达性</strong>：确认 khyos 路径也拿到邀约</li></ul>
+<p>（现在只有 <code>toolUseLoopCore</code> 那一处调用；接信封后由信封统一出）。</p>
+<ul><li><strong>门</strong>：<code>KHY_UPSTREAM_QUOTA_TRUTH</code>（默认开）。</li><li><strong>验证</strong>：<code>FreeUsageLimitError</code> → 文案含「额度」且 advice 非空；<code>Missing API key</code> → 含「API Key」。</li></ul>
+<h3 id="4-5-w5-修-r4-旁白-occurrence-接回-loop-侧">4.5 W5 · 修 R4：旁白 occurrence 接回 loop 侧<a class="anchor" href="#4-5-w5-修-r4-旁白-occurrence-接回-loop-侧" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>：<code>toolUseLoopCore._buildOutcomeReflectionHint</code> 调用 <code>toolOutcomeNarration</code> 时**补传</li></ul>
+<p><code>{ occurrence }</code><strong>，occurrence 按</strong>本批次同类工具出现次数<strong>计（与 TUI 侧 <code>queryBridgeTimeline</code> 同口径）。<br>  建议把 occurrence 计算抽成</strong>共用纯叶子**，两边共用一份 —— 消除「一边传一边不传」的漂移。</p>
+<ul><li><strong>门</strong>：<code>KHY_LOOP_NARRATION_OCCURRENCE</code>（默认开）。</li><li><strong>验证</strong>：一批 3 个同类工具 → 旁白<strong>三句不同</strong>。</li></ul>
+<h3 id="4-6-w6-失败墙信息分层-治-看起来很吵">4.6 W6 · 失败墙信息分层（治「看起来很吵」）<a class="anchor" href="#4-6-w6-失败墙信息分层-治-看起来很吵" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>：信封的 <code>attempts</code> 展示层<strong>分层</strong>——</li></ul>
+<p><strong>① 主因</strong>（唯一，可行动）置顶；<strong>② 其它适配器</strong>折叠为一行计数；<br>  <strong>③ IDE 适配器 unavailable</strong>（本机没装 IDE，<strong>不是失败原因</strong>）<strong>不单列</strong>。</p>
+<ul><li><strong>理由</strong>：截图里 3 条 IDE 噪音挤占了真因的位置；用户装了 IDE 才可能相关，没装时它们是<strong>恒定的环境事实</strong>，不是失败原因。</li><li><strong>门</strong>：<code>KHY_FAILURE_ATTEMPT_TIERS</code>（默认开）。</li><li><strong>验证</strong>：含 3 个 IDE unavailable + 1 个真因的失败 → 首屏只呈现真因 + 一行计数。</li></ul>
+<h3 id="4-7-w7-旁白去重兜底-防复发">4.7 W7 · 旁白去重兜底（防复发）<a class="anchor" href="#4-7-w7-旁白去重兜底-防复发" aria-label="锚点">#</a></h3>
+<ul><li><strong>改动点</strong>：<code>_buildOutcomeReflectionHint</code> 拼多行时，<strong>逐字相同</strong>的旁白<strong>只留一条</strong>（其余折叠计数）。</li></ul>
+<p>这是<strong>兜底</strong>，不是替代 W5——W5 治「为什么重复」，W7 治「万一又重复」。</p>
+<ul><li><strong>门</strong>：<code>KHY_OUTCOME_HINT_DEDUP</code>（默认开）。</li><li><strong>验证</strong>：3 条完全相同的旁白 → 输出 1 条 + 计数。</li></ul>
+<h3 id="4-8-波次顺序与依赖">4.8 波次顺序与依赖<a class="anchor" href="#4-8-波次顺序与依赖" aria-label="锚点">#</a></h3>
+<pre><code>W1（接信封）─┬─→ W3（墙格式）      ← W1 之后多半已无「墙」可修，但 W3 仍需（信封首屏也走清洗）
+             ├─→ W4（真因认得出）  ← 依赖 W1：建议由信封统一消费
+             └─→ W6（信息分层）    ← 依赖 W1
+
+W2（轮次去污染）─→ 独立，可并行
+W5（旁白 occurrence）─→ 独立，可并行
+W7（旁白去重兜底）─→ 依赖 W5</code></pre>
+<p><strong>建议排期</strong>：W1 → W2/W5（并行）→ W3/W4/W6 → W7 → 全量回归。<br><strong>W1 不做完，后面几刀都在给一条没人走的路补漆。</strong></p>
+<h3 id="4-9-每波次的验收门-红-绿-必须逐条通过">4.9 每波次的验收门（红→绿，必须逐条通过）<a class="anchor" href="#4-9-每波次的验收门-红-绿-必须逐条通过" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash">node --check &lt;改动文件&gt;                     <span class="hljs-comment"># 语法</span>
+node --<span class="hljs-built_in">test</span> &lt;该波次新增/改动的测试文件&gt;      <span class="hljs-comment"># 红→绿</span>
+node scripts/ci/check-change-safety.js --changed
+node scripts/ci/check-agent-rules.js --changed
+node scripts/ci/check-repo-layout.js
+node scripts/ci/check-copyright-readiness.js
+npm run <span class="hljs-built_in">arch</span>:god --workspace runtime/node/backend
+khy doctor</code></pre>
+<p><strong>新增测试建议落点</strong>（沿用仓内既有位置）：</p>
+<ul><li><code>runtime/node/backend/tests/services/repeatedPromptRounds.test.js</code>（扩 R1 用例）</li><li><code>runtime/node/backend/tests/honestFailureReason.test.js</code>（扩 R2/R3 用例）</li><li><code>runtime/node/backend/tests/cli/handlers/aiGatewayGenerateHelpersLeaf.test.js</code>（墙格式）</li><li><code>runtime/node/backend/tests/cli/toolPrefaceVoice.*.test.js</code>（R4/R7 用例）</li><li>新增 TUI 失败首屏的<strong>端到端</strong>断言（禁只测叶子）</li></ul>
+<h3 id="4-10-本计划-不做-的事-明确划界-防范围蔓延">4.10 本计划<strong>不做</strong>的事（明确划界，防范围蔓延）<a class="anchor" href="#4-10-本计划-不做-的事-明确划界-防范围蔓延" aria-label="锚点">#</a></h3>
+<ul><li><strong>不改</strong> <code>cliFailureEnvelope.js</code> 的<strong>契约</strong>（<code>[DESIGN-ARCH-114]</code> 已冻结）——本轮是<strong>接线</strong>，不是重设计。</li><li><strong>不改</strong> <code>RUNTIME-005</code> 的规则文本（它没说错）。</li><li><strong>不删</strong>旧的散文失败路径（降级为展开层，信息不丢）。</li><li><strong>不动</strong> khyos 之外的交付面（web / mobile）——同一信封可复用，但不在本轮范围。</li><li><strong>不 bump</strong> 工程版本（B7：MINOR/MAJOR 须人点头）。</li><li><strong>不 commit / push</strong>（R1）。</li></ul>
+<h2 id="5-风险与对策">5. 风险与对策<a class="anchor" href="#5-风险与对策" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>风险</th><th>对策</th></tr></thead><tbody><tr><td>W1 接线后<strong>首屏变短</strong>，信息是否丢了？</td><td>旧散文<strong>保留</strong>为展开层，并加断言：首屏与展开层合起来<strong>信息量不减</strong></td></tr><tr><td>W2 改「注入不回灌」会不会影响模型读上下文？</td><td>注入只是<strong>旁注</strong>；模型仍在本轮收到它，只是不再<strong>冒充用户发言</strong>。加用例断言模型仍收到提示</td></tr><tr><td>W3 保留换行会不会撑爆某些终端渲染？</td><td>按行截断 + 现有行数上限；真屏实测（TUI + REPL）</td></tr><tr><td>W4 补规则会不会把 <code>auth</code> 误判成别的类？</td><td>新规则<strong>只加 label/advice，不改 errorType 分类</strong>（与 <code>upstreamTruthLabel</code> 既有职责一致）</td></tr><tr><td>W6 折叠 IDE 噪音，用户想看全量怎么办？</td><td>折叠层可展开；IDE 适配器<strong>仍在</strong> attempts 里可查</td></tr><tr><td>一次做 7 波，风险大</td><td>每波独立门 + 独立红→绿断言；<strong>可单独回退</strong>（门关即逐字节回退）</td></tr></tbody></table>
+<h2 id="6-附录-本轮跑过的探针-可复现">6. 附录 · 本轮跑过的探针（可复现）<a class="anchor" href="#6-附录-本轮跑过的探针-可复现" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>探针</th><th>验证什么</th><th>结论</th></tr></thead><tbody><tr><td><code>verify-hypotheses.cjs</code></td><td>双标签 / 上游真因 / 旁白 occurrence / 轮次饱和</td><td>4 条根因<strong>全部复现</strong></td></tr><tr><td><code>verify-wall-chain.cjs</code></td><td>失败墙逐字节渲染链</td><td>单行 + 截断 + 双标签<strong>全中</strong></td></tr><tr><td><code>verify-envelope.cjs</code></td><td>信封是否可用 / 为何没被用</td><td>信封<strong>可用且正确</strong>，只是<strong>没接线</strong></td></tr><tr><td><code>scan-defects.cjs</code></td><td>全库频次</td><td>双标签 <strong>31/31 必现</strong></td></tr></tbody></table>
+<blockquote><p>探针放 <code>works/data/khy/T4-transient/tmp/</code>（B8：临时件不进仓库根），<strong>未入版本控制</strong>。<br>证据快照已归档至 <code>works/data/khy/feedback/khyos-conversation-errors-20261101/</code>。</p></blockquote>
+<hr>
+<h2 id="7-实施记录-2026-11-01-自我对抗式修复">7. 实施记录（2026-11-01 · 自我对抗式修复）<a class="anchor" href="#7-实施记录-2026-11-01-自我对抗式修复" aria-label="锚点">#</a></h2>
+<h3 id="7-1-方法-先证伪-再修-再对抗">7.1 方法：先证伪，再修，再对抗<a class="anchor" href="#7-1-方法-先证伪-再修-再对抗" aria-label="锚点">#</a></h3>
+<p>每个波次都走同一条<strong>对抗式</strong>路径，<strong>不许</strong>「先改代码再补测试」：</p>
+<ol><li><strong>证伪</strong>：写一条断言真实症状的测试，先跑出<strong>红</strong>，并把红时的实际输出<strong>逐字节</strong>记下来；</li><li><strong>修</strong>：改产品代码；</li><li><strong>再证伪</strong>：同一测试转<strong>绿</strong>；</li><li><strong>对抗</strong>：追加「<strong>门关 → 与今日逐字节一致</strong>」与「<strong>上游确实渲染出了信封</strong>」两类反向断言——</li></ol>
+<p>前者防「门没接线」的假绿，后者防「没信封也绿」的假绿；</p>
+<ol><li><strong>回归</strong>：跑<strong>全部引用了被改模块</strong>的套件（本轮 23 套 / 350 例全绿）。</li></ol>
+<h3 id="7-2-计划与实现的-一处偏差-比原计划更准">7.2 计划与实现的<strong>一处偏差</strong>（比原计划更准）<a class="anchor" href="#7-2-计划与实现的-一处偏差-比原计划更准" aria-label="锚点">#</a></h3>
+<p><strong>原计划</strong>（§4.1 W1）判断是「khyos 的 TUI 失败路径<strong>根本没走</strong>信封，W1 = 在 TUI 侧<strong>新建</strong>信封渲染」。</p>
+<p><strong>实施中证伪出的真实机制更准</strong>（<code>toolUseLoop.failureEnvelopeWiring.test.js</code> 证伪输出）：</p>
+<pre><code>&quot;认证失败。具体原因：真实失败原因: - kiro [unavailable]: Kiro IDE unavailable·
+输入「继续」即可从断点续写未完成的内容。·&quot;</code></pre>
+<p>信封<strong>是被渲染了的</strong>——<code>aiChatCore.chat()</code>（正是 TUI 用的那个 <code>chat</code>）在网关失败时<br><strong>已经把信封渲染好</strong>并随 <code>reply</code> + <code>failureCode</code> 返回（<code>failureCode</code> <strong>仅</strong>信封分支写入<br>→ 是「上游已渲染信封」的<strong>可靠</strong>判别信号）；而 <code>toolUseLoopCore</code> 的错误收口<br><strong>弃之不用</strong>，改从 <code>failureDetails</code> 重新拼散文墙 → <strong>把已经算好的信封丢了</strong>。</p>
+<p>⇒ 故 W1 的正确修法不是「新建渲染」，而是<strong>「别丢」</strong>：<br>新增纯叶子 <code>services/gateway/upstreamFailureEnvelope.js</code>（判定 + 拆分首屏/展开层），<br><code>toolUseLoopCore</code> 在上游已给信封时<strong>直接沿用其首屏</strong>，旧诊断墙降级为展开层（信息不丢）。</p>
+<p><strong>这条偏差本身就是「自我对抗式」的价值</strong>：只读代码会得出「TUI 不走信封」的结论；<br>只有把真实链路跑起来、把断言写成红，才会看见「信封被丢弃」这个更精确的机制。</p>
+<h3 id="7-3-落地清单">7.3 落地清单<a class="anchor" href="#7-3-落地清单" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>波次</th><th>改动文件</th><th>门</th></tr></thead><tbody><tr><td>W1</td><td>新增 <code>src/services/gateway/upstreamFailureEnvelope.js</code>；改 <code>src/services/tool/toolUseLoopCore.js</code>（错误收口沿用信封首屏；salvage 路径不把信封塞进括号注解）</td><td><code>KHY_TUI_FAILURE_ENVELOPE</code></td></tr><tr><td>W2</td><td>新增 <code>src/services/promptScaffolding.js</code>（剥系统注入旁注）；改 <code>src/services/repeatedPromptRounds.js</code>（历史侧与当前侧<strong>都</strong>剥，<strong>均受门控</strong>）；改 <code>src/services/sessionPersistence.js</code>（<code>[SYSTEM]</code> 无冒号形态纳入合成前缀）</td><td><code>KHY_PROMPT_ROUND_UNPOLLUTED</code>（门关 → 不剥离 → 逐字节回退今日的饱和行为）</td></tr><tr><td>W3</td><td>改 <code>src/services/honestFailureReason.js</code>（<code>sanitizeCause</code> 保留换行 + 按行截断；<code>resolveFriendlyFailureMessage</code> 不叠「具体原因：」但<strong>保留</strong>自带标签）</td><td><code>KHY_FAILURE_WALL_KEEP_LINES</code> / <code>KHY_FAILURE_CAUSE_DEDUP</code></td></tr><tr><td>W4</td><td>改 <code>src/services/gateway/upstreamTruthLabel.js</code>（补「上游免费额度用尽」「缺少 API Key」两条规则，<strong>不改</strong> errorType 分类）</td><td><code>KHY_UPSTREAM_QUOTA_TRUTH</code>（规则级门）</td></tr><tr><td>W5</td><td>改 <code>src/services/tool/toolUseLoopCore.js</code>（<code>_buildOutcomeReflectionHint</code> 按本批次同类工具次数传 occurrence）</td><td><code>KHY_LOOP_NARRATION_OCCURRENCE</code></td></tr><tr><td>W6</td><td>改 <code>src/services/gateway/cliFailureEnvelope.js</code>（主因分层：可行动 &gt; 环境事实 &gt; 其余）</td><td><code>KHY_FAILURE_ATTEMPT_TIERS</code></td></tr><tr><td>W7</td><td>改 <code>src/services/tool/toolUseLoopCore.js</code>（逐字相同旁白折叠为一条 + 如实标出合并数）</td><td><code>KHY_OUTCOME_HINT_DEDUP</code></td></tr><tr><td><strong>W8</strong></td><td>新增 <code>src/services/cliErrorDescriptor.js</code> 的失败人话化段（<code>humanizeFailure</code> / <code>composeHuman</code> / <code>humanTextEnabled</code>）；改 <code>src/services/gateway/aiGateway.js</code>（网关 content 墙的人话化）+ <code>src/cli/aiGatewayGenerateHelpers.js</code>（CLI 墙条目的人话化）</td><td><code>KHY_FAILURE_HUMAN_TEXT</code></td></tr><tr><td><strong>§7.9 安全</strong></td><td>改 <code>src/services/gateway/cliFailureEnvelope.js</code>（信封 <code>cause.detail</code> <strong>源头脱敏</strong>）+ 改 <code>src/cli/aiGatewayGenerateHelpers.js</code>（失败墙条目 <strong>源头脱敏</strong>）</td><td>无（<strong>修补既有漏洞</strong>，非行为门）</td></tr><tr><td>登记</td><td>改 <code>src/utils/flagRegistry/index.js</code>（8 个门全部登记，default-on）</td><td>—</td></tr></tbody></table>
+<p><strong>W8 说明</strong>：截图里最刺眼的是<strong>英文机器串</strong>直出用户界面 ——<br><code>通道: OpenCode Zen (401) [auth] — {&quot;type&quot;:&quot;error&quot;,&quot;error&quot;:{&quot;type&quot;:&quot;AuthError&quot;,&quot;message&quot;:&quot;Missing API key.&quot;}}</code><br>与墙行里的 <code>Missing API key.</code> / <code>Kiro IDE unavailable</code>。<br>W8 让这些位置<strong>转述成中文人话</strong>（实测：<code>通道: OpenCode Zen (401) [缺少 API Key]: 该通道尚未配置 API Key，请运行 ai config 配置该通道的 API Key，配好即可继续</code>），<br>门 <code>KHY_FAILURE_HUMAN_TEXT</code> 关 → 逐字节回到今日的英文机器串（实测已验）。<br>三个消费点（信封首屏 / CLI 墙 / 网关 content 墙）<strong>共用同一个门与同一个合成器</strong> <code>composeHuman</code>，<br>故三者不可能各说各话；<code>composeHuman</code> <strong>只输出 <code>label/reason/fix</code></strong>，从不输出 <code>raw</code>（原始串可能含密钥）——<br>即人话化本身<strong>不构成新的泄密面</strong>。</p>
+<h3 id="7-9-安全补正-复核发现-本轮引入的越界-被暴露的既有漏洞">7.9 安全补正（复核发现，本轮引入的越界 + 被暴露的既有漏洞）<a class="anchor" href="#7-9-安全补正-复核发现-本轮引入的越界-被暴露的既有漏洞" aria-label="锚点">#</a></h3>
+<p><strong>发现</strong>：W1 把信封首屏接到 TUI 失败路径后，实测同一份含 <code>sk-proj-abcdefghijklmnop</code><br>的失败数据 —— <strong>HEAD 版 <code>finalResponse</code> 含明文 key = false，本轮新版 = true</strong>（首屏与展开层两处都带出）。</p>
+<p><strong>根因比 W1 更深一层</strong>：<code>cliFailureEnvelope</code> <strong>此前完全没有脱敏</strong>。<br>REPL 路径之所以一直安全，是<strong>巧合</strong> —— 那条路径的失败墙<strong>恰好</strong>会流经<br><code>resolveFriendlyFailureMessage → sanitizeCause</code>（脱敏单一真源）；而<strong>信封首屏本身</strong><br>（<code>cause.detail</code> 直接来自上游原始错误串）<strong>从未脱敏</strong>。<br>W1 绕过了那道巧合兜底，把「信封原样透出」带到了 TUI ⇒ 既有漏洞被<strong>扩大</strong>到新路径。</p>
+<p><strong>修法（两处源头，不是消费点打补丁）</strong>：</p>
+<table><thead><tr><th>位置</th><th>改动</th><th>覆盖</th></tr></thead><tbody><tr><td><code>cliFailureEnvelope._pickPrimaryCause</code></td><td><code>detail</code> 字段经 <code>_redactDetail()</code> 脱敏（复用 <code>honestFailureReason.sanitizeCause</code> —— 既有脱敏单一真源，与老墙路径<strong>同款</strong>口径）</td><td>信封首屏 + <code>cause.detail</code>（<strong>同时修掉 REPL 路径的既有漏洞</strong>）</td></tr><tr><td><code>cli/aiGatewayGenerateHelpers._formatGatewayFailureDetails</code></td><td>墙条目经 <code>_redactWallEntry()</code> 脱敏（同一真源）</td><td>失败墙（展开层）</td></tr></tbody></table>
+<p><strong>为什么修在源头</strong>：一次修，<strong>两条路径都安全</strong>，且未来新增消费点<strong>默认安全</strong>（纵深防御：越靠近源头越不可能漏）。<br>两处都带<strong>兜底</strong>：脱敏叶子不可用时，本地正则至少抹掉常见密钥形态（宁可少脱一点，也<strong>不泄密</strong>）；<br>异常路径回落<strong>绝不泄密</strong>的占位串（不是原文）。</p>
+<p><strong>回归</strong>：<code>tests/services/failureSecretRedaction.test.js</code>（6 例）钉死「任何用户可见的失败文案都不得含明文密钥」，<br>且断言<strong>脱敏 ≠ 抹掉</strong>（通道名 / 状态码 / 真因语义仍在）。</p>
+<h3 id="7-10-复核指出的其余偏差-已逐条改正">7.10 复核指出的其余偏差（已逐条改正）<a class="anchor" href="#7-10-复核指出的其余偏差-已逐条改正" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>偏差</th><th>性质</th><th>处置</th></tr></thead><tbody><tr><td><code>KHY_PROMPT_ROUND_UNPOLLUTED</code> 登记了却<strong>无消费点</strong>（W2 剥离无条件生效，无法按 §4.0 回退）</td><td>门控不完整</td><td><strong>已接线</strong>：新增 <code>_unpollutedEnabled(env)</code>，<code>priorUserTextsFrom</code> 与 <code>countRound</code> 的剥离<strong>均</strong>受该门控制；实测门开 <code>1→2→3→4</code>、门关 <code>1→2→2→2</code>（今日逐字节行为）；并补 3 条门控断言</td></tr><tr><td>§7.6 称 <code>check-repo-layout</code> 「唯一红 <code>extension-id-hardcode</code>」</td><td>文档与实测不符（实为 4 个 error）</td><td><strong>已改正</strong>：§7.6 改为逐个列出 4 个 finding + 各自的时间戳/位置归属（全部既有），并补上此前漏列的 <code>check-change-safety --changed</code>（exit 1，唯一 error 是 <code>changed-count-error</code>：工作树 1165 个改动文件）</td></tr><tr><td>§7.5 称「末组不被腰斩」已达成</td><td><strong>实测未达成</strong> —— 220 字上限套到列表上仍会腰斩末行（切成「Fre…」）</td><td><strong>已改正（代码）</strong>：多行墙改为<strong>按行保完整</strong>（单行不腰斩；超 12 行则<strong>整行丢弃</strong>并如实标出丢了多少行）；单行散文沿用旧的总长上限。补 2 条断言（「末行完整」「整行丢弃并标数」）</td></tr><tr><td><code>upstreamTruthLabel.js</code> 一处注释与 <code>function _errField(body)</code> 被合并到同一行</td><td>编辑痕迹（换行丢失）</td><td><strong>已改正</strong></td></tr><tr><td><code>honestFailureReason.js</code> 注释把 <code>sk-svcacct-</code> 误改为 <code>sk-proj-</code></td><td>无关改动（B3 偏差）</td><td><strong>已改正</strong>（改回原词）</td></tr><tr><td>本轮在仓库根留下 <code>-p</code> 空目录与 <code>.backend-node-tests.log</code> 空文件</td><td>自身污染 → 令 <code>root-junk</code> 由 6 变 7</td><td><strong>已主动清理</strong>（回收站语义，可恢复）；<code>root-junk</code> 计数回到 6，<code>layer-registry</code> 红随之消失</td></tr></tbody></table>
+<h3 id="7-4-轨迹复盘结果-真实截图那一轮-逐条判据">7.4 轨迹复盘结果（真实截图那一轮，逐条判据）<a class="anchor" href="#7-4-轨迹复盘结果-真实截图那一轮-逐条判据" aria-label="锚点">#</a></h3>
+<pre><code>══════ 截图首轮：上游额度用尽 ══════
+⚠ 本次请求未能完成 —— 通道被限流
+[RATE_LIMITED]
+通道: OpenCode Zen (429) [network] — {&quot;type&quot;:&quot;error&quot;,...FreeUsageLimitError...}
+→ 降低并发、别连发
+→ 稍等几分钟待限流窗口重置后重试
+
+真实失败原因:
+- kiro [unavailable]: Kiro IDE unavailable
+- cursor [unavailable]: Cursor IDE unavailable
+- trae [unavailable]: Trae IDE unavailable
+- OpenCode Zen +1 个适配器 [上游 FreeUsageLimitError]: Free usage limit reached. Free…
+
+输入「继续」重试；额度按出口 IP 计，重试无用；请等配额恢复，或 /model 换用付费/其它通道。</code></pre>
+<table><thead><tr><th>判据</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>机器码（信封首屏在场）</td><td>✗ 无</td><td>✓ <code>[RATE_LIMITED]</code> / <code>[AUTH_FAILED]</code></td></tr><tr><td>双标签「具体原因：真实失败原因」</td><td>✗ 有</td><td>✓ 无</td></tr><tr><td>失败墙保留换行（不再压扁）</td><td>✗ 一行</td><td>✓ 4 行完整</td></tr><tr><td>末组适配器不被腰斩</td><td>✗「cursor [unavail…」/「Fre…」</td><td>✓ <strong>末行完整保留</strong>（超 12 行则整行丢弃并标出丢了多少行）</td></tr><tr><td>主因是真因（不是 IDE 噪音）</td><td>✗ kiro</td><td>✓ OpenCode Zen (429)</td></tr><tr><td>可执行建议（非只说「继续」）</td><td>✗ 只有通用「继续」</td><td>✓ 带额度/配 key 方向</td></tr><tr><td><strong>失败文案不外泄明文密钥</strong></td><td>✓（旧墙<strong>侥幸</strong>被兜住）</td><td>✓ <strong>源头脱敏</strong>（信封 + 墙两处；顺带修掉 REPL 路径的既有漏洞）</td></tr><tr><td>轮次计数（连发 4 次同款）</td><td>✗ 1/2/<strong>2</strong>/<strong>2</strong></td><td>✓ <strong>1/2/3/4</strong>（门关 → 回到 1/2/2/2）</td></tr><tr><td>并行旁白（3 路 webSearch）</td><td>✗ 同一句 ×3</td><td>✓ 三句各异</td></tr></tbody></table>
+<h3 id="7-5-新增测试-红-绿证据链">7.5 新增测试（红→绿证据链）<a class="anchor" href="#7-5-新增测试-红-绿证据链" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>覆盖</th><th>跑法</th><th>结果</th></tr></thead><tbody><tr><td><code>tests/services/toolUseLoop.failureEnvelopeWiring.test.js</code></td><td>W1（含「上游确实渲染出信封」对抗前置 + 门关逐字节回退）</td><td>jest</td><td>7/7</td></tr><tr><td><code>tests/services/repeatedPromptRounds.unpolluted.test.js</code></td><td>W2（含「混装形态确实不相似」对抗前置 + <strong>门控双向</strong>）</td><td><strong>node:test</strong></td><td>13/13</td></tr><tr><td><code>tests/services/toolUseLoop.outcomeNarrationOccurrence.test.js</code></td><td>W5/W7</td><td>jest</td><td>7/7</td></tr><tr><td><code>tests/services/failureWall.formatting.test.js</code></td><td>W3/W4/W6（含「末组不被腰斩」「整行丢弃并标数」）</td><td>jest</td><td>22/22</td></tr><tr><td><code>tests/services/failureSecretRedaction.test.js</code></td><td><strong>§7.9 安全</strong>（失败文案不得外泄明文密钥）</td><td>jest</td><td>6/6</td></tr><tr><td><code>tests/services/gateway/upstreamFailureHumanize.test.js</code></td><td><strong>W8</strong>（失败人话化 + 门控双向）</td><td><strong>node:test</strong></td><td>38/38</td></tr><tr><td><code>tests/services/cliErrorDescriptor.machineCodeInvariant.test.js</code></td><td>机器码不变式 + W8 人话化不碰机器侧（H × T 四组合）</td><td>jest</td><td>7/7</td></tr></tbody></table>
+<p><strong>合计新增 6 个测试文件、100 例，全绿。</strong></p>
+<blockquote><p>⚠ 跑法提醒：<code>repeatedPromptRounds.unpolluted</code> 与 <code>gateway/upstreamFailureHumanize</code> 用<br><strong><code>node:test</code></strong> 语法（<code>jest.config.js</code> 按约定自动忽略 node:test 文件）→ 必须 <code>node --test</code> 跑；<br>其余 4 个是 jest 套件 → <code>jest</code> 跑。合并跑会少算 51 例。</p></blockquote>
+<h3 id="7-6-回归与守卫">7.6 回归与守卫<a class="anchor" href="#7-6-回归与守卫" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>结果</th></tr></thead><tbody><tr><td>引用了被改模块的<strong>全部</strong>套件（27 套）</td><td><strong>405 例全绿</strong>（4 例 skipped 为既有）</td></tr><tr><td><code>check-agent-rules.js --changed</code></td><td><strong>0 error</strong>（7 warning，全为既有）</td></tr><tr><td><code>check-gov-rules.js</code></td><td>通过（GOV-MOD-004 / GOV-TOOL-004/005/006）</td></tr><tr><td><code>check-copyright-readiness.js</code></td><td><strong>0 error</strong></td></tr><tr><td><code>check-no-emoji.js</code></td><td><strong>0 error</strong></td></tr><tr><td><code>arch:god</code>（上帝文件门）</td><td>exit 0 —— 新增文件 77 / 129 行；<code>toolUseLoopCore.js</code> 本就在<strong>既有</strong>上帝文件清单上（HEAD 10794 → 本轮 10876，<strong>既有</strong>超限，非本轮新增）</td></tr><tr><td><code>check-repo-layout.js</code></td><td><strong>4 个 error，全部既有</strong>（见下方归属表）；<code>docs-index-complete: 0</code>（本文已登记）；<code>entry-buffer</code> 2470→<strong>2378</strong>（改善）</td></tr><tr><td><code>check-change-safety.js --changed</code></td><td><strong>exit 1</strong>，唯一 error 是 <code>changed-count-error</code>（工作树共 <strong>1165</strong> 个改动文件，远超低成本模型可审的量级）——由<strong>本轮之前</strong>的既有脏树造成，非本轮引入</td></tr><tr><td><code>src/**/*.test.js</code>（node:test）</td><td>6949 pass / 2 fail → <strong>两者均为 CPU 竞争导致的沙箱 200ms 预算超时</strong>（该套件自身头注已写明此敏感性），<strong>单独复跑 30/30 全绿</strong></td></tr><tr><td>全量 jest</td><td>64 套失败 → <strong>全部为既有环境问题</strong>（<code>string-width</code> ESM 转换、<code>@jest/globals</code> 越界等），与本轮改动无交集；<strong>对照基线复跑确认失败集合一致</strong>（见 §7.7）</td></tr></tbody></table>
+<p><strong><code>check-repo-layout</code> 4 个 error 的归属</strong>（逐个核实时间戳/位置，均<strong>非本轮引入</strong>）：</p>
+<table><thead><tr><th>finding</th><th>内容</th><th>归属</th></tr></thead><tbody><tr><td><code>root-whitelist</code></td><td>5 个白名单外说明性文件（<code>.tmp-docs.txt</code> / <code>.tmp-tools-diff.txt</code> / <code>.tmp-wr.txt</code> / <code>gen-scan.txt</code> / <code>tmp_log_mobile_err.txt</code>）</td><td><strong>既有</strong>：mtime 10-30 17:25 ~ 10-31 02:07，均早于本会话</td></tr><tr><td><code>root-shadow-dir</code></td><td><code>.khy</code> / <code>.khyos</code></td><td><strong>既有</strong>：<code>.khy</code> mtime 11-01 10:42、<code>.khyos</code> 创建于 10-27，均早于本会话</td></tr><tr><td><code>root-junk</code></td><td>6 个临时/事故残留</td><td><strong>既有</strong>：同上（同一批文件，10-30 ~ 10-31）</td></tr><tr><td><code>extension-id-hardcode</code></td><td><code>cli/handlers/phone.js:63</code> 硬编码拓展 id</td><td><strong>既有</strong>：本轮未触碰该文件</td></tr></tbody></table>
+<blockquote><p>本轮<strong>曾</strong>在仓库根留下两个自身残留（<code>-p</code> 空目录、<code>.backend-node-tests.log</code> 空文件），<br>已被本轮<strong>主动清理</strong>（回收站语义，可恢复）——即上表 <code>root-junk</code> 的计数由 7 回到 6。</p></blockquote>
+<h3 id="7-7-与基线的对照-防-把既有红算成我的">7.7 与基线的对照（防「把既有红算成我的」）<a class="anchor" href="#7-7-与基线的对照-防-把既有红算成我的" aria-label="锚点">#</a></h3>
+<p>用 <code>git stash push</code> <strong>只暂存本轮源文件</strong>改动，跑同一套件取得<strong>基线</strong>失败集合，<br>再与改动后的失败集合逐条比对 —— <strong>两者完全一致</strong>，故既有失败<strong>均非本轮引入</strong>。</p>
+<p>实测的两处对照（同名同数）：</p>
+<table><thead><tr><th>套件</th><th>基线（改动暂存）</th><th>改动后</th><th>判定</th></tr></thead><tbody><tr><td><code>tests/toolUseLoop.intentGate.test.js</code></td><td><strong>3 failed</strong>（<code>applies ultrawork model override…</code> / <code>keeps explicit chat preferredModel…</code> / <code>force override replaces explicit chat preferredModel…</code>）</td><td><strong>同样这 3 个、同名同数</strong></td><td><strong>既有失败</strong>（与本轮无关：它断言的是 <code>preferredModel</code> 覆盖，与失败墙/轮次/旁白无交集；直连复跑该断言<strong>行为正确</strong> → 属套件内 env 隔离/顺序问题）</td></tr><tr><td><code>src/services/domain/maintenance/evoEngine/hostPatcher.test.js</code></td><td>单独复跑 <strong>30/30 全绿</strong></td><td>全量并发时 2 fail（<code>Script execution timed out after 200ms</code>）</td><td><strong>环境性</strong>：该套件自身头注已写明「沙箱默认 200ms 预算，并行 CPU 竞争下会超时」，<strong>单独复跑即绿</strong></td></tr></tbody></table>
+<p>同时基线复跑确认缺陷仍在（轮次序列 <code>1 → 2 → 2 → 2</code>），改动后为 <code>1 → 2 → 3 → 4</code>。</p>
+<p><strong>全量 jest 的 64 套失败</strong>经逐一定位，全部属<strong>既有环境问题</strong>，与本轮改动无交集：</p>
+<ul><li><code>string-width</code> / <code>strip-ansi</code> 的 <strong>ESM 转换</strong>失败（<code>Cannot use import statement outside a module</code>）——</li></ul>
+<p>命中 <code>tests/diskCleanup.test.js</code> 等，<strong>本轮未触碰</strong>这些模块；</p>
+<ul><li><code>@jest/globals</code> 越界（<code>node --test</code> 跑 jest 套件的<strong>harness 错配</strong>，非真实失败）；</li><li><code>hostPatcher</code> 的 200ms 沙箱预算（并发竞争）。</li></ul>
+<p><strong>引用了本轮被改模块的全部套件（23 套 / 350 例）单独跑：全绿。</strong></p>
+<h3 id="7-8-本轮-不做-的事-划界">7.8 本轮<strong>不做</strong>的事（划界）<a class="anchor" href="#7-8-本轮-不做-的事-划界" aria-label="锚点">#</a></h3>
+<ul><li>不改 <code>RUNTIME-005</code> 的规则文本（它没说错）。</li><li>不改 <code>cliFailureEnvelope.js</code> 的<strong>契约</strong>（<code>[DESIGN-ARCH-114]</code> 已冻结）——本轮改的是<strong>主因选取</strong>（分层）。</li><li>不删旧散文墙（降级为展开层，信息不丢）。</li><li>不 bump 工程版本（B7：MINOR/MAJOR 须人点头；本轮是 PATCH 级修复）。</li><li><strong>不 commit / push</strong>（R1 分支纪律）——改动留在工作树，由人裁决。</li></ul>
+<hr>
+<p><em>本文 §0–§6 是<strong>计划</strong>，§7 是<strong>实施记录</strong>。落地顺序与门控见 §4.8，每波验收门见 §4.9，<br>实测结果与偏差见 §7。本轮已完成 W1–W7 七波（含 W7 兜底），状态 <code>partial</code>：<br>代码已落地且红→绿可复现，但<strong>尚未经真机 TUI 实跑复核</strong>，也<strong>未提交</strong>。</em></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-197] 剥洋葱：Khy OS 最小核心与分层重量治理.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-197] 剥洋葱：Khy OS 最小核心与分层重量治理</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-199] 金丝雀标记与分发溯源机制</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-198] khyos对话错误族-历史轨迹复盘与修复计划.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

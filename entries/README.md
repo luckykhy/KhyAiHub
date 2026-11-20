@@ -59,10 +59,10 @@ node entries/launch.js              经本目录的跨平台壳（只要 Node，
 | `cli-node` | cli | shell | 就绪 | `runtime/node/backend` |
 | `desktop` | desktop | exe | 就绪 | `apps/khyos-desktop` |
 | `desktop-legacy` | desktop | exe | 降级 | `electron/` |
-| `desktop-provider-hub` | desktop | exe | 降级 | `delivery/web/provider-hub` |
-| `web` | web | html | 就绪 | `delivery/web/ai-frontend` |
+| `desktop-provider-hub` | desktop | exe | 降级 | `delivery/channel/web/provider-hub` |
+| `web` | web | html | 就绪 | `delivery/channel/web/ai-frontend` |
 | `web-quant` | web | html | 就绪 | `delivery/channel/khyquant/frontend` |
-| `mobile` | mobile | apk | 就绪 | `delivery/mobile/khy-os-client-app` |
+| `mobile` | mobile | apk | 就绪 | `delivery/channel/mobile/khy-os-client-app` |
 | `mobile-legacy` | mobile | apk | **损坏** | `apps/khy-mobile` |
 
 **表不会自己更新**：它是**人工定档**。哪个端改了指路方式、换了源目录、补上了打包配置，

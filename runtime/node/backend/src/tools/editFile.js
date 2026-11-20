@@ -11,12 +11,6 @@ const fs = require('fs');
 const path = require('path');
 
 const { defineTool } = require('./_baseTool');
-let _fileHistory;
-try {
-  _fileHistory = require('../services/fileHistoryService');
-} catch {
-  _fileHistory = null;
-}
 
 // Read-before-edit enforcement: reject edits to files the agent has not read
 // in this session, and reject edits to files modified externally since last
@@ -60,28 +54,6 @@ function _checkReadBeforeEdit(absPath) {
     }
   }
   return { ok: true };
-}
-
-/**
- * Record a pre-edit snapshot into the current turn's rollback manifest
- * (DESIGN-ARCH-096 §2-A). Fail-soft: returns silently when no active turn is
- * known (feature off / headless / no context), and never throws. The canonical
- * per-file `fileHistoryService` snapshot is taken separately; this only adds
- * the turn-grouping layer.
- */
-function _recordTurnMutation(context, absPath, preContent, reason) {
-  const turnId = context && context.traceContext && context.traceContext.turnId;
-  if (!turnId) {
-    return; // no active turn → graceful no-op
-  }
-  try {
-    require('../services/turnCheckpointService').recordMutatedFile(turnId, absPath, {
-      reason,
-      content: preContent,
-    });
-  } catch {
-    /* non-critical: turn recording must never break the write */
-  }
 }
 
 module.exports = defineTool({
@@ -237,17 +209,9 @@ module.exports = defineTool({
         /* stat/判定失败 → 回退历史行为 */
       }
 
+      // 基线在读取之前取：写盘时磁盘 mtime 已变 → fileWriteService 判 conflict。
+      const baseMtimeMs = fs.statSync(absPath).mtimeMs;
       const original = fs.readFileSync(absPath, 'utf-8');
-
-      // Take snapshot before modification
-      if (_fileHistory) {
-        try {
-          _fileHistory.takeSnapshot(absPath, { reason: 'editFile', content: original });
-        } catch {
-          /* non-critical */
-        }
-      }
-      _recordTurnMutation(context, absPath, original, 'editFile');
 
       // Count occurrences — 必须数**非重叠**的出现次数，与下面的 split().join() 替换一致。
       // 原来每次前进 1 字符，数的是重叠出现：自重叠 needle（"--" 在 "------" 里）会数出
@@ -287,7 +251,19 @@ module.exports = defineTool({
         updated = original.slice(0, pos) + new_string + original.slice(pos + old_string.length);
       }
 
-      fs.writeFileSync(absPath, updated, 'utf-8');
+      const applied = await require('../services/fileWriteService').write({
+        filePath: absPath,
+        content: updated,
+        baseMtimeMs,
+        actor: 'tool',
+        reason: 'editFile',
+        beforeContent: original,
+        turnId: context && context.traceContext && context.traceContext.turnId,
+        diagCwd: cwd,
+      });
+      if (!applied.ok) {
+        return { success: false, error: applied.error, file: absPath };
+      }
 
       const replacements = replace_all ? count : 1;
       return {

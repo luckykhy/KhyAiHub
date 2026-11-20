@@ -30,7 +30,10 @@ process.env.KHY_APP_HOME = ROOT;
 
 const cleanupService = require('../../src/services/cleanupService');
 
-const TRAINING = path.join(ROOT, 'training');
+// training 自 2026-11-19 起经 DATA_PATHS 登记表解析（T1-domains/ai/training）:
+// cleanupService 的 trimTrainingData/trimQuarantine 都走 resolveDataPath('training', …),
+// 不再平铺在数据家根下。这里把登记后的落点钉死,映射再变就是本文件红。
+const TRAINING = path.join(ROOT, 'T1-domains', 'ai', 'training');
 const QUARANTINE = path.join(TRAINING, 'interaction_quarantine.jsonl');
 const RECORDS = path.join(TRAINING, 'interaction_records.jsonl');
 

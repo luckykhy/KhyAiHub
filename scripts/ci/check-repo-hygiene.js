@@ -8,7 +8,7 @@
  *   · runtime/node/backend/ 的 11 个一次性残留被跟踪入库（TmpKoh.class/.java、
  *     m[0])、m[1])、_chk_app2/_chk_bridge/_probe_tools.js、proxy_test2.js、
  *     note.txt、.khyos-diag-tui-final.txt、.zcode-tmp-ccoverlay.txt）；
- *   · delivery/web/ai-frontend/ 的 5 份 vite.config.js.timestamp-*.mjs（vite dev
+ *   · delivery/channel/web/ai-frontend/ 的 5 份 vite.config.js.timestamp-*.mjs（vite dev
  *     会自己生成）被跟踪入库。
  * 两批已在 P2 清除；本守卫按**文件名形态**拦回流——文件名匹配便宜且无误报，
  * 内容类（密钥形态）归 check-secrets-staged.js，不在这里重复。
@@ -48,7 +48,7 @@ const BAD = [
 const SELFTEST_CASES = [
   // [路径, 是否应命中]
   ['runtime/node/backend/.env.tmp.1790646792872', true],
-  ['delivery/web/ai-frontend/vite.config.js.timestamp-1790123653267-x.mjs', true],
+  ['delivery/channel/web/ai-frontend/vite.config.js.timestamp-1790123653267-x.mjs', true],
   ['runtime/node/backend/TmpKoh.class', true],
   ['runtime/node/backend/TmpKoh.java', true],
   ['runtime/node/backend/m[0])', true],

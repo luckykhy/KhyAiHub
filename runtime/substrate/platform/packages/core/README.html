@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>@khy/core · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>substrate<span class="sep">›</span>platform<span class="sep">›</span>packages<span class="sep">›</span>core<span class="sep">›</span>@khy/core</div>
+      <header class="hero reveal"><h1>@khy/core</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-core">@khy/core</a></li><li class="lvl-2"><a href="#导出面-封闭-exports-深导入一律-err-package-path-not-exported">导出面（封闭 exports，深导入一律 `ERR_PACKAGE_PATH_NOT_EXPORTED`）</a></li><li class="lvl-2"><a href="#两种形态">两种形态</a></li><li class="lvl-2"><a href="#测试">测试</a></li><li class="lvl-2"><a href="#边界">边界</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-core">@khy/core<a class="anchor" href="#khy-core" aria-label="锚点">#</a></h1>
+<p>KhyOS 双模核心的契约与接入面。一核多终端：终端之间不直接引用，只经 CoreHandle 消费能力。</p>
+<h2 id="导出面-封闭-exports-深导入一律-err-package-path-not-exported">导出面（封闭 exports，深导入一律 <code>ERR_PACKAGE_PATH_NOT_EXPORTED</code>）<a class="anchor" href="#导出面-封闭-exports-深导入一律-err-package-path-not-exported" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>子路径</th><th>给谁用</th><th>内容</th></tr></thead><tbody><tr><td><code>@khy/core</code> / <code>@khy/core/contracts</code></td><td>所有端</td><td>CoreHandle 六成员契约、错误码、健康指纹（零 <code>node:</code>）</td></tr><tr><td><code>@khy/core/contracts/core-env</code></td><td>backend 与浏览器</td><td><code>KHY_CORE_*</code> 键名与读取的唯一真源（守卫式读 env）</td></tr><tr><td><code>@khy/core/client</code></td><td>浏览器 / 第三方 attached</td><td><code>obtainCore(opts)</code>——只 attach，不读文件、不 spawn</td></tr><tr><td><code>@khy/core/locator-host</code></td><td>Node 宿主 / CLI / daemon</td><td><code>obtainCoreNode(opts)</code>——auto/embedded 的唯一入口，包内唯一允许 <code>node:</code> 的源文件</td></tr><tr><td><code>@khy/core/server</code></td><td>embedded 宿主</td><td>core server 骨架（本刀零业务，S4 起承接 HTTP/WS）</td></tr></tbody></table>
+<h2 id="两种形态">两种形态<a class="anchor" href="#两种形态" aria-label="锚点">#</a></h2>
+<ul><li><strong>embedded</strong>：<code>obtainCoreNode({ mode:'embedded', allowSpawn?, bundledEntry?, paths? })</code>——定位实现</li></ul>
+<p>（显式注入 &gt; 宿主 bundled 入口 &gt; <code>node_modules/@khy/core</code> &gt; 诚实报错 <code>CORE_LOCATOR_FAILED</code>）、<br>  抢独占锁（pid + port + token + epoch + 心跳），抢不到且持锁者新鲜就转 attach，绝不起新核心。</p>
+<ul><li><strong>attached</strong>：<code>obtainCore({ endpoint, token, terminalId, clientVersion })</code> 或 Node 侧</li></ul>
+<p><code>obtainCoreNode({ mode:'attached', endpoint })</code>——<code>/core/health</code> 指纹比对后走 <code>/core/hello</code> 握手。</p>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> src <span class="hljs-built_in">test</span></code></pre>
+<p>同目录同名测试覆盖每个源文件（entry-buffer colocated 判据）；<code>test/</code> 只放跨进程用例。</p>
+<h2 id="边界">边界<a class="anchor" href="#边界" aria-label="锚点">#</a></h2>
+<p>core 只做统筹：能力注册与发现、事件、配置、会话与计量、AI 网关（唯一出口）、插件生命周期、锁与<br>epoch、路径解析。终端 UI、终端专属业务、任务编排与观测采样模块本体<strong>不进 core</strong><br>（<code>scripts/ci/check-core-boundary.js</code> 机判）。版本轨道不并入 G2；起步版本与归组在首个发布前由人拍板。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../runtime/substrate/platform/delivery/README.html"><div class="dir">← 上一篇</div><div class="ttl">跨平台交付工具 (Cross-Platform Delivery Tool)</div></a><a class="next" href="../../../../../runtime/substrate/platform/packages/moonbit-plugin-sdk/README.mbt.html"><div class="dir">下一篇 →</div><div class="ttl">khyos/moonbitpluginsdk</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="runtime/substrate/platform/packages/core/README.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

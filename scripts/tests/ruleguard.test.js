@@ -28,7 +28,7 @@ test('glob: 单星不跨目录', () => {
 test('glob: 双星跨任意深度且可匹配零层', () => {
   assert.equal(matchesAny(['runtime/node/**'], 'runtime/node/a.js'), true);
   assert.equal(matchesAny(['runtime/node/**'], 'runtime/node/backend/src/deep/a.js'), true);
-  assert.equal(matchesAny(['runtime/node/**'], 'delivery/web/ai-frontend/x.js'), false);
+  assert.equal(matchesAny(['runtime/node/**'], 'delivery/channel/web/ai-frontend/x.js'), false);
 });
 
 test('glob: 问号匹配单字符', () => {

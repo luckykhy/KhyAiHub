@@ -30,7 +30,13 @@ if not defined KHY_DATA_HOME set "KHY_DATA_HOME=%KHY_ENV_ROOT%works\data\khy"
 if not defined KHY_PROJECT_DATA_HOME set "KHY_PROJECT_DATA_HOME=%KHY_ENV_ROOT%works\data\khy"
 if not defined KHYQUANT_DATA_HOME set "KHYQUANT_DATA_HOME=%KHY_DATA_HOME%"
 
-set "KHYOS_HOME=%KHY_ENV_ROOT%works\data\khyos"
+REM 2026-11-19 (no-junction adjudication): KHYOS_HOME is deliberately NOT set.
+REM getBaseHome() in runtime\node\backend\src\utils\dataHome.js is the single
+REM source of truth for the base home; the portable roots above steer it onto
+REM its portable branch (works\data\khy\T1-domains\base). The pin this replaces
+REM carried the works\data\khyos compatibility junction -- with that junction
+REM retired it would recreate the path as a real directory and fork the base
+REM home off the resolver.
 set "KHY_COORDINATOR_MODE=true"
 set "KHY_RUNTIME_HOME=%KHY_DATA_HOME%\runtime"
 set "KHY_CACHE_HOME=%KHY_DATA_HOME%\cache"

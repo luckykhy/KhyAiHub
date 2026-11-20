@@ -1,0 +1,162 @@
+{
+  "id": "actionable-detection-001",
+  "title": "什么算可交互",
+  "why": "ref 的发放范围必须精确：clickable/long-clickable/scrollable/EditText 四种，其余一律不发。多发会让 digest 变噪声，漏发会让模型点不到。",
+  "cases": [
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"OK\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "clickable 即发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "OK",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"Hold\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"true\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "long-clickable 即发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "box",
+            "label": "Hold",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": true,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"true\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "scrollable 即发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "box",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": true,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.EditText\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "EditText 无需 clickable 也发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "input",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              100,
+              100
+            ],
+            "center": [
+              50,
+              50
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": true,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"只是文字\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "纯 TextView 不发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": []
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "纯布局不发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": []
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"可聚焦\" resource-id=\"\" class=\"android.view.View\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"true\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></hierarchy>",
+      "why": "仅 focusable 不发 ref",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": []
+      }
+    }
+  ]
+}

@@ -9856,11 +9856,23 @@ async function startRepl(options = {}) {
                     };
                     try {
                       const tokenSvc = require('../services/tokenUsageService');
-                      turnData.costUSD = tokenSvc.estimateCost(
+                      const mp = require('../services/modelPricing');
+                      const detail = mp.estimateCostDetailed(
                         turnData.inputTokens,
                         turnData.outputTokens,
                         turnData.model || turnData.adapter
                       );
+                      turnData.costState = detail.state;
+                      if (detail.costUSD != null) {
+                        turnData.costUSD = detail.costUSD;
+                      } else if (detail.state === 'flat' || detail.state === 'assumed') {
+                        // Rough display-only fallback; formatTurnCost marks it ~粗价.
+                        turnData.costUSD = tokenSvc.estimateCost(
+                          turnData.inputTokens,
+                          turnData.outputTokens,
+                          turnData.model || turnData.adapter
+                        );
+                      }
                     } catch {
                       /* cost estimation not critical */
                     }
@@ -10919,17 +10931,28 @@ async function startRepl(options = {}) {
               const modelName = result.model || '';
               const adapterName = result.adapter || result.provider || result.actualAdapter || '';
               let turnCostUSD = 0;
+              let turnCostState = '';
               try {
                 const tokenSvc = require('../services/tokenUsageService');
-                turnCostUSD = tokenSvc.estimateCost(
+                const mp = require('../services/modelPricing');
+                const detail = mp.estimateCostDetailed(
                   inputTokens,
                   result.tokenUsage.outputTokens || 0,
                   modelName || adapterName
                 );
+                turnCostState = detail.state;
+                turnCostUSD = detail.costUSD == null ? 0 : detail.costUSD;
+                if (detail.costUSD == null && (detail.state === 'flat' || detail.state === 'assumed')) {
+                  turnCostUSD = tokenSvc.estimateCost(
+                    inputTokens,
+                    result.tokenUsage.outputTokens || 0,
+                    modelName || adapterName
+                  );
+                }
               } catch {
                 /* cost estimation not critical */
               }
-              hud.updateModelInfo(modelName, adapterName, turnCostUSD);
+              hud.updateModelInfo(modelName, adapterName, turnCostUSD, turnCostState);
             } catch {
               /* best-effort */
             }
@@ -11053,11 +11076,23 @@ async function startRepl(options = {}) {
               // Estimate cost
               try {
                 const tokenSvc = require('../services/tokenUsageService');
-                turnData.costUSD = tokenSvc.estimateCost(
+                const mp = require('../services/modelPricing');
+                const detail = mp.estimateCostDetailed(
                   turnData.inputTokens,
                   turnData.outputTokens,
                   model || provider
                 );
+                turnData.costState = detail.state;
+                if (detail.costUSD != null) {
+                  turnData.costUSD = detail.costUSD;
+                } else if (detail.state === 'flat' || detail.state === 'assumed') {
+                  // Rough display-only fallback; formatTurnCost marks it ~粗价.
+                  turnData.costUSD = tokenSvc.estimateCost(
+                    turnData.inputTokens,
+                    turnData.outputTokens,
+                    model || provider
+                  );
+                }
               } catch {
                 /* no cost estimation available */
               }

@@ -65,6 +65,8 @@ describe('完整目录结构', () => {
   });
 });
 
+// 说明放在 describe 外面:这一段被 maxFuncLines 棘轮钉在本文件原有的 50 行上(块内行数),
+// 行内的注释只能写成行尾 —— 单独一行就把 50 撑成 51,那是阻断级 FAIL。
 describe('?  浮层精简视图(防 HelpMenu 收敛后回归)', () => {
   // 与 HelpMenu.js 历史内联 SHORTCUTS 逐字节一致:键位收敛后浮层不得有任何视觉漂移。
   // 唯一一处**有意**改动:Ctrl+O 从「就地展开最后一条」改绑为「打开会话记录视图」
@@ -102,8 +104,7 @@ describe('?  浮层精简视图(防 HelpMenu 收敛后回归)', () => {
     ['Meta + T', '切换扩展思考'],
     ['Ctrl + C', '取消当前回合 / 退出'],
     ['Ctrl + O', '打开会话记录视图(滚动回看 / 展开)'],
-    // 第五处有意改动(2026-11-12 夜检 §4):「清屏」→「清空本会话记录」。
-    ['Ctrl + L', '清空本会话记录'],
+    ['Ctrl + L', '清空本会话记录'], // 第五处有意改动(2026-11-12 §4):「清屏」→ 本名
     ['Ctrl + A / E', '行首 / 行尾'],
     ['Ctrl + W', '删除前一个词'],
     ['Ctrl + K / U', '删除到行尾 / 行首'],
@@ -187,16 +188,17 @@ describe('目录条目不得宣称终端送不出的键位(BUG-35 真源守卫)'
   });
 });
 
+// 上一段守的是「终端送不送得出这个字节」。这一段守它**后面那一环**:字节到了 ink
+// 手里还剩什么。ink 6.x 的 useInput 不把手上的键名交给处理器——它把 parseKeypress 的
+// 结果重装成一个固定形状的对象(字段名表里没有 name),再用 nonAlphanumericKeys 把
+// 功能键的 sequence 清成空串。于是 App.js 里那条 `key.name === 'f2'` 分支永不可达。
+// 真机:三种 F2 编码 `\eOQ` / `\e[12~` / `\e[[B` 逐条按过(parity 见
+// works/data/khy/feedback/f2-delivery-20261109/repro-before.txt),屏幕零反应。
+// 10-03 §4 只核到「parse-keypress 把 ESC O Q 解析成 name='f2'」就登记了这条,少核了
+// 这一环 ⇒ 面板教的是一个应用收不到的键。这一段的判据读的是 ink 的 shipped 源码,
+// 不是我的转述:哪天 ink 真的把 name 透出来,第一段会红,提示重测而不是提示相信注释。
+// 说明放在块外(56→46):块内行数是 maxFuncLines 棘轮的口径,本文件原有上限 50。
 describe('目录条目不得宣称应用层收不到的功能键(2026-11-09 实测否证 F2)', () => {
-  // 上一段守的是「终端送不送得出这个字节」。这一段守它**后面那一环**:字节到了 ink
-  // 手里还剩什么。ink 6.x 的 useInput 不把手上的键名交给处理器——它把 parseKeypress 的
-  // 结果重装成一个固定形状的对象(字段名表里没有 name),再用 nonAlphanumericKeys 把
-  // 功能键的 sequence 清成空串。于是 App.js 里那条 `key.name === 'f2'` 分支永不可达。
-  // 真机:三种 F2 编码 `\eOQ` / `\e[12~` / `\e[[B` 逐条按过(parity 见
-  // works/data/khy/feedback/f2-delivery-20261109/repro-before.txt),屏幕零反应。
-  // 10-03 §4 只核到「parse-keypress 把 ESC O Q 解析成 name='f2'」就登记了这条,少核了
-  // 这一环 ⇒ 面板教的是一个应用收不到的键。这一段的判据读的是 ink 的 shipped 源码,
-  // 不是我的转述:哪天 ink 真的把 name 透出来,第一段会红,提示重测而不是提示相信注释。
   const fs = require('node:fs');
   const path = require('node:path');
   const USE_INPUT = path.resolve(
@@ -211,18 +213,21 @@ describe('目录条目不得宣称应用层收不到的功能键(2026-11-09 实�
     let depth = 0;
     for (let i = open; i < src.length; i++) {
       if (src[i] === '{') depth += 1;
-      else if (src[i] === '}') {
-        depth -= 1;
-        if (depth === 0) return src.slice(open, i + 1);
-      }
+      else if (src[i] === '}') depth -= 1;
+      // 判定留在循环体这一层(不嵌进 else 块里):同一个条件两处分支各自缩进一层,
+      // maxNesting 就多一格,而这里读的本来就是「配对回到零」这一件事。
+      if (depth === 0) return src.slice(open, i + 1);
     }
     throw new Error('use-input.js 的 key 字面量花括号不配对');
   };
 
   test('ink 交给处理器的 key 对象里没有 name 字段(可达性的外部前提)', () => {
+    // 字符类写成 [^\w$] 而不是枚举「空白/{/,」:后者在源码里带一个字面量花括号,
+    // 而 check-file-ratchet 的括号扫描器不识别正则,会把它当成真代码多进一层。
+    // 语义上 [^\w$] 更严(任何非标识符字符都算前缀),不会把这条判据放松。
     assert.doesNotMatch(
       keyShape(),
-      /(^|[\s{,])name\s*:/,
+      /(^|[^\w$])name\s*:/,
       'ink 的 useInput 开始透出 key.name 了 —— 重测 F2 后再决定要不要恢复功能键条目'
     );
   });

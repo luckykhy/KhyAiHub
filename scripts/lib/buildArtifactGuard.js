@@ -45,7 +45,7 @@ const RULES = Object.freeze([
     // Scope moved from apps/khy-mobile/android/ (ghost endpoint, isolated per
     // [DESIGN-ARCH-120] §五) to the surviving Flutter app. The rule is generic
     // Gradle regenerable-output detection; it applies to any android project.
-    scopes: Object.freeze(['delivery/mobile/khy-os-client-app/android/']),
+    scopes: Object.freeze(['delivery/channel/mobile/khy-os-client-app/android/']),
     dirs: Object.freeze(['build', '.gradle', '.cxx', 'intermediates', 'outputs']),
     exts: Object.freeze(['.apk', '.aab', '.aar', '.dex', '.ap_', '.hprof']),
     why: 'Gradle 每次构建重新生成；APK/AAB 只应作为 CI artifact 上传',

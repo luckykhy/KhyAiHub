@@ -10,7 +10,7 @@
 const path = require('path');
 
 const { getBuiltInAgents } = require('../../src/agents/builtInAgents');
-const gate = require('../../../../scripts/ci/check-version-sync.js');
+const gate = require('../../../../../scripts/ci/check-version-sync.js');
 
 function liveG1Files() {
   const groups = gate.VERSION_GROUPS || [];

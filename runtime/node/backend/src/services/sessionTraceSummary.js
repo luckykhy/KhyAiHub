@@ -242,16 +242,11 @@ function renderSessionSummaryMarkdown(summary) {
 
 function writeSessionSummary(sessionId, summary, outDir) {
   const safeSessionId = String(sessionId || 'session').replace(/[^a-zA-Z0-9._-]/g, '_');
-  // Was path.join(process.cwd(), '.khy', 'audit', 'summaries') — cwd-relative,
-  // so the same session produced summaries in two different trees depending on
-  // where the command was run from. Resolved through dataHome now.
-  const targetDir = outDir || (() => {
-    try {
-      return require('../utils/dataHome').getDataDir('audit', 'summaries');
-    } catch {
-      return path.join(process.cwd(), '.khy', 'audit', 'summaries');
-    }
-  })();
+  // cwd-relative '.khy' forked the tree — the same session got summaries under
+  // whichever directory the command happened to run from. dataHome is the one
+  // resolver, so there is a single audit root (no root-level .khy shadow dir).
+  const { getDataDir } = require('../utils/dataHome');
+  const targetDir = outDir || getDataDir('audit', 'summaries');
   _ensureDir(targetDir);
 
   const jsonPath = path.join(targetDir, `${safeSessionId}.json`);

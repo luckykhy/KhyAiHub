@@ -88,7 +88,7 @@ describe('影子副本判定：数字按边界匹配', () => {
 describe('排除规则：前缀通配必须落到路径段上', () => {
   test('`**/test/**` 必须命中嵌套目录里的测试文件', () => {
     // 曾把 `**/test/**` 当普通前缀做 startsWith —— 永不成立，于是测试里的假端口被当成真矛盾。
-    assert.equal(guard.isExcluded('delivery/web/ai-frontend/test/backendDiscovery.test.mjs', ['**/test/**']), true);
+    assert.equal(guard.isExcluded('delivery/channel/web/ai-frontend/test/backendDiscovery.test.mjs', ['**/test/**']), true);
     assert.equal(guard.isExcluded('runtime/node/backend/tests/x.test.js', ['**/tests/**']), true);
   });
 

@@ -1,6 +1,6 @@
 {
   "$note": "发布源卫生豁免：只允许 具体文件 + 完整匹配值，禁止整目录/整模式豁免（会掩未来的泄漏）。每条须带 reason 与到期复核。",
-  "updated": "2026-10-02",
+  "updated": "2026-11-20",
   "exemptions": [
     {
       "file": "scripts/tests/releaseHygiene.test.js",
@@ -241,6 +241,192 @@
       "match": "sk-decomposition",
       "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
       "until": "2027-10-02"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/ACCEPTANCE-PROGRESS.html",
+      "match": "349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974",
+      "reason": "APK 签名证书 SHA-256（apksigner verify 交付物指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/ACCEPTANCE-PROGRESS.html",
+      "match": "7C6A2520591BA8FCFFEC6B8169E1F62AD7294EE382A52121B9E8CD7F5F8F97BB",
+      "reason": "APK 签名证书 SHA-256（apksigner verify 交付物指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/HANDOFF.html",
+      "match": "349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974",
+      "reason": "APK 签名证书 SHA-256（apksigner verify 交付物指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/HANDOFF.html",
+      "match": "97E67D1B4A781CD1B95F0A2BD587B73FB01ABA5C160ABB45EEB11AFFDD649C36",
+      "reason": "APK 签名证书 SHA-256（apksigner verify 交付物指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/shell/AdbTlsCertificate.kt",
+      "match": "FC6DA2D0A7BBEB3B2A4872BEE9FD83C998B7F8C21FB99851EB4DA151573E3FFD",
+      "reason": "证书 CN 指纹（文档注释里的证书主体示例，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/shell/Spake2.kt",
+      "match": "5ada7e4bf6ddd9adb6626d32131c6b5c51a1e347a3478f53cfcf441b88eed12e",
+      "reason": "SPAKE2 测试向量 POINT_M/N（Ed25519 曲线点，published test vectors）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/shell/Spake2.kt",
+      "match": "10e3df0ae37d8e7a99b5fe74b44672103dbddcbd06af680d71329a11693bc778",
+      "reason": "SPAKE2 测试向量 POINT_M/N（Ed25519 曲线点，published test vectors）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/lib/core/services/bridge_link_tls.dart",
+      "match": "6653449d3fb9a286a22458757f2433e3aa158803eb30178ee69779c7294e318a",
+      "reason": "PC 自签证书 sha256(der) pin（文件注释自述；证书指纹非私钥）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/scripts/adb-pairing-common.js",
+      "match": "5ada7e4bf6ddd9adb6626d32131c6b5c51a1e347a3478f53cfcf441b88eed12e",
+      "reason": "SPAKE2 测试向量 POINT_M/N（与 Spake2.kt 同值，published test vectors）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/scripts/adb-pairing-common.js",
+      "match": "10e3df0ae37d8e7a99b5fe74b44672103dbddcbd06af680d71329a11693bc778",
+      "reason": "SPAKE2 测试向量 POINT_M/N（与 Spake2.kt 同值，published test vectors）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/NetCaptureCoreTest.java",
+      "match": "sk-abcdefgh1234",
+      "reason": "脱敏测试假 key（测试断言其被掩码，非真实凭据）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/NetCaptureCoreTest.java",
+      "match": "sk-abcdefgh12345678",
+      "reason": "脱敏测试假 key（测试断言其被掩码，非真实凭据）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/shell/AdbAuthKeyTest.kt",
+      "match": "-----BEGIN PRIVATE KEY-----",
+      "reason": "PEM 头尾字符串（测试断言 PEM 结构，非密钥材料）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/shell/AdbAuthKeyTest.kt",
+      "match": "-----END PRIVATE KEY-----",
+      "reason": "PEM 头尾字符串（测试断言 PEM 结构，非密钥材料）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/10_规范/registry/FEATURE-OWNERSHIP.json",
+      "match": "691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a",
+      "reason": "provenance commit SHA（登记笔记里的溯源标识，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/10_规范/registry/SOURCING-PROVENANCE.json",
+      "match": "6E273AB0E991C4E79BC8B1BBB9B9DD739CCAC1A8712A541A214078886B7B790F",
+      "reason": "provenance commit/APK SHA（溯源登记，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/10_规范/registry/SOURCING-PROVENANCE.json",
+      "match": "691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a",
+      "reason": "provenance commit/APK SHA（溯源登记，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-198] khyos对话错误族-历史轨迹复盘与修复计划.html",
+      "match": "sk-proj-abcdefghijklmnop",
+      "reason": "文档中的字母序假 key（sk-proj-abcdefghijklmnop，失败数据示例）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型.html",
+      "match": "6E273AB0E991C4E79BC8B1BBB9B9DD739CCAC1A8712A541A214078886B7B790F",
+      "reason": "Shizuku 官方 release APK 的 SHA-256（公开资产指纹）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-212] khyos 自举提权代理-完全脱离Shizuku.html",
+      "match": "FC6DA2D0A7BBEB3B2A4872BEE9FD83C998B7F8C21FB99851EB4DA151573E3FFD",
+      "reason": "adb 指纹 / 证书 CN（公开标识）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "runtime/node/backend/vendor/android-agent-kit/SOURCE.html",
+      "match": "691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a",
+      "reason": "归档包 zip SHA-256（版本锁定指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "runtime/node/backend/vendor/android-agent-kit/SOURCE.html",
+      "match": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "reason": "归档包 zip SHA-256（版本锁定指纹，公开信息）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "works/design/khy-mascot/README.html",
+      "match": "a3416e1cf654e7d4f5e75f116cec2c3f0a14501a77d30c2f6068bbda178de388",
+      "reason": "与上游比对的 sha256（公开哈希）",
+      "until": "2027-05-18"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/tool/amoo_mirror_mock_server.dart",
+      "match": "sk-abc123def456ghi789jkl012mno345pqr",
+      "reason": "Amoo 镜像 mock server 的脱敏判据素材（_buildSanitizeFixture 的示例文本；测试替身，文件自述不进 App 构建产物）",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/record/ai/audit-khy-os.md",
+      "match": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "reason": "审计文档的复现用假 token（qr-status 轮询触发的构造参数，非真实凭据）",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/record/ai/audit-khy-os.html",
+      "match": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "reason": "同上：md 的站点构建孪生（docs:build 生成物），内容随 md 派生",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "delivery/channel/mobile/khy-os-client-app/tool/amoo_mirror_mock_server.dart",
+      "match": "mirror-device-token-0001",
+      "reason": "Amoo 镜像 mock server 的假设备 token（测试替身常量，文件自述不进 App 构建产物）",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "012323232323232323232323232323232323232323232323232323232323",
+      "reason": "HTML 实体数字序列的重复模式（压缩产物里的转义串），非密钥",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "qualsSignBeforeAttributeName",
+      "reason": "React 内部属性名（quals 开头巧合命中 relay-token 形态），非 token",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "SHA-256 空串哈希（公开常量，openssl/Python 文档随处可见），非密钥",
+      "until": "2027-05-20"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "-change_this_in_production",
+      "reason": "占位符默认值（JWT_SECRET 模板串），PLACEHOLDER 规则对压缩产物形态漏放行",
+      "until": "2027-05-20"
     }
   ],
   "symlinks": []

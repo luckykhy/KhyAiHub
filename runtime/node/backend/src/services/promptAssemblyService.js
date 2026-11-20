@@ -33,8 +33,8 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
+const { resolveDataPath } = require('../utils/dataHome');
 
 // ── Cache ──
 
@@ -89,7 +89,9 @@ function computeStablePrefixHash(systemPromptText) {
 
   // Today's daily log (small excerpt for context)
   try {
-    const memoryDir = getMemoryDataDir('logs');
+    // Probe only — the year/month subdirs may not exist yet, so this must not
+    // mkdir: resolveDataPath keeps the existsSync check below meaningful.
+    const memoryDir = resolveDataPath('memory', 'logs');
     const today = new Date().toISOString().slice(0, 10);
     const logPath = path.join(
       memoryDir,
@@ -333,17 +335,6 @@ function getCacheStatus() {
 // ── Fallback ──
 
 const FALLBACK_SYSTEM_PROMPT = 'You are KHY OS, a helpful AI assistant.';
-
-// ── Path helpers ──
-
-function getMemoryDataDir(...segments) {
-  try {
-    const { getMemoryDataDir: _get } = require('../utils/dataHome');
-    return _get(...segments);
-  } catch {
-    return path.join(os.homedir(), '.khy', 'memory', ...segments);
-  }
-}
 
 module.exports = {
   buildStableSystemMessage,

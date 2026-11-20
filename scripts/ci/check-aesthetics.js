@@ -15,6 +15,9 @@
  *      语义色按 WCAG 2.2 双阈值（正文 4.5:1 / 大字与 UI 3:1）与其 bg 令牌比对。
  *      var() 链**递归解析（带环检测）** + rgba()/hex **alpha 合成**后计算相对亮度比。
  *      TUI / 桌面 / 移动不做对比度断言（底色不可静态确定或表达不同，只做存在性）。
+ *   4. 覆盖面 —— 报告本轮**真的做了对比度断言**的端与**被排除在度量之外**的端。
+ *      未度量端不参与通过/失败计数（单独一节输出）：被静默排除的人不会出现在
+ *      任何通过率里，所以「没测」必须自己说出来（aesthetics-coverage-gap）。
  *
  * 五端（tui/web/khyquant/desktop/mobile）各端本地名取法：
  *   tui      ccTheme.js 标识符（点路径按词边界）
@@ -27,7 +30,7 @@
  * 恒 exit 0、只记录不阻断（PP-3）。stage 权威是本文件的 STAGE 常量，
  * check-rollout-stage.js 会拿它跟 FEATURE-OWNERSHIP.json 的登记比对，漂移即报错。
  *
- * Usage: node scripts/ci/check-aesthetics.js [--changed]
+ * Usage: node scripts/ci/check-aesthetics.js [--changed] [--json]
  * Fixture root: KHY_AESTHETICS_ROOT=/path/to/repo node scripts/ci/check-aesthetics.js
  */
 'use strict';
@@ -41,10 +44,10 @@ const REPO_ROOT = process.env.KHY_AESTHETICS_ROOT
 
 const TOKENS_REL = 'docs/10_规范/registry/AESTHETICS-TOKENS.json';
 const TUI_THEME_REL = 'runtime/node/backend/src/cli/tui/theme/ccTheme.js';
-const WEB_THEME_REL = 'delivery/web/ai-frontend/src/styles/newapi-theme.css';
+const WEB_THEME_REL = 'delivery/channel/web/ai-frontend/src/styles/newapi-theme.css';
 const KHYQUANT_THEME_REL = 'delivery/channel/khyquant/frontend/src/styles/theme.css';
 const DESKTOP_THEME_REL = 'apps/khyos-desktop/src/renderer/theme/globals.css';
-const MOBILE_THEME_REL = 'delivery/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart';
+const MOBILE_THEME_REL = 'delivery/channel/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart';
 
 // 五端 surfaces 名册，与 AESTHETICS-TOKENS.json 的 $meta.surfaces 对应。
 const ENDS = ['tui', 'web', 'khyquant', 'desktop', 'mobile'];
@@ -71,11 +74,12 @@ const STAGE = 'S1';
 const OBSERVER_STAGES = new Set(['S1', 'S2']);
 
 const changedMode = process.argv.includes('--changed');
+const jsonMode = process.argv.includes('--json');
 
 const findings = [];
 
-function addFinding(severity, file, message, line) {
-  findings.push({ severity, rule: RULE, file, line: line || 1, message });
+function addFinding(severity, file, message, line, id) {
+  findings.push({ severity, rule: RULE, id: id || null, file, line: line || 1, message });
 }
 
 /** S1/S2 只记录不阻断：error 一律降级为 warning（PP-3）。 */
@@ -297,6 +301,8 @@ function checkCrossEnd(data) {
 // 取值经 var() 链递归解析（带环检测）+ alpha 合成后，按 WCAG 2.2 相对亮度比计算。
 // 不达标判 warning（advisory / S1）。
 
+const contrastRuns = new Map(); // end -> { files: Set, comparisons: number }
+
 const WEB_CONTRAST_PAIRS = [
   { fg: '--khy-text-main', bg: '--khy-bg-main', min: 4.5, kind: 'body' },
   { fg: '--khy-text-strong', bg: '--khy-bg-main', min: 4.5, kind: 'body' },
@@ -428,7 +434,13 @@ function contrastRatio(fg, bg) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function runContrast(cssRel, pairs, themeBlocks) {
+function runContrast(end, cssRel, pairs, themeBlocks) {
+  let run = contrastRuns.get(end);
+  if (!run) {
+    run = { files: new Set(), comparisons: 0 };
+    contrastRuns.set(end, run);
+  }
+  run.files.add(cssRel);
   for (const { label, map } of themeBlocks) {
     for (const pair of pairs) {
       const fgRaw = resolveToken(pair.fg, map, new Set());
@@ -441,6 +453,7 @@ function runContrast(cssRel, pairs, themeBlocks) {
       const bgEff = bgColor.a < 1 ? composite(bgColor, { r: 1, g: 1, b: 1, a: 1 }) : bgColor;
       const fgEff = fgColor.a < 1 ? composite(fgColor, bgEff) : fgColor;
       const ratio = contrastRatio(fgEff, bgEff);
+      run.comparisons += 1;
       if (ratio + 1e-9 < pair.min) {
         addFinding('warning', cssRel,
           `对比度不足（${label}，${pair.kind === 'body' ? '正文' : '大字/UI'}）：`
@@ -453,7 +466,7 @@ function runContrast(cssRel, pairs, themeBlocks) {
 function checkContrast() {
   const webText = readText(WEB_THEME_REL);
   if (webText) {
-    runContrast(WEB_THEME_REL, WEB_CONTRAST_PAIRS, [
+    runContrast('web', WEB_THEME_REL, WEB_CONTRAST_PAIRS, [
       // Web 主题表的两个令牌块写作 `html:root` / `html.dark:root`（见 newapi-theme.css
       // 顶部的注释：EP 的样式按需注入且特异性更高，本表必须抬过它）。
       // 正则要同时接受 `:root` 与 `html:root` 两种写法 —— 守卫认不出块 = 静默不检查，
@@ -464,10 +477,59 @@ function checkContrast() {
   }
   const khyText = readText(KHYQUANT_THEME_REL);
   if (khyText) {
-    runContrast(KHYQUANT_THEME_REL, KHYQUANT_CONTRAST_PAIRS, [
+    runContrast('khyquant', KHYQUANT_THEME_REL, KHYQUANT_CONTRAST_PAIRS, [
       { label: 'khyquant :root', map: declarations(blockBody(khyText, /^\s*:root\s*\{/m)) },
     ]);
   }
+}
+
+// ── 覆盖面读数 ──────────────────────────────────────────────────────────────
+//
+// 「测了哪些端」必须由**真的算过对比度**推出，而不是由 CONTRAST_ENDS 宣称。
+// 令牌块认不出（选择器改名）、令牌全缺、颜色不可静态解析，都会让某个端
+// 实际比较 0 次 —— 那种端算「未度量」，不能算通过。
+
+function computeCoverage() {
+  const measured = [];
+  const unmeasured = [];
+  const measuredFiles = {};
+  for (const end of ENDS) {
+    const run = contrastRuns.get(end);
+    const didMeasure = CONTRAST_ENDS.includes(end) && run && run.comparisons > 0;
+    if (didMeasure) {
+      measured.push(end);
+      measuredFiles[end] = run.files.size;
+    } else {
+      unmeasured.push(end);
+    }
+  }
+  return { measured, unmeasured, measuredFiles };
+}
+
+function coverageFindingMessage(coverage) {
+  const measuredText = coverage.measured.length
+    ? coverage.measured.map((end) => `${end} (${coverage.measuredFiles[end]} 个令牌文件)`).join('、')
+    : '无';
+  if (coverage.unmeasured.length === 0) {
+    return `已度量 ${measuredText} —— 五端均有对比度/色板守卫。`;
+  }
+  return `已度量 ${measuredText}；未度量 ${coverage.unmeasured.join(' / ')}`
+    + ' —— 这些端的对比度与色板无守卫（DESIGN-FE-012 已声明缺口）。';
+}
+
+function checkCoverage() {
+  const coverage = computeCoverage();
+  addFinding('warning', TOKENS_REL, coverageFindingMessage(coverage), 1, 'aesthetics-coverage-gap');
+  return coverage;
+}
+
+function coverageLine(coverage) {
+  const measuredText = coverage.measured.length
+    ? coverage.measured.map((end) => `${end} (${coverage.measuredFiles[end]} 个令牌文件)`).join('、')
+    : '无';
+  const unmeasuredText = coverage.unmeasured.length ? coverage.unmeasured.join(' / ') : '无';
+  return `已度量 ${measuredText}｜未度量 ${unmeasuredText}`
+    + '（未度量端不参与通过/失败；DESIGN-FE-012 已声明缺口）';
 }
 
 function main() {
@@ -508,18 +570,37 @@ function main() {
     }
   }
 
+  const coverage = checkCoverage();
+
   let exitCode = 0;
   let warnCount = 0;
   let infoCount = 0;
+  const rendered = [];
   for (const item of findings) {
     const effective = severityFor(item.severity);
     if (effective === 'error') exitCode = 1;
     if (effective === 'warning') warnCount += 1;
     if (effective === 'info') infoCount += 1;
     const label = effective === 'error' ? 'ERROR' : effective === 'info' ? 'INFO' : 'WARN ';
-    process.stdout.write(`  ${label} ${item.file}:${item.line} — ${item.message}\n`);
+    rendered.push({ ...item, severity: effective });
+    if (!jsonMode) {
+      process.stdout.write(`  ${label} ${item.file}:${item.line} — ${item.message}\n`);
+    }
   }
 
+  if (jsonMode) {
+    process.stdout.write(`${JSON.stringify({
+      rule: RULE,
+      stage: STAGE,
+      checked,
+      findings: rendered,
+      coverage: { measured: coverage.measured, unmeasured: coverage.unmeasured },
+      summary: { warnings: warnCount, infos: infoCount, exitCode },
+    }, null, 2)}\n`);
+    process.exit(exitCode);
+  }
+
+  process.stdout.write(`\n[aesthetics] 覆盖面：${coverageLine(coverage)}\n`);
   process.stdout.write(
     `\n[aesthetics] checked=${checked} findings=${findings.length} ` +
       `(warn=${warnCount} info=${infoCount}) stage=${STAGE} exit=${exitCode}\n`

@@ -7,13 +7,13 @@
  * Verifies the wiring between each of the client surfaces and the Node
  * backend, so a runtime 404 / dead call is caught statically before it ships:
  *
- *   WEB    delivery/web/ai-frontend      REST /api/*  (axios)  → backend route namespaces
+ *   WEB    delivery/channel/web/ai-frontend      REST /api/*  (axios)  → backend route namespaces
  *   TUI    runtime/node/backend/src/cli  in-process service-layer `require` (CH-2)
  *   DESKTOP delivery/desktop/khyos-desktop + electron/  IPC channels + endpoint source
  *
  * (MOBILE direction removed: apps/khy-mobile was an isolated ghost endpoint with
  *  no source — see [DESIGN-ARCH-120] §五. The surviving mobile client is the
- *  Flutter app delivery/mobile/khy-os-client-app, which has no /api/* web source to audit.)
+ *  Flutter app delivery/channel/mobile/khy-os-client-app, which has no /api/* web source to audit.)
  *
  * Judgement per direction (see AGENTS.md 五通道决策矩阵):
  *   - WEB: every requested `/api/<ns>...` namespace must be a namespace
@@ -374,7 +374,7 @@ function main() {
 
   // mobile direction removed: apps/khy-mobile is an isolated ghost endpoint
   // (0 git-tracked files, source lost — see [DESIGN-ARCH-120] §五). The surviving
-  // mobile client is the Flutter app delivery/mobile/khy-os-client-app, which has no /api/*
+  // mobile client is the Flutter app delivery/channel/mobile/khy-os-client-app, which has no /api/*
   // web source to audit here.
 
   let tui = { label: 'TUI (cli service-layer require)', gaps: [], warnings: [], matched: [], total: 0, skipped: true };

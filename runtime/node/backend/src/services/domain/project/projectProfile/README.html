@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>projectProfile — khy-os 的项目自我认知 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>project<span class="sep">›</span>projectProfile<span class="sep">›</span>projectProfile — khy-os 的项目自我认知</div>
+      <header class="hero reveal"><h1>projectProfile — khy-os 的项目自我认知</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#projectprofile-khy-os-的项目自我认知">projectProfile — khy-os 的项目自我认知</a></li><li class="lvl-2"><a href="#为什么有这一层">为什么有这一层</a></li><li class="lvl-2"><a href="#内容">内容</a></li><li class="lvl-2"><a href="#两条设计约束">两条设计约束</a></li><li class="lvl-2"><a href="#消费方">消费方</a></li><li class="lvl-2"><a href="#重新生成">重新生成</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="projectprofile-khy-os-的项目自我认知">projectProfile — khy-os 的项目自我认知<a class="anchor" href="#projectprofile-khy-os-的项目自我认知" aria-label="锚点">#</a></h1>
+<p><strong>单一真源。</strong> 改这一处，手机上的 AI 和 PC 上的 AI 同时改对自己的认知。</p>
+<h2 id="为什么有这一层">为什么有这一层<a class="anchor" href="#为什么有这一层" aria-label="锚点">#</a></h2>
+<p>跑在手机上的 AI 和跑在 PC 上的 AI，系统提示原本都是<strong>项目盲</strong>的：</p>
+<ul><li>手机侧 <code>delivery/channel/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart</code> 只说</li></ul>
+<p>「你是 khy-os AI 助手，运行在用户的 Android 手机上」</p>
+<ul><li>PC 侧 <code>services/domain/network/stepneoCloud/agentLoop.js</code> 连项目名都没有，</li></ul>
+<p>只有「你是一个能在用户手机上执行操作的智能体」</p>
+<p>它们知道怎么操作设备，却不知道自己在维护什么、<strong>什么不许做</strong>。一个不知道 R1/R2 的<br>agent 下次就可能自动 commit，或把密钥写进源码——那不是它坏，是没人告诉它。</p>
+<h2 id="内容">内容<a class="anchor" href="#内容" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>段</th><th>作用</th></tr></thead><tbody><tr><td><code>PROJECT_PROFILE.layout</code></td><td>结构速查，指路 <code>works/record/ai/MAP.md</code></td></tr><tr><td><code>PROJECT_PROFILE.redLines</code></td><td>R1–R4，破线必须停手问人</td></tr><tr><td><code>PROJECT_PROFILE.behaviorRules</code></td><td>B3/B4/B7/B8，只收与「AI 动手」直接相关的</td></tr><tr><td><code>PROJECT_PROFILE.phone</code></td><td>手机侧特有：工作目录绑定、桥的事实</td></tr><tr><td><code>readVersionTracks(repoRoot)</code></td><td>运行时读三条版本轨道，<strong>不写死</strong></td></tr><tr><td><code>renderProfileSection({...})</code></td><td>渲染成系统提示的一段</td></tr></tbody></table>
+<h2 id="两条设计约束">两条设计约束<a class="anchor" href="#两条设计约束" aria-label="锚点">#</a></h2>
+<p><strong>版本号不写死在 <code>PROJECT_PROFILE</code> 里。</strong> 硬编码会和<br><code>scripts/ci/check-copyright-readiness.js</code> 的五处一致性打架，而且必然过期。<br>一律 <code>readVersionTracks()</code> 从真源读；一致性校验的真源是<br><code>scripts/ci/check-version-sync.js</code>，本模块只取每条轨道一个代表源用于展示。</p>
+<p><strong>真源放后端侧，不放 <code>delivery/</code>。</strong> node 运行时反向 require 交付面会新增<br><code>scripts/ci/check-repo-layout.js</code> 的 <code>cross-layer-require</code> 违规。生成脚本是构建期工具，<br>不受该约束（同 <code>scripts/brand/build-brand-assets.js</code> 往 <code>runtime/node/backend</code> 写产物的路子）。</p>
+<h2 id="消费方">消费方<a class="anchor" href="#消费方" aria-label="锚点">#</a></h2>
+<ol><li><code>services/domain/network/stepneoCloud/agentLoop.js</code> —— PC 侧云模型 loop 的系统提示</li><li><code>scripts/project-profile/build-project-profile.js</code> —— 生成</li></ol>
+<p><code>delivery/channel/mobile/khy-os-client-app/lib/core/config/project_profile.g.dart</code><br>   （手机侧系统提示 + 设置页「项目」区块）</p>
+<h2 id="重新生成">重新生成<a class="anchor" href="#重新生成" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node scripts/project-profile/build-project-profile.js</code></pre>
+<p>改完本单元必须重跑，否则 Dart 侧拿到的是旧画像。产物文件头部标了「勿手改」。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/project/metaplan/README.html"><div class="dir">← 上一篇</div><div class="ttl">metaplan — 元规划与动态约束注入（D2 功能单元）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/project/README.html"><div class="dir">下一篇 →</div><div class="ttl">project — 工作流、蓝图、一致性体检与元计划（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/project/projectProfile/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

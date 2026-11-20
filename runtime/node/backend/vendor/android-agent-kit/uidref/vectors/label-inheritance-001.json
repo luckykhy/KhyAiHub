@@ -1,0 +1,199 @@
+{
+  "id": "label-inheritance-001",
+  "title": "标签继承：匿名可点行的文字在子孙上",
+  "why": "安卓里可点的行几乎总是匿名 LinearLayout，text/content-desc/resource-id 全空，文字在子 TextView 上。不继承就得到空标签，模型无法区分行与行。",
+  "cases": [
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"><node index=\"0\" text=\"Wi-Fi\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"已连接\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></hierarchy>",
+      "why": "clickable 行继承两段子孙文本",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "Wi-Fi · 已连接",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"><node index=\"0\" text=\"Wi-Fi\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"Wi-Fi\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></hierarchy>",
+      "why": "重复文本去重",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "Wi-Fi",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.ScrollView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"true\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,2000]\"><node index=\"0\" text=\"整页文字一\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"整页文字二\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></hierarchy>",
+      "why": "scrollable 容器**不**继承——它的标签等于整页内容，是噪声",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "scroll",
+            "label": "",
+            "bounds": [
+              0,
+              0,
+              1080,
+              2000
+            ],
+            "center": [
+              540,
+              1000
+            ],
+            "clickable": false,
+            "long_clickable": false,
+            "scrollable": true,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"><node index=\"0\" text=\"A\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"B\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"C\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"D\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"E\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></hierarchy>",
+      "why": "继承上限 4 段，防爆",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "A · B · C · D",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"无障碍描述\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></hierarchy>",
+      "why": "子孙缺 text 时回退 content-desc",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "无障碍描述",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    },
+    {
+      "in": "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"true\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][1080,200]\"><node index=\"0\" text=\"孙\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.LinearLayout\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"><node index=\"0\" text=\"深一层\" resource-id=\"\" class=\"android.widget.TextView\" package=\"com.example\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickable=\"false\" enabled=\"true\" focusable=\"false\" focused=\"false\" scrollable=\"false\" long-clickable=\"false\" password=\"false\" selected=\"false\" bounds=\"[0,0][100,100]\"/></node></node></hierarchy>",
+      "why": "隔代也算子孙（不限直接子节点）",
+      "out": {
+        "package": "com.example",
+        "rotation": 0,
+        "elements": [
+          {
+            "ref": "e1",
+            "role": "item",
+            "label": "孙 · 深一层",
+            "bounds": [
+              0,
+              0,
+              1080,
+              200
+            ],
+            "center": [
+              540,
+              100
+            ],
+            "clickable": true,
+            "long_clickable": false,
+            "scrollable": false,
+            "editable": false,
+            "checked": false,
+            "disabled": false,
+            "password": false
+          }
+        ]
+      }
+    }
+  ]
+}

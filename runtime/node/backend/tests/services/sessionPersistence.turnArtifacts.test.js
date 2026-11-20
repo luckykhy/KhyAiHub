@@ -13,8 +13,8 @@
  *      restore 白名单照旧剥离新字段。
  *
  * 隔离：在 require 持久化模块**之前**把 KHY_PROJECT_DATA_HOME 钉到临时目录
- * （dataHome 首次解析即缓存）。数据家目录放在临时根的 .khy 子目录下，让
- * dataHome 的 khy-Trajectory 可见别名也落在临时根内，after 整树清理零残留。
+ * （dataHome 首次解析即缓存）。数据家整个落在临时根内，after 整树清理零残留
+ * （2026-11-19 起不再有 khy-Trajectory 别名这一层副作用）。
  *
  * 运行: node --test tests/services/sessionPersistence.turnArtifacts.test.js
  */

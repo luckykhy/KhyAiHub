@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>services/domain/git — Git 分支领域单元 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>git<span class="sep">›</span>services/domain/git — Git 分支领域单元</div>
+      <header class="hero reveal"><h1>services/domain/git — Git 分支领域单元</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#services-domain-git-git-分支领域单元">services/domain/git — Git 分支领域单元</a></li><li class="lvl-2"><a href="#为什么拆成两件">为什么拆成两件</a></li><li class="lvl-2"><a href="#错误码-桌面端-i18n">错误码 ↔ 桌面端 i18n</a></li><li class="lvl-2"><a href="#复用既有资产">复用既有资产</a></li><li class="lvl-2"><a href="#边界">边界</a></li><li class="lvl-2"><a href="#测试">测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="services-domain-git-git-分支领域单元">services/domain/git — Git 分支领域单元<a class="anchor" href="#services-domain-git-git-分支领域单元" aria-label="锚点">#</a></h1>
+<p>Git 分支的<strong>判据</strong>与<strong>执行</strong>分离成一对件，后端、CLI、桌面端三方共用同一份判据。</p>
+<table><thead><tr><th>文件</th><th>角色</th><th>IO</th></tr></thead><tbody><tr><td><code>branchGuard.js</code></td><td>前置判据纯叶子</td><td>零 IO · 确定性 · 绝不抛</td></tr><tr><td><code>gitBranchService.js</code></td><td>执行层（list / switch / create）</td><td>独占 IO（execFileSync 跑 git + 探测 <code>.git</code> 标志）</td></tr></tbody></table>
+<h2 id="为什么拆成两件">为什么拆成两件<a class="anchor" href="#为什么拆成两件" aria-label="锚点">#</a></h2>
+<p>判定「这次切换会不会弄丢我的改动」需要采集大量仓库状态，但那采集是 IO；<br>而判定规则本身（哪些情况算阻断、错误码怎么翻译）是纯逻辑。混在一起会让规则<br>无法被单独测试，也让三方调用方各自复制一遍判定。故：规则在叶子，采集在壳。</p>
+<h2 id="错误码-桌面端-i18n">错误码 ↔ 桌面端 i18n<a class="anchor" href="#错误码-桌面端-i18n" aria-label="锚点">#</a></h2>
+<p><code>branchGuard</code> 的错误码与 <code>apps/khyos-desktop/src/renderer/i18n/zh-CN.json</code> 的<br><code>git.branchSwitcher.error.*</code> 一一对应：</p>
+<table><thead><tr><th>错误码</th><th>桌面端 i18n 键</th></tr></thead><tbody><tr><td><code>invalidBranchName</code></td><td><code>git.branchSwitcher.error.invalidBranchName</code></td></tr><tr><td><code>branchAlreadyExists</code></td><td><code>git.branchSwitcher.error.branchAlreadyExists</code></td></tr><tr><td><code>targetBranchNotFound</code></td><td><code>git.branchSwitcher.error.targetBranchNotFound</code></td></tr><tr><td><code>conflictsPresent</code></td><td><code>git.branchSwitcher.error.conflictsPresent</code></td></tr><tr><td><code>operationInProgress</code></td><td><code>git.branchSwitcher.error.operationInProgress</code></td></tr><tr><td><code>branchInOtherWorktree</code></td><td><code>git.branchSwitcher.error.branchInOtherWorktree</code></td></tr><tr><td><code>dirtyWorkingTree</code></td><td><code>git.branchSwitcher.blockedDialog.*</code> + <code>error.trackedOverwrite</code> / <code>error.untrackedOverwrite</code></td></tr><tr><td><code>unknown</code></td><td><code>git.branchSwitcher.error.unknown</code></td></tr></tbody></table>
+<p>后端 <code>_MESSAGE</code> 表提供中文兜底，供无 i18n 的调用方（工具层 / CLI）使用——<br><strong>任何路径都不吐 git 的英文 stderr</strong>。</p>
+<h2 id="复用既有资产">复用既有资产<a class="anchor" href="#复用既有资产" aria-label="锚点">#</a></h2>
+<ul><li>git 可执行文件解析 → <code>services/gitExecutableDetector</code>（Windows 优先 Git Bash），</li></ul>
+<p>与 <code>gitContextService</code> / <code>tools/gitStatus.js</code> 同一条路径，不另起一套。</p>
+<ul><li>不复用 <code>gitContextService</code>：那份是<strong>被动观测</strong>（给系统提示注入上下文），</li></ul>
+<p>本单元是<strong>主动操作</strong>（切分支会改工作树），语义不同层。</p>
+<h2 id="边界">边界<a class="anchor" href="#边界" aria-label="锚点">#</a></h2>
+<ul><li>覆盖风险只覆盖两类：本地已跟踪的修改、会被目标分支覆盖的未跟踪文件。</li></ul>
+<p>stash 后的改动不在判据内。</p>
+<ul><li><code>force</code> 不在判据内，是执行层最后手段，须由调用方在用户显式确认后传入。</li><li>本单元无 env 门控：分支读写是产品基座能力。</li></ul>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> runtime/node/backend/src/services/domain/git/branchGuard.test.js
+node --<span class="hljs-built_in">test</span> runtime/node/backend/src/services/domain/git/gitBranchService.test.js</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/gateway-stuff/README.html"><div class="dir">← 上一篇</div><div class="ttl">gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/maintenance/evoEngine/README.html"><div class="dir">下一篇 →</div><div class="ttl">domain/maintenance/evoEngine — 自举创世引擎（需求内源发生 → 沙箱验证 → 受控热载）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/git/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

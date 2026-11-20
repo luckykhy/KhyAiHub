@@ -5,12 +5,14 @@
  * Every tool execution is logged with parameters, result, permission
  * decision, and elapsed time. Supports querying, per-module stats and rotation.
  *
- * Record shape (8 mandatory fields, one JSON object per line):
+ * Record shape (8 mandatory fields + optional permissionRule, one JSON object per line):
  *   timestamp  ISO 8601
  *   tool       tool / operation name
  *   params     sanitized — SENSITIVE_KEYS → '***', `_`-prefixed keys dropped
  *   result     { success: boolean, error?: first sentence, <= ERROR_CHARS }
  *   permission allow | deny | allow-session | allow-always | unknown
+ *   permissionRule  which branch produced `permission` (risk-safe, bypass-mode,
+ *                   user-allow-always, …); absent on pre-2026-11 records
  *   elapsed    ms
  *   user       OS user
  *   sessionId  per-process session id
@@ -86,6 +88,9 @@ function _file() {
  * @param {object} [entry.params] - Parameters (secrets masked here, not by the caller)
  * @param {object} [entry.result] - Execution result summary ({ success, error })
  * @param {string} [entry.permission] - Permission decision (allow/deny/allow-session/allow-always)
+ * @param {string} [entry.permissionRule] - The rule/branch that produced the decision
+ *        (e.g. risk-safe, read-only-default, user-allow-always). Optional: older
+ *        records and non-permission call sites simply have no rule.
  * @param {number} [entry.elapsed] - Execution time in ms
  * @param {string} [entry.user] - User identifier
  * @param {string} [entry.sessionId] - Session identifier
@@ -104,6 +109,7 @@ function logToolExecution(entry) {
     params: _sanitizeParams(entry.params),
     result: _summarizeResult(entry.result),
     permission: entry.permission || 'unknown',
+    permissionRule: entry.permissionRule || null,
     elapsed: entry.elapsed || 0,
     user: entry.user || process.env.USER || process.env.USERNAME || 'unknown',
     sessionId: entry.sessionId || _sessionId,

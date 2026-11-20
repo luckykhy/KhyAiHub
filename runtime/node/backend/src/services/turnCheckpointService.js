@@ -25,8 +25,10 @@
  *   - 诚实不假装 (honest, no fake success): every path returns a structured
  *     `{ success, ... }` and never throws into the caller.
  *
- * Storage: per-turn manifest JSON under the app data home
- * (`<appHome>/turn_checkpoints/<turnId>.json`). turnId is generated as
+ * Storage: per-turn manifest JSON under the unified data home, resolved via
+ * getDataDir('turn_checkpoints') (DATA_PATHS maps it to
+ * T1-domains/sessions/turn_checkpoints) — no flat literal under the app
+ * home. turnId is generated as
  * `turn-<timestamp>-<rand>` by `beginTurn`. The manifest is durable so a
  * crash between endTurn and rollbackTurn still has the pre-edit contents to
  * restore from (the files themselves may have been overwritten, but the
@@ -37,24 +39,25 @@
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { getDataDir, resolveDataPath } = require('../utils/dataHome');
 
-// Lazy-resolve the app data home (portable-aware, isolated by KHY_APP_HOME /
-// KHY_DATA_HOME in tests). Resolved at call time, not module load, so the
-// established test pattern (delete require.cache + pin env) keeps working.
-function _appHome() {
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
-  } catch {
-    return path.join(os.homedir(), '.khyquant');
-  }
+// turn_checkpoints used to be a flat literal under the app home, whose
+// fallback hardcoded ~/.khyquant — a fourth divergent data root. It now
+// resolves through the data-home resolver like every other registered name.
+// Resolution stays at call time (not module load) so the established test
+// pattern (pin env + delete require.cache) keeps working.
+//
+// Probe/read side: resolveDataPath never mkdirs — listTurns relies on
+// fs.existsSync reporting real existence.
+function _turnDir() {
+  return resolveDataPath('turn_checkpoints');
 }
 
-function _turnDir() {
-  return path.join(_appHome(), 'turn_checkpoints');
+// Write side: getDataDir creates the directory before the manifest lands.
+function _ensureTurnDir() {
+  return getDataDir('turn_checkpoints');
 }
 
 function _turnPath(turnId) {
@@ -77,10 +80,6 @@ const STATUS = Object.freeze({
   ROLLEDBACK: 'rolledback',
 });
 
-function _ensureDir(dir) {
-  fs.mkdirSync(dir, { recursive: true });
-}
-
 function _readManifest(turnId) {
   try {
     return JSON.parse(fs.readFileSync(_turnPath(turnId), 'utf-8'));
@@ -90,7 +89,7 @@ function _readManifest(turnId) {
 }
 
 function _writeManifest(manifest) {
-  _ensureDir(_turnDir());
+  _ensureTurnDir();
   const tmp = _turnPath(manifest.turnId) + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(manifest, null, 2), 'utf-8');
   fs.renameSync(tmp, _turnPath(manifest.turnId));

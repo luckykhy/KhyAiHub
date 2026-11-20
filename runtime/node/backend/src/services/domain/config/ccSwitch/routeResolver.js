@@ -18,7 +18,13 @@
  * rewritten route or null when no card applies.
  */
 
-const { APPS, PROTOCOLS } = require('./constants');
+const { APPS, PROTOCOLS, cardPoolProvider } = require('./constants');
+
+// resolveCardRoute 写进 route.metadata.source 的值。proxyServer 的 Anthropic 入站
+// 放宽分支（「非 explicit/route-map 就清掉 preferredAdapter 进级联」）必须把它和
+// explicit/route-map 同等看待：卡片是用户在 UI 上为这个 app 显式激活的上游，
+// 放宽等于让 kiro/trae 等 IDE 适配器把这次请求截走。
+const CARD_ROUTE_SOURCE = 'cc-switch-card';
 
 /**
  * Map an inbound source protocol to the external app that produced it.
@@ -106,7 +112,12 @@ function resolveCardRoute(route, ctx = {}) {
   }
 
   // 4. Rewrite the route to the generic api adapter pinned to the card's pool.
-  const poolProvider = `cc-switch:${card.id}`;
+  //    池名走 constants.cardPoolProvider 单一真源：它产出 `cc_switch_<cardId>`，
+  //    落在 apiAdapter / aiGateway 三段式正则在池段认得的 [a-z0-9_-] 字符类内。
+  //    旧版这里拼 `cc-switch:<cardId>`（含冒号），池段被正则截成 'cc-switch'，
+  //    apiKeyPool.pick 精确匹配不到 key/endpoint，模型 id 还被污染成
+  //    '<cardId>:<model>' —— 卡片因此从未真正接到网关路由上。
+  const poolProvider = cardPoolProvider(card.id);
   return {
     ...route,
     adapterKey: 'api',
@@ -119,11 +130,16 @@ function resolveCardRoute(route, ctx = {}) {
     apiPoolProvider: poolProvider,
     metadata: {
       ...(route.metadata || {}),
-      source: 'cc-switch-card',
+      source: CARD_ROUTE_SOURCE,
       ccSwitchCardId: card.id,
       ccSwitchCardName: card.name,
     },
   };
 }
 
-module.exports = { resolveCardRoute, appForProtocol, appsForProtocol };
+module.exports = {
+  resolveCardRoute,
+  appForProtocol,
+  appsForProtocol,
+  CARD_ROUTE_SOURCE,
+};

@@ -3,8 +3,9 @@
 // Colocated tests for checkpointService.js.
 // child_process, gitExecutableDetector and utils/dataHome are stubbed via
 // require.cache BEFORE the target require, so no git/tar subprocess ever runs
-// and all checkpoint storage lands in os.tmpdir(). checkpointObjectStore stays
-// real so the CAS round-trip is exercised end to end.
+// and all checkpoint storage lands in os.tmpdir(). The dataHome stub short-
+// circuits getDataDir() (see below); checkpointObjectStore stays real so the
+// CAS round-trip is exercised end to end.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -101,7 +102,11 @@ require.cache[dataHomeKey] = {
   loaded: true,
   exports: {
     getDataHome: () => TMP,
-    getAppDataDir: (sub) => path.join(TMP, sub),
+    // DATA_PATHS 的档位映射在此桩里短路：getDataDir('checkpoints') 直接落
+    // TMP/checkpoints，与下面 freshProj/manifestOf 的期望同一棵树。真实档位
+    // （T1-domains/sessions/checkpoints）由 tests/workspaceCheckpointCas.test.js
+    // 用真 dataHome 覆盖。
+    getDataDir: (sub) => path.join(TMP, sub),
   },
 };
 

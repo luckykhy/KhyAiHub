@@ -8,7 +8,7 @@
     "scripts/ci/check-license-tiers.js"
   ],
   "$status": "active",
-  "$updated": "2026-09-29",
+  "$updated": "2026-11-09",
 
   "ssot": {
     "doc": "docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md",
@@ -161,52 +161,84 @@
     },
     {
       "source": "GitHub 生态调研（逐条上游见各 catalogs/<eco>.json 的 entries[].upstreamUrl；本文件为六生态总索引与跨生态去重关系，自身无 entries 数组）",
-      "localPath": "delivery/market/index.json",
+      "localPath": "works/market/index.json",
       "relationship": "reference",
       "license": null,
       "notes": "总索引行：纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。逐条上游在其指向的六个 catalogs/*.json（均已各自登记台账行）。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/zcode.json",
+      "localPath": "works/market/catalogs/zcode.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/claude-code.json",
+      "localPath": "works/market/catalogs/claude-code.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/opencode.json",
+      "localPath": "works/market/catalogs/opencode.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/mcode.json",
+      "localPath": "works/market/catalogs/mcode.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/deepseek-harness.json",
+      "localPath": "works/market/catalogs/deepseek-harness.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
     },
     {
       "source": "GitHub 生态调研（逐条上游见该文件 entries[].upstreamUrl）",
-      "localPath": "delivery/market/catalogs/aggregators.json",
+      "localPath": "works/market/catalogs/aggregators.json",
       "relationship": "reference",
       "license": null,
       "notes": "纯指针编目，不含上游代码；本行只登记编纂事实，不构成 vendored/fork，也不豁免 SOURCING-002 许可证分档；条目真正落地时另立行并更新编目 relationship。"
+    },
+    {
+      "source": "RikkaApps/Shizuku@v13.6.0 (commit b844bc491f1790c72328e1a8e5b2349f8978f0ea, release 2025-05-25) — 免 root 提权通道的协议形态与交互结论（一次提权、Binder 中转、按调用方身份鉴权、能力前置探测）",
+      "localPath": "delivery/channel/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/ElevationManager.kt",
+      "relationship": "idea",
+      "license": "Apache-2.0",
+      "versionPin": "v13.6.0 (b844bc491f1790c72328e1a8e5b2349f8978f0ea)",
+      "notes": "登记 2026-11-09（[DESIGN-ARCH-207] P-01 期 1）。**2026-11-12 人裁决后改写**：原为 adapter（调用官方分发版本的 binder），现在**完全移除官方 Shizuku 依赖**——依赖坐标、清单里的客户端 provider、内置 APK、自动安装通道一并删除，提权改由 khyos 自带的 uid-2000 代理（sidecar）提供，与 Shizuku server 同级。relationship 因此由 adapter 改为 **idea**：只取「一次提权、按调用方身份鉴权、能力前置探测、失败诚实降级」这些结论，从零实现，本仓不留任何上游文件（B-S3）。分析取证留在 [DESIGN-ARCH-211]，架构与分期在 [DESIGN-ARCH-212]，反向守卫 scripts/ci/check-no-shizuku-dependency.js 防止依赖回流。许可证说明不变：上游 Apache-2.0 附 SECTION 6 三条额外限制（禁用 launcher 图标、禁用 Shizuku 作 app 名、禁用 moe.shizuku.privileged.api applicationId 与 moe.shizuku.manager.permission.* 权限声明），本仓不引入上游文件，故不触发；B-S4.1（本仓根无 LICENSE）同受约束。"
+    },
+    {
+      "source": "wangzan101/Mika@v0.1.38 (commit 30a9a5173e4590542f4fbd8ff2d49d55364be9cb, release 2026-11-07) — hidden background screen：把 GUI 自动化放到独立显示/独立焦点上，用户主屏不被占用，过程可随时查看与接管",
+      "localPath": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-207] Mika与Shizuku功能归入裁定-既有实现盘点与G5后台屏重估.md",
+      "relationship": "idea",
+      "license": "Apache-2.0",
+      "versionPin": "v0.1.38 (30a9a5173e4590542f4fbd8ff2d49d55364be9cb)",
+      "notes": "登记 2026-11-09（[DESIGN-ARCH-207] P-02）。idea：只取一条行为结论，不取实现/UI/文案，本仓不引入任何上游文件；上游是 Kotlin/Android 工程，与本仓桌面 Electron + 手机 Flutter 不同平台（B-S3）。localPath 刻意指向承载该结论的决策文档本身——idea 无代码落点，若指向「未来可能改的文件」会伪造已落地事实；check-provenance.js:107 要求 localPath 磁盘存在，本行满足。上游 Apache-2.0 附 NOTICE（Copyright 2026 wangzan101）与 licenses/THIRD_PARTY_NOTICES.md，若将来走 verbatim/vendored 必须随附；本行不触发。B-S4.1 同受本仓 LICENSE 缺口约束。对应既有裁决：[DESIGN-ARCH-200]:113 G5「不押」原裁决保留，本次只做重估，期 2 真机探针需人再拍板（§7.3 设备项），不写「探针已通过」（§7.4）。"
+    },
+    {
+      "source": "RikkaApps/Shizuku@v13.6.0（官方 release APK 13.6.0.r1086.2650830c / versionCode 1086，APK SHA-256 6E273AB0E991C4E79BC8B1BBB9B9DD739CCAC1A8712A541A214078886B7B790F）— 解包取证结论：binder 交接协议、客户端 provider 接线要求、按应用授权模型",
+      "localPath": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-211] Shizuku 解包分析与 khyos 提权模型.md",
+      "relationship": "reference",
+      "license": "Apache-2.0",
+      "versionPin": "v13.6.0 (官方 release APK 13.6.0.r1086.2650830c / versionCode 1086)",
+      "notes": "登记 2026-11-11（[DESIGN-ARCH-211]）。reference：本仓**不引入任何上游文件**（B-S3；根目录无 LICENSE，B-S4.1），本行只登记「读了官方 APK、得出哪些事实」这一事实；上游源码不入库，分析产物（manifest / dex 类清单 / 协议常量表）由脚本 analyze-shizuku-apk.ps1 默认写在仓库外（%TEMP%）。文中引用的是公开标识符与协议常量（provider authority、getBinder/sendBinder 方法名、binder extra key、权限名）与结构结论，不贴上游源码实现（B-P4）。与既有 Shizuku(adapter) 行不冲突：那一行登记「代码落点 ShizukuServiceManager.kt 调用官方分发版本」，本行登记「机制取证的载体」。取证结论三条已落到代码：provider 依赖与清单声明、按应用授权申请、状态文案区分三种失败原因；对应回归测试 ShizukuProviderWiringTest（正向 3/3 通过、反向摘掉接线 3/3 失败）。[DESIGN-ARCH-207] 的 adapter 档不改写——解包后理由更硬：B-S3 红线 + 上游 Apache-2.0 Section 6 三条额外限制 + khyos 自带 sidecar 已是同等 uid 2000 能力 + 第三方 App 的官方 Shizuku API 只能靠官方 App。"
+    },
+    {
+      "source": "RikkaApps/Shizuku@v13.6.0（自启动机制：App 内 adb 配对客户端 + 本机 127.0.0.1 的 _adb-tls-pairing._tcp 端点）＋ AOSP packages/modules/adb（adb 主机协议帧格式，Apache-2.0）— khyos 自举提权代理的机制依据",
+      "localPath": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-212] khyos 自举提权代理-完全脱离Shizuku.md",
+      "relationship": "reference",
+      "license": "Apache-2.0",
+      "versionPin": "Shizuku v13.6.0（官方 release APK 13.6.0.r1086.2650830c）＋ AOSP adb 协议（帧格式以本机 platform-tools/adb.exe 实测为准，2026-11-12）",
+      "notes": "登记 2026-11-12（[DESIGN-ARCH-212]）。reference：只登记**机制事实与协议事实**，不引入任何上游文件（B-S3；根目录无 LICENSE，B-S4.1）。Shizuku 侧取的是「App 自己连本机 adbd 完成配对并在 Android 11+ 无需电脑自启动」这一结论（依据为其公开类的字符串常量，属事实而非代码，见 [DESIGN-ARCH-211] §2.3 与本文件 §2.1）；AOSP 侧取的是 adb 主机协议这一**公开协议规范**。协议字节以**实测**为准而非记忆：三条与常识相左的事实（magic = command XOR 0xffffffff；data_crc32 = payload 字节和且只有 CNXN 填；服务串带 NUL 而 CNXN banner 不带）由脚本 capture-adb-wire-format.js 抓真实 adb.exe 的报文钉成黄金向量，测试 AdbProtocolTest 8/8 绿；抓取产物写在仓库外。期 1 已落地（协议层 + 黄金向量 + 抓包工具），期 2/3（配对/传输/自启动编排）待实施，未写「已通过」。[DESIGN-ARCH-207] 的 adapter 档与 [DESIGN-ARCH-211] 的分析结论均不改写；本提案不新增第二个提权实现，只给既有 sidecar 补「谁来拉起它」这一段（复用 canonical，不违反 B-U5.1）。"
     }
   ],
 
@@ -222,8 +254,9 @@
       { "path": "runtime/boot/kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
       { "path": "runtime/node/backend/vendor/shared", "state": "ledgered", "contents": ["config/", "logs/", "package.json", "src/", "tests/"] },
       { "path": "delivery/extension/tools/khy-markdown/vendor", "state": "empty" },
-      { "path": "delivery/web/ai-frontend/public/vendor", "state": "empty" },
-      { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] }
+      { "path": "delivery/channel/web/ai-frontend/public/vendor", "state": "empty" },
+      { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] },
+      { "path": "runtime/node/backend/vendor/android-agent-kit", "state": "pending-approval", "contents": ["SOURCE.md", "uidref/", "screendiff/"] }
     ]
   },
 
@@ -253,6 +286,13 @@
       "description": "2026-10-25 逐文件比对：后端 vendor 副本与真源 runtime/substrate/platform/packages/shared 已有 7 个文件漂移——src/config/database.js、src/config/env.js、src/models/Conversation.js、src/models/User.js、src/models/index.js、src/services/cacheService.js、src/utils/logger.js（其余 84 个归一化行尾后逐字节相同）。两份副本各自都在被使用：真源供 workspace 内解析，vendor 副本供 bundled pip install 的裸 require。",
       "needed": "由人裁定哪边是准的，再给一条同步机制（vendored 副本随真源走，或反写真源）；在此之前两边的行为可能不一致。",
       "severity": "medium"
+    },
+    {
+      "id": "gap-5",
+      "path": "runtime/node/backend/vendor/android-agent-kit",
+      "description": "android-agent-kit v0.1.0 的 uidref/screendiff 已逐字入库，ledger 行待 B-P3 维护者批准。B-M1 #6 偏差：上游归档无 .git、无任何 commit/SHA 痕迹，versionPin 只能记「归档快照 zip SHA-256=691916c7fba717c8ac5444cf8e79eafe2e986597797c2c65fa19258dfe7fab1a + MANIFEST 版本日期 2026-10-27」；批准 ledger 行即同时批准这条偏差，日后拿到真 commit 必须换钉（B-L3 不得静默变更）。偏差说明与复核途径见 runtime/node/backend/vendor/android-agent-kit/SOURCE.md §版本钉与 B-M1 #6 偏差。",
+      "needed": "维护者（≠实现者）批准后提交 ledger 行（批准即同时批准上述 B-M1 #6 偏差，versionPin 用快照哈希）并把 state 改回 ledgered",
+      "severity": "low"
     }
   ],
 

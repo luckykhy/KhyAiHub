@@ -46,20 +46,38 @@ function run(args = [], opts = {}) {
   const stage = opts.stage || 'S1';
   const key = JSON.stringify({ stage, args });
   if (_cache.has(key)) return _cache.get(key);
-  const r = cp.spawnSync(process.execPath, [scriptFor(stage), ...args], {
-    cwd: ROOT, encoding: 'utf8', timeout: 120000,
-  });
-  const output = `${r.stdout || ''}${r.stderr || ''}`;
-  const m = /Summary: (\d+) error\(s\), (\d+) warning\(s\)\./.exec(output);
-  const out = {
-    status: r.status,
-    output,
-    errors: m ? Number(m[1]) : -1,
-    warnings: m ? Number(m[2]) : -1,
-  };
+  const out = invoke(scriptFor(stage), args);
   _cache.set(key, out);
   return out;
 }
+
+/**
+ * spawn 一次并解析 Summary。拿不到 Summary 就再试一次。
+ *
+ * ⚠ 为什么重试而不是「把 -1 当 0」：`-1` 的含义是**没测到**，不是**没违规**。
+ * 全量并发下（`npm run test:scripts` 几十个文件同时 spawn）这里偶发拿不到 Summary，
+ * 2026-11-10 实测 #229/#230 在 `test:all` 里报 `-1 !== 0`，单独跑必绿。
+ * 把它折成 0 会让超时伪装成「零违规」—— 判据失效却全绿，比红更坏。
+ */
+function invoke(script, args) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const r = cp.spawnSync(process.execPath, [script, ...args], {
+      cwd: ROOT, encoding: 'utf8', timeout: 120000,
+    });
+    const output = `${r.stdout || ''}${r.stderr || ''}`;
+    const m = /Summary: (\d+) error\(s\), (\d+) warning\(s\)\./.exec(output);
+    if (m) {
+      return {
+        status: r.status,
+        output,
+        errors: Number(m[1]),
+        warnings: Number(m[2]),
+      };
+    }
+  }
+  return { status: null, output: '（两次 spawn 均未拿到 Summary 行）', errors: -1, warnings: -1 };
+}
+
 
 /**
  * 取某阶段对应的脚本路径。S1 用真身；其余用临时改过常量的副本。

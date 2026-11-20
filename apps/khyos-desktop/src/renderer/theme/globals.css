@@ -51,7 +51,7 @@
   /* 品牌强调色（Khy OS 品牌琥珀族）：此前是「亮暗翻转的主前景色」（暗色纯白 / 浅色纯黑），
      全应用没有真正的彩色强调件，层级只能靠 text-foreground/25~80 堆叠。
      焦点环、选中指示、进度填充、激活态文字都走这一个令牌，改一处全仓生效。
-     真源：delivery/brand/khy-brand-geometry.js 的 PALETTE。
+     真源：works/brand/khy-brand-geometry.js 的 PALETTE。
      暗色 #f0a868 于 #1f222a 面板上对比度约 7.96:1；浅色 #9c4116 于白底约 6.60:1。 */
   --color-brand: #f0a868;
   /* 实心主按钮底色：白字对比度 ≥4.5:1（AA，对 #9c4116 = 6.60:1）。hover / active 另立令牌，
@@ -63,7 +63,7 @@
   /* 品牌色的低透明度表面：设置页头像圈、选中导航底等。 */
   --color-brand-subtle: #f0a86824;
   /* 品牌主标的渐变端点（亮暗两端同值 —— 它是**品牌身份**，不是主题强调）。
-     真源：delivery/brand/khy-brand-geometry.js 的 PALETTE.amber300 / amber500。 */
+     真源：works/brand/khy-brand-geometry.js 的 PALETTE.amber300 / amber500。 */
   --brand-from: #ffc078;
   --brand-to: #e2703a;
   --color-secondary: #363636;

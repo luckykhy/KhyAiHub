@@ -80,13 +80,17 @@ test('手机的任务/会话/发消息请求映射到 host IPC 协议', async ()
   const gen = toHost.find((m) => m.type === 'ai.generate')
   assert.equal(gen.prompt, '跑一下')
   assert.equal(gen.options.cwd, 'D:/Portable/khy-os')
+  // 手机选中的是哪条任务，这一轮就必须续在哪条会话上——丢掉 sessionId 会在桌面侧
+  // 另开一条新会话，两端各看各的。
+  assert.equal(gen.options.sessionId, 's1', 'ai.generate 应带上手机选中的 sessionId')
   hub.consume({ type: 'ai.chunk', id: gen.id, chunk: { text: '第一段' } })
   hub.consume({ type: 'ai.toolCall', id: gen.id, tool: 'readFile' })
-  hub.consume({ type: 'ai.result', id: gen.id, ok: true, text: '完成' })
+  hub.consume({ type: 'ai.result', id: gen.id, ok: true, text: '完成', sessionId: 's1' })
   await new Promise((res) => setTimeout(res, 200))
   const streams = got.filter((m) => m.type === 'khy_stream')
   assert.deepEqual(streams.map((m) => m.event.kind), ['chunk', 'tool_call', 'end'])
   assert.equal(streams[0].event.text, '第一段')
+  assert.equal(streams[2].event.sessionId, 's1', '结束帧应把会话 id 回给手机')
 
   // 手机转达审批 → host ai.controlResponse
   toHost.length = 0
@@ -125,9 +129,42 @@ test('host 不可达时如实报错，不静默成功', async () => {
   await hub.stop()
 })
 
-test('probeBridge 探不到 CLI 时给出可执行的下一步', async () => {
+test('probeBridge 只认 bridge 的 /health，不被端口段里的其他 200 页面骗到', async () => {
+  const http = await import('node:http')
   const { hub } = harness()
-  const r = await hub.probeBridge()
-  assert.equal(r.found, false)
-  assert.match(String(r.error), /khy bridge start/)
+  // 假「别的应用」：任何路径都 200 + HTML（实机 9223 上的 WebView devtools 页就是这样）。
+  const decoy = http.createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end("<html><head><title>WebView remote debugging</title></head></html>")
+  })
+  await new Promise((res) => decoy.listen(0, '127.0.0.1', res))
+  const decoyPort = decoy.address().port
+  try {
+    const r = await hub.probeBridge({ basePort: decoyPort })
+    assert.equal(r.found, false, '只有 200 HTML 的端口不是 bridge')
+    assert.match(String(r.error), /khy bridge start/, '探不到时要给出可执行的下一步')
+  } finally {
+    await new Promise((res) => decoy.close(res))
+  }
+
+  // 真 bridge 的应答形状必须仍然认得出来（/health → {status:'ok', clients:N}）。
+  const bridge = http.createServer((req, res) => {
+    if (req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ status: 'ok', clients: 0 }))
+      return
+    }
+    res.writeHead(404)
+    res.end()
+  })
+  await new Promise((res) => bridge.listen(0, '127.0.0.1', res))
+  const bridgePort = bridge.address().port
+  try {
+    const r = await hub.probeBridge({ basePort: bridgePort })
+    assert.equal(r.found, true)
+    assert.equal(r.port, bridgePort)
+    assert.match(String(r.url), new RegExp(`:${bridgePort}$`))
+  } finally {
+    await new Promise((res) => bridge.close(res))
+  }
 })

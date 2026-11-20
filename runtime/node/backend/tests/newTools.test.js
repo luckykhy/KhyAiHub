@@ -88,15 +88,75 @@ describe('New Tools', () => {
       expect(r.code).toBe('BAD_PARAM');
   });
 
-  test('三新工具均为 defineTool 产物(�?name/execute,行为标志已归一为谓�?', async () => {
+  test('三新工具均为 defineTool 产物(有 name/execute,行为标志已归一为谓词)', async () => {
       for (const t of [db, http, gitLog]) {
         expect(typeof t.name).toBe('string');
         expect(typeof t.execute).toBe('function');
-        expect(typeof t.isReadOnly).toBe('function'); // defineTool 把布尔归一成谓�?
+        expect(typeof t.isReadOnly).toBe('function'); // defineTool 把布尔归一成谓词
       }
       expect(gitLog.name).toBe('gitLog');
       expect(db.name).toBe('databaseQuery');
       expect(http.name).toBe('httpRequest');
+  });
+
+  // ── httpRequest 的 SSRF 守卫（AGT-02）────────────────────────────────────
+  //
+  // 本工具此前只校验协议：云元数据地址(169.254.169.254)、回环(127.0.0.1)、
+  // RFC1918(10.x / 192.168.x) 全部可打，且**重定向后的新目标不再复查** ——
+  // 公网 URL 302 到内网就被跟踪。现在每一跳都过 services/urlSafety 的守卫。
+  describe('httpRequest SSRF 守卫', () => {
+    const INTERNAL_TARGETS = [
+      'http://169.254.169.254/latest/meta-data/',
+      'http://127.0.0.1:9229/json',
+      'http://10.0.0.5/',
+      'http://192.168.1.1/admin',
+    ];
+
+    test('内网/回环/元数据目标在输入校验阶段即被拒', async () => {
+      for (const url of INTERNAL_TARGETS) {
+        const v = await http.validateInput({ url });
+        expect(v.valid).toBe(false);
+        expect(v.message).toMatch(/private or local/);
+      }
+    });
+
+    test('execute 对内网目标一律拒发(BAD_PARAM)', async () => {
+      for (const url of INTERNAL_TARGETS) {
+        const r = await http.execute({ url, method: 'GET' }, {});
+        expect(r.success).toBe(false);
+        expect(r.code).toBe('BAD_PARAM');
+        expect(r.error).toMatch(/SSRF|守卫|拒绝/);
+      }
+    });
+
+    test('重定向跳向内网时:第二跳被拒,且内网那一跳根本没发出去', async () => {
+      const httpMod = require('http');
+      const { EventEmitter } = require('events');
+      const spy = jest.spyOn(httpMod, 'request').mockImplementation((target, options, cb) => {
+        const req = new EventEmitter();
+        req.write = () => {};
+        req.destroy = () => {};
+        req.end = () => {
+          const res = new EventEmitter();
+          res.statusCode = 302;
+          res.statusMessage = 'Found';
+          res.headers = { location: 'http://169.254.169.254/latest/meta-data/' };
+          cb(res);
+          setImmediate(() => res.emit('end'));
+        };
+        return req;
+      });
+      try {
+        // 首跳用公网 IP 字面量:IP 字面量不触发 DNS 解析,整条用例离线可跑
+        const r = await http.execute({ url: 'http://93.184.216.34/start', method: 'GET' }, {});
+        expect(r.success).toBe(false);
+        expect(r.code).toBe('BAD_PARAM');
+        expect(r.error).toMatch(/SSRF|守卫|拒绝/);
+        expect(spy).toHaveBeenCalledTimes(1); // 只有首跳:内网那一跳从未发出
+      } finally {
+        spy.mockRestore();
+      }
+    });
   });
 
 });

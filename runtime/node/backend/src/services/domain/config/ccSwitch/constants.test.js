@@ -24,10 +24,23 @@ const {
   SCHEMA_VERSION,
 } = c;
 
-test('导出面恰好是文档声明的 7 个符号，不多不少', () => {
+test('导出面恰好是文档声明的 10 个符号，不多不少', () => {
   assert.deepEqual(
     Object.keys(c).sort(),
-    ['AGENT_MODES', 'APPS', 'APP_LABELS', 'DATA_FILE', 'PROTOCOLS', 'PROTOCOL_DEFAULT_MODELS', 'SCHEMA_VERSION'].sort()
+    [
+      'AGENT_MODES',
+      'APPS',
+      'APP_LABELS',
+      'CARD_POOL_NAMESPACE',
+      'DATA_FILE',
+      'LEGACY_CARD_POOL_NAMESPACE',
+      'PROTOCOLS',
+      'PROTOCOL_DEFAULT_MODELS',
+      'SCHEMA_VERSION',
+      'cardPoolProvider',
+      'legacyCardPoolProvider',
+      'normalizePoolProviderName',
+    ].sort()
   );
 });
 
@@ -129,14 +142,52 @@ test('KNOWN-DEFECT PROTOCOLS 里没有 CODEX 成员，routeResolver 的 case PRO
 });
 
 test('KNOWN-DEFECT SCHEMA_VERSION 只当默认值用：无任何校验器，未知高版本照单全收', () => {
-  // Measured: the module ships the number but no guard — it exports only data.
-  assert.ok(
-    Object.values(c).every((v) => typeof v !== 'function'),
-    'constants exports only data, so every consumer invents its own version compare'
+  // Measured: the module ships the number but no guard — 数据符号全是字面量/冻结对象。
+  // （2026-11-19 起另有 3 个池名纯函数，见下面「卡片池命名空间」一组；它们不参与版本比较。）
+  const DATA_SYMBOLS = [
+    'PROTOCOLS', 'APPS', 'APP_LABELS', 'AGENT_MODES', 'PROTOCOL_DEFAULT_MODELS',
+    'DATA_FILE', 'SCHEMA_VERSION', 'CARD_POOL_NAMESPACE', 'LEGACY_CARD_POOL_NAMESPACE',
+  ];
+  for (const name of DATA_SYMBOLS) {
+    assert.notEqual(typeof c[name], 'function', `${name} 是数据不是行为`);
+  }
+  assert.deepEqual(
+    Object.keys(c).filter((k) => typeof c[k] === 'function').sort(),
+    ['cardPoolProvider', 'legacyCardPoolProvider', 'normalizePoolProviderName'],
+    '唯一的函数符号是三个池名纯叶子（零 IO、绝不抛）'
   );
   const src = require('fs').readFileSync(require.resolve('./store.js'), 'utf-8');
   // The only consumer keeps whatever version the file claims (|| only fires on
   // 0/NaN), i.e. a future schemaVersion: 2 store loads unchanged with no gate.
   assert.match(src, /schemaVersion:\s*Number\(doc\.schemaVersion\)\s*\|\|\s*SCHEMA_VERSION/);
   assert.doesNotMatch(src, /schemaVersion\s*[<>]=?\s*\d|schemaVersion !== SCHEMA_VERSION/);
+});
+
+// ── 卡片池命名空间（2026-11-19：缺口②「自带 key 的卡生成的模型名网关解不出」）────
+// 池名会被网关当成 `api:<pool>:<model>` 的池段用，apiAdapter.parseProviderModel 与
+// aiGateway._resolveApiPoolProviderForRequest 的三段式正则池段只认 [a-z0-9_-]。
+// 历史命名空间 `cc-switch:<cardId>` 含冒号 → 池段被截成 'cc-switch'、apiKeyPool.pick
+// 精确匹配不到 key/endpoint、模型 id 被污染成 '<cardId>:<model>'。
+test('卡片池命名空间：现行名合法、旧名含冒号、两侧互转', () => {
+  assert.equal(c.CARD_POOL_NAMESPACE, 'cc_switch');
+  assert.equal(c.LEGACY_CARD_POOL_NAMESPACE, 'cc-switch');
+  assert.equal(c.cardPoolProvider('c_ab12'), 'cc_switch_c_ab12');
+  assert.equal(c.legacyCardPoolProvider('c_ab12'), 'cc-switch:c_ab12');
+  // 现行名必须过网关池段正则；旧名必须过不了（这就是要换掉它的理由）
+  assert.match(c.cardPoolProvider('c_ab12'), /^[a-z0-9_-]+$/);
+  assert.doesNotMatch(c.legacyCardPoolProvider('c_ab12'), /^[a-z0-9_-]+$/);
+  // 幂等/边界：空 id 仍产出合法形态（store 总是先 _genId()，空 id 只会出现在手搓数据里）
+  assert.match(c.cardPoolProvider(''), /^[a-z0-9_-]+$/);
+});
+
+test('normalizePoolProviderName：合法名原样透传，非法字符折叠为 _', () => {
+  assert.equal(c.normalizePoolProviderName('openai'), 'openai');
+  assert.equal(c.normalizePoolProviderName('my-provider'), 'my-provider', '连字符在字符类内，不许被折叠');
+  assert.equal(c.normalizePoolProviderName('  DeepSeek  '), 'deepseek');
+  assert.equal(c.normalizePoolProviderName('a:b:c'), 'a_b_c');
+  assert.equal(c.normalizePoolProviderName('__x__'), 'x', '首尾下划线被修掉');
+  assert.equal(c.normalizePoolProviderName(''), '');
+  assert.equal(c.normalizePoolProviderName(null), '');
+  // 绝不抛
+  assert.doesNotThrow(() => c.normalizePoolProviderName({ toString: null }));
 });

@@ -133,7 +133,7 @@ venv 里 `--no-index` 装 wheel 之后，`--version` / `doctor` / `gateway statu
 
 sdist 这一侧**刻意不拆**，理由写在 `pip_packaging_rules.py` 的
 `REQUIRED_SDIST_PATHS` 里：它把 `runtime/boot/kernel/src`、`runtime/boot/kernel/boot`、`runtime/boot/kernel/Makefile`、两个
-kernel iso 配置、三个 `runtime/boot/kernel/vendor/moonbit` 文件、`delivery/web/ai-frontend/src/main.js`、
+kernel iso 配置、三个 `runtime/boot/kernel/vendor/moonbit` 文件、`delivery/channel/web/ai-frontend/src/main.js`、
 `software/khyquant/frontend/src/main.js` 钉成源码包的**地板**。少了任何一个就说明
 规则改错了，构建直接失败。另外 `runtime/substrate/platform/khy_platform/cli.py` 还留着一条
 `bundled/services/backend` 镜像树的兼容分支，把这些目录从源码包里摘出去会同时动到

@@ -1,0 +1,14 @@
+{
+  "name": "uidref",
+  "version": "0.1.0",
+  "description": "安卓 UI 元素引用层 · JavaScript 参考实现（零依赖）",
+  "license": "Apache-2.0",
+  "main": "uidref.js",
+  "scripts": {
+    "test": "node conformance.js ../vectors/",
+    "dumpjson": "node dumpjson.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,11 +1,15 @@
 /**
  * performanceOptimizer.test.js — locks the throttle/debounce/hw-accel contract
- * in src/utils/performanceOptimizer.js. Throttle is call-based (leading edge,
- * no trailing), debounce is inactivity-based; both must preserve `this` and
- * forward the final args.
+ * in src/utils/performanceOptimizer. `throttleData` truncates a K-line array to
+ * its newest `maxCount` entries (the shape the trading page consumes);
+ * debounce is inactivity-based and must preserve `this` and forward the final args.
+ *
+ * 导入**不带扩展名**：与产线（Vite）解析同一条路径。此前这里写死 '.js'，
+ * 锁的是一份同名影子实现（那份的 throttleData 是函数节流，与产线语义不同），
+ * 而 Vite 实际解析到的恰恰是它 —— 测试与产线跑的不是同一份代码（FE-01）。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { throttleData, debounce, enableHardwareAcceleration } from '../utils/performanceOptimizer.js'
+import { throttleData, debounce, enableHardwareAcceleration } from '../utils/performanceOptimizer'
 
 describe('performanceOptimizer', () => {
   beforeEach(() => {
@@ -15,26 +19,12 @@ describe('performanceOptimizer', () => {
     vi.useRealTimers()
   })
 
-  it('throttleData allows the first call and suppresses calls inside the delay window', () => {
-    const fn = vi.fn()
-    const throttled = throttleData(fn, 100)
-    throttled('a')
-    expect(fn).toHaveBeenCalledTimes(1)
-    throttled('b') // within 100ms of the first call
-    expect(fn).toHaveBeenCalledTimes(1)
-    vi.advanceTimersByTime(100)
-    throttled('c') // now allowed
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenLastCalledWith('c')
+  it('throttleData keeps only the newest maxCount entries', () => {
+    expect(throttleData([1, 2, 3, 4, 5], 3)).toEqual([3, 4, 5])
   })
 
-  it('throttleData uses a real Date.now clock (advancing real time opens the window)', () => {
-    const fn = vi.fn()
-    const throttled = throttleData(fn, 20)
-    throttled(1)
-    vi.advanceTimersByTime(30) // advance the fake clock past the 20ms window
-    throttled(2)
-    expect(fn).toHaveBeenCalledTimes(2)
+  it('throttleData returns the input unchanged when it is already short enough', () => {
+    expect(throttleData([1, 2], 5)).toEqual([1, 2])
   })
 
   it('debounce delays the call until inactivity and forwards the last args + this', () => {

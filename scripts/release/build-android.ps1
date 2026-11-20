@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env pwsh
 # khy-os Android signed-release builder (PowerShell, cross-platform).
 #
-# Builds the khy-os mobile app (delivery/mobile/khy-os-client-app, Flutter) into a signed
+# Builds the khy-os mobile app (delivery/channel/mobile/khy-os-client-app, Flutter) into a signed
 # release APK + AAB, verifies the signature, and copies both into
 # ./dist/android with a SHA-256 manifest.
 #
@@ -28,6 +28,7 @@
 #   Local:    .\scripts\release\build-android.ps1
 #   Artifacts: dist/android/app-release.apk + app-release.aab + mapping.txt
 #     + SHA256SUMS.txt
+#     Debug fallback 时产物按签名事实命名：app-debug.apk / app-debug.aab。
 #   If the script WARNS "DEBUG-signed": no release credentials were found;
 #     the output is NOT Play-store-ready. Check android/key.properties or set
 #     the KHY_ANDROID_* env vars, then re-run.
@@ -51,7 +52,7 @@ param(
 $ErrorActionPreference = 'Stop'
 # scripts/release/ -> up two levels = repo root.
 $root = (Get-Item $PSScriptRoot).Parent.Parent.FullName
-$appDir = Join-Path $root 'delivery\mobile\khy-os-client-app'
+$appDir = Join-Path $root 'delivery\channel\mobile\khy-os-client-app'
 $androidDir = Join-Path $appDir 'android'
 $keyProps = Join-Path $androidDir 'key.properties'
 
@@ -192,10 +193,10 @@ if ($relStoreFile) {
     $expectSigning = 'release'
     $relStoreFile = $absStore
   } else {
-    Say-Warn "release keystore not found at $absStore — the build will fall back to the DEBUG keystore (output NOT Play-store-ready)."
+    Say-Warn "release keystore not found at $absStore — the build will fall back to the DEBUG keystore (output NOT Play-store-ready, and it will be named app-debug.apk)."
   }
 } else {
-  Say-Warn "no release signing credentials (env or key.properties) — output will be DEBUG-signed, NOT Play-store-ready."
+  Say-Warn "no release signing credentials (env or key.properties) — output will be DEBUG-signed and named app-debug.apk, NOT Play-store-ready."
 }
 
 # ── Canary stamp (per-delivery) ──────────────────────────────────────────────
@@ -231,12 +232,161 @@ if (-not $SkipBuild) {
   Write-Host ""
   $buildLabel = if ($ApkOnly) { 'Building release APK' } elseif ($AabOnly) { 'Building release AAB' } else { 'Building release APK + AAB' }
   Write-Host "=== $buildLabel ==="
+  # Pre-build gate (fail-fast): the generated plugin registrant must not carry a
+  # dev-dependency plugin registration. integration_test is this app's only dev
+  # dependency that ships an Android plugin (pubspec.yaml:70-88), and a stale
+  # registration block for it cannot compile in release.
+  # Mechanism, end to end:
+  #   * Every command that runs with releaseMode=false -- flutter pub get,
+  #     flutter test, debug flutter run/drive -- calls
+  #     regeneratePlatformSpecificTooling(releaseMode:false), and injectPlugins
+  #     drops dev dependencies ONLY when releaseMode is true
+  #     (flutter_tools/lib/src/flutter_plugins.dart:1407-1413). A stale
+  #     registrant can therefore contain dev-dependency registrations.
+  #   * Gradle puts a dev-dependency plugin on a buildType's classpath only
+  #     when that buildType is NOT release
+  #     (flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:113-118),
+  #     so the release variant cannot resolve the plugin's classes.
+  #   * The registrant lives in android/app/src/main/java -- the MAIN source
+  #     set, which the release variant compiles too -- so a stale block fails
+  #     late and cryptically inside javac with
+  #     "package dev.flutter.plugins.integration_test does not exist".
+  #   * flutter build apk/appbundle --release normally regenerates the
+  #     registrant with dev dependencies filtered out, but the regeneration
+  #     only WRITES when the content differs (flutter_plugins.dart:538-543
+  #     renders through _renderTemplateToFile). So a stale file survives, and
+  #     a concurrent `flutter pub get` / `flutter test` in the same tree can
+  #     dirty it WHILE gradle is running -- a pre-build check cannot see that.
+  #   * Therefore this stage REPAINS instead of failing: it deletes the dirty
+  #     generated file so the tool rewrites it clean, and the release APK is
+  #     then inspected directly (Verify plugin registration below) so neither a
+  #     missed repair nor a concurrent dirtying can reach the artifact.
+  $registrant = Join-Path $androidDir 'app\src\main\java\io\flutter\plugins\GeneratedPluginRegistrant.java'
+
+  # 同一棵树上还有别的 flutter 在跑吗？
+  #
+  # 这是 registrant 被中途写脏的**已观测来源**（2026-11-13 实测）：同机另一个
+  # 会话正在跑 `flutter test`，而 flutter test / pub get / debug run 都是
+  # releaseMode=false 的命令，会用 dev 依赖重生成 registrant（flutter_plugins.dart
+  # 1407-1413 的过滤只在 releaseMode=true 时生效）。实测那次脏写就落在构建跑了
+  # 640 秒之后——不是构建自己的 pub get（那会紧跟在 release 重生成后面）。
+  #
+  # 匹配要看对地方：flutter 命令行的参数是相对路径（test/drivers/xxx.dart），
+  # 进程命令行里**不含** App 目录——所以只能认「flutter 工具快照在跑」这个形态。
+  # gradle 侧相反：命令行里带 App 绝对路径。
+  #
+  # 拦不住它，但能说出来：看到这条告警，就知道构建失败不是随机事件，而是有人
+  # 同时在构建。产物级检查保证这种竞争最多让构建失败，不会让坏 APK 出厂。
+  try {
+    $flutterTools = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+      Where-Object {
+        $_.Name -eq 'dart.exe' -and $_.CommandLine -like '*flutter_tools.snapshot*'
+      })
+    $gradleHere = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+      Where-Object {
+        $_.Name -eq 'java.exe' -and $_.CommandLine -like "*$([IO.Path]::GetFileName($appDir))*"
+      })
+    if ($flutterTools.Count -gt 0 -or $gradleHere.Count -gt 0) {
+      $pids = @($flutterTools | ForEach-Object { $_.ProcessId }) + @($gradleHere | ForEach-Object { $_.ProcessId })
+      Say-Warn ("检测到 {0} 个 flutter/gradle 进程正在跑（PID: {1}）。" -f $pids.Count, ($pids -join ', '))
+      Say-Warn "其中 flutter 的 pub get / test / debug run 会用 dev 依赖重生成 GeneratedPluginRegistrant.java，可能让本次构建在 javac 阶段失败（不会产出坏 APK）。"
+      Say-Warn "并发来源：同一台机器上的另一个会话（工作区共享）。等它跑完再重试。"
+    }
+  } catch {
+    # 查不到就当没有：这道告警是提示，不是闸门。
+  }
+
+  if (Test-Path $registrant) {
+    $staleDevLines = @(Select-String -Path $registrant -Pattern 'dev\.flutter\.plugins\.integration_test' | ForEach-Object { $_.LineNumber })
+    if ($staleDevLines.Count -gt 0) {
+      # 自愈，而不是死路。这份文件是 gitignored 的纯生成物（android/.gitignore
+      # 里的 GeneratedPluginRegistrant.java），Flutter 工具会在 release 模式下
+      # 重新生成它——injectPlugins 只在 releaseMode=true 时滤掉 dev 依赖
+      # （flutter_plugins.dart:1407-1413）。删掉它，工具就会用干净的插件集重写。
+      #
+      # 为什么原来是硬失败：javac 会在 MAIN 源集上编译它，而 release 变体没有
+      # :integration_test 的编译期依赖（PluginHandler.kt:113-118），报错是
+      # "package dev.flutter.plugins.integration_test does not exist"——晚且难懂。
+      # 但硬失败只是把同一个坑推给下一个人手工再填一遍，而填法有两条（删文件 /
+      # 手工跑一次 release 构建），两条都会被人忘。
+      #
+      # 删除的唯一风险是「插件静默不注册」——所以配套加了产物级检查
+      # （下方 Verify plugin registration）：它读的是编进 dex 的字节，不是
+      # 中间文件。生成物没了、插件没编进去，发布构建会当场红，不会带着
+      # NoClassDefFoundError 上架。
+      Remove-Item -Force $registrant
+      Say-Warn "registrant carried a dev-dependency plugin (line(s) $($staleDevLines -join ', ')); deleted the generated file so the release-mode regeneration rewrites it clean. The APK is re-checked below."
+
+      # 机制备查（免得这段自愈被当成「绕过检查」）：
+      #   flutter_tools/lib/src/flutter_plugins.dart:1407-1413
+      #     injectPlugins 只在 releaseMode=true 时滤掉 dev 依赖
+      #   flutter_tools/lib/src/commands/packages.dart:395-398
+      #     工具自己的注释承认 pub get 会用 releaseMode=false 重生成（污染）
+      #   flutter_tools/lib/src/runner/flutter_command.dart:1982-1987
+      #     release 构建在跑命令前会用 release 模式重生成一次——但内容相同就
+      #     跳过写盘，所以「脏文件」与「并发污染」都会漏过前置检查，
+      #     这正是下面要做产物级检查的原因。
+    }
+  }
+  # 先把依赖 settle 掉，再构建。
+  #
+  # 顺序是有讲究的，理由是实测出来的（2026-11-13）：
+  #   * `flutter pub get` 会用 releaseMode=false 重生成 registrant（写入 dev 依赖
+  #     的注册块）；
+  #   * `flutter build apk --release` 会在跑命令前用 releaseMode=true 重生成一次，
+  #     把上面那份脏的覆盖成干净的；
+  #   * 但构建内部的 pub get 是**后台异步**的：依赖没缓存时，它会在 release 重生成
+  #     之后几秒才把脏文件写回来，javac 编译到的就是脏的那份（实测时间线：
+  #     干净写入 → 3 秒后脏写入 → javac 报 integration_test 不存在）。
+  # 先单独跑一次 pub get，缓存就settle了：构建内部的 pub get 随即短路，不再有脏写。
+  # 证据：依赖已缓存的那轮构建日志里没有 "Resolving dependencies"，也没失败过。
+  #
+  # 代价是多一条 flutter 调用（约 20-30s）；换来的是 release 构建不再靠运气。
+  $code = Invoke-Tool @($flutter, 'pub', 'get') $appDir
+  if ($code -ne 0) { Say-Warn "flutter pub get failed (exit $code) — 继续构建，依赖若不全会由构建自己报错。" }
+
+  # pub get 刚把 registrant 写成脏的（dev 依赖在册）：删掉它，让接下来的 release
+  # 重生成写一份干净的。检测在前一次已经做过，这里是 pub get 之后必须再做一次。
+  if (Test-Path $registrant) {
+    $staleAfterPub = @(Select-String -Path $registrant -Pattern 'dev\.flutter\.plugins\.integration_test' | ForEach-Object { $_.LineNumber })
+    if ($staleAfterPub.Count -gt 0) {
+      Remove-Item -Force $registrant
+      Say-Warn "pub get 把 registrant 写成了含 dev 依赖的样子（line(s) $($staleAfterPub -join ', ')）；已删除，release 重生成会写干净的。"
+    }
+  }
+
+  # 跑一次 release 构建。失败时只有一种情况值得自动重试：registrant 是脏的。
+  # 那说明构建期间有并发 flutter（另一个会话的 pub get / test / debug run）
+  # 把它写脏了——不是我们这次构建的锅（我们启动前已经删过一次、release 重生成
+  # 也写过干净的）。删掉重试一次，并如实说明重试原因。
+  function Invoke-ReleaseBuild([string[]]$flutterArgs, [string]$label) {
+    $exit = Invoke-Tool $flutterArgs $appDir
+    if ($exit -eq 0) {
+      return 0
+    }
+    if (Test-Path $registrant) {
+      $dirty = @(Select-String -Path $registrant -Pattern 'dev\.flutter\.plugins\.integration_test' | ForEach-Object { $_.LineNumber })
+      if ($dirty.Count -gt 0) {
+        Say-Warn "$label failed (exit $exit)，而 registrant 正带着 dev 依赖（line(s) $($dirty -join ', ')）——这是并发 flutter 写脏它的已知形态。删掉重试一次。"
+        Remove-Item -Force $registrant
+        $exit = Invoke-Tool $flutterArgs $appDir
+        if ($exit -eq 0) {
+          # 不把首次失败的原因断言成「 registrant 脏」——并发构建还会以别的形态
+          # 失败（实测：mergeReleaseNativeLibs 读 libflutter.so 时 MD5 失败，
+          # 文件被另一个构建占着）。只说「形态一致」，不编因果。
+          Say-Ok "$label 重试后成功（首次失败的形态与并发写脏 registrant 一致，具体原因见上面首次构建的输出）"
+        }
+      }
+    }
+    return $exit
+  }
+
   if (-not $AabOnly) {
-    $code = Invoke-Tool @($flutter, 'build', 'apk', '--release', "--dart-define=KHY_CANARY=$khyCanary") $appDir
+    $code = Invoke-ReleaseBuild @($flutter, 'build', 'apk', '--release', "--dart-define=KHY_CANARY=$khyCanary") 'flutter build apk --release'
     if ($code -ne 0) { Say-Fail "flutter build apk --release failed (exit $code)" }
   }
   if (-not $ApkOnly) {
-    $code = Invoke-Tool @($flutter, 'build', 'appbundle', '--release', "--dart-define=KHY_CANARY=$khyCanary") $appDir
+    $code = Invoke-ReleaseBuild @($flutter, 'build', 'appbundle', '--release', "--dart-define=KHY_CANARY=$khyCanary") 'flutter build appbundle --release'
     if ($code -ne 0) { Say-Fail "flutter build appbundle --release failed (exit $code)" }
   }
   Say-Ok "gradle build complete"
@@ -273,6 +423,10 @@ if (-not $ApkOnly) {
 }
 
 # ── Verify signature ────────────────────────────────────────────────────────
+# 签名者指纹与 DN 在验证时就取好：产物名要跟随签名事实，台账里也该带上
+# 「这份文件是谁签的」——只有 hash 的台账分不出 release 与 debug。
+$signerDigest = ''
+$signerDn = ''
 if ($apkPath -and -not $SkipVerify) {
   Write-Host ""
   Write-Host "=== Verifying signature ==="
@@ -290,6 +444,13 @@ if ($apkPath -and -not $SkipVerify) {
       Say-Fail "APK signature verification failed (apksigner reported no valid signer):`n$certOut"
     }
     $sha256Line = ($certOut | Select-String 'Signer #1 certificate SHA-256 digest' | Select-Object -First 1).Line
+    if ($sha256Line) {
+      $signerDigest = ($sha256Line -replace '.*SHA-256 digest:\s*', '').Trim()
+    }
+    $dnLine = ($certOut | Select-String 'Signer #1 certificate DN' | Select-Object -First 1).Line
+    if ($dnLine) {
+      $signerDn = ($dnLine -replace '.*certificate DN:\s*', '').Trim()
+    }
     # Report every scheme that actually verified, not just the first one found:
     # v2 alone (minSdk 24+) and v2+v3 both ship in the wild.
     $schemes = @()
@@ -325,7 +486,74 @@ if ($apkPath -and -not $SkipVerify) {
         }
       }
     } elseif ($expectSigning -eq 'debug') {
-      Say-Warn "output is DEBUG-signed (no release credentials found). This APK is NOT Play-store-ready; regenerate with release credentials for an upload."
+      Say-Warn "output is DEBUG-signed (no release credentials found) and named app-debug.apk. This APK is NOT Play-store-ready; regenerate with release credentials for an upload."
+    }
+  }
+}
+
+# ── Verify plugin registration in the shipped APK ─────────────────────────────
+# 为什么查产物而不是查中间文件：registrant 住在 android/app/src/main/java/…/
+# GeneratedPluginRegistrant.java —— 一份 gitignored、共享、可被任意并发
+# `flutter pub get` / `flutter test` / debug run 改写的文件。前置检查只看得到
+# 它「此刻」的样子，看不到 gradle 跑的过程中别人把它写脏。
+#
+# 而脏 registrant 进到 release 产物里，两种坏法都很难查：
+#   * javac 先过、脏块编进 dex —— 构建不报错，装机第一次启动才
+#     NoClassDefFoundError（dev 插件不在 release APK 里）。
+#   * registrant 被删、工具没重写 —— 构建照样过，所有插件静默不注册，
+#     功能一个个缺失，没人知道是构建期丢的。
+# 所以这条检查直接读编进 dex 的字节：注册块必须在（插件没丢），dev 依赖必须不在。
+if ($apkPath) {
+  Write-Host ""
+  Write-Host "=== Verifying plugin registration in the APK ==="
+  $dexText = ''
+  try {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+    $zip = [IO.Compression.ZipFile]::OpenRead($apkPath)
+    try {
+      $parts = New-Object System.Collections.Generic.List[string]
+      foreach ($entry in $zip.Entries) {
+        if ($entry.FullName -match '^classes\d*\.dex$') {
+          $stream = $entry.Open()
+          $mem = New-Object System.IO.MemoryStream
+          $stream.CopyTo($mem)
+          $stream.Close()
+          $parts.Add([Text.Encoding]::ASCII.GetString($mem.ToArray()))
+          $mem.Dispose()
+        }
+      }
+      $dexText = [string]::Join('', $parts)
+    } finally { $zip.Dispose() }
+  } catch {
+    Say-Warn "could not read dex from the APK ($($_.Exception.Message)) — skipping plugin-registration check."
+  }
+  if ($dexText) {
+    $hasRegistrant = $dexText.Contains('io/flutter/plugins/GeneratedPluginRegistrant')
+    $hasDevPlugin = $dexText.Contains('dev/flutter/plugins/integration_test')
+    if (-not $hasRegistrant) {
+      Say-Fail @"
+the release APK contains no plugin-registration block (io/flutter/plugins/GeneratedPluginRegistrant).
+
+Every Flutter plugin is missing from the APK -- the app will start but each
+plugin's features will be dead, with no build error to point at the cause.
+Most likely the generated registrant was deleted and the tool never rewrote it.
+Check that android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+exists and registers the app's plugins, then rebuild.
+"@
+    }
+    if ($hasDevPlugin) {
+      Say-Fail @"
+the release APK references the dev-dependency plugin dev/flutter/plugins/integration_test.
+
+That plugin is not shipped in a release build, so the app will crash on start
+with NoClassDefFoundError. Something wrote a dev-mode registrant into the
+build (a concurrent 'flutter pub get' / 'flutter test' / debug run in this
+working tree is the usual culprit) and the dirty file was compiled in.
+Rebuild in a quiet tree, or re-run the repair step above.
+"@
+    }
+    if ($hasRegistrant -and -not $hasDevPlugin) {
+      Say-Ok "plugin registration present; no dev-dependency plugin in the release dex"
     }
   }
 }
@@ -339,19 +567,33 @@ Set-Content -Path $manifest -Value '' -Encoding ascii
 
 $artifacts = @()
 
+# 产物名跟随签名事实（S5 / T15）：文件名不证明签名——debug 签名的包落成
+# app-release.apk，就是给「要装错的那个包」起了一个「能装」的名字（实测
+# Download 里同名不同签名的两批 APK 的结构性成因）。签名档位在 :188-198
+# 已经判过，这里按同一判定落地，并在台账里带上签名者指纹。
+$apkName = if ($expectSigning -eq 'debug') { 'app-debug.apk' } else { 'app-release.apk' }
+$aabName = if ($expectSigning -eq 'debug') { 'app-debug.aab' } else { 'app-release.aab' }
+
 if ($apkPath) {
-  $dest = Join-Path $OutputDir 'app-release.apk'
+  $dest = Join-Path $OutputDir $apkName
   Copy-Item -Force $apkPath $dest
   $h = (Get-FileHash -Algorithm SHA256 $dest).Hash
-  Add-Content -Path $manifest -Value ("{0}  app-release.apk" -f $h)
+  Add-Content -Path $manifest -Value ("{0}  {1}" -f $h, $apkName)
+  if ($signerDigest) {
+    Add-Content -Path $manifest -Value ("# signer: {0}  {1}" -f $apkName, $signerDigest)
+    if ($signerDn) { Add-Content -Path $manifest -Value ("# signer-dn: {0}  {1}" -f $apkName, $signerDn) }
+  }
   $artifacts += $dest
   Say-Ok "APK -> $dest"
 }
 if ($aabPath) {
-  $dest = Join-Path $OutputDir 'app-release.aab'
+  $dest = Join-Path $OutputDir $aabName
   Copy-Item -Force $aabPath $dest
   $h = (Get-FileHash -Algorithm SHA256 $dest).Hash
-  Add-Content -Path $manifest -Value ("{0}  app-release.aab" -f $h)
+  Add-Content -Path $manifest -Value ("{0}  {1}" -f $h, $aabName)
+  if ($signerDigest) {
+    Add-Content -Path $manifest -Value ("# signer: {0}  {1}" -f $aabName, $signerDigest)
+  }
   $artifacts += $dest
   Say-Ok "AAB -> $dest"
 }
@@ -382,8 +624,8 @@ if ($mappingPath) {
 # a bookkeeping failure must not discard the artifacts above.
 if ($khyCanary) {
   Add-Content -Path $manifest -Value "# khy-canary: $khyCanary" -Encoding ascii
-  $apkShaForLedger = if ($apkPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir 'app-release.apk')).Hash } else { '' }
-  $aabShaForLedger = if ($aabPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir 'app-release.aab')).Hash } else { '' }
+  $apkShaForLedger = if ($apkPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir $apkName)).Hash } else { '' }
+  $aabShaForLedger = if ($aabPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir $aabName)).Hash } else { '' }
   try {
     $ledgerDir = Join-Path $root 'works\data\khy\canary'
     if (-not (Test-Path $ledgerDir)) { New-Item -ItemType Directory -Force -Path $ledgerDir | Out-Null }
@@ -448,7 +690,7 @@ foreach ($f in $artifacts) {
 }
 
 if ($expectSigning -eq 'debug') {
-  Say-Warn "these artifacts are DEBUG-signed (no release keystore was found)."
+  Say-Warn "these artifacts are DEBUG-signed (no release keystore was found) and named app-debug.* — do not deliver them as release."
   Say-Warn "to produce a Play-store-ready package, create android/key.properties + a release keystore, or set KHY_ANDROID_* env vars, then re-run this script."
 } else {
   Say-Ok "artifacts are RELEASE-signed and ready for Play upload."

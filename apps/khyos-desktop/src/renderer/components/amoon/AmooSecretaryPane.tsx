@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import { AmooSecretaryMemory, type MemoryLimits, type MemoryResult } from './AmooSecretaryMemory'
 import { LoopStatusSection } from './AmooSecretaryLoopStatus'
+// 「电脑端 AI」小节：直连手机原生 Amoo 后台服务的另一条车道，按 ask 挂在秘书面板末尾，
+// 不新增标签、不共用秘书的状态源（见 ./AgentbusSection 头部）。
+import { AgentbusSection } from './AgentbusSection'
 import { errText, Notice, type Capability } from './amoonShared'
 
 // amoo secretary pane — ask a question, wait for the answer, read the result.
@@ -717,8 +720,8 @@ export function AmooSecretaryPane() {
         <HistorySection history={history} />
 
         <LoopStatusSection capability={capability} />
-
         <AmooSecretaryMemory capability={capability} memoryLimits={status?.memoryLimits} />
+        <AgentbusSection />
       </div>
     </div>
   )

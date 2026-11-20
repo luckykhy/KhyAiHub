@@ -116,7 +116,12 @@ describe('chatChords ↔ 键位目录 双向一致([DESIGN-ARCH-147] G-02)', () 
       `「${row.desc}」又写回了没有实测支撑的宽度条件`
     );
   });
+});
 
+// 单开一节(而不是塞进上面那节):上面那节是「目录 ↔ 实现」的对拍,这两条盯的是**视图自己
+// 画的那行图例**。拆开还有一笔硬账:外层 describe 的回调体已经被 maxFuncLines 棘轮盯着,
+// 往里再塞 70 行就会把它从 78 撑到 148 —— 那是一条阻断级 FAIL,与判据本身无关。
+describe('会话记录视图的提示条两个方向(2026-11-12 pty 实测)', () => {
   test('⑥ 会话记录视图的现场提示条不得比目录少教退出键(2026-11-12 pty 实测)', () => {
     // 视图把每一个键都吃掉(App.js 的 transcript 分支拥有全部输入)，而它的提示条此前只写
     // 「Esc 关闭视图」——目录第 158 行登记着四条退路(Esc / q / Ctrl+C / Ctrl+O)。
@@ -177,7 +182,9 @@ describe('chatChords ↔ 键位目录 双向一致([DESIGN-ARCH-147] G-02)', () 
     const base = grab(/'(([^']*滚动一行[^']*))'/, '滚动那段前缀');
     const branches = [...block.matchAll(/'(Ctrl\+E [^']*工具输出)'/g)].map((m) => m[1]);
     assert.equal(branches.length, 2, `Ctrl+E 那一项应有折叠/展开两个分支，实得 ${branches.length} 个`);
-    const tail = grab(/'(([^']*关闭视图)*)'/, '退出键那段后缀');
+    // 尾串的 `[^']*` 后面**不加 `*`**：写成 (…)* 时它允许零次重复，只要别处出现一对空串
+    // （`''`）就会返回空串，宽度账随之空转、这条判据照样绿。抓不到就 assert 红，不降级。
+    const tail = grab(/'([^']*关闭视图)'/, '退出键那段后缀');
     const wFold = displayWidth(base + branches[0] + tail);
     const wExpand = displayWidth(base + branches[1] + tail);
     assert.equal(wFold, wExpand, '两个分支宽度不等，窄屏会按分支抖动行数');

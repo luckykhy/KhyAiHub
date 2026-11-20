@@ -136,7 +136,7 @@ const EXEMPT = [
 const RUNTIME_SOURCE_RE = [
   /^runtime\/node\/.*\.(js|mjs|cjs|ts|tsx|jsx)$/,
   /^apps\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue)$/,
-  /^delivery\/web\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue)$/,
+  /^delivery\/channel\/web\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue)$/,
   /^delivery\/channel\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue|py)$/,
   /^runtime\/substrate\/platform\/.*\.(py|js|ts|tsx|vue)$/,
   /^delivery\/extension\/.*\.(js|mjs|cjs|ts|py)$/,
@@ -146,7 +146,7 @@ const RUNTIME_SOURCE_RE = [
   // 样式表里的 `content: "✨"` 与 `list-style-type` 一样会**画在屏幕上**，
   // 与 js/ts 同属生成物面；行内 `/* 🔥 说明 */` 由 codePartOf 剥掉，不产生噪声。
   /^apps\/.*\.(css|scss|less)$/,
-  /^delivery\/web\/.*\.(css|scss|less)$/,
+  /^delivery\/channel\/web\/.*\.(css|scss|less)$/,
   /^runtime\/node\/.*\.(css|scss|less)$/,
   /^delivery\/channel\/.*\.(css|scss|less)$/,
   /^runtime\/substrate\/platform\/.*\.(css|scss|less)$/,
@@ -496,7 +496,7 @@ const SCENARIOS = {
     { path: 'runtime/node/backend/src/cli/sanitizer.js', content: '// 历史文案里有 🚨 需要一并剥掉\nconst re = /\uD83D\uDEA8/; // khy-allow-no-emoji: 剥离外部粘贴文本里的告警标记\n' },
   ],
   'initial-avatar': [
-    { path: 'delivery/web/ai-frontend/src/components/Avatar.vue', content: 'const avatarChar = props.name.charAt(0).toUpperCase();\n' },
+    { path: 'delivery/channel/web/ai-frontend/src/components/Avatar.vue', content: 'const avatarChar = props.name.charAt(0).toUpperCase();\n' },
   ],
   // 裁决 4（文档面）：markdown 标题不是注释、HTML 整行注释不渲染、抑制用 <!-- --> 形。
   'docs-surface': [
@@ -508,7 +508,7 @@ const SCENARIOS = {
   'ui-surface': [
     { path: 'delivery/desktop/khyos-desktop/src/renderer/components/layout/Sidebar.tsx', content: "const NAV = [{ id: 'git', icon: '🔀', label: 'Git' }];\n" },
     { path: 'docs/19_资产/site/docs-site.css', content: '.card::after { content: "✨"; }\n' },
-    { path: 'delivery/web/ai-frontend/src/styles/a.css', content: '.card { color: red; /* ✨ 装饰 */ }\n' },
+    { path: 'delivery/channel/web/ai-frontend/src/styles/a.css', content: '.card { color: red; /* ✨ 装饰 */ }\n' },
   ],
 };
 

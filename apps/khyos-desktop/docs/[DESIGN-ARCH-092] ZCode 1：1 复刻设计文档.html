@@ -1308,7 +1308,7 @@ restarting → postUpdateReleaseNotes（重启后展示发布说明）</code></p
       <span class="hljs-string">&quot;**/*.wasm&quot;</span>
     <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
     <span class="hljs-attr">&quot;directories&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">&quot;output&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;dist-electron&quot;</span>
+      <span class="hljs-attr">&quot;output&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;../../entries/electron/dist-electron&quot;</span>
     <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
     <span class="hljs-attr">&quot;files&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-string">&quot;out/**/*&quot;</span><span class="hljs-punctuation">,</span>
@@ -1815,7 +1815,7 @@ node scripts/ci/pixel-compare.js</code></pre>
 <pre><code class="language-bash">node scripts/ci/test-shortcuts.js</code></pre>
 <p>11 个快捷键全量测试：Ctrl+N/J/Alt+B/K/F/T、Shift+Tab、@/#/$/<code>/</code>。</p>
 <p><strong>步骤 4：体积优化（0.5 天）</strong></p>
-<pre><code class="language-bash"><span class="hljs-built_in">ls</span> -lh dist-electron/win-unpacked/resources/app.asar
+<pre><code class="language-bash"><span class="hljs-built_in">ls</span> -lh ../../entries/electron/dist-electron/win-unpacked/resources/app.asar
 <span class="hljs-comment"># 目标：≤ 120 MB</span>
 node scripts/ci/check-dynamic-imports.js</code></pre>
 <p><strong>步骤 5：品牌替换终检（0.5 天）</strong></p>

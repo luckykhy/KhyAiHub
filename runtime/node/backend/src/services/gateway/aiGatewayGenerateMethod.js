@@ -1529,6 +1529,7 @@ const AIGatewayGenerateMethod = {
       }
       return result;
     };
+    let _ucbPick = null;
     const finishResult = (result, { response = null, error = null } = {}) => {
       _stopGatewayIdleWatchdog();
       languageChunkGate = null;
@@ -1550,6 +1551,7 @@ const AIGatewayGenerateMethod = {
           result.routeFact = _routeFact.buildRouteFact(result, {
             env: process.env,
             pinnedUnavailable: _pinnedUnavailable,
+            bandit: _ucbPick,
           });
         } catch {
           /* 诊断字段是best-effort,绝不影响请求成败 */
@@ -2681,6 +2683,16 @@ const AIGatewayGenerateMethod = {
     );
     if (!Array.isArray(orderedAdapters) || orderedAdapters.length === 0) {
       orderedAdapters = this._adapters;
+    }
+    // UCB 选路读数只在「未被钉选/auto」时带出：钉选或重排后第一名不再代表 UCB 的选择，
+    // 把它报成选路依据反而制造假事实。spread 重排会丢不可枚举旁路属性，故必须在此取。
+    if (preferredAdapter === 'auto') {
+      try {
+        const _routing = require('./aiGatewayRoutingMethods');
+        _ucbPick = orderedAdapters[_routing.UCB_PICK_KEY] || null;
+      } catch {
+        /* 诊断字段是 best-effort */
+      }
     }
     let protocolHintLockedAdapter = '';
     if (preferredAdapter === 'auto') {
@@ -4944,7 +4956,15 @@ const AIGatewayGenerateMethod = {
                     entry.key === 'api' ? _mapApiPoolProviderToServiceProvider(poolProvider) : null;
                   const apiDefaultModel =
                     entry.key === 'api' ? _defaultModelForApiPoolProvider(poolProvider) : null;
-                  const cachedFastFail = await inspectCachedFastFail(entry.key, adapterDisplayName);
+                  // fast-fail 是**跨请求**的准入闸（该适配器刚失败过就先别试），
+                  // 而 attempt 预算是**请求内**的重试预算。只在池内第一次尝试时读
+                  // fast-fail：否则 pi=0 的失败会同步写进 _adapterLastError
+                  // （_recordAdapterFailure 在任何 await 之前就写镜像），
+                  // pi=1 紧接着读到这条冷却 → virtualSkip → 池重试退化成 1 次。
+                  // single-key 分支早已是同型守卫（attempt === 0 ? … : null，
+                  // 见 5597 行），pool 分支此前漏了（GW-02）。
+                  const cachedFastFail =
+                    pi === 0 ? await inspectCachedFastFail(entry.key, adapterDisplayName) : null;
                   if (cachedFastFail) {
                     allAttempts.push({
                       provider: adapterDisplayName,
@@ -5058,6 +5078,15 @@ const AIGatewayGenerateMethod = {
                         },
                         abortSignal: attemptAbort.signal,
                         beforeRun: async () => {
+                          // fast-fail 是**跨请求**的准入闸，请求内的重试预算由
+                          // attempt 维度管。池内只有第一次尝试读冷却：否则 pi=0 的
+                          // 失败（同步写进冷却镜像）会把 pi=1 自己锁掉 ——
+                          // 「同池换 key 重试」退化成 1 次真实尝试（GW-02）。
+                          // single-key 分支没有这道 beforeRun 检查，只有循环顶部的
+                          // attempt === 0 守卫（5597 行），口径一致。
+                          if (pi !== 0) {
+                            return null;
+                          }
                           const cached = await inspectCachedFastFail(entry.key, adapterDisplayName);
                           if (!cached) {
                             return null;
@@ -5436,6 +5465,16 @@ const AIGatewayGenerateMethod = {
                   }
                   if (!shouldRotateKey) {
                     break; // Non-retryable and non-credential, move to next adapter
+                  }
+                } finally {
+                  // 兜底释放并发槽。try 体内有多条 continue / return 路径
+                  // （fast-fail 跳过、attempt 预算超限、preferred 终局返回……），
+                  // 它们都绕过 releaseSlot() ⇒ 槽只增不减，累计到上限后该 key
+                  // 被永久排除（max=1 的适配器一次泄漏即判死），且无自愈路径。
+                  // release 是幂等的（concurrencySlots.acquire 返回的 release 带
+                  // released 标志），与成功路径和 catch 里的释放互不冲突。
+                  if (releaseSlot) {
+                    releaseSlot();
                   }
                 }
               }

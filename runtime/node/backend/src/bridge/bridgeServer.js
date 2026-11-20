@@ -349,7 +349,9 @@ async function _handleHttpRequest(req, res) {
     const authz = String(req.headers['authorization'] || '');
     const token = authz.startsWith('Bearer ') ? authz.slice(7).trim() : '';
     const auth = require('./bridgeAuth');
-    if (!token || !auth.validateJwt(token).ok) {
+    // SEC-04：验证通过后保留身份，作为附件属主落盘。
+    const authResult = token ? auth.validateJwt(token) : { ok: false };
+    if (!authResult.ok) {
       _jsonResponse(res, 401, { success: false, error: '未授权,请先登录' });
       return;
     }
@@ -383,6 +385,8 @@ async function _handleHttpRequest(req, res) {
             originalName: f.originalname,
             mimeType: f.mimetype,
             size: f.size,
+            // SEC-04：记录附件属主（上面已验过 JWT）。
+            ownerUserId: authResult.user?.id,
           });
           attachments.push(uploadStore.toDescriptor(manifest));
         }
@@ -401,14 +405,16 @@ async function _handleHttpRequest(req, res) {
     const authz = String(req.headers['authorization'] || '');
     const token = authz.startsWith('Bearer ') ? authz.slice(7).trim() : '';
     const auth = require('./bridgeAuth');
-    if (!token || !auth.validateJwt(token).ok) {
+    // SEC-04：验过身份后按属主过滤 —— 他人的附件 id 一律按 404 处理。
+    const authResult = token ? auth.validateJwt(token) : { ok: false };
+    if (!authResult.ok) {
       _jsonResponse(res, 401, { success: false, error: '未授权,请先登录' });
       return;
     }
     const fs = require('fs');
     const uploadStore = require('../services/aiUploadStore');
     const id = req.url.slice('/api/upload/'.length).split('?')[0];
-    const manifest = uploadStore.getUpload(id);
+    const manifest = uploadStore.getUpload(id, authResult.user?.id);
     if (!manifest) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not Found');

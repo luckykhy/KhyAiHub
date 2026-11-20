@@ -51,7 +51,8 @@ const hudState = {
   // Model/adapter transparency
   lastModel: '', // last model used (e.g. "claude-3.5-sonnet")
   lastAdapter: '', // last adapter used (e.g. "relay")
-  sessionCostUSD: 0, // running session cost
+  lastCostState: '', // priced/free/flat/assumed/unknown
+  sessionCostUSD: 0, // running session cost (measured states only)
 
   // Account email (from kiroAdapter or account pool)
   accountEmail: '',
@@ -207,15 +208,23 @@ function updateTokens(usage) {
  * @param {string} model
  * @param {string} [adapter]
  * @param {number} [turnCostUSD]
+ * @param {string} [costState] - priced/free/flat/assumed/unknown
  */
-function updateModelInfo(model, adapter, turnCostUSD) {
+function updateModelInfo(model, adapter, turnCostUSD, costState) {
   if (model) {
     hudState.lastModel = model;
   }
   if (adapter) {
     hudState.lastAdapter = adapter;
   }
-  if (turnCostUSD > 0) {
+  if (costState) {
+    hudState.lastCostState = costState;
+  }
+  // Only measured costs enter the running session total. flat/assumed/unknown
+  // must not masquerade as billed amounts in the status bar — the per-turn line
+  // already marks them as rough or unknown.
+  const usable = !costState || costState === 'priced' || costState === 'free';
+  if (usable && turnCostUSD > 0) {
     hudState.sessionCostUSD += turnCostUSD;
   }
 }

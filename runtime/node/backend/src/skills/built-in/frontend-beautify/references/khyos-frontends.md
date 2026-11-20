@@ -2,11 +2,11 @@
 
 本文档描述 khyos 两个前端的**项目结构、文件定位、典型改动点**，供 frontend-beautify skill 在美化时快速定位。
 
-## 1. AI 平台前端（delivery/web/ai-frontend）
+## 1. AI 平台前端（delivery/channel/web/ai-frontend）
 
 ### 结构
 ```
-delivery/web/ai-frontend/src/
+delivery/channel/web/ai-frontend/src/
 ├── main.js                  # 入口：引 EP 暗色 css-vars + newapi-theme.css + useTheme
 ├── styles/
 │   └── newapi-theme.css     # ★ 设计 token 真源（--khy-* 亮暗双主题）
@@ -41,8 +41,8 @@ delivery/web/ai-frontend/src/
 
 ### 验证
 ```bash
-cd delivery/web/ai-frontend && npx vite build   # 无编译错误
-cd delivery/web/ai-frontend && npm run dev      # 目视检查
+cd delivery/channel/web/ai-frontend && npx vite build   # 无编译错误
+cd delivery/channel/web/ai-frontend && npm run dev      # 目视检查
 ```
 
 ## 2. 量化交易前端（delivery/channel/khyquant/frontend）
@@ -78,7 +78,7 @@ cd delivery/channel/khyquant/frontend && npm run dev
 ## 3. 移动伴侣（已退役）
 
 > 原 `apps/khy-mobile/`（Vue 3 + Capacitor）已删除；现存移动端为 Flutter 客户端
-> `delivery/mobile/khy-os-client-app/`，其界面不适用本技能的 Vue/Element Plus 流程。
+> `delivery/channel/mobile/khy-os-client-app/`，其界面不适用本技能的 Vue/Element Plus 流程。
 
 ### 结构（历史存档）
 ```
@@ -112,7 +112,7 @@ apps/khy-mobile/
 
 ### 验证
 ```bash
-cd delivery/mobile/khy-os-client-app && flutter build apk  # 现行为 Flutter 构建
+cd delivery/channel/mobile/khy-os-client-app && flutter build apk  # 现行为 Flutter 构建
 # 真机/模拟器：npm run dev + Capacitor（可选）
 ```
 

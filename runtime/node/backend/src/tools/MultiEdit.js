@@ -20,13 +20,6 @@ const { defineTool } = require('./_baseTool');
 const { validateNotUNCPath, validateNoPathTraversal } = require('./inputValidators');
 const fileLock = require('./_fileLock');
 
-let _fileHistory;
-try {
-  _fileHistory = require('../services/fileHistoryService');
-} catch {
-  _fileHistory = null;
-}
-
 let _readTracker;
 try {
   _readTracker = require('./_readTracker');
@@ -94,25 +87,6 @@ function _checkReadBeforeEdit(absPath) {
     }
   }
   return { ok: true };
-}
-
-/**
- * Record a pre-edit snapshot into the current turn's rollback manifest.
- * Fail-soft: no-op when no active turn is known.
- */
-function _recordTurnMutation(context, absPath, preContent, reason) {
-  const turnId = context && context.traceContext && context.traceContext.turnId;
-  if (!turnId) {
-    return;
-  }
-  try {
-    require('../services/turnCheckpointService').recordMutatedFile(turnId, absPath, {
-      reason,
-      content: preContent,
-    });
-  } catch {
-    /* non-critical */
-  }
 }
 
 /**
@@ -291,17 +265,9 @@ module.exports = defineTool({
           /* stat/判定失败 → 回退历史行为 */
         }
 
+        // 基线在读取之前取：写盘时磁盘 mtime 已变 → fileWriteService 判 conflict。
+        const baseMtimeMs = fs.statSync(absPath).mtimeMs;
         const original = fs.readFileSync(absPath, 'utf-8');
-
-        // snapshot before modification
-        if (_fileHistory) {
-          try {
-            _fileHistory.takeSnapshot(absPath, { reason: 'MultiEdit', content: original });
-          } catch {
-            /* non-critical */
-          }
-        }
-        _recordTurnMutation(context, absPath, original, 'MultiEdit');
 
         // apply edits sequentially; abort this file on first failure
         let working = original;
@@ -337,7 +303,20 @@ module.exports = defineTool({
           continue;
         }
 
-        fs.writeFileSync(absPath, working, 'utf-8');
+        const applied = await require('../services/fileWriteService').write({
+          filePath: absPath,
+          content: working,
+          baseMtimeMs,
+          actor: 'tool',
+          reason: 'MultiEdit',
+          beforeContent: original,
+          turnId: context && context.traceContext && context.traceContext.turnId,
+        });
+        if (!applied.ok) {
+          results.push({ file: absPath, success: false, error: applied.error, replacementsApplied: 0 });
+          failedCount++;
+          continue;
+        }
         totalReplacements += fileReplacements;
         results.push({
           file: absPath,

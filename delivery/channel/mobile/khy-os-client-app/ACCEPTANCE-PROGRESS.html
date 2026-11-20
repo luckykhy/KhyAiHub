@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: ACCEPTANCE-PROGRESS.md -->
+<title>真机验收进展记录（2026-11-16，设备恢复后） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>channel<span class="sep">›</span>mobile<span class="sep">›</span>khy-os-client-app<span class="sep">›</span>真机验收进展记录（2026-11-16，设备恢复后）</div>
+      <header class="hero reveal"><h1>真机验收进展记录（2026-11-16，设备恢复后）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#真机验收进展记录-2026-11-16-设备恢复后">真机验收进展记录（2026-11-16，设备恢复后）</a></li><li class="lvl-2"><a href="#设备">设备</a></li><li class="lvl-2"><a href="#验收-①-21-条混合命令-第一轮-未落盘">验收 ①（21 条混合命令）—— 第一轮：未落盘</a></li><li class="lvl-2"><a href="#验收-③-前置条件-不满足">验收 ③ 前置条件 —— 不满足</a></li><li class="lvl-2"><a href="#新发现的脚本缺陷-有真机证据">新发现的脚本缺陷（有真机证据）</a></li><li class="lvl-2"><a href="#脚本缺陷-2-wifi-判据漏判-已修">脚本缺陷 2：WiFi 判据漏判（已修）</a></li><li class="lvl-2"><a href="#①-触发失效的定位过程-2026-11-16-11-24-四轮排查">① 触发失效的定位过程（2026-11-16 11:24，四轮排查）</a></li><li class="lvl-2"><a href="#①-真因确诊-2026-11-16-11-50-五轮实验">① 真因确诊（2026-11-16 11:50，五轮实验）</a></li><li class="lvl-2"><a href="#结论再修正-2026-11-16-12-35-后半段的失败主要是设备离线">⚠️ 结论再修正（2026-11-16 12:35）—— 后半段的失败主要是设备离线</a></li><li class="lvl-2"><a href="#今天已经确凿拿到的东西-不受上述影响">今天已经确凿拿到的东西（不受上述影响）</a></li><li class="lvl-2"><a href="#附-脚本计数的坑-今天连踩三次">附：脚本计数的坑（今天连踩三次）</a></li><li class="lvl-2"><a href="#附带-今天的-powershell-环境问题-记录-避免重复踩">附带：今天的 PowerShell 环境问题（记录，避免重复踩）</a></li><li class="lvl-2"><a href="#③-仍需">③ 仍需</a></li><li class="lvl-2"><a href="#②">②</a></li><li class="lvl-1"><a href="#2026-11-16-14-0x-15-0x-设备二次恢复-驱动两个判定-bug-确诊">2026-11-16 14:0x – 15:0x：设备二次恢复，驱动两个判定 bug 确诊</a></li><li class="lvl-2"><a href="#设备回来了-但检查脚本在说谎">设备回来了，但检查脚本在说谎</a></li><li class="lvl-2"><a href="#三个脚本缺陷-均有实证">三个脚本缺陷（均有实证）</a></li><li class="lvl-2"><a href="#最重要-验收驱动的判定从来没有对过">最重要：验收驱动的判定从来没有对过</a></li><li class="lvl-2"><a href="#本轮拿到的真机证据-修复后">本轮拿到的真机证据（修复后）</a></li><li class="lvl-2"><a href="#③-现状-14-4x-复核">③ 现状（14:4x 复核）</a></li><li class="lvl-1"><a href="#2026-11-16-15-0x-①-21-21-全过-反假阳性-守卫是三层真空">2026-11-16 15:0x：① 21/21 全过 + 「反假阳性」守卫是三层真空</a></li><li class="lvl-2"><a href="#①-的结果与独立复核">① 的结果与独立复核</a></li><li class="lvl-2"><a href="#反假阳性-守卫-三层各自独立足以让它恒为-0">「反假阳性」守卫：三层各自独立足以让它恒为 0</a></li><li class="lvl-2"><a href="#修法与闭环验证">修法与闭环验证</a></li><li class="lvl-2"><a href="#验收标准-4-的部分实证-15-3x-未开无障碍也能拿到的部分">验收标准 4 的部分实证（15:3x，未开无障碍也能拿到的部分）</a></li><li class="lvl-2"><a href="#②-脚本的致灾缺陷-15-2x-修复">② 脚本的致灾缺陷（15:2x 修复）</a></li><li class="lvl-2"><a href="#交付物已刷新为含日志见证的版本">交付物已刷新为含日志见证的版本</a></li><li class="lvl-3"><a href="#交付闭环的一课-15-4x-装机哈希曾与交付副本不一致">交付闭环的一课（15:4x）：装机哈希曾与交付副本不一致</a></li><li class="lvl-2"><a href="#硬性约束-2-的真机直接验证-15-5x">硬性约束 2 的真机直接验证（15:5x）</a></li><li class="lvl-2"><a href="#预填失败的真实后果-15-5x-值得记">预填失败的真实后果（15:5x，值得记）</a></li><li class="lvl-2"><a href="#常用指令与共享存储的真机落盘-16-0x">常用指令与共享存储的真机落盘（16:0x）</a></li><li class="lvl-2"><a href="#硬性约束-4-的双层验证-16-2x">硬性约束 4 的双层验证（16:2x）</a></li><li class="lvl-2"><a href="#amoo-解耦的关键实证-上下文确实被带过去了-16-3x">Amoo 解耦的关键实证：上下文确实被带过去了（16:3x）</a></li><li class="lvl-2"><a href="#补上一个真实的覆盖缺口-raw-json-切换-16-4x">补上一个真实的覆盖缺口：raw JSON 切换（16:4x）</a></li><li class="lvl-2"><a href="#raw-json-切换的真机确认-16-5x">raw JSON 切换的真机确认（16:5x）</a></li><li class="lvl-2"><a href="#可导出-的真机验证-16-5x-字节级一致">「可导出」的真机验证（16:5x，字节级一致）</a></li><li class="lvl-2"><a href="#amoo-产出的命令格式-形态正确-但执行要人按发送-17-0x">Amoo 产出的命令格式：形态正确，但执行要人按发送（17:0x）</a></li><li class="lvl-3"><a href="#更正-19-3x-ai-页签发送不会产生-amoo-记录">⚠️ 更正（19:3x）：AI 页签发送不会产生 amoo 记录</a></li><li class="lvl-3"><a href="#代码级追认-记录一致不是巧合-是同一份判断-21-0x">代码级追认：记录一致不是巧合，是同一份判断（21:0x）</a></li><li class="lvl-2"><a href="#双向调用的-请求-半边已有实证-17-1x">双向调用的「请求」半边已有实证（17:1x）</a></li><li class="lvl-2"><a href="#设备已换构架-装机是-versioncode-43-不是交付副本-19-5x">设备已换构架：装机是 versionCode 43，不是交付副本（19:5x）</a></li><li class="lvl-2"><a href="#补-clearhistory-测试-一个-假绿灯-坑-20-2x">补 clearHistory 测试 + 一个「假绿灯」坑（20:2x）</a></li><li class="lvl-3"><a href="#过程中的坑-build-successful-不等于测试跑了">过程中的坑：BUILD SUCCESSFUL 不等于测试跑了</a></li><li class="lvl-2"><a href="#去授权-真的到得了权限中心-20-4x-标准-5-补强">「去授权」真的到得了权限中心（20:4x，标准 5 补强）</a></li><li class="lvl-2"><a href="#21-21-在设备当前构建上复跑通过-19-5x-三证据源一致">21/21 在设备当前构建上复跑通过（19:5x，三证据源一致）</a></li><li class="lvl-2"><a href="#②-脚本预检-抓到一个会让证据翻倍的-bug-17-2x">② 脚本预检：抓到一个会让证据翻倍的 bug（17:2x）</a></li><li class="lvl-2"><a href="#fake-adb-判定逻辑测试-三条断言全过-16-0x">fake-adb 判定逻辑测试：三条断言全过（16:0x）</a></li><li class="lvl-3"><a href="#附-设备掉线又恢复-15-4x">附：设备掉线又恢复（15:4x）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="真机验收进展记录-2026-11-16-设备恢复后">真机验收进展记录（2026-11-16，设备恢复后）<a class="anchor" href="#真机验收进展记录-2026-11-16-设备恢复后" aria-label="锚点">#</a></h1>
+<blockquote><p>背景：<code>VERIFICATION.md</code> 已在 2026-11-14 被 Set-Content 事故损坏，本文件是<br>恢复连接后的验收进展与<strong>新发现的真机证据</strong>。写入用 write/edit 工具，不用<br>Set-Content（事故根因）。</p></blockquote>
+<h2 id="设备">设备<a class="anchor" href="#设备" aria-label="锚点">#</a></h2>
+<ul><li>型号 PZ261A / Android 16</li><li>连接方式：<strong>adb over WiFi（mDNS TLS）</strong>，序列号显示为</li></ul>
+<p><code>adb-ZYPZ261A01M6870010L-R9QdlL (2)._adb-tls-connect._tcp</code></p>
+<ul><li>App 版本 1.1.48，APK 构建于 11-16 10:33（比 lib/ 最新源码 09:18 新）</li></ul>
+<h2 id="验收-①-21-条混合命令-第一轮-未落盘">验收 ①（21 条混合命令）—— 第一轮：未落盘<a class="anchor" href="#验收-①-21-条混合命令-第一轮-未落盘" aria-label="锚点">#</a></h2>
+<p><strong>现象</strong>：脚本逐条报 PASS（如 <code>[ 1/21] want=ok {&quot;tool&quot;:&quot;ping&quot;} -&gt; PASS</code>），<br>但设备上 <code>/sdcard/bridge-amoobridge/console_history.jsonl</code> <strong>行数不变（115）</strong>，<br>即 21 条一条都没进共享历史。</p>
+<p><strong>根因（已实测确认）</strong>：</p>
+<pre><code>appops get com.khyos.khy_os_client MANAGE_EXTERNAL_STORAGE
+→ allow; time=+4m57s ago; rejectTime=+1d23h42m ago</code></pre>
+<p>即 <strong>MANAGE_EXTERNAL_STORAGE 在开跑时尚未授予</strong>（rejectTime 是 1 天 23 小时前），<br><code>KhyConsole.baseDir()</code> 按设计静默回退到 App 私有目录，21 条全写进了私有目录。<br>这与早前「共享存储失效时静默违背同一份存储」是同一机制，只是这次发生在真机。</p>
+<p><strong>这也是脚本的一个盲区</strong>：脚本只查共享目录的行数，看不到 App 实际写了哪儿，<br>所以把「写了但没写共享」报成了 PASS。<strong>修正方向</strong>：脚本应在开跑前检查<br><code>appops … MANAGE_EXTERNAL_STORAGE</code>，非 allow 则先提示授权（否则重跑无意义）。</p>
+<h2 id="验收-③-前置条件-不满足">验收 ③ 前置条件 —— 不满足<a class="anchor" href="#验收-③-前置条件-不满足" aria-label="锚点">#</a></h2>
+<pre><code>settings get secure enabled_accessibility_services
+→ com.stepos.systemuiex/…PlugAccessibilityService:com.stepos.picker/…WeChatHackService</code></pre>
+<p><strong>没有 <code>khy_os_client</code></strong>，即本 App 的无障碍服务未开启，<code>AmooLoop.start()</code><br>会按设计拒绝（<code>AmooLoop.java:913-920</code>）。跑 ③ 前需先开启。</p>
+<h2 id="新发现的脚本缺陷-有真机证据">新发现的脚本缺陷（有真机证据）<a class="anchor" href="#新发现的脚本缺陷-有真机证据" aria-label="锚点">#</a></h2>
+<p><code>khy_amoo_accept.ps1</code> 的存活判据用 <code>dumpsys accessibility | grep -c khy_os_client</code>，<br>真机上它返回 <strong>1</strong>——但那一行是</p>
+<pre><code>[com.ss.android.ugc.aweme][com.stepx.aiapp.…][com.khyos.khy_os_client][com.tencent.transfer]…</code></pre>
+<p>即<strong>已安装应用列表</strong>，不是已绑定服务列表。所以该判据在「未开启无障碍」的<br>设备上会误报「已绑定」。这正是 2026-11-14 记的 13b「dumpsys 判据是未验证的<br>Android 行为断言」的真机应验——当时把它降级为「待验证假设」是对的。</p>
+<p><strong>修正方向</strong>：判据应改为只匹配服务绑定形态（如<br><code>grep -E 'Service.*khy_os_client|khy_os_client/.*Accessibility'</code>），<br>并以 <code>enabled_accessibility_services</code> 是否含 <code>khy_os_client</code> 为主判据。</p>
+<h2 id="脚本缺陷-2-wifi-判据漏判-已修">脚本缺陷 2：WiFi 判据漏判（已修）<a class="anchor" href="#脚本缺陷-2-wifi-判据漏判-已修" aria-label="锚点">#</a></h2>
+<p><code>khy_install.ps1</code> 原用 <code>$serial -match ':$'</code> 判断 WiFi-only，但本设备 adb 报的是<br>mDNS/TLS 名（<code>…_adb-tls-connect._tcp</code>，<strong>不含冒号</strong>），导致它把 WiFi 连接当成<br>USB 并继续装包/准备跑断网测试（那会自断 adb）。已改为同时匹配 <code>:$</code>、<br><code>_adb-tls-connect</code>、<code>^adb-.*_adb</code> 三种形态，并实测：现在能正确拒绝。</p>
+<h2 id="①-触发失效的定位过程-2026-11-16-11-24-四轮排查">① 触发失效的定位过程（2026-11-16 11:24，四轮排查）<a class="anchor" href="#①-触发失效的定位过程-2026-11-16-11-24-四轮排查" aria-label="锚点">#</a></h2>
+<p><strong>现象</strong>：三轮跑查，21 条命令全部 NOT RECORDED；<code>logcat -s KHYCONSOLE</code> 为空。</p>
+<p><strong>逐一排除</strong>（每一条都有真机证据，不是推测）：</p>
+<table><thead><tr><th>#</th><th>假设</th><th>证据</th><th>结论</th></tr></thead><tbody><tr><td>1</td><td>坐标失效</td><td>截图量得播放按钮在原图 y≈2470（脚本用 1997）</td><td>试了新坐标组，仍失败 → 不是主因</td></tr><tr><td>2</td><td>命令没预填</td><td>截图显示输入框<strong>确实</strong>预填着 <code>{&quot;tool&quot;:&quot;ping&quot;}</code></td><td>排除</td></tr><tr><td>3</td><td>Amoo 抢前台</td><td>某次截图确实是 Amoo 聊天界面</td><td>真实存在但<strong>非稳定复现</strong>；下一次 <code>mCurrentFocus</code> 显示 khy-os 本就在前台，仍失败 → 不是主因</td></tr><tr><td>4</td><td>前台不对</td><td>`dumpsys window \</td><td>grep mCurrentFocus<code> = </code>com.khyos.khy_os_client/.MainActivity`</td></tr><tr><td>5</td><td>ENTER 不触发</td><td>单独试 <code>input keyevent 66</code>（editor SEND）</td><td>无效 → 排除</td></tr><tr><td>6</td><td>共享目录不可写</td><td><code>MANAGE_EXTERNAL_STORAGE: allow</code>（10:54 授予）</td><td>排除</td></tr><tr><td>7</td><td>控制台页签没渲染</td><td>截图：历史卡片/输入框/播放按钮/五页签<strong>全部正常</strong></td><td>排除</td></tr></tbody></table>
+<p><strong>关键旁证</strong>：共享历史 118 条中 <strong>72 条 origin=link</strong>（PC 经 BridgeLink 下发的指令，<br>时间从 17:59 到 22:33 连续不断），<strong>4 条 origin=manual 全部来自 11-13/11-14</strong>（早前会话），<br><strong>今天 11-16 一条 manual 都没有</strong>。</p>
+<p>即：<strong>同一个 App 里，PC 经链路边下发的指令全部成功执行并落盘，而控制台 UI 的点击<br>执行从不发生</strong>。代码侧执行入口完好（<code>console_screen.dart:755</code> <code>onPressed: _exec</code>、<br><code>:741</code> <code>onSubmitted</code>、<code>_exec()</code> 逻辑、<code>ConsoleService.exec</code> → MethodChannel →<br><code>KhyConsole.exec</code> 全都在），所以问题在<strong>点击事件到不了 <code>_exec</code></strong> 这一层，<br>需要 App 内日志或现场调试才能继续定位——超出「跑验收」的范围。</p>
+<p><strong>另一个发现</strong>：别的会话给项目加了第三种 origin <code>link</code><br>（<code>console_service.dart:75</code> <code>kConsoleOriginLink</code>，标签「链路」），<br><code>manual</code>/<code>amoo</code> 仍在。③ 的取证脚本按 <code>origin=amoo</code> 匹配仍有效，但<strong>结论里应说明<br>共享历史现在有三种来源</strong>。</p>
+<h2 id="①-真因确诊-2026-11-16-11-50-五轮实验">① 真因确诊（2026-11-16 11:50，五轮实验）<a class="anchor" href="#①-真因确诊-2026-11-16-11-50-五轮实验" aria-label="锚点">#</a></h2>
+<p><strong>曾误判两次</strong>，都记下来，因为误判的路径比结论有价值：</p>
+<ol><li>先判「Amoo 抢前台」——有截图证据，但下次 <code>mCurrentFocus</code> 显示 khy-os 本就在</li></ol>
+<p>前台却仍失败 → 非主因；</p>
+<ol><li>又判「点击事件到不了 <code>_exec</code>，需 App 内日志」——<strong>下得太早</strong>。漏了一个手段：</li></ol>
+<p><code>uiautomator</code> 虽然漏 Flutter <strong>文本</strong>，但不漏 Flutter <strong>可点击节点</strong>（早前它就<br>   抓到了五个 Tab）。用节点树直接量，执行按钮真实中心是 <strong>(927,2231)</strong>，<br>   脚本写的是 (932,1997)——<strong>差 234px，点到了历史列表</strong>。<br>   （我从截图目估的 y≈2470 也是错的：把底部导航高度误算进去了。）</p>
+<p><strong>单条验证成功</strong>（11:39:11，<code>manual ping ok</code>，result 含 pong/pid）后，跑全量 21 条<br>仍失败 → 说明还有第二个因素。三次重复实验把两个偶发因素分离开：</p>
+<table><thead><tr><th>次</th><th>输入框有命令文本</th><th>落盘</th></tr></thead><tbody><tr><td>1</td><td><strong>False</strong>（预填丢失）</td><td>否</td></tr><tr><td>2</td><td>True</td><td><strong>是（127→128）</strong></td></tr><tr><td>3</td><td>True</td><td>否</td></tr></tbody></table>
+<p><strong>结论：两个独立的偶发因素，都在 App 侧</strong></p>
+<ol><li><strong>预填竞态</strong>：<code>am force-stop</code> + <code>am start</code> 后，<code>_loadAll()</code>（async）里的</li></ol>
+<p><code>pendingCommand()</code> 有时还没把命令写进 <code>_input</code>。等 11 秒通常够，不总是。<br>   <code>_exec()</code> 第一行 <code>if (text.isEmpty) return</code>（<code>console_screen.dart:145-149</code>）<br>   直接吞掉——<strong>界面无任何提示</strong>，看起来就是「点了没反应」。</p>
+<ol><li><strong>点击偶发不触发</strong>：文本在位时点击仍有约 1/3 不执行。</li></ol>
+<p><strong>量化</strong>：单条实验成功率约 1/3（3 次里 1 次完整成功）。21 条按此概率全中，<br>期望值约 7 条——与四轮观察（0~2 条）量级一致。</p>
+<p><strong>脚本侧已修</strong>：坐标改为实测值 (927,2231) 与页签 (360,2449)；此前还加了<br>ts 过滤器与前台拉回。<strong>剩余两个偶发因素是 App 侧竞态，脚本修不掉</strong>，<br>需要在 App 内加日志或现场调试。</p>
+<h2 id="结论再修正-2026-11-16-12-35-后半段的失败主要是设备离线">⚠️ 结论再修正（2026-11-16 12:35）—— 后半段的失败主要是设备离线<a class="anchor" href="#结论再修正-2026-11-16-12-35-后半段的失败主要是设备离线" aria-label="锚点">#</a></h2>
+<p><strong>今天 12:0x 之后的分析大部分作废</strong>，原因：</p>
+<p><code>adb devices</code> 现在返回 <strong><code>no devices/emulators found</code></strong> —— 设备在 12:0x 左右掉线了。<br>而我的脚本普遍用 <code>2&gt;$null</code> 吞掉 stderr，于是每条 adb 命令都<strong>无声失败</strong>：<br><code>ps</code>/<code>pidof</code>/<code>dumpsys</code> 全返回空 → 我误判成「App 进程不存在」「焦点窗口空」<br>「点击不触发」。<strong>那些空输出不是被测对象的状态，是命令根本没执行。</strong></p>
+<p>同时发现 <code>D:\Portable\4-output\Temp\</code> 被清理过：<code>khy-devcheck.ps1</code>、<br><code>khy_install.ps1</code>、<code>khy_accept2.ps1</code> 已不在（<code>khy-btn.ps1</code>、<code>khy-today.ps1</code> 等还在），<br>所以后期连「脚本不存在」也被 <code>2&gt;$null</code> 吞掉，进一步掩盖了真实原因。</p>
+<p><strong>今天真正有效的证据只有 12:0x 之前的</strong>：</p>
+<table><thead><tr><th>时间</th><th>事件</th><th>是否有效</th></tr></thead><tbody><tr><td>11:39-11:54</td><td>11 条 manual 全部 ok（已核实 raw 全部匹配探针命令）</td><td><strong>有效</strong></td></tr><tr><td>11:18</td><td>Amoo 回复「本地执行 ui_click → tool_unavailable」</td><td><strong>有效</strong></td></tr><tr><td>全天</td><td>72 条 origin=link 全部 ok</td><td><strong>有效</strong></td></tr><tr><td>12:0x 之后</td><td>「点击不触发」「进程不存在」等</td><td><strong>作废</strong>（设备离线 + 错误被吞）</td></tr></tbody></table>
+<p><strong>教训（今天最贵的一条）</strong>：<code>2&gt;$null</code> 会让「命令没执行」和「执行了但结果为空」<br>变得完全无法区分。<strong>观测代码必须先证明自己能观测到东西</strong>，再拿它的输出下结论。<br>这也是本项目方法论第 1 条「看起来在检查和真的在检查」的又一实例。</p>
+<p><strong>当前状态</strong>：设备离线，三项真机验收继续等待。代码侧无新问题。</p>
+<p>上一段写「问题在脚本不在 App」，<strong>这个结论被后续实验推翻了</strong>，记下修正过程：</p>
+<ol><li>把 ① 脚本砍到与探针<strong>完全相同的最小序列</strong>（<code>khy-min.ps1</code>，5 条）→ 仍 0 条落盘；</li><li>复跑曾被证明有效的 <code>khy-retry.ps1</code> → 连续 3 次都是</li></ol>
+<p><strong><code>text present but tap did not fire</code></strong>（输入框有命令、点击执行、无结果）。</p>
+<p><strong>所以与脚本无关</strong>。真正的失败模式是：<strong>点击执行按钮这个动作，当前几乎不触发 <code>_exec()</code></strong>。</p>
+<p>而 11:39-11:50 那 11 条密集成功说明它<strong>曾经是可触发的</strong>——即这是<strong>随时间/状态变化的间歇性故障</strong>，不是固定的。可能方向（未验证）：<br>输入框持着预填文本 + 焦点时，<code>IconButton.filled</code> 的点击被前一个 <code>TextField</code> 的<br>手势区吃掉；或 Flutter 的 hit-test 在输入行有内容时把按钮区域让给了文本选择。<br><strong>这需要 App 内日志或现场调试</strong>，超出 adb 能定位的范围。</p>
+<h2 id="今天已经确凿拿到的东西-不受上述影响">今天已经确凿拿到的东西（不受上述影响）<a class="anchor" href="#今天已经确凿拿到的东西-不受上述影响" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>证据</th></tr></thead><tbody><tr><td>手动执行通道<strong>曾经</strong>完整工作</td><td>11 条 manual 记录，全部 <code>ok</code>（含 ping/ls）</td></tr><tr><td>Amoo 产出命令走本地通道</td><td>Amoo 回复「本地执行 ui_click → tool_unavailable」</td></tr><tr><td>PC 经桥下发指令全部成功</td><td>72 条 origin=link，无失败</td></tr><tr><td>三类失败分类正确</td><td>JVM 20 条混合命令逐条断言 + widget/Dart 单测</td></tr><tr><td>断网不依赖网络</td><td>结构侧：控制台四个文件 0 网络 import，执行链进程内</td></tr></tbody></table>
+<h2 id="附-脚本计数的坑-今天连踩三次">附：脚本计数的坑（今天连踩三次）<a class="anchor" href="#附-脚本计数的坑-今天连踩三次" aria-label="锚点">#</a></h2>
+<p><code>&amp; $adb shell 'wc -l &lt; file' 2&gt;&amp;1</code> 会把 adb 的 stderr 警告混进管道，<br><code>.Trim()</code> 于是被调用在 ErrorRecord 上并抛异常，计数变 -1/空。<br><strong>解法</strong>：用 <code>2&gt;$null</code> 会连 stdout 一起吞；正确写法是<br><code>$r = &amp; $adb shell ... 2&gt;$null; [string]$r</code> 再 TryParse，<br>或直接用 <code>khy-today.ps1</code>（它内部处理过）独立读数。</p>
+<blockquote><p><strong>以下是被 12:35「结论再修正」推翻的旧结论，保留以记录推翻过程</strong>：<br>当时据「探针 11 连成功 vs 全量脚本六轮 0-2 条」判断「问题不在 App，在脚本」，<br>并列出三个嫌疑（前台拉回循环、ESC 收键盘、uiautomator 校验）。后续实验<br>（砍到最小序列仍失败、重试探针也失败）加之最终发现<strong>设备当时已离线</strong>，<br>证明该判断不成立。详见上面「结论再修正」一节。</p></blockquote>
+<h2 id="附带-今天的-powershell-环境问题-记录-避免重复踩">附带：今天的 PowerShell 环境问题（记录，避免重复踩）<a class="anchor" href="#附带-今天的-powershell-环境问题-记录-避免重复踩" aria-label="锚点">#</a></h2>
+<p>手打 <code>D:\Portable\2-tools\...</code> 长路径在今天被截断了<strong>十几次</strong>，每次都让命令<br>静默变成空跑（<code>$f</code> 为 null → <code>&amp; $f.FullName</code> 报错，但后台任务显示 succeeded）。<br><strong>解法</strong>：路径只写在脚本文件里，用自包含启动器调（<code>khy-run1.ps1</code>），<br>不在命令行手打。这与本项目方法论第 2 条同源。</p>
+<p>Amoo 的回复原文（11:18 截图）：</p>
+<blockquote><p>我们刚才在 khy-os 本地执行了一条命令：ui_click<br>参数：{&quot;text&quot;:&quot;x&quot;}<br>结果：tool_unavailable</p></blockquote>
+<p>即 <strong>Amoo 产出的命令确实走了 khy-os 本地执行通道</strong>（<code>KhyConsole.exec(ORIGIN_AMOO,…)</code>），<br>且因无障碍未开拿到 <code>tool_unavailable</code>（三类失败中的第二类，文案与<br><code>KhyConsole.java:228-231</code> 一致）。这满足了验收标准 4 的核心命题<br>「Amoo 产出的命令与手动命令走同一条通道」的<strong>真机证据</strong>部分；<br>「显示格式一致」部分已有 widget 测试 + Dart 单测覆盖（JVM/Dart 层）。</p>
+<h2 id="③-仍需">③ 仍需<a class="anchor" href="#③-仍需" aria-label="锚点">#</a></h2>
+<p>无障碍未开启（<code>enabled_accessibility_services</code> 无 <code>khyos.khy_os_client</code>），<br><code>AmooLoop.start()</code> 会拒绝。要跑完整 ③ 需先开启——<strong>这是用户授权动作，不由脚本代做</strong>。</p>
+<h2 id="②">②<a class="anchor" href="#②" aria-label="锚点">#</a></h2>
+<p>需插 USB（当前 WiFi，<code>khy_install.ps1</code> 已能正确识别并拒绝）。</p>
+<hr>
+<h1 id="2026-11-16-14-0x-15-0x-设备二次恢复-驱动两个判定-bug-确诊">2026-11-16 14:0x – 15:0x：设备二次恢复，驱动两个判定 bug 确诊<a class="anchor" href="#2026-11-16-14-0x-15-0x-设备二次恢复-驱动两个判定-bug-确诊" aria-label="锚点">#</a></h1>
+<h2 id="设备回来了-但检查脚本在说谎">设备回来了，但检查脚本在说谎<a class="anchor" href="#设备回来了-但检查脚本在说谎" aria-label="锚点">#</a></h2>
+<p><code>adb devices</code> 明确列出两条 <code>device</code> 状态（同一手机的两次 mDNS TLS 注册），<br>脚本却报 <code>NO DEVICE</code>。四轮排查后定位：Temp 里有<strong>两个</strong> devcheck——</p>
+<table><thead><tr><th>文件</th><th>字节</th><th>结果</th></tr></thead><tbody><tr><td><code>khy_devcheck.ps1</code>（<strong>下划线</strong>）</td><td>348 个非 ASCII、无 BOM</td><td><strong>坏的</strong></td></tr><tr><td><code>khy-devcheck.ps1</code>（<strong>连字符</strong>）</td><td>纯 ASCII</td><td>好的，canonical</td></tr></tbody></table>
+<p>下划线版违反本仓「验收脚本必须 ASCII-only」的成文规则：PowerShell 5.1 按 GBK<br>解码无 BOM 的 UTF-8 文件，中文注释被误解码后与下一行的 <code>$dev = ...</code> 赋值<strong>并成<br>同一行</strong>，<code>#</code> 把赋值整行注释掉 → <code>$dev</code> 从未赋值 → 永远 <code>NO DEVICE</code>。<br>按 GBK 解码后可见 L14 变成 <code># …銆?$dev = &amp; $adb devices …</code>，赋值确实被吞。<br><strong>我今天敲错成下划线版，白绕四轮诊断。</strong></p>
+<h2 id="三个脚本缺陷-均有实证">三个脚本缺陷（均有实证）<a class="anchor" href="#三个脚本缺陷-均有实证" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>缺陷</th><th>修法</th></tr></thead><tbody><tr><td><code>khy_run_all.ps1</code> step 0</td><td>WiFi 防护只认 <code>IP:PORT</code>，漏判 mDNS/TLS 形态 → 把 WiFi 设备当 USB 放行，一路跑到断网项（<strong>正是把手机双射频搞掉的那条路</strong>）</td><td>正向判据：USB 序列号是纯令牌，带点号/冒号/空白的一律是网络传输。阳性对照已验证</td></tr><tr><td><code>khy_accept2.ps1</code> 序列号选取</td><td>先按 <code>$d[0]</code> 取，mDNS 重复注册名带空格、<code>adb -s</code> 对它 <code>device not found</code>；改成「跳过含空白」<strong>又错了</strong>——哪个注册可用会随时间翻转，那一版只剩空格注册可用时反而 <code>FATAL: no device</code></td><td>最终按 <code>adb -s &lt;s&gt; get-state</code> 探针选取，不看名字形态</td></tr><tr><td><code>fake-adb-test.ps1</code> 固件</td><td>假 adb 的 pull 无视目标参数，永远写 <code>console_history.jsonl</code>，而驱动 pull 到 <code>console_history_probe.jsonl</code> → 驱动读到不存在的探针文件 → 21 条全 NOT RECORDED → <strong>ts 过滤器根本没被检验到</strong></td><td>按 <code>$args</code> 里的目标路径复制。重跑待 ① 结束后（两者共用探针文件，不能并发）</td></tr></tbody></table>
+<h2 id="最重要-验收驱动的判定从来没有对过">最重要：验收驱动的判定从来没有对过<a class="anchor" href="#最重要-验收驱动的判定从来没有对过" aria-label="锚点">#</a></h2>
+<p><code>khy_accept2.ps1</code> 两个 bug，<strong>任何一个都足以让 21 条判定全部失效</strong>：</p>
+<table><thead><tr><th>#</th><th>位置</th><th>缺陷</th><th>实证</th></tr></thead><tbody><tr><td>1</td><td>ts 过滤器（原 L333）</td><td><code>[int]::TryParse</code> 解析 epoch <strong>毫秒</strong>——<code>[int]</code> 是 Int32，上限 2147483647，当前 epoch 毫秒约 1.79 万亿 → 必失败，<code>$ts</code> 保持 0 → <code>0 -lt $runStartedAtMs</code> 恒真 → <strong>每条记录都被当陈旧跳过</strong></td><td><code>[int]::TryParse('1794811097848') -&gt; False, value=0</code>；<code>[int64]</code> 才行</td></tr><tr><td>2</td><td><code>Get-HistEntries</code> 读文件（原 L190）</td><td><code>Get-Content</code> 未写 <code>-Encoding UTF8</code>，中文 Windows 上默认按 GBK 解码 UTF-8 文件，误解码字符破坏 JSON → 计入 <code>$bad</code> 后丢弃</td><td>一条 135 行真实历史：默认读法 <strong>91 好 / 44 坏</strong>，UTF8 读法 <strong>135 好 / 0 坏</strong>。丢的 44 行正是带中文错误文案的记录——<strong>即最该验证的失败用例</strong></td></tr></tbody></table>
+<p><strong>这推翻了本文档此前的归因</strong>：<code>## ① 真因确诊</code> 与 <code>## 结论再修正</code> 里<br>「成功率约 1/3」「两个 App 侧偶发竞态（预填有时不到输入框、点击有时不触发）」<br>是驱动自己造成的，<strong>不是 App 的</strong>。两处均已修（<code>[int64]</code> + <code>-Encoding UTF8</code>），<br>并用真机拉到的历史验证：135 条全部解析成功，ping/info 均正确匹配 <code>status=ok</code>。<br><strong>在此之前，该脚本从未产生过一次正确判定。</strong></p>
+<blockquote><p>连带：<code>fake-adb-test.ps1</code> 那条 FAIL 先前只诊断到「固件 bug」，<strong>不完整</strong>——<br>即使固件修好，Int32 溢出也会让它永远拿不到期望的 WRONG STATUS。</p></blockquote>
+<h2 id="本轮拿到的真机证据-修复后">本轮拿到的真机证据（修复后）<a class="anchor" href="#本轮拿到的真机证据-修复后" aria-label="锚点">#</a></h2>
+<p><strong>安装</strong>：1.1.53+42 覆盖 1.1.50+39 成功。装前先把设备上那个包拉下来比对证书，<br>与我的构建<strong>完全一致</strong>（<code>cb16f14c…9f93d</code>），故无需卸载、数据保留。</p>
+<p><strong>冒烟</strong>：<code>khy_smoke.ps1</code> 走完整流程跑 <code>{&quot;tool&quot;:&quot;ping&quot;}</code>，共享历史新增<br><code>origin&quot;:&quot;manual&quot;</code>、<code>status&quot;:&quot;ok&quot;</code>、<code>result</code> 带回 <code>pong</code> 与 <code>pid</code>。</p>
+<p><strong>截图（14:36 / 14:37 两张）</strong>：</p>
+<ul><li>底部<strong>六个页签全部渲染</strong>（文件/控制台/AI/技能/设备/设置，「设置」可选中）</li></ul>
+<p>—— 这是 <code>main.dart</code> 导航修复（写死 <code>i &lt; 5</code> → <code>_tabTitles.length</code>）的直接证据；</p>
+<ul><li>控制台顶栏带 <strong>khyos 品牌块</strong>（墨黑圆角底 + 琥珀主标，<code>KhyBrandTile(28)</code>），</li></ul>
+<p>与聊天页 AppBar 区/抽屉头、连接页、设置页同形态；</p>
+<ul><li>命令以结构化卡片渲染：<code>手动</code>徽标 + <code>成功</code> + ok/pid/pong/ui，raw JSON 同屏；</li><li>「未授权无障碍：ui_* 与 shot 不可用，其余能力不影响」+「去授权」</li></ul>
+<p>—— 验收标准 5 的真机证据（ping/info/ls/battery/stat 全部照常执行）。</p>
+<p><strong>① 修复后重跑</strong>：截至记录时 <strong>6/21 PASS</strong>，含第 6 条<br><code>{&quot;tool&quot;:&quot;read&quot;}</code>（期望 <code>invalid_args</code>）——正是此前被 GBK bug 吞掉的那类<br>带中文错误文案的失败用例，三类失败中的第一类第一次在真机上被真正验证到。</p>
+<h2 id="③-现状-14-4x-复核">③ 现状（14:4x 复核）<a class="anchor" href="#③-现状-14-4x-复核" aria-label="锚点">#</a></h2>
+<p>系统级 <code>accessibility_enabled = 1</code>，但 <code>enabled_accessibility_services</code> 里<br><strong>没有</strong> <code>com.khyos.khy_os_client</code>（只有两个 StepOS 服务）——本 App 读屏权限<br>确实未开，与截图一致。<code>khy_amoo_accept.ps1</code> 的前置检查写得对：查<br><code>enabled_accessibility_services</code> 含 <code>khy_os_client</code>，不含就打印授权命令并<br>exit 1，<strong>不擅自授予读屏权限</strong>。脚本已就绪，等用户授权。</p>
+<hr>
+<h1 id="2026-11-16-15-0x-①-21-21-全过-反假阳性-守卫是三层真空">2026-11-16 15:0x：① 21/21 全过 + 「反假阳性」守卫是三层真空<a class="anchor" href="#2026-11-16-15-0x-①-21-21-全过-反假阳性-守卫是三层真空" aria-label="锚点">#</a></h1>
+<h2 id="①-的结果与独立复核">① 的结果与独立复核<a class="anchor" href="#①-的结果与独立复核" aria-label="锚点">#</a></h2>
+<p>驱动输出 <strong>pass=21 fail=0</strong>。但脚本末尾又自己打了一条<br><code>KHYCONSOLE execution log lines: 0</code> → 「NO COMMAND EXECUTED -- every PASS above<br>is a false positive」。没有含混接受任何一方自述，改为<strong>从共享历史独立复核</strong>：<br>156 行全部按 UTF8 解析，对本轮起始时间戳（1794811301864）之后的记录，逐条比对<br>21 条命令的期望状态——<strong>一致 21、不一致 0</strong>。PASS 是真的，那条自我否定是错的。</p>
+<table><thead><tr><th>类别</th><th>条数</th><th>结果</th></tr></thead><tbody><tr><td><code>ok</code></td><td>5</td><td>全 PASS</td></tr><tr><td><code>invalid_args</code></td><td>6</td><td>全 PASS</td></tr><tr><td><code>tool_unavailable</code></td><td>5</td><td>全 PASS</td></tr><tr><td><code>exec_error</code></td><td>5</td><td>全 PASS</td></tr></tbody></table>
+<p>三类失败分类第一次在真机上全部走通——而其中带中文错误文案的那 8 条，<br>正是先前被 GBK bug 静默丢掉、一条都验不到的那批。</p>
+<h2 id="反假阳性-守卫-三层各自独立足以让它恒为-0">「反假阳性」守卫：三层各自独立足以让它恒为 0<a class="anchor" href="#反假阳性-守卫-三层各自独立足以让它恒为-0" aria-label="锚点">#</a></h2>
+<p>它查询 <code>logcat -s KHYCONSOLE</code> 并要求出现 <code>capture:</code> 或 <code>exec:</code> 行。<br>实测这条链上<strong>叠了三层问题</strong>，任何一层单独都让它永远读 0：</p>
+<table><thead><tr><th>#</th><th>问题</th><th>实证</th></tr></thead><tbody><tr><td>1</td><td><strong>全仓没有任何代码 emit <code>KHYCONSOLE</code> 这个 tag</strong>。那些命中全是引用 <code>KhyConsole</code> 类名；<code>KhyConsole.java</code> 里一条 <code>Log.</code> 调用都没有</td><td>设备上 <code>logcat -d -t 400 -s KHYCONSOLE</code> 非空行 0，而 <code>logcat -d -t 5</code> 不限 tag 有 6 行——logcat 本身是通的</td></tr><tr><td>2</td><td>消息过滤写 `capture:\</td><td>exec:`，<strong>那格式没人产出</strong></td></tr><tr><td>3</td><td><strong><code>-t 400</code> 在按 tag 过滤之前就截断了未过滤缓冲</strong>，手机够忙时 400 行回不到目标行</td><td>同一时刻：<code>logcat -d -s KHYCONSOLE</code> → <strong>1 行</strong>；<code>-t 400 -s KHYCONSOLE</code> → <strong>0 行</strong>；<code>-t 100000 -s KHYCONSOLE</code> → <strong>1 行</strong></td></tr></tbody></table>
+<p>讽刺的是 <code>KhyConsole</code> 类文档第 30 行明写设计意图是让控制台的失败「不再对日志<br>不可见」——日志从未被写出来，而守卫却建立在它存在之上。脚本注释里那次<br>「21/21 假 PASS 且 logcat 为空」的旧诊断，logcat 为空很可能从头到尾都不是证据。</p>
+<h2 id="修法与闭环验证">修法与闭环验证<a class="anchor" href="#修法与闭环验证" aria-label="锚点">#</a></h2>
+<ol><li><strong>产品侧</strong>：<code>KhyConsole.exec</code> 加 <code>Log.i(LOG_TAG=&quot;KHYCONSOLE&quot;, origin/tool/status/id)</code>。</li></ol>
+<p>刻意<strong>没有</strong>放在 <code>finish</code> 里（虽然一行搞定且覆盖所有返回路径）——<code>finish</code> 也被<br>   <code>validateOnly</code> 调用，那是纯校验、不执行；见证若落在它身上，「只校验没执行」的<br>   运行照样能刷出行，守卫就会在该失败时通过，正是它要防的假阳性。改为 <code>exec</code><br>   包一层 <code>execInner</code>，见证只对真实执行生效。</p>
+<ol><li><strong>构建侧</strong>：<code>testOptions { unitTests.returnDefaultValues = true }</code>——否则 JVM</li></ol>
+<p>单测撞 <code>Method i in android.util.Log not mocked</code>，40 条挂 8 条。没有选择在<br>   <code>Log</code> 调用外包 try/catch：那会把真实失败藏进我们正想让它可见的代码里。<br>   修复后 <strong>40/40 全绿</strong>。</p>
+<ol><li><strong>脚本侧</strong>：过滤改为匹配 tag 自身（<code>KHYCONSOLE:</code>），并去掉 <code>-t 400</code>。</li></ol>
+<p><strong>真机闭环</strong>：<code>logcat -c</code> 后 0 行 → 跑一条 <code>{&quot;tool&quot;:&quot;ping&quot;}</code> → 刷出<br><code>11-16 15:19:19.596  I KHYCONSOLE: origin=manual tool=ping status=ok</code>；<br>用守卫修复后的原样条件复算得 <strong>count=1</strong>。</p>
+<p>另记一个操作事实：<strong>logcat 是环形缓冲，见证有保质期</strong>。15:17 那条到 15:20<br>再查就已被冲掉，所以守卫必须在跑查结束后尽快取，不能指望历史行还在。</p>
+<h2 id="验收标准-4-的部分实证-15-3x-未开无障碍也能拿到的部分">验收标准 4 的部分实证（15:3x，未开无障碍也能拿到的部分）<a class="anchor" href="#验收标准-4-的部分实证-15-3x-未开无障碍也能拿到的部分" aria-label="锚点">#</a></h2>
+<p>当前共享历史 160 条：<strong>manual 55 / link 105 / amoo 0</strong>。没有 amoo 来源的记录，<br>所以「Amoo 产出与手动记录方式一致」的<strong>记录级对比仍需 ③</strong> 跑出新鲜 amoo 记录。</p>
+<p>但 <code>link</code>（PC 经 BridgeLink 下发）同样是「非手动」来源，可以拿它做同构性对比：</p>
+<ul><li><strong>字段集合完全相同</strong>（12 个：<code>args</code> <code>capability_note</code> <code>error</code> <code>hint</code> <code>id</code></li></ul>
+<p><code>needs_auth</code> <code>origin</code> <code>raw</code> <code>result</code> <code>status</code> <code>tool</code> <code>ts</code>）；</p>
+<ul><li><strong>三类失败分类对 link 来源同样适用</strong>：link ok 85 / invalid_args 12 /</li></ul>
+<p>exec_error 8；manual ok 30 / invalid_args 11 / tool_unavailable 8 / exec_error 6。</p>
+<p>即记录格式与状态分类是<strong>与来源无关</strong>的——这正是标准 4 的核心命题。<br>link 没有 <code>tool_unavailable</code> 只是因为 PC 侧没下发过 ui_*/shot 类命令，不是分类失效。</p>
+<h2 id="②-脚本的致灾缺陷-15-2x-修复">② 脚本的致灾缺陷（15:2x 修复）<a class="anchor" href="#②-脚本的致灾缺陷-15-2x-修复" aria-label="锚点">#</a></h2>
+<p><code>khy_offline_accept.ps1</code> 的设备判定原本是：</p>
+<pre><code class="language-powershell"><span class="hljs-keyword">if</span> (<span class="hljs-variable">$serial</span> <span class="hljs-operator">-match</span> <span class="hljs-string">&#x27;:$&#x27;</span>) { <span class="hljs-variable">$wifi</span> = <span class="hljs-variable">$serial</span> } <span class="hljs-keyword">else</span> { <span class="hljs-variable">$usb</span> = <span class="hljs-variable">$serial</span> }   <span class="hljs-comment"># 每轮覆盖</span></code></pre>
+<p>两个叠加问题：① 同样只认 <code>IP:PORT</code>，mDNS/TLS 形态（无冒号）会被当成 USB；<br>② <code>$usb</code> 被每次循环覆盖，多设备时取决于列表顺序。当前设备正是 mDNS 形态，<br>若在插线前跑 ②，它会关掉 WiFi 自断链路，而宿主侧恢复因设备不可达<strong>静默失败</strong><br>（<code>| Out-Null</code>）——脚本注释里「已经发生过一次」的就是这个。</p>
+<p>已改：正向判据（USB 序列号是纯令牌，带点号/冒号/空白的一律归网络传输）、<br>只取第一个纯令牌不被覆盖、加 <code>get-state</code> 探针。<strong>阳性对照已实测</strong>：当前只有<br>mDNS 设备时输出 <code>FATAL: no USB device. (WiFi-only: …)</code>，且退出时还在碰任何<br>射频之前，零风险。顺带测出 <code>adb kill-server</code> 后 mDNS 能自动重连。</p>
+<h2 id="交付物已刷新为含日志见证的版本">交付物已刷新为含日志见证的版本<a class="anchor" href="#交付物已刷新为含日志见证的版本" aria-label="锚点">#</a></h2>
+<p>SHA-256 <code>349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974</code><br>（15:16 构建，三副本同哈希，签名 verify exit 0，已装机）。<br>此前 14:12 那版（<code>97E67D1B…</code>）只有品牌块修复、<strong>没有</strong>日志见证。</p>
+<h3 id="交付闭环的一课-15-4x-装机哈希曾与交付副本不一致">交付闭环的一课（15:4x）：装机哈希曾与交付副本不一致<a class="anchor" href="#交付闭环的一课-15-4x-装机哈希曾与交付副本不一致" aria-label="锚点">#</a></h3>
+<p>先前说「已装机验证」，但拉下设备上的包一比，装机的是 <code>3496C9B7…</code>、<br>交付副本是 <code>349D8BFC…</code>——版本号都是 1.1.53+42，肉眼分不出。追因：<strong>装机发生在<br>15:16:12，而构建任务在我装机之后又把 <code>app-release.apk</code> 重写成 15:16:31 那一版，<br>我 15:22 才复制成交付副本</strong>。同一份源码的两次构建，哈希不同。</p>
+<p>也就是说，先前的见证验证虽然真实，但验证的不是最终交付的那个文件。<br>已重装交付副本本身并复核：</p>
+<pre><code>installed : 349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974
+delivered : 349D8BFC088FCD800D3EAC95B959CC5B76536FC49A5EE0A6E3163F5D5912B974
+一致: True</code></pre>
+<p>并在该构建上复验见证：<code>logcat -c</code> 后 0 行 → 跑一条 <code>{&quot;tool&quot;:&quot;ping&quot;}</code> →<br><code>11-16 15:49:02.010  I KHYCONSOLE: origin=manual tool=ping status=ok id=c-1794815342007-0</code>；<br>守卫修复后的原样条件复算 <strong>count=1</strong>。</p>
+<p>同一构建的控制台截图（15:51）确认：顶栏品牌块 + 「控制台」+ 5 个操作图标；<br>「未授权无障碍」横幅与「去授权」；常用指令 chip「ping」；结构化结果卡<br>（<code>手动</code>徽标 + raw JSON + ok/pid/pong/ui）。卡片时间戳 15:49:02、pid 23909<br>与上面的日志行一一对应，即这张截图就是该构建刚跑出来的结果。</p>
+<h2 id="硬性约束-2-的真机直接验证-15-5x">硬性约束 2 的真机直接验证（15:5x）<a class="anchor" href="#硬性约束-2-的真机直接验证-15-5x" aria-label="锚点">#</a></h2>
+<p>目标要求「不提权不引入 root，exec 仍以 App 身份运行，input/am/pm 的假成功<br>要如实标注为能力受限」。用 <code>{&quot;tool&quot;:&quot;exec&quot;,&quot;args&quot;:{&quot;cmd&quot;:&quot;id&quot;}}</code> 直接探：</p>
+<pre><code>uid=10231(u0_a231) gid=10231(u0_a231)
+groups=10231(u0_a231),1077(external_storage),3003(inet),9997(everybody),...
+context=u:r:untrusted_app:s0:c231,c256,c512,c768</code></pre>
+<p>uid 10231 是应用沙箱 uid（root 为 0），SELinux context 是 <code>untrusted_app</code>，<br>result 内 <code>via&quot;:&quot;app&quot;</code>、<code>elevated&quot;:&quot;app&quot;</code>。记录同时带 <code>capability_note</code>：</p>
+<blockquote><p>以 App 身份运行（未提权）：input / am / pm / cmd / settings 等命令会因权限<br>不足而无操作，不能当作系统级执行结果。</p></blockquote>
+<p>即控制台自己在记录里讲明了能力边界——正是约束 2 后半个要求。</p>
+<h2 id="预填失败的真实后果-15-5x-值得记">预填失败的真实后果（15:5x，值得记）<a class="anchor" href="#预填失败的真实后果-15-5x-值得记" aria-label="锚点">#</a></h2>
+<p>同一次探测的<strong>第一次</strong>没有落地：发的是 <code>{&quot;tool&quot;:&quot;exec&quot;,&quot;args&quot;:{&quot;cmd&quot;:&quot;id&quot;}}</code>，<br>历史里却多了一条 <code>{&quot;tool&quot;:&quot;ping&quot;}</code> 的 ok 记录。即预填失败时<strong>不是「没执行」，<br>而是执行了输入框里的旧命令</strong>。</p>
+<p>好在验收不会因此误判：匹配走 raw 全串，旧命令的 raw 与期望不符 → 报<br>NOT RECORDED，不会假 PASS。但这解释了一件事——为什么单纯看「有没有新记录」<br>不足以判断执行成功，必须比对 raw 内容。</p>
+<h2 id="常用指令与共享存储的真机落盘-16-0x">常用指令与共享存储的真机落盘（16:0x）<a class="anchor" href="#常用指令与共享存储的真机落盘-16-0x" aria-label="锚点">#</a></h2>
+<p><code>/sdcard/bridge-amoobridge/console_favorites.json</code>：</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;version&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-number">1</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;items&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;f-1794813979882&quot;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;label&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;ping&quot;</span><span class="hljs-punctuation">,</span>
+ <span class="hljs-attr">&quot;json&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;{\&quot;tool\&quot;:\&quot;ping\&quot;}&quot;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;tool&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;ping&quot;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;created_at&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-number">1794813979882</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span></code></pre>
+<p>与截图里那颗「ping」chip 对应——「常用指令（快捷按钮）」有真机落盘证据。<br>同目录下 <code>console_history.jsonl</code>（163 行）与 <code>console_favorites.json</code> 并存，<br>即目标要求的「khy-os 与 Amoo 共享同一份记录、两边读写同一存储」。</p>
+<h2 id="硬性约束-4-的双层验证-16-2x">硬性约束 4 的双层验证（16:2x）<a class="anchor" href="#硬性约束-4-的双层验证-16-2x" aria-label="锚点">#</a></h2>
+<p>「不把桥对外开放，不做端口转发或隧道」。</p>
+<p><strong>代码层</strong>：全 android 源码共 4 个 <code>ServerSocket</code> 绑定点，<strong>无一例外绑 <code>127.0.0.1</code></strong>：</p>
+<table><thead><tr><th>文件</th><th>绑定</th></tr></thead><tbody><tr><td><code>HttpBridge.java:620</code></td><td><code>InetAddress.getByName(&quot;127.0.0.1&quot;)</code></td></tr><tr><td><code>NetProxy.java:73</code></td><td><code>&quot;127.0.0.1&quot;</code></td></tr><tr><td><code>ShellSidecar.java:163</code></td><td><code>&quot;127.0.0.1&quot;</code></td></tr><tr><td><code>LocalVisionServer.kt:149</code></td><td><code>InetAddress.getByName(&quot;127.0.0.1&quot;)</code></td></tr></tbody></table>
+<p><strong>设备层</strong>：<code>ss -ltn</code> 实测桥端口——</p>
+<pre><code>LISTEN  0  0  [::ffff:127.0.0.1]:8896  *:*</code></pre>
+<p>纯回环（IPv4-mapped IPv6 形式），不在任何外部接口上。</p>
+<p><strong>排除误报</strong>：<code>netstat -ltn</code> 里另见 <code>0.0.0.0:11131</code> 与 <code>[::]:39301</code> 两个暴露监听，<br>但用端口号反查源码，<strong>这两个端口在 App 源码中完全不存在</strong>，属其他应用。<br>本 App 只用 8896（及相邻的 8897）。</p>
+<p>源码本身已记录过这个坑：<code>HttpBridge.java:565</code> 明写 <code>new ServerSocket(port)</code> 会让<br><code>ss -ltn</code> 报 <code>*:8896</code>、同 Wi-Fi 上任何设备都能连；<code>LocalVisionServer.kt:132</code> 记了<br>同一次实测。即这一风险是已知并被显式避开的，不是偶然没触发。</p>
+<h2 id="amoo-解耦的关键实证-上下文确实被带过去了-16-3x">Amoo 解耦的关键实证：上下文确实被带过去了（16:3x）<a class="anchor" href="#amoo-解耦的关键实证-上下文确实被带过去了-16-3x" aria-label="锚点">#</a></h2>
+<p>抓 uiautomator 时发现前台是 <strong>Amoo</strong>（<code>com.stepos.ailauncher/…ChatMainActivity</code>），<br>它的聊天里被注入了完整上下文。最后三段正是目标第三块的原话要求：</p>
+<blockquote><p>我们刚在 khy-os 本地执行了一条命令：exec<br>参数：<code>{&quot;cmd&quot;:&quot;id&quot;}</code><br>结果：执行成功 <code>{&quot;out&quot;:&quot;uid=10231(u0_a231) … context=u:r:untrusted_app:s0:c231,…&quot;}</code></p></blockquote>
+<p>即 <strong>khy-os 侧主动调用 Amoo 时，把当前命令与结果一起带了过去</strong>——<br>「把上下文（当前命令与结果）一起带过去，避免重复描述」。</p>
+<p>注入内容还包含三处与硬性约束直接对应的事实：</p>
+<ul><li><strong>能力边界如实告知</strong>：「无障碍没开：ui_ 开头的工具与 shot 此刻不可用——差授权，</li></ul>
+<p>不是做不到」；「提权未就绪：exec 以 App 身份跑，input／am／pm 回 ok=false<br>  （code=elevation_required）」——与约束 2、3 一致；</p>
+<ul><li><strong>命令格式契约</strong>：单独占一整行、恰好一个 JSON 对象、tool 必须是真实工具名、</li></ul>
+<p>不要用代码块包裹（这台设备上围栏会被渲染器吃掉）；</p>
+<ul><li><strong>约束 4 被写进给 Amoo 的提示</strong>：「也不要提议把桥对外开放或经隧道暴露：那会在</li></ul>
+<p>手机上开一个能执行任意命令的远程入口，不做」。</p>
+<p>无障碍当时是关着的，而 <code>AmooLoop.start()</code> 在无障碍关闭时会拒绝启动，所以这次唤起<br>只能是<strong>人工点了「唤起 Amoo」按钮</strong>——即设计的按需唤起路径，不是启动即拉起。</p>
+<p><strong>仍缺的一半</strong>：历史中 <code>origin</code> 只有 <code>manual</code>(62) 与 <code>link</code>(105)，<strong>没有 amoo</strong>。<br>即「Amoo 产出的命令走同一执行通道并落同一份记录」这半条，要等 Amoo 真的从聊天里<br>发出一条命令才能验（那需要无障碍开启 + 人工在 Amoo 里发命令）。</p>
+<blockquote><p><strong>给改本文档的人的警告（今天连犯四次，必读）</strong>：编辑时<strong>不要把小节标题当作<br><code>old_string</code> 锚点</strong>。今天四次都是拿 <code>## fake-adb …</code> 这类标题当锚点，替换后原标题<br>被吞、内容变成孤儿段落。锚点要用<strong>稳定的正文句子</strong>——标题正是你最该保留的东西。<br>每次编辑后用 <code>grep '^## '</code> 数一遍节数，别靠记忆。</p></blockquote>
+<h2 id="补上一个真实的覆盖缺口-raw-json-切换-16-4x">补上一个真实的覆盖缺口：raw JSON 切换（16:4x）<a class="anchor" href="#补上一个真实的覆盖缺口-raw-json-切换-16-4x" aria-label="锚点">#</a></h2>
+<p>目标第二块要求「可一键切到 raw JSON」。查测试时发现：既有 11 条 widget 用例里，<br>只有 <code>Amoo 与手动的命令卡片渲染结构一致</code> 断言了 <strong>raw 视图的入口图标存在</strong><br>（<code>find.byIcon(Icons.code)</code>），<strong>没有任何测试点它</strong>并验证视图真的换了。</p>
+<p>一个只渲染图标、<code>onPressed</code> 却是空实现（或 <code>setState</code> 写错字段）的界面，在原有<br>覆盖下是全绿的——<strong>图标存在不等于功能存在</strong>。</p>
+<p>补了 <code>raw JSON 一键切换：图标翻转、JSON 摊开、再点回到格式化</code>，断言：</p>
+<ul><li>默认格式化视图：图标是 <code>Icons.code</code>，且看不到 <code>&quot;capability_note&quot;</code> 这类 JSON 字段名；</li><li>点一下：图标翻成 <code>Icons.list_alt</code>，且整条记录按 JSON 摊开（<code>&quot;capability_note&quot;</code> 出现）；</li><li>再点一下：图标回到 <code>Icons.code</code>，分块视图恢复（「退出码」重新出现）。</li></ul>
+<p>结果 <strong>12/12 全绿</strong>——即切换功能本来就是好的，此前缺的只是覆盖。<br>（纯测试改动，未动产品代码，交付 APK 无需重建。）</p>
+<h2 id="raw-json-切换的真机确认-16-5x">raw JSON 切换的真机确认（16:5x）<a class="anchor" href="#raw-json-切换的真机确认-16-5x" aria-label="锚点">#</a></h2>
+<p>测试补完后，又在真机上实际点了一次。坐标不是估的——<code>uiautomator dump</code> 能读到<br>这些 IconButton 的 <code>content-desc</code>：</p>
+<table><thead><tr><th>坐标</th><th>content-desc</th></tr></thead><tbody><tr><td><strong>(498,234)</strong></td><td>切换到 raw JSON</td></tr><tr><td>(654,234)</td><td>导出历史</td></tr><tr><td>(810,234)</td><td>清空历史</td></tr><tr><td>(966,234)</td><td>唤起 Amoo（可选）</td></tr><tr><td>(1122,234)</td><td>重置访问令牌</td></tr><tr><td>(1070,429)</td><td>去授权（横幅按钮）</td></tr></tbody></table>
+<p>点 (498,234) 后截图确认：</p>
+<ul><li>AppBar 第一个图标由 <code>&lt;/&gt;</code> 变为<strong>表格图标</strong>（<code>Icons.list_alt</code>）——切换翻转；</li><li>历史卡片摊开为<strong>整条记录的 JSON</strong>：命令原文下面跟着完整记录的</li></ul>
+<p><code>id</code>/<code>ts</code>/<code>origin</code>/<code>tool</code>/<code>args</code>/<code>status</code>/<code>error</code>/<code>hint</code>/<code>needs_auth</code>/<br>  <code>capability_note</code>/<code>result</code> 全字段，等宽字体；</p>
+<ul><li>底部导航仍高亮「控制台」，没有误跳页签。</li></ul>
+<p><strong>这张坐标表也解释了先前的谨慎是对的</strong>：「清空历史」就在 156px 外，「重置访问令牌」<br>在 624px 外。在没有 <code>content-desc</code> 的情况下盲点 AppBar，点错一次就是销毁历史或<br>打断 PC 侧配对。要动这一排图标，先 dump 拿 <code>content-desc</code>，别目估。</p>
+<p>另有一条标准 4 的旁证：raw 视图里可见的两条记录都是 <code>origin&quot;:&quot;link&quot;</code><br>（PC 经 BridgeLink 下发），字段与手动记录完全同一套。</p>
+<h2 id="可导出-的真机验证-16-5x-字节级一致">「可导出」的真机验证（16:5x，字节级一致）<a class="anchor" href="#可导出-的真机验证-16-5x-字节级一致" aria-label="锚点">#</a></h2>
+<p>目标第二块还要求「保留最近 N 条命令与结果的本地记录，<strong>可导出</strong>」。导出原本只有<br>JVM 测试 <code>exportWritesEveryRecordedLine</code> 覆盖，真机上点了一次：</p>
+<p>坐标同样来自 <code>uiautomator dump</code> 的 <code>content-desc</code>（见上一节的坐标表）：<br>「导出历史」在 <strong>(654,234)</strong>。点下去之后 <code>/sdcard/Download/</code> 新增</p>
+<pre><code>khy-os-console-1794819521642.jsonl   152241 B   2026-11-16 16:58</code></pre>
+<p>与当时的共享历史逐字节比对：</p>
+<pre><code>导出文件 SHA-256  7C6A2520591BA8FCFFEC6B8169E1F62AD7294EE382A52121B9E8CD7F5F8F97BB
+共享历史 SHA-256  7C6A2520591BA8FCFFEC6B8169E1F62AD7294EE382A52121B9E8CD7F5F8F97BB
+一致：True    行数 167 : 167</code></pre>
+<p>即导出不是「近似复制」，而是原样落盘。<code>KhyConsole.export()</code> 的目标路径是<br><code>/sdcard/Download/khy-os-console-&lt;时间戳&gt;.jsonl</code>，Download 不可写时退回基础目录<br>（<code>KhyConsole.java:637-642</code>）。</p>
+<h2 id="amoo-产出的命令格式-形态正确-但执行要人按发送-17-0x">Amoo 产出的命令格式：形态正确，但执行要人按发送（17:0x）<a class="anchor" href="#amoo-产出的命令格式-形态正确-但执行要人按发送-17-0x" aria-label="锚点">#</a></h2>
+<p>在 AI 页签（khy-os 内置的 Amoo 对话）里看到 Amoo 的回复：</p>
+<blockquote><p>顺手把之前那件事补上：桥刚回过心跳（pid 9886），我再确认一次在线状态，<br>并把手机端实际可用的工具清单拉出来。<br><code>{&quot;tool&quot;:&quot;ping&quot;,&quot;args&quot;:{}}</code><br><code>{&quot;tool&quot;:&quot;tools&quot;,&quot;args&quot;:{}}</code></p></blockquote>
+<p><strong>形态是对的</strong>：Amoo 给出的正是控制台接受的那种 JSON——<code>tool</code> + <code>args</code> 两个字段，<br>与手动输入同一种语法。这验证了块 3 的要求「唤起后它产出的也必须是同一种 JSON 命令」。</p>
+<h3 id="更正-19-3x-ai-页签发送不会产生-amoo-记录">⚠️ 更正（19:3x）：AI 页签发送不会产生 amoo 记录<a class="anchor" href="#更正-19-3x-ai-页签发送不会产生-amoo-记录" aria-label="锚点">#</a></h3>
+<p>我先前在这里写过「③ 不需要先开无障碍，只要在 AI 页签把命令发出去即可」——<br><strong>这是错的</strong>，已实查代码纠正：</p>
+<ul><li><code>amoo_composer.dart:106</code> 调的是 <code>ConsoleService.exec(text)</code>，<strong>不传 origin</strong>，</li></ul>
+<p>而 <code>console_service.dart:472</code> 的默认值是 <code>kConsoleOriginManual</code>；</p>
+<ul><li>全 <code>lib/</code> 范围内<strong>没有任何地方传 <code>kConsoleOriginAmoo</code></strong>——它只用于显示</li></ul>
+<p>（<code>isAmoo</code> 与标签「Amoo」）；</p>
+<ul><li>唯一产出 <code>origin&quot;:&quot;amoo&quot;</code> 的是 <code>AmooLoop.java:1509</code> 的</li></ul>
+<p><code>KhyConsole.exec(KhyConsole.ORIGIN_AMOO, fence.payload)</code>，即<strong>拦截循环</strong>从<br>  Amoo 聊天里读到命令时才走这条路；</p>
+<ul><li>而 <code>AmooLoop.start()</code> 在 L1151 检查 <code>Tools.uiReady()</code>，无障碍未开直接返回，</li></ul>
+<p>报「循环未启动：无障碍服务未开启」。</p>
+<p><strong>所以 ③ 的前置条件恢复为原判：必须先开无障碍</strong>，再让循环跑起来读到 Amoo 聊天里<br>的命令。从 AI 页签手动发送只会得到 <code>manual</code> 记录——那本身也是一条有价值的证据<br>（说明两条路的记录格式一致），但证明不了「Amoo 产出的命令走同一通道」。</p>
+<h3 id="代码级追认-记录一致不是巧合-是同一份判断-21-0x">代码级追认：记录一致不是巧合，是同一份判断（21:0x）<a class="anchor" href="#代码级追认-记录一致不是巧合-是同一份判断-21-0x" aria-label="锚点">#</a></h3>
+<p>顺着 <code>AmooLoop.java</code> 把 amoo 记录的产出路径走了一遍，确认无免无障碍路径，同时拿到<br>标准 4 的代码级根因：</p>
+<p><code>KhyConsole.exec(ORIGIN_AMOO, fence.payload)</code>（L1509）之前有两道关——<br>L1477 <code>KhyConsole.validateOnly(fence.payload)</code>（准入）、L1497<br><code>LoopModes.decide(...)</code>（非 EXECUTE 直接返回「需要人确认后继续」，<strong>不落记录</strong>）。<br>而 L1472-1476 的注释写明了为什么这么排：</p>
+<blockquote><p>白名单、参数 schema、无障碍授权，三样都在控制台内核里判。这里不再自己写第二份<br>判断——两份判断迟早会不一致，而不一致的那份会让「同一个命令在两边表现不同」<br>变成查不出来的灵异事件。</p></blockquote>
+<p>即「Amoo 产出与手动输入记录方式完全一致」不是两边分别实现到恰好一致，而是<br><strong>同一份准入判断 + 同一条 exec + 同一个文件</strong>，一致是构造使然。</p>
+<p><strong>但它们没有执行</strong>：查共享历史，没有 raw 为 <code>{&quot;tool&quot;:&quot;ping&quot;,&quot;args&quot;:{}}</code> 或<br><code>{&quot;tool&quot;:&quot;tools&quot;,&quot;args&quot;:{}}</code> 的记录，<code>origin</code> 仍只有 manual(62) 与 link(105)。<br>原因是这一步<strong>有意留给人</strong>——AI 页签的说明写着「提问发出后收不回来」，<br>命令要人按下发送才会走 <code>KhyConsole.exec(ORIGIN_AMOO, …)</code>。</p>
+<p>所以 ③ 的最后一步是：<strong>人在 Amoo 对话里按下发送</strong>。届时历史里会出现<br><code>origin&quot;:&quot;amoo&quot;</code> 的记录，才能与 manual 记录做逐字段对比（标准 4 的后半）。</p>
+<h2 id="双向调用的-请求-半边已有实证-17-1x">双向调用的「请求」半边已有实证（17:1x）<a class="anchor" href="#双向调用的-请求-半边已有实证-17-1x" aria-label="锚点">#</a></h2>
+<p>目标第三块要求「Amoo 侧可以用 amoo_ask 请求执行、用 amoo_result 取回结果」。<br>查共享历史，<code>amoo_*</code> 工具共有 6 条记录：</p>
+<table><thead><tr><th>时间</th><th>origin</th><th>tool</th><th>status</th><th>要点</th></tr></thead><tbody><tr><td>11-15 09:48</td><td>link</td><td>amoo_ask</td><td>ok</td><td>返回 job id + <code>state:&quot;running&quot;</code> + <code>timeout_ms:420000</code> + <code>via:&quot;direct&quot;</code></td></tr><tr><td>11-15 09:49</td><td>link</td><td>amoo_ask</td><td>ok</td><td>同上</td></tr><tr><td>11-15 10:03</td><td>link</td><td>amoo_ask</td><td>ok</td><td>同上</td></tr><tr><td>11-15 10:03</td><td>link</td><td>amoo_stop</td><td>ok</td><td><code>running:false, ask_running:false, apex_state:&quot;failed/aborted&quot;</code></td></tr><tr><td>11-15 10:04</td><td>link</td><td>amoo_ask</td><td><strong>exec_error</strong></td><td><code>code:&quot;refused&quot;</code>，见下</td></tr><tr><td>11-15 10:05</td><td>link</td><td>amoo_ask</td><td>ok</td><td>同上</td></tr></tbody></table>
+<p>即 <code>amoo_ask</code> 的异步作业模型（job / state / timeout）是真跑过的。那条<br><code>exec_error</code> 是约束 3 的又一条实证——capability 不足时<strong>如实说明缺什么，<br>还带上本机实测依据</strong>，不假装能跑：</p>
+<blockquote><p>无障碍服务没开，Amoo 循环一步都跑不了。它靠无障碍读 Amoo 的界面、往输入框<br>写字、点发送；没有这个权限，读写界面和点击都做不了，问出去也收不到回复<br>（本机实测：空转 120 秒后返回 timeout…）</p></blockquote>
+<p><code>amoo_result</code> 没有记录，只因它从未被调用过（取回结果的能力在工具清单内）。</p>
+<h2 id="设备已换构架-装机是-versioncode-43-不是交付副本-19-5x">设备已换构架：装机是 versionCode 43，不是交付副本（19:5x）<a class="anchor" href="#设备已换构架-装机是-versioncode-43-不是交付副本-19-5x" aria-label="锚点">#</a></h2>
+<p>Goal 恢复后复查发现：设备上跑的 APK 哈希是 <code>B0CE13E2…</code>，<strong>不是</strong>交付副本的<br><code>349D8BFC…</code>；<code>versionCode=43</code>（交付副本是 42）、<code>lastUpdateTime=2026-11-16 16:23:51</code><br>——我在 15:43 装完交付副本之后，又有别的会话构建并安装了 versionCode 43 的包。</p>
+<p>但该构建<strong>包含全部控制台功能</strong>（dex 内 <code>KHYCONSOLE</code>/<code>consoleExec</code>/<code>consoleTools</code>/<br><code>amooSummon</code>/<code>khy_console_cmd_b64</code>/<code>consoleHistory</code> 均在，品牌资产 17220 B / 2718 B<br>与交付副本尺寸一致），即另一会话从含控制台改动的同一份源码构建。</p>
+<p><strong>影响</strong>：此前「装机哈希与交付副本一致」的闭环结论<strong>已不成立</strong>（被别人的安装覆盖）。<br>交付副本 <code>349D8BFC…</code> 本身的有效性不受影响（它通过过全部核验），但「设备上跑的就是它」<br>这句话现在只对 15:43–16:23 之间成立。</p>
+<p><strong>处置</strong>：既然设备当前跑的是带控制台的构建，直接在它上面重跑 21 条混合命令验收，<br>拿到比以往更贴近当前设备状态的证据（后台运行中）。</p>
+<h2 id="补-clearhistory-测试-一个-假绿灯-坑-20-2x">补 clearHistory 测试 + 一个「假绿灯」坑（20:2x）<a class="anchor" href="#补-clearhistory-测试-一个-假绿灯-坑-20-2x" aria-label="锚点">#</a></h2>
+<p><code>clearHistory</code> 此前<strong>只在测试 setup 里当扫帚用</strong>（<code>cleanSlateBeforeEach</code>），从未作为<br>被测对象——没有任何测试断言它做什么。而 setup 自己的注释写着「只清历史不够，常用指令<br>文件会保留」，即「清历史不得动常用指令」这个不变式被依赖却从未验证。破坏性操作没有<br>护栏，回归会静默擦掉用户的常用指令。</p>
+<p>补了 <code>clearingHistoryLeavesShortcutsAloneAndKeepsTheChannelUsable</code>，钉三个不变式：</p>
+<ol><li>历史真被清空（<code>readHistory()</code> 归零）；</li><li><strong>常用指令一条不少</strong>（清完仍 1 条、tool 与 label 不变）；</li><li>清完之后通道仍可用——再来一条命令必须正常落账（否则清一次就把通道弄坏，</li></ol>
+<p>用户看到的是「按一下清空，控制台就死了」）。</p>
+<p>结果 <strong>41/41 全过</strong>（原 40 + 新增 1）。</p>
+<h3 id="过程中的坑-build-successful-不等于测试跑了">过程中的坑：BUILD SUCCESSFUL 不等于测试跑了<a class="anchor" href="#过程中的坑-build-successful-不等于测试跑了" aria-label="锚点">#</a></h3>
+<p>第一次跑只报 <code>BUILD SUCCESSFUL in 4m 21s</code>、exit 0，我去找结果 XML 时发现<br><strong>这个类的 XML 根本不存在</strong>——gradle 把 Test 任务判定为 up-to-date 直接跳过，<br>一条都没执行。加 <code>:app:cleanTestDebugUnitTest</code> 强制重跑才真跑（33 秒、41 条）。</p>
+<p>这与今天其它几个「守卫不会亮」是同一类问题：<strong>看命令的退出码不足以证明验证发生过</strong>。<br>要么看结果 XML 在不在、新用例在不在列里，要么就强制重跑。</p>
+<h2 id="去授权-真的到得了权限中心-20-4x-标准-5-补强">「去授权」真的到得了权限中心（20:4x，标准 5 补强）<a class="anchor" href="#去授权-真的到得了权限中心-20-4x-标准-5-补强" aria-label="锚点">#</a></h2>
+<p>标准 5 要求「未开无障碍时…给出授权提示」。此前只见到横幅和按钮存在，没验证<strong>点了<br>真的到得了</strong>。设备在线时点了一次（坐标 (1070,429) 来自 <code>content-desc</code>，非目估），<br>权限中心页打开，内容比要求的更强：</p>
+<ul><li>顶部汇总 <strong>「4/6 已就绪 / 缺少：无障碍、屏幕捕获」</strong>——缺什么一眼可见；</li><li>六项各带状态灯与直达入口：所有文件访问 ✓、<strong>无障碍服务 →「去开启」</strong>、</li></ul>
+<p>悬浮窗 ✓、通知 ✓、<strong>屏幕捕获 →「启动」</strong>、电池与后台运行 ✓；</p>
+<ul><li>每项都写清「缺它会怎样」：「缺它 PC 侧拿不到令牌，手机连不上」；</li></ul>
+<p>「UI 自动化、点按、输入文字、无障碍截屏都靠它」；<br>  「省电策略冻结后台时，无障碍会掉线、助手与 PC 断连」；</p>
+<ul><li>提权代理单列为「<strong>不算授权位</strong>」，并如实写「PING 未应答（未提权，或 sidecar</li></ul>
+<p>仍在启动中）」——与约束 2 一致，不把没就绪的说成就绪。</p>
+<p><strong>中途修正一次错误预期</strong>：我原以为「去授权」会跳系统设置页，查代码才发现设计是<br><code>Navigator.push(PermissionCenterScreen)</code> 推 <strong>App 内</strong>权限中心（console_screen.dart<br>L497-499 注释：2026-11-15 收敛，所有授权位状态灯与直达入口集中一处，不再散跳）。<br>所以点完焦点仍留在本 App 是<strong>正确行为</strong>，不是没反应。</p>
+<h2 id="21-21-在设备当前构建上复跑通过-19-5x-三证据源一致">21/21 在设备当前构建上复跑通过（19:5x，三证据源一致）<a class="anchor" href="#21-21-在设备当前构建上复跑通过-19-5x-三证据源一致" aria-label="锚点">#</a></h2>
+<p>在 versionCode 43（哈希 <code>B0CE13E2…</code>，即设备当时实际运行的构建）上重跑：</p>
+<p>在 versionCode 43（哈希 <code>B0CE13E2…</code>，即设备当时实际运行的构建）上重跑：</p>
+<pre><code>=== per-command result: pass=21 fail=0 (of 21) ===
+=== KHYCONSOLE execution log lines: 14 ===
+  19:58:50.883 I KHYCONSOLE: origin=manual tool=read status=exec_error id=c-1794830330880-0
+  19:59:17.430 I KHYCONSOLE: origin=manual tool=stat status=exec_error id=c-1794830357425-0
+  19:59:43.236 I KHYCONSOLE: origin=manual tool=unzip status=exec_error id=c-1794830383233-0</code></pre>
+<p><strong>三个独立证据源同时成立</strong>：</p>
+<ol><li>驱动判定 21/21 PASS；</li><li><code>KHYCONSOLE</code> 日志见证刷出 14 行（带 origin/tool/status/id）——守卫不再是真空信号；</li><li>从共享历史独立复核：<strong>一致 21/21</strong>（历史 167 → 197 条，其中 21 条对应该轮命令且</li></ol>
+<p>状态全部正确；多出的 9 条是重试重复，符合预期）。</p>
+<p>三类失败的文案在明细里也逐一可见，且互不相同：</p>
+<ul><li><code>参数不合法：缺少参数「path」</code> / <code>未知参数「psth」（read 可用：path、max）</code> /</li></ul>
+<p><code>参数「cmd」应为 字符串，实际是 数字</code> / <code>op=set 时必须提供参数「text」</code> /<br>  <code>参数「mode」只能是 bypass / plan / edit / default</code></p>
+<ul><li><code>工具不可用：未授权无障碍服务，ui_tap 无法执行</code></li><li><code>执行报错：退出码 127，/system/bin/sh: zz_no_such_cmd_xyz: inaccessible or not found</code> /</li></ul>
+<p><code>FileNotFoundException: /no_such_file_xyz: open failed: ENOENT</code> /<br>  <code>zip 不存在：/no_such_file_xyz.zip</code> / <code>工具没有返回结果</code></p>
+<blockquote><p>教训：共享设备 + 共享工作树的场景下，「装机哈希 = 交付副本」是个<strong>时效性结论</strong>，<br>任何一次别人的安装都会让它失效。要陈述这个事实，必须带上时间戳。</p></blockquote>
+<p>在等插 USB 的间隙预检 <code>khy_offline_test.sh</code>（② 要 push 到设备的那份），发现兜底<br>判断把「之前」和「之后」的行数<strong>在同一时刻</strong>读：</p>
+<pre><code class="language-sh">input tap <span class="hljs-variable">$PLAY_X</span> <span class="hljs-variable">$PLAY_Y</span> ...      <span class="hljs-comment"># 点了</span>
+<span class="hljs-built_in">sleep</span> 8
+b=$(<span class="hljs-built_in">wc</span> -l &lt; <span class="hljs-variable">$HIST</span> 2&gt;/dev/null)     <span class="hljs-comment"># 点了之后才读&quot;之前&quot;</span>
+a=$(<span class="hljs-built_in">wc</span> -l &lt; <span class="hljs-variable">$HIST</span> 2&gt;/dev/null)     <span class="hljs-comment"># 同一时刻读&quot;之后&quot;</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-string">&quot;<span class="hljs-variable">$b</span>&quot;</span> = <span class="hljs-string">&quot;<span class="hljs-variable">$a</span>&quot;</span> ]; <span class="hljs-keyword">then</span> ...       <span class="hljs-comment"># 恒真</span></code></pre>
+<p>后果：<code>b == a</code> 永远成立，「坐标点击已命中」那个分支是死代码，而 ENTER 兜底被<br><strong>无条件执行</strong>——即使坐标点击已经成功，也会重跑一遍命令，证据里留下两条同名记录，<br>看着像「命令执行了两次」。已修：把 <code>b=</code> 前移到 tap 之前（现为 L77 读 b → L78 点<br>执行 → L80 读 a），并删掉原来那两个恒等的读取。</p>
+<h2 id="②-脚本预检-抓到一个会让证据翻倍的-bug-17-2x">② 脚本预检：抓到一个会让证据翻倍的 bug（17:2x）<a class="anchor" href="#②-脚本预检-抓到一个会让证据翻倍的-bug-17-2x" aria-label="锚点">#</a></h2>
+<p>在等插 USB 的间隙预检 <code>khy_offline_test.sh</code>（② 要 push 到设备的那份），发现兜底<br>判断把「之前」和「之后」的行数<strong>在同一时刻</strong>读：</p>
+<p>修复后复核：文件无 BOM、无 CR、0 个非 ASCII 字节（4770 B）——它要被 push 到设备<br>上由 toybox sh 解析，中文 Windows 上一次 CJK 往返就足以让解析器静默失败。</p>
+<p>② 的其余安全设计也确认在位：<code>trap restore EXIT</code>（任何退出路径都恢复射频，含中途<br>被杀）、独立的 watchdog 脚本 200 秒后无条件恢复、共享历史缺失时不跑兜底而是明确报错。</p>
+<blockquote><p>同类教训今天还有一处：<code>khy_accept2.ps1</code> 的 ts 过滤器也是「看起来在过滤」<br>（有 <code>-lt $runStartedAtMs</code> 比较），实则 <code>[int]</code> 溢出后恒真。<strong>写了断言不等于<br>断言有效</strong>，得让它在已知输入下真的分出对错。</p></blockquote>
+<h2 id="fake-adb-判定逻辑测试-三条断言全过-16-0x">fake-adb 判定逻辑测试：三条断言全过（16:0x）<a class="anchor" href="#fake-adb-判定逻辑测试-三条断言全过-16-0x" aria-label="锚点">#</a></h2>
+<p>今天这条断言失败了三次，每次原因都不同，且三次都不是被测逻辑的错：</p>
+<ol><li>驱动硬编码 adb 路径、不认 <code>KHY_ADB</code> → 假 adb 从未被用上；</li><li>假 adb 的 pull 无视目标参数 → 驱动读到不存在的探针文件；</li><li>驱动改用 <code>get-state</code> 探针后，假 adb 不认识这个子命令 → 探针返回空 → 判无设备。</li></ol>
+<p>三处都修完后（第三条是给假 adb 补 <code>get-state</code> 应答），结果：</p>
+<pre><code>PASS  harness reached khy_accept2.ps1 (positive control)
+PASS  ts filter ignored the stale record (no false PASS)
+PASS  fresh record was matched (verdict is WRONG STATUS, not NOT RECORDED)
+DECISION LOGIC OK</code></pre>
+<p>驱动输出里的关键行：</p>
+<pre><code>[ 1/21] want=ok  {&quot;tool&quot;:&quot;ping&quot;}  -&gt; WRONG STATUS (want ok, got exec_error)</code></pre>
+<p>固件为 ping 备了一条<strong>陈旧</strong>的 <code>ok</code> 和一条<strong>新鲜</strong>的 <code>exec_error</code>。ts 过滤器<br>忽略陈旧那条、命中新鲜那条，于是报 WRONG STATUS 而非假 PASS——这正是该测试<br>要证明的核心命题。第 2-21 条报 NOT RECORDED 是预期的：固件只为 ping 准备了记录。</p>
+<p>至此今天所有能自主执行的项目都已跑完并有实证。</p>
+<p><strong>教训</strong>：构建产物与交付副本之间只要隔着一次未锁定的复制，就可能漂移。<br>正确顺序是「构建完全结束 → 复制成交付副本 → 装交付副本 → 验证」，<br>不能把「装构建输出」当成「装交付物」。</p>
+<h3 id="附-设备掉线又恢复-15-4x">附：设备掉线又恢复（15:4x）<a class="anchor" href="#附-设备掉线又恢复-15-4x" aria-label="锚点">#</a></h3>
+<p>mDNS 链路断过一次（<code>adb devices</code> 空，但 <code>adb mdns services</code> 仍在广播），<br><code>adb connect 192.168.1.117:40497</code> 直连后恢复，设备以 <strong>TCP 形态</strong>回来了<br>（不再是 <code>adb-XXXX._adb-tls-connect._tcp</code>）。各脚本的 WiFi 防护对 TCP 形态<br>（<code>IP:PORT</code>）本来就认得好，所以这次恢复反而让防护更可靠。</p>
+<p>见证脚本原先硬编码旧序列号，设备一换形态就「device not found」，<br>已改为探针动态选设备——与 <code>khy_accept2.ps1</code> 一致。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../delivery/channel/khyquant/PACKAGING.html"><div class="dir">← 上一篇</div><div class="ttl">KHY-Quant pip 打包说明</div></a><a class="next" href="../../../../delivery/channel/mobile/khy-os-client-app/AMOO-GUIDELINES.html"><div class="dir">下一篇 →</div><div class="ttl">Amoo 系统提示词与红线（用户 2026-10-23 提取）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="delivery/channel/mobile/khy-os-client-app/ACCEPTANCE-PROGRESS.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

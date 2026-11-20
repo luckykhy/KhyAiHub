@@ -4,10 +4,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const DATABASE_MODULE = '../../../../platform/packages/shared/src/config/database';
-const STORAGE_PATHS_MODULE = '../../../../platform/packages/shared/src/utils/storagePaths';
+const DATABASE_MODULE = '../../../../substrate/platform/packages/shared/src/config/database';
+const STORAGE_PATHS_MODULE = '../../../../substrate/platform/packages/shared/src/utils/storagePaths';
 
-jest.mock('../../../../platform/packages/shared/src/utils/logger', () => ({
+jest.mock('../../../../substrate/platform/packages/shared/src/utils/logger', () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),

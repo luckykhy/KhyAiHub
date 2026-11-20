@@ -13,7 +13,7 @@ function safeSegment(value) {
 }
 
 function cacheRoot(state, opts = {}) {
-  const base = opts.cacheDir || path.join(require('../../../../utils/dataHome').getDataHome(), 'updates', 'cache');
+  const base = opts.cacheDir || require('../../../../utils/dataHome').getDataDir('updates', 'cache');
   const target = state.target && (state.target.version || state.target.commit);
   return path.join(base, 'package', safeSegment(target || 'unknown'));
 }

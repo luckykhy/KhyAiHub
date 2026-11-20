@@ -1,4 +1,5 @@
 // khy-canary: Khy-20261102-312-MFQP71BJ
+import { errText } from '../../utils/errText'
 import { useCallback, useEffect, useState } from 'react'
 
 // ── OnboardingDialog (ZC-ALIGN-003 §1 D5, a11y s-8) ──
@@ -57,8 +58,8 @@ export function OnboardingDialog() {
       } else {
         setScanError(res?.error || '迁移检测失败：请重启应用后重试')
       }
-    }).catch(() => {
-      setScanError('迁移检测失败：主进程无响应，请重启应用')
+    }).catch((err: unknown) => {
+      setScanError(`迁移检测失败：${errText(err)}。若持续失败请重启应用`)
     })
   }, [])
 
@@ -91,8 +92,8 @@ export function OnboardingDialog() {
       } else {
         setImported((prev) => ({ ...prev, [sourceId]: res?.error || `导入 ${label} 失败：请重试` }))
       }
-    } catch {
-      setImported((prev) => ({ ...prev, [sourceId]: `导入 ${label} 失败：主进程无响应，请重启应用` }))
+    } catch (err) {
+      setImported((prev) => ({ ...prev, [sourceId]: `导入 ${label} 失败：${errText(err)}（主进程无响应时请重启应用）` }))
     } finally {
       setImportingId('')
     }

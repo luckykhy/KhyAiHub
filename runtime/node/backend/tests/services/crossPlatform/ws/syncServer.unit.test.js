@@ -50,6 +50,14 @@ describe('syncServer', () => {
   let mockHub;
   const { WebSocket: MockWS } = require('ws');
 
+  // 假认证器：token 形如 'tok:<userId>' → 身份由 token 决定（SEC-01 之后，
+  // 身份不再取自消息体里自填的 userId）。
+  const fakeAuthenticate = async (token) => {
+    const id = String(token || '').replace(/^tok:/, '');
+    if (!id) return { ok: false };
+    return { ok: true, user: { id } };
+  };
+
   beforeEach(() => {
     // Clean up module-level state from previous tests.
     const syncServer = require('../../../../src/services/crossPlatform/ws/syncServer');
@@ -163,26 +171,28 @@ describe('syncServer', () => {
       syncServer.detach();
     });
 
-    test('auth message registers device with hub and replies auth:ok', () => {
+    test('auth message registers device with hub and replies auth:ok', async () => {
       const syncServer = require('../../../../src/services/crossPlatform/ws/syncServer');
-      const wss = syncServer.attach({}, { hub: mockHub });
+      const wss = syncServer.attach({}, { hub: mockHub, authenticate: fakeAuthenticate });
       const ws = new MockWS();
 
       wss.emit('connection', ws);
       const messageHandler = ws.listeners('message')[0];
       expect(messageHandler).toBeDefined();
 
-      // No authenticate function => _handleAuth runs synchronously.
+      // 认证是强制的：身份来自 token，不采信消息里自填的 userId（SEC-01）
       messageHandler(JSON.stringify({
         type: 'auth',
         deviceId: 'd1',
         platform: 'web',
-        userId: 'u1',
-        token: 'tok',
+        userId: 'forged',
+        token: 'tok:u1',
       }));
+      // _handleAuth 要 await 认证器 → 等一拍再看结果
+      await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockHub.registerDevice).toHaveBeenCalledWith(
-        expect.objectContaining({ deviceId: 'd1', platform: 'web' })
+        expect.objectContaining({ deviceId: 'd1', platform: 'web', userId: 'u1' })
       );
 
       const authOk = ws.send.mock.calls.find((c) => {
@@ -218,23 +228,25 @@ describe('syncServer', () => {
   describe('notifyUser / broadcast', () => {
     /**
      * Helper: simulate a full auth flow for a device and return its mock WS.
-     * Since no authenticate function is provided, _handleAuth runs synchronously.
+     * The identity comes from the token (SEC-01); the helper is async because
+     * _handleAuth awaits the authenticator.
      */
-    function authDevice(wss, deviceId, userId, platform) {
+    async function authDevice(wss, deviceId, userId, platform) {
       const ws = new MockWS();
       wss.emit('connection', ws);
       const handler = ws.listeners('message')[0];
-      handler(JSON.stringify({ type: 'auth', deviceId, userId, platform, token: 'tok' }));
+      handler(JSON.stringify({ type: 'auth', deviceId, platform, token: `tok:${userId}` }));
+      await new Promise((resolve) => setImmediate(resolve));
       return ws;
     }
 
-    test('notifyUser sends notification to all clients of the same user', () => {
+    test('notifyUser sends notification to all clients of the same user', async () => {
       const syncServer = require('../../../../src/services/crossPlatform/ws/syncServer');
-      const wss = syncServer.attach({}, { hub: mockHub });
+      const wss = syncServer.attach({}, { hub: mockHub, authenticate: fakeAuthenticate });
 
-      const client1 = authDevice(wss, 'd1', 'u1', 'web');
-      const client2 = authDevice(wss, 'd2', 'u1', 'terminal');
-      authDevice(wss, 'd3', 'u2', 'mobile');
+      const client1 = await authDevice(wss, 'd1', 'u1', 'web');
+      const client2 = await authDevice(wss, 'd2', 'u1', 'terminal');
+      await authDevice(wss, 'd3', 'u2', 'mobile');
 
       const delivered = syncServer.notifyUser('u1', 'Test', 'Body', { foo: 'bar' });
       expect(delivered).toBe(2); // d1 + d2
@@ -250,12 +262,12 @@ describe('syncServer', () => {
       syncServer.detach();
     });
 
-    test('broadcast sends to every connected client', () => {
+    test('broadcast sends to every connected client', async () => {
       const syncServer = require('../../../../src/services/crossPlatform/ws/syncServer');
-      const wss = syncServer.attach({}, { hub: mockHub });
+      const wss = syncServer.attach({}, { hub: mockHub, authenticate: fakeAuthenticate });
 
-      const client1 = authDevice(wss, 'd1', 'u1', 'web');
-      const client2 = authDevice(wss, 'd2', 'u2', 'terminal');
+      const client1 = await authDevice(wss, 'd1', 'u1', 'web');
+      const client2 = await authDevice(wss, 'd2', 'u2', 'terminal');
 
       syncServer.broadcast({ type: 'ping-all' });
       expect(client1.send).toHaveBeenCalled();

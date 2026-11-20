@@ -11,8 +11,8 @@
  * - dreamConsolidation(): background thread that consolidates daily logs
  *   into structured memory files via LLM
  *
- * Storage layout (portable-aware):
- *   <appHome>/memory/
+ * Storage layout (resolved through utils/dataHome):
+ *   getDataDir('memory')/
  *     logs/
  *       YYYY/
  *         MM/
@@ -28,7 +28,6 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 // ── Paths (portable-aware) ──
@@ -39,12 +38,8 @@ function getMemoryDir() {
   if (MEMORY_DIR) {
     return MEMORY_DIR;
   }
-  try {
-    const { getAppHome } = require('../utils/dataHome');
-    MEMORY_DIR = path.join(getAppHome(), 'memory');
-  } catch {
-    MEMORY_DIR = path.join(os.homedir(), '.khyquant', 'memory');
-  }
+  const { getDataDir } = require('../utils/dataHome');
+  MEMORY_DIR = getDataDir('memory');
   return MEMORY_DIR;
 }
 
@@ -143,7 +138,8 @@ function extractMemoryTags(text) {
  * @returns {string}
  */
 function loadMemoryIndex() {
-  const indexPath = path.join(getMemoryDir(), 'MEMORY.md');
+  const { resolveDataPath } = require('../utils/dataHome');
+  const indexPath = resolveDataPath('memory', 'MEMORY.md');
   if (!fs.existsSync(indexPath)) {
     return '';
   }
@@ -293,7 +289,8 @@ async function runDreamConsolidation(apiCaller, logCount = 5) {
     const index = loadMemoryIndex();
 
     // Collect recent log files
-    const logsDir = path.join(getMemoryDir(), 'logs');
+    const { resolveDataPath } = require('../utils/dataHome');
+    const logsDir = resolveDataPath('memory', 'logs');
     let logFiles = [];
     if (fs.existsSync(logsDir)) {
       logFiles = fs
