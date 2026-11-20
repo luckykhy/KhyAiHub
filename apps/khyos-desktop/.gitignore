@@ -1,0 +1,27 @@
+# 依赖
+node_modules/
+
+# 构建产物（G5：不提交构建输出；dist-ts 为 tsc 声明输出，留盘供编辑器但不入 git）
+out/
+dist/
+dist-ts/
+dist-electron*/
+build/
+# scripts/build/ 是源码（图标生成等），不是产物。上面这条 build/ 无前导 /，
+# 匹配任意层级，会把它整棵吞掉——generate-icon.cjs 因此一直未入版本库。
+# buildRootGuard.js 的 SOURCE_DIR_ALLOWLIST 只消音了 check-build-root，
+# 没有修 git 跟踪，两者不是一回事。
+!scripts/build/
+*.tsbuildinfo
+
+# 运行时数据家与临时探针（G4：数据家唯一，works/data 为唯一状态目录）
+works/data/
+
+# 日志与探针输出
+*.log
+probe-out.txt
+stdout.txt
+stderr.txt
+
+# 临时文件规约：.tmp_ 前缀，月底清理
+.tmp_*
