@@ -188,6 +188,12 @@ function cmdPush() {
       if (status.startsWith('D')) {
         git(['update-index', '--force-remove', target], { env });
       } else {
+        if (status.startsWith('R')) {
+          // 重命名是「加新 + 删旧」两半：只加新路径，旧路径会留在树里，
+          // 链尖树校验（下方）当场发现多出整个旧目录。2026-11-20 实测：
+          // 迁移提交 799 个 R 条目全部漏删，同步在推送前被自己的校验拦下。
+          git(['update-index', '--force-remove', p1], { env });
+        }
         const blob = gitQuiet(['rev-parse', `${c}:${target}`]);
         if (!blob) continue;
         // --add 必须有：目标文件若不在 parent 树里（本笔新增），
