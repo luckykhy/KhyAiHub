@@ -7,7 +7,7 @@
     "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-004] 构建产物单一根规范.md",
     "parasiticBudget": 6,
     "notes": [
-      "本表是构建产物落点与重建方式的唯一真源。.gitignore / .dockerignore / scripts/maintenance/clean.js 的产物清单由它派生（npm run build:root:sync）。",
+      "本表是构建产物落点与重建方式的唯一真源。原注释声称 .gitignore / .dockerignore / scripts/maintenance/clean.js 的产物清单由它派生（npm run build:root:sync）——2026-11-20 实测该脚本在 package.json 中并不存在，build:all 同样不存在，24 个非 parasitic 条目的 inBuildAll:true 因此无脚本支撑。派生是意图不是现状：clean.js 实际已自由漂移出 10 条无登记项（dist/android 即其中之一，并因此在 2026-11-20 被 clean:apply 永久毁掉）。修 clean.js 时以本表与 works/backup/build-artifacts-*/README.md 的共同认定为判据，不要反向依赖这条注释。",
       "path 是目标位置（产物根之下）；legacyPath 是尚未迁完的当前位置。status=migrating 表示允许旧路径暂时存在，sunset 到期后由 check-build-root 判 error。",
       "rebuild 为空的条目不允许登记 —— 写不出「怎么把它变回来」的东西删掉就是永久损失，不该被当成产物（不变量 I1）。",
       "parasitic 条目 = 工具强制路径或必须被源码树引用的产物，无法重定向。必须有 hook 与 sunset，且总数不得超过 meta.parasiticBudget（只降不升，不变量 I3）。",
@@ -18,10 +18,10 @@
     {
       "id": "ai-frontend",
       "path": "entries/ai-frontend",
-      "legacyPath": "delivery/web/ai-frontend/dist",
+      "legacyPath": "delivery/channel/web/ai-frontend/dist",
       "group": "build",
-      "producer": "delivery/web/ai-frontend/vite.config.js → build.outDir",
-      "rebuild": "npm run build --prefix delivery/web/ai-frontend",
+      "producer": "delivery/channel/web/ai-frontend/vite.config.js → build.outDir",
+      "rebuild": "npm run build --prefix delivery/channel/web/ai-frontend",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2026-12-31"
@@ -29,10 +29,10 @@
     {
       "id": "ai-frontend-coverage",
       "path": "entries/coverage/ai-frontend",
-      "legacyPath": "delivery/web/ai-frontend/coverage",
+      "legacyPath": "delivery/channel/web/ai-frontend/coverage",
       "group": "build",
-      "producer": "delivery/web/ai-frontend（Vitest）→ coverage.reportsDirectory",
-      "rebuild": "npm run test --prefix delivery/web/ai-frontend -- --coverage",
+      "producer": "delivery/channel/web/ai-frontend（Vitest）→ coverage.reportsDirectory",
+      "rebuild": "npm run test --prefix delivery/channel/web/ai-frontend -- --coverage",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2026-12-31"
@@ -51,10 +51,10 @@
     {
       "id": "provider-hub",
       "path": "entries/provider-hub",
-      "legacyPath": "delivery/web/provider-hub/dist",
+      "legacyPath": "delivery/channel/web/provider-hub/dist",
       "group": "build",
-      "producer": "delivery/web/provider-hub（Vite）→ build.outDir",
-      "rebuild": "npm run build --prefix delivery/web/provider-hub",
+      "producer": "delivery/channel/web/provider-hub（Vite）→ build.outDir",
+      "rebuild": "npm run build --prefix delivery/channel/web/provider-hub",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2026-12-31"
@@ -62,10 +62,10 @@
     {
       "id": "khyos-desktop-dist",
       "path": "entries/khyos-desktop-dist",
-      "legacyPath": "delivery/brand/khyos-desktop/dist",
+      "legacyPath": "works/brand/khyos-desktop/dist",
       "group": "build",
-      "producer": "delivery/brand/khyos-desktop/scripts/build.mjs（esbuild 打包 + 单文件页内联）",
-      "rebuild": "npm run build --prefix delivery/brand/khyos-desktop",
+      "producer": "works/brand/khyos-desktop/scripts/build.mjs（esbuild 打包 + 单文件页内联）",
+      "rebuild": "npm run build --prefix works/brand/khyos-desktop",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
@@ -74,10 +74,10 @@
     {
       "id": "khyos-desktop-frames",
       "path": "entries/khyos-desktop-frames",
-      "legacyPath": "delivery/brand/khyos-desktop/out",
+      "legacyPath": "works/brand/khyos-desktop/out",
       "group": "build",
-      "producer": "delivery/brand/khyos-desktop/scripts/capture.mjs（逐场景 PNG）与 assemble.mjs（mp4/ogg 合成）",
-      "rebuild": "node delivery/brand/khyos-desktop/scripts/capture.mjs && node delivery/brand/khyos-desktop/scripts/assemble.mjs",
+      "producer": "works/brand/khyos-desktop/scripts/capture.mjs（逐场景 PNG）与 assemble.mjs（mp4/ogg 合成）",
+      "rebuild": "node works/brand/khyos-desktop/scripts/capture.mjs && node works/brand/khyos-desktop/scripts/assemble.mjs",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
@@ -86,10 +86,10 @@
     {
       "id": "flutter-android-build",
       "path": "entries/flutter-android",
-      "legacyPath": "delivery/mobile/khy-os-client-app/build",
+      "legacyPath": "delivery/channel/mobile/khy-os-client-app/build",
       "group": "build",
       "producer": "Flutter（flutter build 的 build 目录）",
-      "rebuild": "cd delivery/mobile/khy-os-client-app && flutter build apk",
+      "rebuild": "cd delivery/channel/mobile/khy-os-client-app && flutter build apk",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
@@ -98,38 +98,48 @@
     {
       "id": "flutter-android-release",
       "path": "entries/flutter-android",
-      "legacyPath": "delivery/mobile/khy-os-client-app/release",
+      "legacyPath": "delivery/channel/mobile/khy-os-client-app/release",
       "group": "build",
       "producer": "Flutter Android 发布产物",
-      "rebuild": "cd delivery/mobile/khy-os-client-app && flutter build apk --release",
+      "rebuild": "cd delivery/channel/mobile/khy-os-client-app && flutter build apk --release",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
-      "note": "2026-09-19 实测：当前是手工拷贝的发布件（khy-os-client-<日期>.apk，59.8 MB，未跟踪）。注意 build-android.ps1 的默认输出是 <root>/dist/android（$DistDir），不是本路径 —— 即这里的内容**不由任何脚本自动产出**。与 build/gradle 同属 Flutter 产物线，三者须一并迁移，故暂不动（见 flutter-android-build 的 note）。"
+      "note": "2026-09-19 实测：当前是手工拷贝的发布件（khy-os-client-<日期>.apk，59.8 MB，未跟踪）。注意 build-android.ps1 的默认输出是 <root>/dist/android（$DistDir），不是本路径 —— 即这里的内容**不由任何脚本自动产出**。与 build/gradle 同属 Flutter 产物线，三者须一并迁移，故暂不动（见 flutter-android-build 的 note）。2026-11-20：唯一的在册文件 khy-os-client-20260915-2206.apk 已按用户裁决（冗余构建整合）归档至 works/backup/build-artifacts-20261120/mobile-apk-archive/，legacyPath 目录现已空；若日后又人工拷入新的日期快照，按同一规则归档。"
+    },
+    {
+      "id": "android-release-chain",
+      "path": "dist/android",
+      "group": "build",
+      "producer": "scripts/release/build-android.ps1（npm run android:release）；签名读 android/key.properties 与 android/khyos-release.keystore",
+      "rebuild": "npm run android:release（build-android.ps1）；需 flutter + gradle + 签名密钥，本机 flutter/gradle 均不在 PATH",
+      "inBuildAll": false,
+      "status": "active",
+      "note": "2026-11-20 补登记——此前本表完全不认识这个路径，而它是全仓最承重的产物：verify-android-signature.js 与 scripts/release/lib/releaseGateStages.js 的默认读取位都是它。当天有 agent 执行 clean.js --apply 把它永久毁掉（171 MB；dist/ 被 .gitignore 屏蔽因而无从从 git 恢复），事后用 build-android.ps1 重建，release 签名与 keystore 交叉核对通过。rebuild 非空但本机不可执行，且签名密钥全仓仅一份、无外部备份，按不变量 I1 属于「有命令、不可达」——故 status 记 active 而非 migrating，并已从 clean.js TARGETS 移除该条（原登记对 release/ 路径的 rebuild 可证明为假：build-android.ps1:59 实际写 dist/android）。注意 .gitignore 的 dist/ 与 *.apk / *.aab 两条使本路径永远无法被 git 追踪，耐久性只能靠仓外归档，见 works/backup 的 Tier 2 结论。"
     },
     {
       "id": "flutter-android-gradle",
       "path": "entries/flutter-android",
-      "legacyPath": "delivery/mobile/khy-os-client-app/android/build",
+      "legacyPath": "delivery/channel/mobile/khy-os-client-app/android/build",
       "group": "build",
       "producer": "Flutter 内嵌 Android 工程 Gradle",
-      "rebuild": "cd delivery/mobile/khy-os-client-app/android && ./gradlew assembleRelease",
+      "rebuild": "cd delivery/channel/mobile/khy-os-client-app/android && ./gradlew assembleRelease",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
-      "note": "2026-09-19 实测：delivery/mobile/khy-os-client-app/android/build 是 Gradle 中间产物，与 build/release 同属 Flutter 产物线。Flutter 不支持重定向，须与另外两条一并设计方案。"
+      "note": "2026-09-19 实测：delivery/channel/mobile/khy-os-client-app/android/build 是 Gradle 中间产物，与 build/release 同属 Flutter 产物线。Flutter 不支持重定向，须与另外两条一并设计方案。"
     },
     {
       "id": "electron-out",
       "path": "entries/electron/out",
       "legacyPath": "apps/khyos-desktop/out",
       "group": "build",
-      "producer": "electron-vite → outDir",
-      "rebuild": "pnpm run build --filter khyos-desktop",
+      "producer": "electron-vite → outDir（main/preload/renderer/host/scheduler 五段）",
+      "rebuild": "npm run build --prefix apps/khyos-desktop",
       "inBuildAll": true,
       "status": "migrating",
-      "sunset": "2026-10-31",
-      "note": "★ 已被 git 跟踪（9 个文件）且 .gitignore 未覆盖 —— 证据 §1.3 的事故现场，优先级最高。桌面端 R4 迁移后从未搬进 delivery/，legacyPath 以 apps/ 实际位置为准。"
+      "sunset": "2027-06-30",
+      "note": "⚠️ 迁移目标实测不可达，2026-11-19 已全量试迁后回退（依据：app-builder-lib 源码）——(1) package.json 的 main 在开发态（electron . 从 app 目录读）与打包态（asar 内解析）必须指向同一处，asar 内路径逃不出归档；(2) electron-builder 的 files 匹配走不出 app 目录：app-builder-lib/out/util/filter.js 的 createFilter 只对 walker 走过的文件算「相对 appDir」路径再 minimatch，`../` 字符串 pattern 静默零匹配，platformPackager 的 asarUnpack matcher 同样 defaultSrc=appDir。语义上这正是 parasitic（工具强制路径），但 meta.parasiticBudget=6 已满、棘轮只降不升，故维持 migrating + 未来 sunset 的 warning 通道；要改判 parasitic 需人先拍板升预算。三个 vite 配置头部有警告注释防再犯。打包输出 dist-electron 不受此限（纯输出），见 electron-builder 条目。"
     },
     {
       "id": "electron-dist",
@@ -147,12 +157,12 @@
       "path": "entries/electron/dist-electron",
       "legacyPath": "apps/khyos-desktop/dist-electron",
       "group": "build",
-      "producer": "apps/khyos-desktop（electron-builder 打包，build.directories.output=dist-electron）",
+      "producer": "apps/khyos-desktop（electron-builder 打包，build.directories.output=../../entries/electron/dist-electron）",
       "rebuild": "npm run electron:build --prefix apps/khyos-desktop",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2026-12-31",
-      "note": "端矩阵 desktop 的 artifactOutput 指向本 id；补这条之前它悬空（登记表里只有 electron-out / electron-dist，都是编译产物、不是可分发的 exe）。"
+      "note": "端矩阵 desktop 的 artifactOutput 指向本 id；补这条之前它悬空（登记表里只有 electron-out / electron-dist，都是编译产物、不是可分发的 exe）。2026-11-19：output 配置与历史产物已迁入登记路径；app 根旧 dist-electron* 空壳（被 MiniMax Code / WorkBuddy 占用 asar）已强杀持有进程后清除，legacyPath 现存磁盘上已不存在。2026-11-20：同版本的 5 个历史实验变体（-3d/-new/-pack/-pet/-pkg，约 1.85 GB）按用户裁决归档至 works/backup/build-artifacts-20261120/khyos-electron-variants/（冗余构建整合，README 在该目录）；pet 变体仍被 scripts/desktop/package-and-launch.ps1 用作打包缺 exe 时的回退启动位，故保留不删。本路径（dist-electron）是唯一正品。"
     },
     {
       "id": "quant-frontend-dist",
@@ -169,10 +179,10 @@
     {
       "id": "flutter-dart-tool",
       "path": "entries/flutter-android",
-      "legacyPath": "delivery/mobile/khy-os-client-app/.dart_tool",
+      "legacyPath": "delivery/channel/mobile/khy-os-client-app/.dart_tool",
       "group": "build",
       "producer": "Dart 工具链（pub get / build 缓存，Dart 官方不支持重定向）",
-      "rebuild": "cd delivery/mobile/khy-os-client-app && flutter pub get",
+      "rebuild": "cd delivery/channel/mobile/khy-os-client-app && flutter pub get",
       "inBuildAll": true,
       "status": "migrating",
       "sunset": "2027-06-30",
@@ -281,13 +291,13 @@
     },
     {
       "id": "frontend-vendor",
-      "path": "delivery/web/ai-frontend/public/vendor",
-      "legacyPath": "delivery/web/ai-frontend/public/vendor",
+      "path": "delivery/channel/web/ai-frontend/public/vendor",
+      "legacyPath": "delivery/channel/web/ai-frontend/public/vendor",
       "group": "parasitic",
-      "producer": "delivery/web/ai-frontend 的 predev/prebuild 钩子 → sync-md-vendor.mjs",
-      "rebuild": "node delivery/web/ai-frontend/scripts/sync-md-vendor.mjs",
+      "producer": "delivery/channel/web/ai-frontend 的 predev/prebuild 钩子 → sync-md-vendor.mjs",
+      "rebuild": "node delivery/channel/web/ai-frontend/scripts/sync-md-vendor.mjs",
       "parasitic": true,
-      "hook": "delivery/web/ai-frontend 的 predev / prebuild 钩子",
+      "hook": "delivery/channel/web/ai-frontend 的 predev / prebuild 钩子",
       "sunset": "2027-06-30",
       "note": "必须落在 public/ 下才能被 Vite dev server 与 build 直接服务。"
     },
@@ -299,7 +309,7 @@
       "producer": "delivery/extension/tools/khy-markdown/muya-embed/ensure-vendor.mjs",
       "rebuild": "node delivery/extension/tools/khy-markdown/muya-embed/ensure-vendor.mjs",
       "parasitic": true,
-      "hook": "khy-markdown 拓展的 prepack / delivery/web/ai-frontend 的 sync-md-vendor.mjs / build-payload-assets.js",
+      "hook": "khy-markdown 拓展的 prepack / delivery/channel/web/ai-frontend 的 sync-md-vendor.mjs / build-payload-assets.js",
       "sunset": "2027-06-30",
       "note": "11 MB esbuild 自打包产物，必须在拓展包内才能被 prepack 打进分发产物。"
     },
