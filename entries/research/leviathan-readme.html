@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: leviathan-readme.md -->
+<title>LEVIATHAN · リヴァイアサン · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>entries<span class="sep">›</span>research<span class="sep">›</span>LEVIATHAN · リヴァイアサン</div>
+      <header class="hero reveal"><h1>LEVIATHAN · リヴァイアサン</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#leviathan-リヴァイアサン">LEVIATHAN · リヴァイアサン</a></li><li class="lvl-2"><a href="#how-it-looks-like-anime">How it looks like anime</a></li><li class="lvl-2"><a href="#how-it-was-made">How it was made</a></li><li class="lvl-2"><a href="#run-it">Run it</a></li><li class="lvl-2"><a href="#layout">Layout</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="leviathan-リヴァイアサン">LEVIATHAN · リヴァイアサン<a class="anchor" href="#leviathan-リヴァイアサン" aria-label="锚点">#</a></h1>
+<p>An 83-second anime short where every frame is rendered by code: no video model, no image model, no hand-drawn frames.<br>A colossal archer draws a giant bow on a sunlit coast and fires a harpoon that climbs into orbit. Out at sea, four whales<br>rise beside a fleet of container ships. They are lures inside the mouth of a leviathan. The harpoon comes back down from<br>space, drives through the beast in a storm of lightning, and the sea takes the fleet.</p>
+<p><span class="deadimg" title="图片不存在：docs/breach.jpg">□ breach</span></p>
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><span class="deadimg" title="图片不存在：docs/archer.jpg">□ archer</span></td><td><span class="deadimg" title="图片不存在：docs/release.jpg">□ release</span></td></tr><tr><td><span class="deadimg" title="图片不存在：docs/whales.jpg">□ whales</span></td><td><span class="deadimg" title="图片不存在：docs/maw.jpg">□ maw</span></td></tr><tr><td><span class="deadimg" title="图片不存在：docs/wave.jpg">□ wave</span></td><td><span class="deadimg" title="图片不存在：docs/pierce.jpg">□ pierce</span></td></tr></tbody></table>
+<p><strong>Watch:</strong> download <code>dist/leviathan_lite.html</code> (or the full-quality <code>leviathan.html</code> and the MP4 from the<br><span class="deadlink" title="目标不存在：../../releases">Releases</span>) and open it in any browser. It is one self-contained file and works offline.</p>
+<blockquote><p>An anime-style remake of a short by ★ AHMII ★: same story and shots, redrawn bright in cel style, with original<br>music. Not affiliated. Made with <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>.</p></blockquote>
+<hr>
+<h2 id="how-it-looks-like-anime">How it looks like anime<a class="anchor" href="#how-it-looks-like-anime" aria-label="锚点">#</a></h2>
+<p>The film is a three.js (r170, WebGL2) scene drawn through a custom multi-pass pipeline that imitates a cel +<br>painted-background production, the same engine as <a href="https://github.com/0xCodez/sunshower" target="_blank" rel="noopener">Sunshower</a>:</p>
+<table><thead><tr><th>Pass</th><th>What it does</th></tr></thead><tbody><tr><td>shadow / reflection</td><td>character-only shadow map (painted lighting, not physics); mirrored camera for the water</td></tr><tr><td>main (MRT)</td><td>colour + a data buffer (view normal, depth, material id)</td></tr><tr><td>paint</td><td>depth-aware Kuwahara &quot;brush&quot; filter on background pixels only → gouache look</td></tr><tr><td>ink</td><td>hand-inked lines on cel pixels only: id / depth / normal edges, pressure noise</td></tr><tr><td>water</td><td>screen-space sea at kilometre scale: swell, whitecaps, reflections, glitter, foam</td></tr><tr><td>atmosphere</td><td>haze, spray, light shafts</td></tr><tr><td>overlay</td><td>drawn energy, lightning and water FX</td></tr><tr><td>bloom / grade</td><td>glow on emissives, high-key anime grade, film grain</td></tr></tbody></table>
+<ul><li><strong>Everything is 3D under the drawing.</strong> The archer is built from convex armour plates with projected panel lines,</li></ul>
+<p>the leviathan is a bent skinned surface with a procedural hide, the ships are instanced containers on a hull.</p>
+<ul><li><strong>Animation is on twos and threes</strong>, like film anime: characters at 12 drawings a second, water FX at 8.</li><li><strong>Every frame is a pure function of time.</strong> Frames can render in any order, so the headless render is resumable and</li></ul>
+<p>deterministic.</p>
+<ul><li><strong>Sound is fully synthesized</strong> with Web Audio <code>OfflineAudioContext</code>: brass, strings, sub drones, whale song, the</li></ul>
+<p>bowstring, sonic booms, thunder and the sea, all locked to the story beats (<code>CUES</code> in <code>src/shots.js</code>).</p>
+<h2 id="how-it-was-made">How it was made<a class="anchor" href="#how-it-was-made" aria-label="锚点">#</a></h2>
+<p>One director session and parallel agent teams in Claude Code, working from a shared production bible<br>(<a href="CONTRACT.html">CONTRACT.md</a>): archer, leviathan, ships, world, underwater, energy FX, water FX, sound. Each team owned its<br>own files and rendered stills to check its shots against the reference.</p>
+<h2 id="run-it">Run it<a class="anchor" href="#run-it" aria-label="锚点">#</a></h2>
+<p>Requirements: Node 18+, Google Chrome (or set <code>CHROME=/path/to/chrome</code>), and <code>ffmpeg</code> on <code>PATH</code>.</p>
+<pre><code class="language-bash">npm install</code></pre>
+<p>Serve the folder with any static server and open <code>index.html?scale=1</code> to scrub through the film live:</p>
+<pre><code class="language-bash">npx serve .</code></pre>
+<p>Render stills for review:</p>
+<pre><code class="language-bash">node tools/snap.mjs --scale 1 s:breach t:41 <span class="hljs-string">&quot;q:test=1&amp;cam=0,60,300&amp;at=0,60,0&amp;t=10=name:mycam&quot;</span></code></pre>
+<p>Full build: soundtrack, film (resumable segments), single-file player in <code>dist/</code>:</p>
+<pre><code class="language-bash">npm run build</code></pre>
+<h2 id="layout">Layout<a class="anchor" href="#layout" aria-label="锚点">#</a></h2>
+<pre><code>src/shots.js        story beats (CUES), the 39 shots, cameras registry
+src/cams/           cameras and looks for each department's shots
+src/archer*.js      the archer, bow; src/arrow.js the harpoon arrow; src/tether.js its cable
+src/leviathan.js    the monster + lev-*.js (body, hide, limbs, spine, whales, animation)
+src/ships*.js       container ships, deck, bridge, the giant swell
+src/world*.js       sky, ocean, coast, planet, port  (+ bgmaterials.js, passes-env.js)
+src/under*.js       the underwater world and its staging
+src/fx-energy*.js   charge, lightning, sky tear, plasma
+src/fx-splash*.js   breach water, plumes, the water mountain, the crash
+src/audio*.js       the synthesized soundtrack
+tools/              snap (stills), render (MP4), render-audio (WAV), build-player (HTML), check
+player/player.html  the single-file player template</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../entries/research/CONTRACT.html"><div class="dir">← 上一篇</div><div class="ttl">LEVIATHAN — production contract</div></a><a class="next" href="../../entries/tools/deepseek-eyes/docs/CLIENTS.html"><div class="dir">下一篇 →</div><div class="ttl">MCP 客户端配置 / MCP Client Configuration</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="entries/research/leviathan-readme.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

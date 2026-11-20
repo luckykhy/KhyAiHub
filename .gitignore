@@ -9,12 +9,16 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-# Exception: packaging/build/ holds CI build scripts (source, not output).
+# Exception: works/ship/build/ holds CI build scripts (source, not output).
 # The broad build/ rule above must not swallow them, or the
 # Build Standalone Executables workflow fails with MODULE_NOT_FOUND.
-!packaging/build/
-!packaging/build/*.js
-!packaging/build/*.json
+# 方案 P 把顶层 packaging/ 物理化迁到 works/ship/ 后，例外若还写 packaging/build/
+# 就等于没有例外——脚本继续被 build/ 吞掉，干净检出里整个目录不存在。
+!works/ship/build/
+!works/ship/build/*.js
+!works/ship/build/*.json
+!works/ship/build/shims/
+!works/ship/build/shims/*.mjs
 *.iso
 *.db
 *.db-shm
@@ -55,7 +59,7 @@ DebugProbesKt.bin
 # .env.<任意后缀> 泛化兜底：运行时原子写（aiManagementServer.js 的
 # writeFileSync + renameSync）中断会留下 .env.tmp.<时间戳>，两份曾带着真实
 # JWT_SECRET 入库（df6a6544 → bc43302f R100 改名）。按形态兜住，不再逐个补名。
-# 模板反选：根 / runtime/node/backend / delivery/web/ai-frontend 三份已跟踪的
+# 模板反选：根 / runtime/node/backend / delivery/channel/web/ai-frontend 三份已跟踪的
 # .env.example 必须继续入库；entries/tools/deepseek-eyes/.env.example 由下方
 # entries/* 规则继续忽略（本反选在其之前，后写者优先）。
 .env.*
@@ -67,6 +71,9 @@ DebugProbesKt.bin
 key_manager_audit.jsonl
 .khyquant/
 .khyquant-data/
+# khy-Trajectory 可见别名已于 2026-11-19 用户裁决整体拆除（仓库不再使用
+# junction/symlink，数据家即 works/data/khy 真目录）。两行保留为历史兜底：
+# 存量机器上可能还有这条 junction，挡住它被 git add -A 卷进来。
 .khy-Trajectory/
 khy-Trajectory/
 # Legacy root-level khyquant data locations — migrated to .khy/khyquant/{cache,data,temp}
@@ -117,6 +124,11 @@ platform/packages/*/node_modules/
 # 导致工作树永远带未跟踪文件、双机自动同步的 --clean-only 门禁永远跳过。
 # 这里在反选之后重新排除，让工作树可真正收敛到 clean。
 platform/packages/shared/logs/
+
+# 初始管理员口令：首启由 services/credentialGenerator.js 按机器指纹派生，
+# 落在数据家（.khy/credentials/default-admin.json）。仓库里不再保留任何明文口令文件
+# （SEC-06：旧的 .admin_initial_password 已被退役）。
+.admin_initial_password
 
 # Frontend build artifacts
 apps/ai-frontend/dist/
@@ -224,6 +236,11 @@ apps/khyos-desktop/dist-electron/
 # 实测 `dist-electron-pack/` 是 146 个文件、770 MB 的 win-unpacked 产物。
 apps/khyos-desktop/dist-electron-*/
 
+# 根级 out/：electron-builder / vite 的构建产物根（2026-11-20 实测出现空目录，
+# 未跟踪未忽略，layer-registry 报未登记顶层目录）。空壳已删，规则收编防复发；
+# 同步登记进 check-repo-layout.js 的 GENERATED_TOP_LEVEL_DIRS。
+out/
+
 # ── 体积防复发（2026-09-16 体积治理后补）────────────────────────────────
 # 本轮实测的膨胀源中，以下几类**当时未被任何忽略规则覆盖**，因此持续出现在
 # `git status` 里、并有被 `git add -A` 误收的风险。规则留下防复发。
@@ -330,6 +347,11 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 # --- 2026-10-02 W9′ 数据家迁入 works/data/（B档 §22 R1；本机态，gitignore 派生自 DATA-LOCATIONS roots.rel）---
 works/data/
 
+# --- 2026-11-20 冗余构建归档区（用户裁决：只收冗余、活性产物留原地）---
+#   works/backup/<日期>/ 收纳同一版本/同一管线的重复或历史构建输出（见各目录 README）。
+#   二进制大件，绝不入版本库；恢复方法见 README。
+works/backup/
+
 # --- 2026-10-05 未跟踪项收口 ---
 #   runtime/substrate/platform/khy_platform/bundled/ —— esbuild 产物拷贝（内容 logs/ + runtime/）。
 #   根级 platform/khy_platform/bundled/ 已被上方规则忽略，但该模式含 / 锚定仓库根，
@@ -339,6 +361,9 @@ runtime/substrate/platform/khy_platform/bundled/
 runtime/works/
 #   electron.vite.config.<时间戳>.mjs —— vite 启动时生成的临时配置，可再生。
 apps/khyos-desktop/electron.vite.config.*.mjs
+#   同一生成器在 provider-hub 也会落临时配置（内含 __electron_vite_injected_dirname
+#   的本机绝对路径，零硬编码守卫会逐条判 error），按同样最窄目录罩住。
+delivery/channel/web/provider-hub/electron.vite.config.*.mjs
 #   .ai/ —— 智能体探测残留（__scope_probe/probe.json），自愈型本机态（同 .workbuddy/ 先例）。
 /.ai/
 #   .codeartsdoer/ —— CodeArts Doer 工具本机状态（skills/agents/mcp/temp 等）。
@@ -349,11 +374,11 @@ apps/khyos-desktop/electron.vite.config.*.mjs
 #   产生 diff（out/main/index.js 一个文件就 +284/-10）。契约件是源码不是产物，
 #   故 git rm --cached 后整目录忽略。
 apps/khyos-desktop/out/
-#   delivery/brand/khyos-desktop/out/ —— 品牌 3D 桌面链路的逐场景帧与预览片
+#   works/brand/khyos-desktop/out/ —— 品牌 3D 桌面链路的逐场景帧与预览片
 #   （capture.mjs 落 out/frames/<sceneId>/*.png，一次全量采集近千个文件）。
 #   删了能由 capture + assemble 重建，登记见 BUILD-OUTPUTS.json 的
 #   khyos-desktop-frames 条目；dist/ 已被第 9 行的 dist/ 规则覆盖。
-delivery/brand/khyos-desktop/out/
+works/brand/khyos-desktop/out/
 #   runtime/node/backend/Microsoft/ —— PowerShell ModuleAnalysisCache 遥测缓存，
 #   在仓内生成，与本仓无关。注意与已存在的 runtime/works/ 不是同一路径。
 runtime/node/backend/Microsoft/
@@ -380,14 +405,74 @@ apps/khyos-desktop/works/
 *.cpuprofile
 
 # --- 2026-11-09 全量整理收口 ---
-#   delivery/mobile/khy-os-client-app/third_party/ —— vendored 第三方树：
+#   delivery/channel/mobile/khy-os-client-app/third_party/ —— vendored 第三方树：
 #   llama.cpp 源码 96.9MB + models 77.2MB + quickjs 4.3MB，共 4285 个文件。
 #   它是构建期本地依赖（android/app/src/main/cpp/CMakeLists.txt 按路径引用），
 #   不入库；仓内该路径下无已跟踪文件。llama.cpp/.gitignore:72 的
 #   !models/ggml-vocab-*.gguf* 反忽略规则随之失效——那两个 .gguf（10.4/15MB）
 #   本来也过不了 pre-commit 的 >10MB 检查。
-delivery/mobile/khy-os-client-app/third_party/
-#   delivery/mobile/khy-os-client-app/android/app/.cxx-x/ —— CMake 原生构建缓存
+delivery/channel/mobile/khy-os-client-app/third_party/
+#   delivery/channel/mobile/khy-os-client-app/android/app/.cxx-x/ —— CMake 原生构建缓存
 #   （CMakeCache.txt / .ninja_log / compiler ABI 探针），49.6MB / 306 个生成物，
 #   每次构建重写。注意与第 302 行的 !android/app/src/** 取回规则不同路径，不冲突。
-delivery/mobile/khy-os-client-app/android/app/.cxx-x/
+delivery/channel/mobile/khy-os-client-app/android/app/.cxx-x/
+# --- 2026-11-18: 工具家点目录（junction 垫片已按用户裁决废除；工具自建真目录）---
+# 真数据住 works/data/<tool>/；这些点目录是工具硬编码路径的落点，本机态不入库。
+.zcode/
+.cursor/
+.opencode/
+.mavis/
+.qoder/
+
+# ═══ 2026-11-20 git 覆盖审计补：Tier 1 源码被广义产物规则误吞 ══════════════════════
+# 原则：只加反选，不动上面任何一条广义规则。反选必须写在被反选规则之后（后写者优先）。
+# 判据必须用 git check-ignore --no-index —— 不带 --no-index 时它会跳过已跟踪路径，
+# 把「规则罩着但侥幸还在索引里」误报成「没被忽略」。本次审计就因此差点漏掉整整一组。
+#
+# (1) entries/research/ —— 16 个手写原型文件，无生产者，被第 276 行 entries/* 吞掉。
+#     只反选目录：entries/* 的 * 不跨 /，目录放行后其内容不再被任何规则命中。
+#     不要写成 !entries/research/** —— 那会把将来的 node_modules/ 一起解禁。
+!entries/research/
+#
+# (2) entries/apk-unpack/tools/ —— 63 个手写分析脚本（34 .js / 24 .txt / 5 .out）。
+#     源 APK（hiao2）已删、jadx/apktool 不在 PATH，等于没有生产者。
+#     同级 scratch/（11,478 个文件）是反编译中间产物，必须继续忽略，所以先放行父目录、
+#     用 tools/* 收回全部子项、再按扩展名逐个放行。父目录被排除时，单独反选其下文件是
+#     no-op，这个父链不能省。
+!entries/apk-unpack/
+entries/apk-unpack/*
+!entries/apk-unpack/tools/
+entries/apk-unpack/tools/*
+!entries/apk-unpack/tools/*.js
+!entries/apk-unpack/tools/*.mjs
+!entries/apk-unpack/tools/*.md
+!entries/apk-unpack/tools/*.txt
+!entries/apk-unpack/tools/*.out
+#
+# (3) 已跟踪却坐在忽略目录里的契约件。第 421-425 行的 .zcode/ .cursor/ .opencode/
+#     .mavis/ .qoder/ 都没有前导 /，匹配任意层级，所以 runtime/node/backend/.cursor/
+#     与 works/record/.cursor/ 也被罩。这些文件只因在索引里才活着，一旦 git rm --cached
+#     或在干净检出中就没了。逐个反选、不整目录解禁——那会把工具的 node_modules/tmp 放进来。
+!.opencode/
+.opencode/*
+!.opencode/README.md
+!.opencode/README.html
+!.opencode/config.json
+!.zcode/
+.zcode/*
+!.zcode/plans/
+.zcode/plans/*
+!.zcode/plans/plan-sess_ee2d7822-39ad-4bb9-92f9-57196682e483.md
+!.cursor/
+.cursor/*
+!.cursor/rules/
+.cursor/rules/*
+!.cursor/rules/khy-maintainability.mdc
+!runtime/node/backend/.cursor/rules/khy-maintainability.mdc
+!works/record/.cursor/rules/khy-maintainability.mdc
+#
+# (4) 第 44 行 AndroidManifest.xml 没有前导 /，任意层级命中，罩住了已跟踪的 App 清单。
+#     第 319 行那条 !apps/khy-os-client-app/android/app/src/** 是方案 P 迁移前的死路径，
+#     罩不到真实位置，这里补一条同粒度反选。只取 main/ —— debug/ 与 profile/ 的
+#     AndroidManifest 是 Flutter 生成物，继续忽略。
+!delivery/channel/mobile/khy-os-client-app/android/app/src/main/AndroidManifest.xml
