@@ -1,0 +1,136 @@
+<manifest androidversionCode=0x1a (hex) androidversionName="2.8.0-alpha" androidcompileSdkVersion=0x23 (hex) androidcompileSdkVersionCodename="15" package="com.hiao.v2" platformBuildVersionCode=0x23 (hex) platformBuildVersionName=0xf (hex)
+  <uses-sdk androidminSdkVersion=0x1c (hex) androidtargetSdkVersion=0x23 (hex)
+  </uses-sdk>
+  <uses-permission androidname="android.permission.INTERNET"
+  </uses-permission>
+  <uses-permission androidname="android.permission.ACCESS_NETWORK_STATE"
+  </uses-permission>
+  <uses-permission androidname="android.permission.POST_NOTIFICATIONS"
+  </uses-permission>
+  <uses-permission androidname="android.permission.FOREGROUND_SERVICE"
+  </uses-permission>
+  <uses-permission androidname="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+  </uses-permission>
+  <uses-permission androidname="android.permission.RECEIVE_BOOT_COMPLETED"
+  </uses-permission>
+  <uses-permission androidname="android.permission.WAKE_LOCK"
+  </uses-permission>
+  <uses-permission androidname="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+  </uses-permission>
+  <uses-permission androidname="android.permission.MANAGE_EXTERNAL_STORAGE"
+  </uses-permission>
+  <uses-permission androidname="android.permission.WRITE_SETTINGS"
+  </uses-permission>
+  <uses-permission androidname="android.permission.VIBRATE"
+  </uses-permission>
+  <uses-permission androidname="android.permission.SCHEDULE_EXACT_ALARM"
+  </uses-permission>
+  <uses-permission androidname="android.permission.SYSTEM_ALERT_WINDOW"
+  </uses-permission>
+  <uses-permission androidname="com.android.alarm.permission.SET_ALARM"
+  </uses-permission>
+  <queries 
+    <intent 
+      <action androidname="android.intent.action.MAIN"
+      </action>
+      <category androidname="android.intent.category.LAUNCHER"
+      </category>
+    </intent>
+    <intent 
+      <action androidname="android.intent.action.VIEW"
+      </action>
+      <data androidscheme="https"
+      </data>
+    </intent>
+    <package androidname="com.stepos.ailauncher"
+    </package>
+    <package androidname="com.stepos.aiengine"
+    </package>
+    <intent 
+      <action androidname="android.intent.action.VIEW"
+      </action>
+      <data androidscheme="stepos"
+      </data>
+    </intent>
+    <intent 
+      <action androidname="android.intent.action.VIEW"
+      </action>
+      <data androidscheme="amoo"
+      </data>
+    </intent>
+    <intent 
+      <action androidname="android.intent.action.VIEW"
+      </action>
+      <data androidscheme="stepxvibe"
+      </data>
+    </intent>
+    <intent 
+      <action androidname="android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+      </action>
+    </intent>
+    <intent 
+      <action androidname="android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS"
+      </action>
+    </intent>
+  </queries>
+  <application androidtheme=@ref/0x7f050000 androidlabel=@ref/0x7f040021 androidicon=@ref/0x7f030000 androidname=".App" androiddebuggable=4294967295 (dec) androidallowBackup=0 (dec) androidsupportsRtl=4294967295 (dec) androidnetworkSecurityConfig=@ref/0x7f060001 androidroundIcon=@ref/0x7f030001
+    <activity androidname="com.hiao.v2.ui.MainActivity" androidexported=4294967295 (dec) androidlaunchMode=0x1 (hex) androidwindowSoftInputMode=true (bool)
+      <intent-filter 
+        <action androidname="android.intent.action.MAIN"
+        </action>
+        <category androidname="android.intent.category.LAUNCHER"
+        </category>
+      </intent-filter>
+      <intent-filter 
+        <action androidname="android.intent.action.VIEW"
+        </action>
+        <category androidname="android.intent.category.DEFAULT"
+        </category>
+        <category androidname="android.intent.category.BROWSABLE"
+        </category>
+        <data androidscheme="hiao"
+        </data>
+      </intent-filter>
+    </activity>
+    <activity androidname="com.hiao.v2.ui.SettingsActivity" androidexported=0 (dec)
+    </activity>
+    <activity androidname="com.hiao.v2.ui.ApprovalsActivity" androidexported=0 (dec) androidwindowSoftInputMode=true (bool)
+    </activity>
+    <activity androidname="com.hiao.v2.ui.SessionsActivity" androidexported=0 (dec)
+    </activity>
+    <activity androidname="com.hiao.v2.ui.SessionViewActivity" androidexported=0 (dec)
+    </activity>
+    <activity androidname="com.hiao.v2.ui.CapsActivity" androidexported=0 (dec)
+    </activity>
+    <activity androidname="com.hiao.v2.ui.EngineActivity" androidexported=0 (dec)
+    </activity>
+    <service androidname="com.hiao.v2.bridge.BridgeService" androidexported=0 (dec) androidforegroundServiceType=true (bool)
+      <property androidname="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" androidvalue="localhost-agent-bridge"
+      </property>
+    </service>
+    <service androidname=".ui.island.FloatingChatService" androidexported=0 (dec) androidforegroundServiceType=true (bool)
+      <property androidname="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" androidvalue="桌面宠物与悬浮迷你对话窗：实时智能体阶段、待审批数、紧凑对话浮层"
+      </property>
+    </service>
+    <service androidname=".quick.HiaoTileService" androidpermission="android.permission.BIND_QUICK_SETTINGS_TILE" androidexported=4294967295 (dec)
+      <intent-filter 
+        <action androidname="android.service.quicksettings.action.QS_TILE"
+        </action>
+      </intent-filter>
+    </service>
+    <service androidname="com.hiao.v2.tools.AccessibilityHelper" androidpermission="android.permission.BIND_ACCESSIBILITY_SERVICE" androidexported=4294967295 (dec)
+      <intent-filter 
+        <action androidname="android.accessibilityservice.AccessibilityService"
+        </action>
+      </intent-filter>
+      <meta-data androidname="android.accessibilityservice" androidresource=@ref/0x7f060000
+      </meta-data>
+    </service>
+    <receiver androidname="com.hiao.v2.bridge.BootReceiver" androidexported=0 (dec)
+      <intent-filter 
+        <action androidname="android.intent.action.BOOT_COMPLETED"
+        </action>
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

@@ -1,0 +1,191 @@
+< manifest android:versionCode=int-dec:26 android:versionName=str:"2.8.0-alpha" android:compileSdkVersion=int-dec:35 android:compileSdkVersionCodename=str:"15" package=str:"com.hiao.v2" platformBuildVersionCode=int-dec:35 platformBuildVersionName=int-dec:15
+< uses-sdk android:minSdkVersion=int-dec:28 android:targetSdkVersion=int-dec:35
+< uses-permission android:name=str:"android.permission.INTERNET"
+< uses-permission android:name=str:"android.permission.ACCESS_NETWORK_STATE"
+< uses-permission android:name=str:"android.permission.POST_NOTIFICATIONS"
+< uses-permission android:name=str:"android.permission.FOREGROUND_SERVICE"
+< uses-permission android:name=str:"android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+< uses-permission android:name=str:"android.permission.RECEIVE_BOOT_COMPLETED"
+< uses-permission android:name=str:"android.permission.WAKE_LOCK"
+< uses-permission android:name=str:"android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+< uses-permission android:name=str:"android.permission.MANAGE_EXTERNAL_STORAGE"
+< uses-permission android:name=str:"android.permission.WRITE_SETTINGS"
+< uses-permission android:name=str:"android.permission.VIBRATE"
+< uses-permission android:name=str:"android.permission.SCHEDULE_EXACT_ALARM"
+< uses-permission android:name=str:"android.permission.SYSTEM_ALERT_WINDOW"
+< uses-permission android:name=str:"com.android.alarm.permission.SET_ALARM"
+< queries
+< intent
+< action android:name=str:"android.intent.action.MAIN"
+< category android:name=str:"android.intent.category.LAUNCHER"
+< intent
+< action android:name=str:"android.intent.action.VIEW"
+< data android:scheme=str:"https"
+< package android:name=str:"com.stepos.ailauncher"
+< package android:name=str:"com.stepos.aiengine"
+< intent
+< action android:name=str:"android.intent.action.VIEW"
+< data android:scheme=str:"stepos"
+< intent
+< action android:name=str:"android.intent.action.VIEW"
+< data android:scheme=str:"amoo"
+< intent
+< action android:name=str:"android.intent.action.VIEW"
+< data android:scheme=str:"stepxvibe"
+< intent
+< action android:name=str:"android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+< intent
+< action android:name=str:"android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS"
+< application android:theme=ref:0x7f050000 android:label=ref:0x7f040021 android:icon=ref:0x7f030000 android:name=str:".App" android:debuggable=int:-1 (0=false,nonzero=true) android:allowBackup=int:0 (0=false,nonzero=true) android:supportsRtl=int:-1 (0=false,nonzero=true) android:networkSecurityConfig=ref:0x7f060001 android:roundIcon=ref:0x7f030001
+< activity android:name=str:"com.hiao.v2.ui.MainActivity" android:exported=int:-1 (0=false,nonzero=true) android:launchMode=int-dec:1 android:windowSoftInputMode=int-hex:0x10
+< intent-filter
+< action android:name=str:"android.intent.action.MAIN"
+< category android:name=str:"android.intent.category.LAUNCHER"
+< intent-filter
+< action android:name=str:"android.intent.action.VIEW"
+< category android:name=str:"android.intent.category.DEFAULT"
+< category android:name=str:"android.intent.category.BROWSABLE"
+< data android:scheme=str:"hiao"
+< activity android:name=str:"com.hiao.v2.ui.SettingsActivity" android:exported=int:0 (0=false,nonzero=true)
+< activity android:name=str:"com.hiao.v2.ui.ApprovalsActivity" android:exported=int:0 (0=false,nonzero=true) android:windowSoftInputMode=int-hex:0x10
+< activity android:name=str:"com.hiao.v2.ui.SessionsActivity" android:exported=int:0 (0=false,nonzero=true)
+< activity android:name=str:"com.hiao.v2.ui.SessionViewActivity" android:exported=int:0 (0=false,nonzero=true)
+< activity android:name=str:"com.hiao.v2.ui.CapsActivity" android:exported=int:0 (0=false,nonzero=true)
+< activity android:name=str:"com.hiao.v2.ui.EngineActivity" android:exported=int:0 (0=false,nonzero=true)
+< service android:name=str:"com.hiao.v2.bridge.BridgeService" android:exported=int:0 (0=false,nonzero=true) android:foregroundServiceType=int-hex:0x40000000
+< property android:name=str:"android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value=str:"localhost-agent-bridge"
+< service android:name=str:".ui.island.FloatingChatService" android:exported=int:0 (0=false,nonzero=true) android:foregroundServiceType=int-hex:0x40000000
+< property android:name=str:"android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value=str:"桌面宠物与悬浮迷你对话窗：实时智能体阶段、待审批数、紧凑对话浮层"
+< service android:name=str:".quick.HiaoTileService" android:permission=str:"android.permission.BIND_QUICK_SETTINGS_TILE" android:exported=int:-1 (0=false,nonzero=true)
+< intent-filter
+< action android:name=str:"android.service.quicksettings.action.QS_TILE"
+< service android:name=str:"com.hiao.v2.tools.AccessibilityHelper" android:permission=str:"android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported=int:-1 (0=false,nonzero=true)
+< intent-filter
+< action android:name=str:"android.accessibilityservice.AccessibilityService"
+< meta-data android:name=str:"android.accessibilityservice" android:resource=ref:0x7f060000
+< receiver android:name=str:"com.hiao.v2.bridge.BootReceiver" android:exported=int:0 (0=false,nonzero=true)
+< intent-filter
+< action android:name=str:"android.intent.action.BOOT_COMPLETED"
+--- tag histogram ---
+action x12
+activity x7
+application x1
+category x4
+data x5
+intent x7
+intent-filter x5
+manifest x1
+meta-data x1
+package x2
+property x2
+queries x1
+receiver x1
+service x4
+uses-permission x14
+uses-sdk x1
+
+--- string pool (non-empty, 96 entries) ---
+theme
+label
+icon
+name
+permission
+debuggable
+exported
+launchMode
+value
+resource
+scheme
+minSdkVersion
+versionCode
+versionName
+windowSoftInputMode
+targetSdkVersion
+allowBackup
+supportsRtl
+networkSecurityConfig
+roundIcon
+compileSdkVersion
+compileSdkVersionCodename
+foregroundServiceType
+.App
+.quick.HiaoTileService
+.ui.island.FloatingChatService
+15
+2.8.0-alpha
+action
+activity
+amoo
+android
+android.accessibilityservice
+android.accessibilityservice.AccessibilityService
+android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE
+android.intent.action.BOOT_COMPLETED
+android.intent.action.MAIN
+android.intent.action.VIEW
+android.intent.category.BROWSABLE
+android.intent.category.DEFAULT
+android.intent.category.LAUNCHER
+android.permission.ACCESS_NETWORK_STATE
+android.permission.BIND_ACCESSIBILITY_SERVICE
+android.permission.BIND_QUICK_SETTINGS_TILE
+android.permission.FOREGROUND_SERVICE
+android.permission.FOREGROUND_SERVICE_SPECIAL_USE
+android.permission.INTERNET
+android.permission.MANAGE_EXTERNAL_STORAGE
+android.permission.POST_NOTIFICATIONS
+android.permission.RECEIVE_BOOT_COMPLETED
+android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+android.permission.SCHEDULE_EXACT_ALARM
+android.permission.SYSTEM_ALERT_WINDOW
+android.permission.VIBRATE
+android.permission.WAKE_LOCK
+android.permission.WRITE_SETTINGS
+android.service.quicksettings.action.QS_TILE
+android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+application
+category
+com.android.alarm.permission.SET_ALARM
+com.hiao.v2
+com.hiao.v2.bridge.BootReceiver
+com.hiao.v2.bridge.BridgeService
+com.hiao.v2.tools.AccessibilityHelper
+com.hiao.v2.ui.ApprovalsActivity
+com.hiao.v2.ui.CapsActivity
+com.hiao.v2.ui.EngineActivity
+com.hiao.v2.ui.MainActivity
+com.hiao.v2.ui.SessionViewActivity
+com.hiao.v2.ui.SessionsActivity
+com.hiao.v2.ui.SettingsActivity
+com.stepos.aiengine
+com.stepos.ailauncher
+data
+hiao
+http://schemas.android.com/apk/res/android
+https
+intent
+intent-filter
+localhost-agent-bridge
+manifest
+meta-data
+package
+platformBuildVersionCode
+platformBuildVersionName
+property
+queries
+receiver
+service
+stepos
+stepxvibe
+uses-permission
+uses-sdk
+桌面宠物与悬浮迷你对话窗：实时智能体阶段、待审批数、紧凑对话浮层
+
+--- checks ---
+PASS  element stack balanced at EOF (depth=0)
+PASS  activity 数量 = 7 (实测 7)
+PASS  service 数量 = 4 (实测 4)
+PASS  receiver 数量 = 1 (实测 1)
+PASS  uses-permission 数量 = 14 (实测 14)
+PASS  存在 <queries> 元素
