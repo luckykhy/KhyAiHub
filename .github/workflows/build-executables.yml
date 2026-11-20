@@ -119,6 +119,99 @@ jobs:
             entries/portable/releases/portable-*-${{ matrix.platform }}.zip
           retention-days: 30
 
+  # Android 签名发布链（dist/android）。
+  #
+  # 为什么单独一个 job 而不并进上面的 4 平台矩阵：它要 flutter + JDK 17 +
+  # Android SDK 三套工具链，比矩阵里任何一项都重得多，混在一起会让整条矩阵等它。
+  #
+  # 为什么只在 tag 与手动触发时跑：APK 是发布件，不是每次推送都要的构件；
+  # main 上的常规推送不出 APK，顺带省掉每次推送几分钟的 flutter 构建。
+  # release job 的 needs 里有它，所以 tag 构建一定等它完成。
+  #
+  # 签名密钥走 secrets，不落 key.properties（那是本机开发路径，gitignored）。
+  # 缺 secret 时 build-android.ps1 自动回退 debug 签名，并按脚本 :574-575 的
+  # 「命名跟随签名事实」把产物命名为 app-debug.*——release job 的 glob 只匹配
+  # app-release.*，所以 debug 包不可能被当成发布件上传，不需要额外闸门。
+  #
+  # 这个 job 存在的理由：dist/android 被 .gitignore 的 dist/ 与 *.apk / *.aab
+  # 三条规则屏蔽，git 追踪不到它，2026-11-20 它被 clean.js --apply 永久毁掉后
+  # 只能靠重新构建恢复。上传到 GitHub Release 是它唯一的耐久归档。
+  build-android:
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # ANDROID_SDK_ROOT / ANDROID_HOME 由它设置，build-android.ps1:152-163 认这两个。
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 版本 pin 到本机开发所用的 3.47.2（自带 Dart 3.13.2，与 pubspec 的
+      # sdk: ^3.13.2 对齐）。不 pin 会让 CI 追最新 stable，Dart 小版本升级
+      # 常带破坏性变更，结果是与本机构建不一致。
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Materialize release keystore
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.KHY_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          KS=delivery/channel/mobile/khy-os-client-app/android/khyos-release.keystore
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::KHY_ANDROID_KEYSTORE_BASE64 not set - falling back to debug signing, artifacts will be named app-debug.* and will NOT reach the release"
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$KS"
+          echo "keystore bytes: $(wc -c < "$KS")"
+
+      # KHY_ANDROID_STORE_FILE 用相对 android/ 的形式：build.gradle 的
+      # rootProject.file() 与 build-android.ps1:191 都会把它解析到 android/ 下，
+      # 这样 workflow 里不出现任何 Windows 绝对路径。
+      # shell 用 pwsh 而不是 bash：build-android.ps1 是 PowerShell 脚本，
+      # 本仓其它 workflow 只用 bash 是因为它们没有 PowerShell 步骤。
+      - name: Build signed release APK and AAB
+        shell: pwsh
+        env:
+          KHY_ANDROID_STORE_FILE: khyos-release.keystore
+          KHY_ANDROID_KEY_ALIAS: ${{ secrets.KHY_ANDROID_KEY_ALIAS }}
+          KHY_ANDROID_STORE_PASSWORD: ${{ secrets.KHY_ANDROID_STORE_PASSWORD }}
+          KHY_ANDROID_KEY_PASSWORD: ${{ secrets.KHY_ANDROID_KEY_PASSWORD }}
+        run: ./scripts/release/build-android.ps1
+
+      - name: Verify release signature
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist/android/app-release.apk)) {
+            Write-Host "::warning::no app-release.apk (debug-signed build) - nothing to verify or upload"
+            exit 0
+          }
+          node scripts/release/verify-android-signature.js --apk dist/android/app-release.apk
+          if ($LASTEXITCODE -ne 0) { throw "release signature verification failed - refusing to upload" }
+
+      - name: Upload Android release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: khy-os-android-release
+          path: |
+            dist/android/app-release.apk
+            dist/android/app-release.aab
+            dist/android/mapping.txt
+            dist/android/SHA256SUMS.txt
+          retention-days: 30
+
   publish-dev-index:
     needs: build
     runs-on: ubuntu-latest
@@ -170,7 +263,9 @@ jobs:
           gh release upload dev-channel publish/* --clobber
 
   release:
-    needs: build
+    # build-android 也在 needs 里：dist/android 是发布件的一部分，
+    # 少了它这次 release 就不含 Android 签名链。
+    needs: [build, build-android]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     # softprops/action-gh-release needs contents:write to create the release;
@@ -233,6 +328,13 @@ jobs:
             artifacts/package/*.tgz
             artifacts/update-index-stable.json
             artifacts/update-index-preview.json
+            artifacts/khy-os-android-release/app-release.apk
+            artifacts/khy-os-android-release/app-release.aab
+            artifacts/khy-os-android-release/mapping.txt
+            artifacts/khy-os-android-release/SHA256SUMS.txt
+          # Android 侧是「有 secret 才上传」：缺 secret 时构建走 debug 回退、
+          # 产物叫 app-debug.*，上面四条 glob 一条都匹配不到。设为 false 才不会
+          # 让一个可选的 Android 归档把整个 release 拖失败。
           fail_on_unmatched_files: false
           generate_release_notes: true
           draft: false

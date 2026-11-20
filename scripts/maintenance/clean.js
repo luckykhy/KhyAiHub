@@ -283,6 +283,11 @@ const PROTECTED_FILE_EXACT = [
   'delivery/channel/mobile/khy-os-client-app/android/key.properties',
   'delivery/channel/mobile/khy-os-client-app/android/gradlew',
   'delivery/channel/mobile/khy-os-client-app/android/gradlew.bat',
+  // 两个都在，别弄混：android/app/build.gradle 是 Groovy、模块级，签名配置
+  // （signingConfigs.release，读 KHY_ANDROID_* 与 key.properties）就在它里面；
+  // android/build.gradle.kts 是 Kotlin、项目级。两者都是承重构建入口且都未被
+  // git 跟踪，删了构建直接断。
+  'delivery/channel/mobile/khy-os-client-app/android/app/build.gradle',
   'delivery/channel/mobile/khy-os-client-app/android/build.gradle.kts',
 ];
 
