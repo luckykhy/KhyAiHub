@@ -189,10 +189,14 @@ jobs:
       # KHY_ANDROID_STORE_FILE 用相对 android/ 的形式：build.gradle 的
       # rootProject.file() 与 build-android.ps1:191 都会把它解析到 android/ 下，
       # 这样 workflow 里不出现任何 Windows 绝对路径。
-      # shell 用 pwsh 而不是 bash：build-android.ps1 是 PowerShell 脚本，
+      # shell 用 powershell 而不是 bash：build-android.ps1 是 PowerShell 脚本，
       # 本仓其它 workflow 只用 bash 是因为它们没有 PowerShell 步骤。
+      # 用 5.1 而不是 pwsh（PowerShell 7）：本机没装 pwsh，无法验证；而 5.1 与
+      # 根 package.json 的 "android:release": "powershell -NoProfile -File ..."
+      # 调用方式一致，该脚本已在 5.1 下跑通过完整签名构建（2026-11-20 实测）。
+      # GitHub 的 windows-latest 两者都预装。
       - name: Build signed release APK and AAB
-        shell: pwsh
+        shell: powershell
         env:
           KHY_ANDROID_STORE_FILE: khyos-release.keystore
           KHY_ANDROID_KEY_ALIAS: ${{ secrets.KHY_ANDROID_KEY_ALIAS }}
@@ -201,7 +205,7 @@ jobs:
         run: ./scripts/release/build-android.ps1
 
       - name: Verify release signature
-        shell: pwsh
+        shell: powershell
         run: |
           if (-not (Test-Path dist/android/app-release.apk)) {
             Write-Host "::warning::no app-release.apk (debug-signed build) - nothing to verify or upload"

@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
 > 父目录：[../](../00_INDEX_部署-分类索引.md)　就近索引：[00_INDEX_部署-分类索引.html](../00_INDEX_部署-分类索引.md)
-> 收录 21 篇。
+> 收录 22 篇。
 
 ## 文件清单
 
@@ -27,3 +27,4 @@
 - [[DEPLOY-MAN-019] 模型可用性与适配器探测]([DEPLOY-MAN-019] 模型可用性与适配器探测.md)
 - [[DEPLOY-MAN-020] AI供应商与APIKey配置]([DEPLOY-MAN-020] AI供应商与APIKey配置.md)
 - [[DEPLOY-MAN-021] IDE桥接模式]([DEPLOY-MAN-021] IDE桥接模式.md)
+- [[DEPLOY-MAN-022] Android签名发布链与CI归档]([DEPLOY-MAN-022] Android签名发布链与CI归档.md)
