@@ -1,0 +1,4028 @@
+### Lcom/hiao/v2/App;  (App.java)
+  - <init>
+  - init
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/bridge/BridgeService;
+### Lcom/hiao/v2/media/CanvasView;  (CanvasView.java)
+  - <init>
+  - X
+      S w
+  - Y
+  - paint
+      S 
+      S #
+      S @type Landroid/graphics/Paint;
+  - get
+      S w
+      S h
+      S bg
+      S 
+      S #
+      S draw
+      S t
+      S c
+      S #64D2FF
+      S text
+      S fill
+      S line
+      S x1
+      S y1
+      S x2
+      S y2
+      S rect
+      S y
+      S x
+      S circle
+      S r
+      S arc
+      S a1
+      S a2
+      S size
+      S s
+      S path
+      S pts
+      S @type Landroid/graphics/Path;
+      S close
+  - <init>
+      S w
+      S h
+  - get
+### Lcom/hiao/v2/media/ChartView;  (ChartView.java)
+  - <clinit>
+      S @type [I
+  - <init>
+  - clip
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - dp
+  - drawAxes
+      S values
+      S <bad-string-idx 207800714>
+  - drawLegend
+      S @type Ljava/lang/StringBuilder;
+      S S
+      S name
+  - drawPie
+      S values
+      S labels
+      S @type Ljava/lang/StringBuilder;
+      S  
+      S %
+  - fmt
+  - <clinit>
+      S @type Landroid/graphics/Paint;
+      S title
+      S 
+      S type
+      S bar
+      S labels
+      S values
+      S series
+      S @type Lorg/json/JSONObject;
+      S name
+      S 数据
+      S @type Lorg/json/JSONArray;
+      S pie
+      S line
+  - access$000
+      S 图表
+      S title
+### Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda0;  (D8$$SyntheticClass)
+  - <init>
+  - countJson
+### Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda1;  (D8$$SyntheticClass)
+  - <init>
+  - isAttachedToWindow
+### Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda2;  (D8$$SyntheticClass)
+  - <init>
+  - refreshCounts
+### Lcom/hiao/v2/media/Img$1;  (Img.java)
+  - <init>
+  - onClick
+      S @type Ljava/lang/String;
+      S @type Landroid/graphics/Bitmap;
+  - <init>
+### Lcom/hiao/v2/media/Img;  (Img.java)
+  - <clinit>
+      S @type Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda0;
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/media/Img$1;
+  - <init>
+  - decode
+      S @type Landroid/graphics/BitmapFactory$Options;
+  - diskFile
+      S http
+      S @type Ljava/io/File;
+      S media_cache
+      S MD5
+      S UTF-8
+      S @type Ljava/lang/StringBuilder;
+      S %02x
+      S @type [Ljava/lang/Object;
+  - fetch
+      S http
+      S @type Ljava/net/URL;
+      S @type Ljava/net/HttpURLConnection;
+      S User-Agent
+      S hiao-v2-media
+      S .bin
+      S img
+      S @type Ljava/io/FileOutputStream;
+      S @type [B
+      S file://
+  - lambda$load$1
+  - lambda$load$2
+      S @type Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda1;
+  - lambda$static$0
+      S @type Ljava/lang/Thread;
+      S media-img
+  - load
+      S @type Landroid/graphics/drawable/ColorDrawable;
+      S @type Landroid/graphics/Bitmap;
+      S @type Lcom/hiao/v2/media/Img$$ExternalSyntheticLambda2;
+### Lcom/hiao/v2/media/MathSpan$FractionSpan;  (MathSpan.java)
+  - <init>
+  - onClick
+      S @type Landroid/graphics/Paint;
+      S  
+  - <init>
+      S @type Landroid/graphics/Paint;
+      S   
+      S @type Landroid/graphics/Paint$FontMetricsInt;
+### Lcom/hiao/v2/media/MathSpan$Grp;  (MathSpan.java)
+  - <init>
+### Lcom/hiao/v2/media/MathSpan;  (MathSpan.java)
+  - <clinit>
+      S alpha
+      S α
+      S @type [Ljava/lang/String;
+      S beta
+      S β
+      S gamma
+      S γ
+      S delta
+      S Δ
+      S epsilon
+      S ε
+      S theta
+      S θ
+      S lambda
+      S λ
+      S mu
+      S μ
+      S pi
+      S π
+      S rho
+      S ρ
+      S sigma
+      S σ
+      S tau
+      S τ
+      S phi
+      S φ
+      S omega
+      S ω
+      S Omega
+      S Ω
+      S times
+      S ×
+      S div
+      S ÷
+      S pm
+      S ±
+      S mp
+      S ∓
+      S cdot
+      S ·
+      S leq
+      S ≤
+      S geq
+      S ≥
+      S neq
+      S ≠
+      S approx
+      S ≈
+      S equiv
+      S ≡
+      S infty
+      S ∞
+      S sum
+      S ∑
+      S prod
+      S ∏
+      S int
+      S ∫
+      S partial
+      S ∂
+      S nabla
+      S ∇
+      S rightarrow
+      S →
+      S leftarrow
+      S ←
+      S Rightarrow
+      S ⇒
+      S in
+      S ∈
+      S notin
+      S ∉
+      S subset
+      S ⊂
+      S subseteq
+      S ⊆
+      S cup
+      S ∪
+      S cap
+      S ∩
+      S forall
+      S ∀
+      S exists
+      S ∃
+      S emptyset
+      S ∅
+      S deg
+      S °
+      S angle
+      S ∠
+      S perp
+      S ⊥
+      S parallel
+      S ∥
+      S propto
+      S ∝
+      S ldots
+      S …
+      S cdots
+      S ⋯
+      S prime
+      S ′
+      S circ
+      S ∘
+      S bullet
+      S •
+      S lfloor
+      S ⌊
+      S rfloor
+      S ⌋
+      S lceil
+      S ⌈
+      S rceil
+      S ⌉
+      S @type [[Ljava/lang/String;
+  - <init>
+  - append
+      S frac
+      S dfrac
+      S sqrt
+      S √(
+      S )
+      S @type Lcom/hiao/v2/media/MathSpan$FractionSpan;
+      S @type Landroid/text/style/SuperscriptSpan;
+      S @type Landroid/text/style/SubscriptSpan;
+      S @type Landroid/text/style/RelativeSizeSpan;
+  - attach
+      S ￼
+  - group
+      S @type Lcom/hiao/v2/media/MathSpan$Grp;
+  - lookup
+  - nextUnit
+      S @type Lcom/hiao/v2/media/MathSpan$Grp;
+  - render
+      S @type Landroid/text/SpannableStringBuilder;
+      S 
+### Lcom/hiao/v2/media/Md$1;  (Md.java)
+  - <init>
+  - access$200
+### Lcom/hiao/v2/media/Md$Block;  (Md.java)
+  - <init>
+      S 
+      S @type Ljava/util/ArrayList;
+### Lcom/hiao/v2/media/Md$LinkListener;  (Md.java)
+  - onLink   [abstract/native]
+### Lcom/hiao/v2/media/Md;  (Md.java)
+  - <clinit>
+      S !\[([^\]]*)\]\(([^)\s]+)\)
+      S \[([^\]]+)\]\(([^)\s]+)\)
+  - <init>
+  - flushPara
+      S @type Lcom/hiao/v2/media/Md$Block;
+  - headingLevel
+  - inline
+      S @type Landroid/text/SpannableStringBuilder;
+      S @type Landroid/text/style/BackgroundColorSpan;
+      S @type Landroid/text/style/RelativeSizeSpan;
+      S **
+      S @type Landroid/text/style/StyleSpan;
+      S ~~
+      S @type Landroid/text/style/StrikethroughSpan;
+      S @type Lcom/hiao/v2/media/Md$1;
+  - looksMath
+      S ^
+      S _
+      S .*[0-9a-zA-Z)]\s*[+-]\s*[0-9a-zA-Z(].*
+  - paraBlock
+      S @type Lcom/hiao/v2/media/Md$Block;
+  - parse
+      S @type Ljava/util/ArrayList;
+      S 
+
+      S 
+
+      S @type Ljava/lang/StringBuilder;
+      S ```
+      S 
+      S @type Lcom/hiao/v2/media/Md$Block;
+      S $$
+      S |
+      S \|[\s:\-|]+\|
+      S (-{3,}|\*{3,}|_{3,})
+      S > 
+      S [-*+]\s+.+
+      S \d+[.)]\s+.+
+      S ![
+      S ^\d+[.)]\s+
+      S   
+      S @type Ljava/lang/String;
+      S  
+  - specialType
+      S 
+      S chart
+      S svg
+      S canvas
+  - splitRow
+      S |
+      S \|
+      S @type Ljava/util/ArrayList;
+### Lcom/hiao/v2/media/Rich$LinkHost;  (Rich.java)
+  - open   [abstract/native]
+### Lcom/hiao/v2/media/Rich$ViewFactory;  (Rich.java)
+  - create   [abstract/native]
+### Lcom/hiao/v2/media/Rich;  (Rich.java)
+  - <init>
+  - blockView
+      S 
+      S @type Lcom/hiao/v2/media/Rich$2;
+      S @type Lcom/hiao/v2/media/Rich$3;
+      S @type Lcom/hiao/v2/media/Rich$1;
+      S 
+
+      S  
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout;
+      S •  
+      S @type Ljava/lang/StringBuilder;
+      S .  
+      S @type Ljava/lang/String;
+  - build
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/media/Md$Block;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+  - codeBlock
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/HorizontalScrollView;
+      S 
+
+      S @type Landroid/view/ViewGroup$LayoutParams;
+  - hasMedia
+      S ```
+      S ![
+      S $$
+      S 
+#
+      S #
+      S 
+|
+      S |
+  - linkFrom
+      S @type Lcom/hiao/v2/media/Rich$4;
+  - mediaCard
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - table
+      S @type Landroid/widget/HorizontalScrollView;
+      S @type Landroid/widget/LinearLayout;
+      S @type Ljava/util/List;
+      S 
+      S @type Ljava/lang/String;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/view/View;
+  - text
+      S @type Landroid/widget/TextView;
+### Lcom/hiao/v2/media/SvgView;  (SvgView.java)
+  - <init>
+      S 
+  - applyTransform
+      S (\w+)\s*\(([^)]*)\)
+      S [\s,]+
+      S translate
+      S scale
+      S rotate
+      S matrix
+      S @type Landroid/graphics/Matrix;
+      S @type [F
+  - buildPathD
+      S @type Ljava/util/StringTokenizer;
+      S ([MmLlHhVvCcSsQqTtAaZz])
+      S  $1 
+      S @type Ljava/util/ArrayList;
+      S @type Ljava/lang/String;
+      S MmLlHhVvCcSsQqTtAaZz
+  - clamp
+  - drawShape
+      S @type Landroid/graphics/Paint;
+  - isShape
+      S rect
+      S circle
+      S ellipse
+      S line
+      S polyline
+      S polygon
+      S path
+  - mergeStyle
+      S @type [I
+      S fill
+      S stroke
+      S stroke-width
+      S fill-opacity
+      S opacity
+  - parseColor
+      S #
+      S none
+  - parseFloat
+      S px
+      S 
+  - shapePath
+      S @type Landroid/graphics/Path;
+      S rect
+      S x
+      S y
+      S width
+      S height
+      S circle
+      S cy
+      S cx
+      S r
+      S ellipse
+      S rx
+      S ry
+      S line
+      S x1
+      S y1
+      S x2
+      S y2
+      S polyline
+      S polygon
+      S path
+      S d
+      S points
+      S [\s,]+
+  - cooldownLabel
+      S @type Ljava/io/StringReader;
+      S @type Ljava/util/ArrayDeque;
+      S @type Landroid/graphics/Matrix;
+      S @type [I
+      S g
+      S transform
+  - doRemove
+  - loadConnectorTrust
+      S 
+      S @type Ljava/io/StringReader;
+      S svg
+      S viewBox
+      S [\s,]+
+### Lcom/hiao/v2/quick/HiaoTileService;  (HiaoTileService.java)
+  - <init>
+  - renderList
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/MainActivity;
+  - syncActionVisibility
+      S busy
+      S 任务进行中
+      S 就绪
+### Lcom/hiao/v2/ui/ApprovalsActivity;  (ApprovalsActivity.java)
+  - <init>
+  - indexOf
+      S approval_id
+      S id
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - indexOf
+  - isEmpty
+  - lastIndexOf
+### Lcom/hiao/v2/ui/ApprovalsScreen$1;  (ApprovalsScreen.java)
+  - <init>
+  - substring
+### Lcom/hiao/v2/ui/ApprovalsScreen$2;  (ApprovalsScreen.java)
+  - <init>
+  - trim
+### Lcom/hiao/v2/ui/ApprovalsScreen$3;  (ApprovalsScreen.java)
+  - <init>
+  - valueOf
+### Lcom/hiao/v2/ui/ApprovalsScreen$4;  (ApprovalsScreen.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/ui/ApprovalsScreen$5$1$1;  (ApprovalsScreen.java)
+  - <init>
+  - append
+### Lcom/hiao/v2/ui/ApprovalsScreen$5$1;  (ApprovalsScreen.java)
+  - <init>
+  - append
+      S ui
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$5$1$1;
+### Lcom/hiao/v2/ui/ApprovalsScreen$5;  (ApprovalsScreen.java)
+  - <init>
+  - substring
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$5$1;
+### Lcom/hiao/v2/ui/ApprovalsScreen$6$1;  (ApprovalsScreen.java)
+  - <init>
+  - currentThread
+### Lcom/hiao/v2/ui/ApprovalsScreen$6;  (ApprovalsScreen.java)
+  - <init>
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$6$1;
+  - access$402
+  - start
+      S high
+### Lcom/hiao/v2/ui/ApprovalsScreen$7$1;  (ApprovalsScreen.java)
+  - <init>
+  - set
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/ApprovalsScreen$7;  (ApprovalsScreen.java)
+  - <init>
+  - disconnect
+      S ui
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$7$1;
+### Lcom/hiao/v2/ui/CapsActivity;  (CapsActivity.java)
+  - <init>
+  - getInstance
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/CapsScreen;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - <init>
+  - nextBytes
+  - nextInt
+### Lcom/hiao/v2/ui/CapsScreen$10;  (CapsScreen.java)
+  - <init>
+  - removeFirst
+### Lcom/hiao/v2/ui/CapsScreen$11$1;  (CapsScreen.java)
+  - <init>
+  - add
+      S @type Ljava/lang/StringBuilder;
+      S compensated
+      S skipped
+      S actionId
+      S 
+      S , 
+      S (
+      S reason
+      S )
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$11;  (CapsScreen.java)
+  - <init>
+  - remove
+      S @type Lcom/hiao/v2/ui/CapsScreen$11$1;
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$12;  (CapsScreen.java)
+  - <init>
+  - fill
+### Lcom/hiao/v2/ui/CapsScreen$13;  (CapsScreen.java)
+  - <init>
+  - getInstance
+### Lcom/hiao/v2/ui/CapsScreen$14;  (CapsScreen.java)
+  - <init>
+  - iterator
+      S @type Ljava/io/File;
+      S /sdcard/hiao/export
+      S dsh2/mailbox/export
+      S @type Ljava/lang/IllegalStateException;
+      S 无法创建导出目录
+      S @type Ljava/lang/StringBuilder;
+      S audit-
+      S .json
+      S @type Ljava/io/FileOutputStream;
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$15$1;  (CapsScreen.java)
+  - <init>
+  - unmodifiableMap
+      S ok
+      S checked
+      S brokenAt
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$15;  (CapsScreen.java)
+  - <init>
+  - peek
+      S @type Lcom/hiao/v2/ui/CapsScreen$15$1;
+### Lcom/hiao/v2/ui/CapsScreen$16;  (CapsScreen.java)
+  - <init>
+  - size
+### Lcom/hiao/v2/ui/CapsScreen$17;  (CapsScreen.java)
+  - <init>
+  - clear
+### Lcom/hiao/v2/ui/CapsScreen$18$1;  (CapsScreen.java)
+  - <init>
+  - put
+### Lcom/hiao/v2/ui/CapsScreen$18;  (CapsScreen.java)
+  - <init>
+  - <init>
+      S ui
+      S @type Lcom/hiao/v2/ui/CapsScreen$18$1;
+### Lcom/hiao/v2/ui/CapsScreen$2$1;  (CapsScreen.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/ui/CapsScreen$2;  (CapsScreen.java)
+  - <init>
+  - remove
+      S @type Lcom/hiao/v2/ui/CapsScreen$2$1;
+### Lcom/hiao/v2/ui/CapsScreen$3;  (CapsScreen.java)
+  - <init>
+  - addAll
+### Lcom/hiao/v2/ui/CapsScreen$4$1;  (CapsScreen.java)
+  - <init>
+  - iterator
+      S id
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$4;  (CapsScreen.java)
+  - <init>
+  - toArray
+      S user
+      S @type Lcom/hiao/v2/ui/CapsScreen$4$1;
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$5;  (CapsScreen.java)
+  - <init>
+  - entrySet
+      S id
+### Lcom/hiao/v2/ui/CapsScreen$6;  (CapsScreen.java)
+  - <init>
+  - remove
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+### Lcom/hiao/v2/ui/CapsScreen$7$1;  (CapsScreen.java)
+  - <init>
+  - clear
+### Lcom/hiao/v2/ui/CapsScreen$7;  (CapsScreen.java)
+  - <init>
+  - add
+      S user
+      S @type Lcom/hiao/v2/ui/CapsScreen$7$1;
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/CapsScreen$8;  (CapsScreen.java)
+  - <init>
+  - isEmpty
+### Lcom/hiao/v2/ui/CapsScreen$9;  (CapsScreen.java)
+  - <init>
+  - <init>
+      S @type Lorg/json/JSONObject;
+  - hasMoreTokens
+      S seq
+### Lcom/hiao/v2/ui/ChatScreen$10;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$11;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$12;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$13;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$14$1;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$14;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$15;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$16;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$17$1;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$17;  (ChatScreen.java)
+  - <init>
+      S @type Lcom/hiao/v2/ui/ChatScreen$17$1;
+  - access$2002
+### Lcom/hiao/v2/ui/ChatScreen$18$1;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$18;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$19;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$1;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$20;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$21;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$2;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$3$1;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$4;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$5;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$6;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$7;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$8;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$9;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen$Host;  (ChatScreen.java)
+  - openTab   [abstract/native]
+### Lcom/hiao/v2/ui/ChatUi$1;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$3;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$4;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$HitlBanner;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$PlanCard;  (ChatUi.java)
+  - <init>
+      S @type Ljava/util/ArrayList;
+### Lcom/hiao/v2/ui/ChatUi$RetryRow;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$StreamBubble$1;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$StreamBubble;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi$TextLongPress;  (ChatUi.java)
+  - onText   [abstract/native]
+### Lcom/hiao/v2/ui/ChatUi$ThinkingBlock;  (ChatUi.java)
+  - <init>
+  - refreshHeader
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/ChatUi$ToolCard;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatUi;  (ChatUi.java)
+  - <init>
+  - access$000
+  - access$100
+  - assistantBubble
+  - assistantBubble
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type [F
+  - attachLongPress
+      S @type Lcom/hiao/v2/ui/ChatUi$1;
+  - base
+      S @type Landroid/widget/TextView;
+  - captionWithMargin
+  - clip
+      S 
+      S 
+
+      S  ⏎ 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - compactButton
+      S @type Landroid/widget/Button;
+  - errorLine
+      S @type Ljava/lang/StringBuilder;
+      S ⚠ 
+  - errorRetryLine
+      S @type Landroid/widget/LinearLayout;
+      S @type Ljava/lang/StringBuilder;
+      S ⚠ 
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatUi$RetryRow;
+  - flowRow
+  - flowRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - hitlInline
+      S @type Landroid/widget/LinearLayout;
+      S 
+      S @type [Ljava/lang/Object;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatUi$HitlBanner;
+  - linkHost
+      S @type Landroid/app/Activity;
+      S @type Lcom/hiao/v2/ui/ChatUi$2;
+  - markTool
+      S @type Ljava/lang/StringBuilder;
+      S ms
+      S 
+
+      S allow
+      S @type [Ljava/lang/Object;
+      S 
+→ 
+  - metaLine
+  - planCard
+      S @type Landroid/widget/LinearLayout;
+      S @type [Ljava/lang/Object;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatUi$PlanCard;
+      S @type Landroid/widget/TextView;
+  - stepTitle
+      S @type Lorg/json/JSONObject;
+      S title
+      S 
+  - streamBubble
+      S 
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type [F
+      S @type Landroid/widget/TextView;
+      S ▍
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatUi$StreamBubble;
+  - systemLine
+  - thinkingBlock
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Lcom/hiao/v2/ui/ChatUi$ThinkingBlock;
+      S @type Lcom/hiao/v2/ui/ChatUi$4;
+  - toolCard
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Landroid/view/View;
+      S @type Lcom/hiao/v2/ui/ChatUi$ToolCard;
+      S @type Lcom/hiao/v2/ui/ChatUi$3;
+  - userBubble
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type [F
+  - verdictColor
+      S allow
+      S confirm
+      S deny
+### Lcom/hiao/v2/ui/EngineActivity$2;  (EngineActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/EngineActivity;  (EngineActivity.java)
+  - <init>
+      S 
+      S @type Lcom/hiao/v2/ui/EngineActivity$1;
+  - access$000
+  - access$100
+  - maybeLoad
+  - onStatusBarTap
+      S running
+  - renderStatus
+      S state
+      S missing
+      S version
+      S 
+      S running
+      S  · 
+      S @type Ljava/lang/StringBuilder;
+      S @type [Ljava/lang/Object;
+      S error
+      S stopped
+  - stateLabel
+      S extracting
+      S ready
+      S starting
+      S running
+      S stopped
+      S error
+### Lcom/hiao/v2/ui/HelpFlow$1;  (HelpFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/HelpFlow$2;  (HelpFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/HelpFlow$3;  (HelpFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/HelpFlow$4;  (HelpFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/HelpFlow;  (HelpFlow.java)
+  - <init>
+  - access$000
+  - applyLateTopInset
+      S @type Lcom/hiao/v2/ui/HelpFlow$3;
+  - close
+      S @type Landroid/view/ViewGroup;
+  - expandableCard
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/HelpFlow$4;
+  - show
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/HelpFlow$1;
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Landroid/widget/ScrollView;
+      S @type [I
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/HelpFlow$2;
+      S @type Landroid/view/ViewGroup;
+### Lcom/hiao/v2/ui/MainActivity$2;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$3$1;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$4;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$7;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$8;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$Screen;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity;  (MainActivity.java)
+  - <clinit>
+      S caps
+      S settings
+      S chat
+      S @type [Ljava/lang/String;
+      S @type [I
+  - <init>
+      S @type [Landroid/view/View;
+      S @type [Landroid/widget/ImageView;
+      S @type [Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/MainActivity$1;
+      S @type Lcom/hiao/v2/ui/MainActivity$2;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - applyGestureExclusion
+      S @type Landroid/graphics/Rect;
+      S @type Ljava/util/ArrayList;
+  - applyTabContentInset
+  - buildApprovalsBackRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/MainActivity$7;
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - buildCapabilityHome
+      S MainActivity
+      S com.hiao.v2.ui.capability.CapabilityHome
+      S @type Landroid/content/Context;
+      S @type [Ljava/lang/Class;
+      S @type [Ljava/lang/Object;
+      S @type Landroid/view/View;
+      S CapabilityHome 非 View，降级 CapsScreen
+      S @type Ljava/lang/StringBuilder;
+      S CapabilityHome 未就绪，能力 Tab 降级 CapsScreen: 
+  - buildTabBar
+      S @type [I
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/MainActivity$8;
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+  - restorePet
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService;
+  - route
+      S hiao
+      S approvals
+      S 
+      S continue_session
+      S continue_title
+  - screenAt
+  - selectTab
+  - updateBadge
+      S 9+
+### Lcom/hiao/v2/ui/OnboardFlow$1;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$2;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$3;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$4;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$5;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$6;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$7;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$8;  (OnboardFlow.java)
+  - <init>
+### Lcom/hiao/v2/ui/OnboardFlow$Done;  (OnboardFlow.java)
+  - onFinish   [abstract/native]
+### Lcom/hiao/v2/ui/OnboardFlow;  (OnboardFlow.java)
+  - <clinit>
+      S @type Ljava/lang/Object;
+  - <init>
+      S 
+      S @type Landroid/widget/FrameLayout;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$1;
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$2;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$3;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$402
+  - access$500
+  - access$600
+  - access$700
+  - buildAuthExplain
+      S 
+      S @type [Ljava/lang/String;
+      S @type Landroid/widget/TextView;
+      S @type Ljava/lang/StringBuilder;
+      S · 
+      S @type Lcom/hiao/v2/ui/OnboardFlow$7;
+  - buildDone
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$8;
+  - buildTry
+      S @type [I
+      S @type [[I
+      S @type Lcom/hiao/v2/ui/OnboardFlow$5;
+  - buildWelcome
+      S @type Landroid/widget/FrameLayout;
+      S @type Lcom/hiao/v2/ui/island/PetView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$4;
+  - exampleCard
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/OnboardFlow$6;
+  - finish
+      S @type Landroid/view/ViewGroup;
+  - headline
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+  - highlightPicked
+      S @type Landroid/widget/LinearLayout;
+  - sampleCard
+      S @type Landroid/widget/TextView;
+      S 要删除文件
+      S 不可恢复，请看清再同意
+      S 剩余 118s 自动拒绝
+      S @type Landroid/widget/LinearLayout;
+  - show
+      S @type Lcom/hiao/v2/ui/OnboardFlow;
+      S @type Landroid/view/ViewGroup;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+  - showStep
+      S @type Landroid/graphics/drawable/GradientDrawable;
+### Lcom/hiao/v2/ui/SessionViewActivity$1;  (SessionViewActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionViewActivity$2$1;  (SessionViewActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionViewActivity$2;  (SessionViewActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionViewActivity$3$1;  (SessionViewActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionViewActivity$3;  (SessionViewActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionViewActivity;  (SessionViewActivity.java)
+  - <init>
+      S 
+      S @type Ljava/util/LinkedList;
+      S @type Ljava/util/ArrayDeque;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - continueTask
+      S @type Lcom/hiao/v2/ui/SessionViewActivity$3;
+  - load
+      S @type Lcom/hiao/v2/ui/SessionViewActivity$2;
+  - render
+      S 
+      S type
+      S data
+      S @type [Ljava/lang/Object;
+  - renderEvent
+      S @type Lorg/json/JSONObject;
+      S user/message
+      S text
+      S assistant/message
+      S reasoning
+      S tool/call
+      S verdict
+      S plan_propose
+      S name
+      S args
+      S tool/result
+      S ms
+      S error
+      S @type Lcom/hiao/v2/ui/ChatUi$ToolCard;
+      S @type Ljava/lang/String;
+      S @type Ljava/lang/StringBuilder;
+      S @type [Ljava/lang/Object;
+      S 
+
+      S ok
+      S turn/start
+      S  · 
+      S prompt
+      S provider
+      S 
+      S model
+      S maxSteps
+      S turn/end
+      S rounds
+      S toolCalls
+      S plan/proposed
+      S steps
+      S note
+      S plan/approved
+      S resolvedBy
+      S plan/exited
+      S reason
+  - renderVerify
+      S ok
+      S brokenAt
+      S @type [Ljava/lang/Object;
+### Lcom/hiao/v2/ui/SessionsActivity$1$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$1$2;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$2;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$3;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$4;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$5$1$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$5$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$5;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$6$1$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$6$1;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity$6;  (SessionsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SessionsActivity;  (SessionsActivity.java)
+  - <init>
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - confirmDelete
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Lcom/hiao/v2/ui/SessionsActivity$6;
+  - continueSession
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/MainActivity;
+      S android.intent.action.VIEW
+      S hiao://chat
+      S continue_session
+      S 
+      S continue_title
+  - load
+      S @type Lcom/hiao/v2/ui/SessionsActivity$1;
+  - render
+      S @type Lorg/json/JSONObject;
+      S id
+      S title
+      S lastTs
+      S events
+      S @type [Ljava/lang/Object;
+  - sessionRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/SessionsActivity$2;
+      S @type Lcom/hiao/v2/ui/SessionsActivity$3;
+  - showRenameDialog
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Lcom/hiao/v2/ui/SessionsActivity$5;
+  - showRowMenu
+      S @type [Ljava/lang/String;
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Lcom/hiao/v2/ui/SessionsActivity$4;
+### Lcom/hiao/v2/ui/SettingsActivity;  (SettingsActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$11;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$13$1$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$13$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$14;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$16$1$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$16$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$17;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$18;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$19;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$20;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$21;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$22;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$23;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$24;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$25;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$26$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$26;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$28;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$29;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$2;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$3$1$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$3$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$30;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$31;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$32;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$33;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$34;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$35$1$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$35$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$35;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$36;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$37;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$38$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$38;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$3;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$4;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$5;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$6;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$7;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$8;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$9;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$IosSwitch$1;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$IosSwitch$2;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$IosSwitch;  (SettingsScreen.java)
+  - <init>
+      S @type Landroid/graphics/Paint;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$IosSwitch$1;
+  - access$3800
+  - access$3900
+  - access$4002
+### Lcom/hiao/v2/ui/SettingsScreen$ModelsSource;  (SettingsScreen.java)
+  - get   [abstract/native]
+### Lcom/hiao/v2/ui/Tokens;  (Tokens.java)
+  - <init>
+  - dp
+  - sp
+### Lcom/hiao/v2/ui/Ui$1;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$2;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$3;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$4;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$5;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$OnBottomInset;  (Ui.java)
+  - onBottomInset   [abstract/native]
+### Lcom/hiao/v2/ui/Ui$Segmented$1;  (Ui.java)
+  - <init>
+### Lcom/hiao/v2/ui/Ui$Segmented$Listener;  (Ui.java)
+  - onSelect   [abstract/native]
+### Lcom/hiao/v2/ui/Ui$Segmented;  (Ui.java)
+  - <init>
+      S @type [Landroid/widget/Button;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/Button;
+      S @type Lcom/hiao/v2/ui/Ui$Segmented$1;
+### Lcom/hiao/v2/ui/Ui;  (Ui.java)
+  - <clinit>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/ui/Ui$1;
+  - <init>
+  - applyInsets
+      S @type Lcom/hiao/v2/ui/Ui$3;
+  - applyTopInset
+      S @type Lcom/hiao/v2/ui/Ui$4;
+  - backHeader
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/Ui$5;
+      S @type Landroid/widget/TextView;
+      S 
+  - baseButton
+      S @type Landroid/widget/Button;
+  - bodyText
+      S @type Landroid/widget/TextView;
+  - boxField
+  - button
+  - caption
+      S @type Landroid/widget/TextView;
+  - card
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - chip
+      S @type Landroid/widget/TextView;
+  - chipOutline
+      S @type Landroid/widget/TextView;
+  - chipPlain
+      S @type Landroid/widget/TextView;
+  - destructiveButton
+  - dim
+  - dp
+  - durationText
+      S 
+      S 前
+      S @type [Ljava/lang/Object;
+  - fade
+  - fullWidth
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - ghostButton
+  - grayButton
+  - hairline
+  - hairline
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - icon
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - input
+      S @type Landroid/widget/EditText;
+  - insetHairline
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - labelField
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - largeTitle
+      S @type Landroid/widget/TextView;
+  - listCard
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - main
+  - mono
+  - mono
+      S @type Landroid/widget/TextView;
+  - outlined
+  - pillOption
+  - press
+      S @type Landroid/graphics/drawable/StateListDrawable;
+      S @type [I
+  - riskColor
+      S high
+      S medium
+  - row
+      S @type Landroid/widget/LinearLayout;
+  - rowParams
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - sectionHeader
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - smallDestructiveButton
+  - smallGhostButton
+  - smallTintedButton
+  - solid
+      S @type Landroid/graphics/drawable/GradientDrawable;
+  - space
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - text
+  - tierColor
+      S high
+      S medium
+  - tierOf
+      S high
+      S T3
+      S medium
+      S T2
+      S T1
+  - timeAgo
+      S @type [Ljava/lang/Object;
+  - tintedButton
+  - title
+      S @type Landroid/widget/TextView;
+  - toast
+      S @type Lcom/hiao/v2/ui/Ui$2;
+  - withLeftMargin
+  - worker
+### Lcom/hiao/v2/ui/approval/ApprovalActions;  (ApprovalActions.java)
+  - <init>
+  - approve
+      S 
+  - approve
+      S 批准迟到：该审批已超时，已自动拒绝
+      S capabilityId
+      S 
+      S args
+      S {}
+      S ok
+      S @type Lorg/json/JSONObject;
+      S user
+      S @type Ljava/lang/StringBuilder;
+      S 批准未能生效：
+      S 无结果
+      S error
+      S 未知原因
+      S 该审批不存在
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - deny
+      S 
+  - evidence
+      S @type Ljava/lang/StringBuilder;
+      S title
+      S 
+      S  
+      S args
+      S （本会话不再询问）
+  - findPending
+      S id
+      S 
+  - parseJson
+      S @type Lorg/json/JSONObject;
+      S {}
+  - pendingCards
+      S ageMs
+      S kind
+      S capabilityId
+      S 
+      S @type Ljava/util/ArrayList;
+      S @type Lorg/json/JSONObject;
+      S callId
+      S id
+      S question
+      S title
+      S optionsDetail
+      S detail
+      S risk
+      S remainSec
+      S argsJson
+      S args
+  - remainSecOf
+      S expiresInMs
+  - riskOf
+      S 
+      S risk
+  - scopeOf
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONArray;
+      S path
+      S dest
+      S @type [Ljava/lang/String;
+      S 
+      S paths
+### Lcom/hiao/v2/ui/approval/ApprovalCopy;  (ApprovalCopy.java)
+  - <clinit>
+      S @type Ljava/util/HashMap;
+      S rm
+      S 要删除文件
+      S exec
+      S 要运行命令
+      S mv
+      S 要移动文件
+      S write
+      S 要写入文件
+      S mkdir
+      S 要新建文件夹
+      S cp
+      S 要复制文件
+      S ui_tap
+      S 要点击屏幕
+      S ui_click
+      S ui_swipe
+      S 要滑动屏幕
+      S ui_back
+      S 要返回上一屏
+      S ui_home
+      S 要回到主屏
+      S ui_recents
+      S 要打开最近任务
+      S ui_dump
+      S 要读取屏幕内容
+      S shot
+      S 要截屏
+      S kb_import
+      S 要导入知识库文档
+      S kb_delete
+      S 要删除知识库文档
+      S connector_call
+      S 要调用外部服务
+      S assistant
+      S 要唤起语音助手
+      S amoo_call
+      S 要连一次电脑
+      S share_text
+      S 要分享文字
+      S open_url
+      S 要打开链接
+      S notify
+      S 要发通知
+      S start_app
+      S 要打开应用
+      S list_apps
+      S 要查看应用列表
+      S clipboard
+      S 要使用剪贴板
+      S toast
+      S 要弹一条提示
+      S volume
+      S 要调音量
+      S brightness
+      S 要调亮度
+      S vibrate
+      S 要震动一下
+      S battery
+      S 要查电量
+      S torch
+      S 要开关手电筒
+      S media_control
+      S 要控制播放
+      S alarm_set
+      S 要设闹钟
+      S timer_set
+      S 要设计时器
+      S sensor_read
+      S 要读传感器
+      S exif_read
+      S 要读照片信息
+      S backscreen
+      S 要控制背屏
+      S engine_start
+      S 要启动官方引擎
+      S engine_stop
+      S 要停止官方引擎
+      S engine_status
+      S 要查看引擎状态
+  - <init>
+  - cardTitle
+      S 
+      S kind
+      S question
+      S title
+      S ask
+      S plan
+      S 要先看一眼计划
+      S @type Ljava/lang/String;
+      S @type Ljava/lang/StringBuilder;
+      S 要执行「
+      S 」
+  - deadlineLine
+      S 
+      S remainSec
+      S expiresInMs
+      S 即将自动拒绝
+      S  秒自动拒绝
+      S 剩余 
+      S @type Ljava/lang/StringBuilder;
+      S  分钟自动拒绝
+      S  分 
+  - firstOf
+      S 
+  - riskFromCapability
+      S 
+      S capabilityId
+      S risk
+  - riskLine
+      S 
+      S risk
+      S high
+      S 不可恢复，请看清再同意
+      S medium
+      S 会改动数据
+      S low
+      S 常规操作
+  - toolOf
+      S capabilityId
+      S 
+### Lcom/hiao/v2/ui/capability/CapPage$1;  (CapPage.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapPage$2;  (CapPage.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapPage$3;  (CapPage.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapPage$Nav;  (CapPage.java)
+  - back   [abstract/native]
+### Lcom/hiao/v2/ui/capability/CapPage;  (CapPage.java)
+  - <init>
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/capability/CapPage$1;
+  - access$000
+  - access$002
+  - access$100
+### Lcom/hiao/v2/ui/capability/CapUi$1;  (CapUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapUi$2;  (CapUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapUi$Segmented$1;  (CapUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapUi$Segmented$Listener;  (CapUi.java)
+  - onSelect   [abstract/native]
+### Lcom/hiao/v2/ui/capability/CapUi$Segmented;  (CapUi.java)
+  - <init>
+      S @type [Landroid/widget/Button;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/Button;
+      S @type Lcom/hiao/v2/ui/capability/CapUi$Segmented$1;
+### Lcom/hiao/v2/ui/capability/CapUi;  (CapUi.java)
+  - <clinit>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/ui/capability/CapUi$1;
+  - <init>
+  - backBar
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S ‹
+      S 返回
+      S 
+  - baseButton
+      S @type Landroid/widget/Button;
+  - body
+  - body2
+  - boxField
+  - button
+  - caption
+  - card
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - chip
+      S @type Landroid/widget/TextView;
+  - chipOutline
+      S @type Landroid/widget/TextView;
+  - chipPlain
+      S @type Landroid/widget/TextView;
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - destructiveButton
+  - dim
+  - dot
+      S @type Landroid/view/View;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - dp
+  - fade
+  - fullWidth
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - ghostButton
+  - grayButton
+  - hairline
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - input
+      S @type Landroid/widget/EditText;
+  - inputMulti
+      S @type Landroid/widget/EditText;
+  - inputSecret
+  - io
+  - label
+      S @type Landroid/widget/TextView;
+  - labelField
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - largeTitle
+  - listCard
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - main
+  - mono
+  - outlined
+  - press
+      S @type Landroid/graphics/drawable/StateListDrawable;
+      S @type [I
+  - row
+      S @type Landroid/widget/LinearLayout;
+  - rowParams
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - sectionHeader
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - smallDestructiveButton
+  - smallGhostButton
+  - smallTintedButton
+  - solid
+      S @type Landroid/graphics/drawable/GradientDrawable;
+  - space
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - timeAgo
+      S 刚刚
+      S @type Ljava/lang/StringBuilder;
+      S  分钟前
+      S  小时前
+      S  天前
+  - tintedButton
+  - title
+  - toast
+      S @type Lcom/hiao/v2/ui/capability/CapUi$2;
+### Lcom/hiao/v2/ui/capability/CapabilityHome$13$1;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$13;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$1;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$2;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$3;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$4;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$5;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$6;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$CountFn;  (CapabilityHome.java)
+  - get   [abstract/native]
+### Lcom/hiao/v2/ui/capability/CapabilityHome;  (CapabilityHome.java)
+  - <clinit>
+      S 自动开关：一有动静就提醒你或执行你安排的事
+      S 常见问题：为什么总问我、数据存在哪、怎么连电脑
+      S 教 hiao 新本事的说明书，点开看装了哪些、试读一本
+      S 把你自己的文档收进来，之后随口就能问里面写了什么
+      S 把一套固定步骤存下来，以后一键照着做
+      S 让 hiao 能调用你的网页服务（地址和密钥只存手机里）
+      S @type [Ljava/lang/String;
+  - <init>
+      S @type [Landroid/widget/TextView;
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - addEntry
+      S @type Landroid/widget/LinearLayout;
+      S ›
+  - buildHome
+      S 能力
+      S 这里管理 hiao 会用到的「本领」：能读什么文档、会什么技能、能调用哪些服务。平时在对话页说话就行，不用常来。
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$1;
+      S 技能
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$2;
+      S 知识库
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$3;
+      S 工作流
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$4;
+      S 连接器
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$5;
+      S 钩子
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$6;
+      S 帮助
+  - countJson
+      S .json
+  - countTo
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$13;
+  - entryText
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S  项 · 
+  - goBack
+  - nav
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$7;
+  - open
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+  - refreshCounts
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$8;
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$9;
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$10;
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$11;
+      S @type Lcom/hiao/v2/ui/capability/CapabilityHome$12;
+      S 常见问题：为什么总问我、数据存在哪、怎么连电脑
+### Lcom/hiao/v2/ui/capability/ConnectorsView$10;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$11;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$12$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$12;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$13;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$14$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$14;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$15$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$15;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$2$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$2;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$3;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$4$1;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$4;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$5;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$6;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$8;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$9;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HelpView$1;  (HelpView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$10$1$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$10$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$10;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$11$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$11;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$12$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$12;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$13;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$14$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$14;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$2$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$2;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$3$1$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$3$1;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$3;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$4;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$5;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$8;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$9;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$10$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$10;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$11;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$12;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$13;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$2;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$3;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$4$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$4;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$5;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$6;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$7$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$7;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$8$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$8;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$9$1;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/KbView$9;  (KbView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$1$1;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$1;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$2;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$3;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$4$1;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$4;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$5;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$6$1$1;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$6$1;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$6;  (SkillsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/SkillsView$SkillDoc;  (SkillsView.java)
+  - <init>
+      S 
+      S @type Ljava/util/ArrayList;
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$1$1;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$1;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$2;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$3;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$4;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$5$1;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$5;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$6;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$7;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$8;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$9$1;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/WorkflowsView$9;  (WorkflowsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$1$1;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$10$1;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$10;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$11$1;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$11;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$12$1;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$12;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$1;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$3;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$4;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$5;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$6;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$8;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$9;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService;  (FloatingChatService.java)
+  - <init>
+      S @type Landroid/os/Handler;
+      S 
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$1;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$2;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$3;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$4;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$5;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$6;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$7;
+  - access$000
+  - access$002
+  - access$100
+  - access$1000
+  - access$1100
+  - access$1200
+  - access$1202
+  - access$1300
+  - access$1302
+  - access$1400
+  - access$1500
+  - access$1600
+  - access$1602
+  - access$1700
+  - access$1800
+  - access$1802
+  - access$1900
+  - access$200
+  - access$2000
+  - access$2100
+  - access$2200
+  - access$2300
+  - access$2400
+  - access$2500
+  - access$2600
+  - access$2700
+  - access$2800
+  - access$2900
+  - access$300
+  - access$3000
+  - access$3100
+  - access$3200
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - access$902
+  - appendFinalIfNew
+      S id
+      S 
+      S ok
+      S answer
+      S @type Ljava/lang/StringBuilder;
+      S ⚠ 
+      S error
+      S 任务失败
+  - attach
+      S @type Ljava/lang/StringBuilder;
+      S 挂窗失败: 
+      S FloatingChatService
+      S 桌面宠物已停止
+      S 「显示在其他应用上层」权限不可用
+  - buildNotification
+      S @type Landroid/app/Notification$Builder;
+      S bridge
+      S hiao v2
+      S service
+      S @type Ljava/lang/StringBuilder;
+      S 构建通知点击意图失败: 
+      S FloatingChatService
+  - buildPanelParams
+      S @type Landroid/view/WindowManager$LayoutParams;
+  - buildPet
+      S @type Landroid/widget/FrameLayout;
+      S @type Lcom/hiao/v2/ui/island/PetView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$8;
+  - buildPetParams
+      S @type Landroid/view/WindowManager$LayoutParams;
+  - clampX
+  - close
+      S 已关闭桌面宠物
+  - collapse
+      S input_method
+      S @type Landroid/view/inputmethod/InputMethodManager;
+      S 
+  - detach
+  - expand
+      S 
+      S @type Lcom/hiao/v2/ui/island/MiniChatView;
+  - onScreenOff
+  - onScreenOn
+  - openApprovals
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/ApprovalsActivity;
+      S @type Ljava/lang/StringBuilder;
+      S 打开审批屏失败: 
+      S FloatingChatService
+  - openMain
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/MainActivity;
+      S @type Ljava/lang/StringBuilder;
+      S 打开主窗口失败: 
+      S FloatingChatService
+  - phaseText
+      S @type Ljava/lang/StringBuilder;
+      S 并行
+      S  · 
+      S 
+      S extracting
+      S @type [Ljava/lang/Object;
+      S tool
+      S streaming
+      S  · 回答中
+  - pollOnce
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$10;
+  - refreshPet
+  - refreshResolvedPanel
+  - refreshTasks
+  - renderStatus
+      S busy
+      S last
+      S 
+      S id
+      S ok
+      S answer
+      S @type Ljava/lang/StringBuilder;
+      S ⚠ 
+      S error
+      S 任务失败
+  - resolveApproval
+      S island
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$11;
+  - resolveFeedback
+  - startPetPoll
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$9;
+  - statusBarHeight
+      S dimen
+      S android
+      S status_bar_height
+  - stopPetPoll
+  - stopTask
+  - submitTask
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService$12;
+  - syncPanelEngineState
+  - vibrate
+      S @type Landroid/os/Vibrator;
+### Lcom/hiao/v2/ui/island/IslandStore;  (IslandStore.java)
+  - <init>
+  - petEnabled
+      S island_on
+      S bubble_on
+  - setPetEnabled
+      S bubble_on
+      S island_on
+  - sp
+      S hiao_v2_island
+### Lcom/hiao/v2/ui/island/IslandUi$1;  (IslandUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/IslandUi;  (IslandUi.java)
+  - <clinit>
+      S @type Lcom/hiao/v2/ui/island/IslandUi$1;
+  - <init>
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - dim
+  - dot
+      S @type Landroid/view/View;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - io
+  - label
+      S @type Landroid/widget/TextView;
+  - outlined
+  - pill
+  - solid
+      S @type Landroid/graphics/drawable/GradientDrawable;
+### Lcom/hiao/v2/ui/island/MiniChatView$10;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$11$1;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$11;  (MiniChatView.java)
+  - <init>
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$11$1;
+  - access$502
+### Lcom/hiao/v2/ui/island/MiniChatView$12;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$13;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$1;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$2;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$3;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$4;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$5;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$6;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$7;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$8;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$9;  (MiniChatView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/MiniChatView$Listener;  (MiniChatView.java)
+  - onClose   [abstract/native]
+  - onExit   [abstract/native]
+  - onOpenApprovals   [abstract/native]
+  - onOpenMain   [abstract/native]
+  - onResolve   [abstract/native]
+  - onSend   [abstract/native]
+  - onStopTask   [abstract/native]
+### Lcom/hiao/v2/ui/island/MiniChatView;  (MiniChatView.java)
+  - <init>
+      S 
+      S @type Ljava/util/HashSet;
+      S @type Landroid/widget/LinearLayout;
+      S hiao
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/view/View;
+      S 退出
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$1;
+      S ✕
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$2;
+      S 任务
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$3;
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$4;
+      S @type Landroid/widget/EditText;
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$5;
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$6;
+  - access$000
+  - access$100
+  - access$202
+  - access$300
+  - access$400
+  - access$600
+  - applyApprovals
+      S @type Ljava/util/ArrayList;
+      S @type Ljava/util/HashSet;
+      S id
+      S @type Landroid/widget/LinearLayout;
+      S 等你确认
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 主窗口 ›
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$8;
+      S @type Lorg/json/JSONObject;
+      S @type Ljava/lang/StringBuilder;
+      S 还有 
+      S  项 · 点按打开完整审批屏
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$9;
+  - approvalCard
+      S id
+      S kind
+      S ask
+      S capabilityId
+      S irreversible
+      S 
+      S risk
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S title
+      S detail
+      S args
+      S expiresInMs
+      S @type Ljava/lang/StringBuilder;
+      S 剩余 
+      S s 自动拒绝
+      S @type Landroid/widget/EditText;
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$10;
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$11;
+  - bubble
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - fullWidthTop
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - kindLabel
+      S ask
+      S plan
+  - riskColor
+      S high
+      S medium
+  - riskLabel
+      S high
+      S medium
+  - scheduleApply
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$7;
+  - scrollBottom
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$13;
+  - send
+      S 
+  - smallChip
+  - space
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - tail
+      S 
+  - taskMidText
+      S 排队中…
+      S step
+      S maxSteps
+      S phase
+      S 
+      S tool
+      S streaming
+      S @type Ljava/lang/StringBuilder;
+      S 第
+      S /
+      S 步
+      S  · 调用 
+      S 工具
+      S  · 回答中
+      S  · 思考中…
+      S 回答中…
+      S 思考中…
+  - taskRow
+      S taskId
+      S 
+      S state
+      S queued
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Ljava/lang/StringBuilder;
+      S #
+      S 停止
+      S @type Lcom/hiao/v2/ui/island/MiniChatView$12;
+  - tierColor
+      S high
+      S medium
+  - tierOf
+      S high
+      S T3
+      S medium
+      S T2
+      S T1
+### Lcom/hiao/v2/ui/island/PetView$1;  (PetView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/PetView$2;  (PetView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/PetView$3;  (PetView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/PetView$4;  (PetView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/PetView$5;  (PetView.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/PetView$PetState;  (PetView.java)
+  - $values
+      S @type [Lcom/hiao/v2/ui/island/PetView$PetState;
+  - <clinit>
+      S @type Lcom/hiao/v2/ui/island/PetView$PetState;
+      S IDLE
+      S BUSY
+      S APPROVAL
+  - <init>
+  - valueOf
+      S @type Lcom/hiao/v2/ui/island/PetView$PetState;
+  - values
+      S @type [Lcom/hiao/v2/ui/island/PetView$PetState;
+### Lcom/hiao/v2/ui/island/PetView;  (PetView.java)
+  - <init>
+      S @type Landroid/os/Handler;
+      S @type Ljava/util/Random;
+      S @type Landroid/graphics/Paint;
+      S @type Landroid/graphics/Path;
+      S @type Landroid/graphics/RectF;
+      S @type Lcom/hiao/v2/ui/island/PetView$1;
+      S @type Landroid/graphics/LinearGradient;
+      S #F6C966
+      S #F0892B
+      S #E5602B
+      S @type [I
+      S @type [F
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$402
+  - access$500
+  - access$514
+  - access$604
+  - access$702
+  - buildStar
+      S @type [F
+  - drawEye
+  - startBlink
+      S @type [F
+      S @type Lcom/hiao/v2/ui/island/PetView$4;
+      S @type Lcom/hiao/v2/ui/island/PetView$5;
+  - updateAnimation
+### Lcom/hiao/v2/media/Rich$1;  (Rich.java)
+  - <init>
+  - <init>
+      S @type Lcom/hiao/v2/media/ChartView;
+      S @type Lorg/json/JSONObject;
+### Lcom/hiao/v2/media/Rich$2;  (Rich.java)
+  - <init>
+  - <init>
+      S @type Lcom/hiao/v2/media/CanvasView;
+      S @type Lorg/json/JSONObject;
+### Lcom/hiao/v2/media/Rich$3;  (Rich.java)
+  - <init>
+  - <init>
+      S @type Lcom/hiao/v2/media/SvgView;
+### Lcom/hiao/v2/media/Rich$4;  (Rich.java)
+  - <init>
+  - <init>
+### Lcom/hiao/v2/ui/ApprovalsScreen;  (ApprovalsScreen.java)
+  - <init>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$1;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$2;
+      S @type Landroid/widget/LinearLayout;
+      S 
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$500
+  - buildEmptyCard
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+  - card
+      S id
+      S kind
+      S ask
+      S plan
+      S capabilityId
+      S irreversible
+      S risk
+      S @type Landroid/widget/TextView;
+      S detail
+      S args
+      S @type Lorg/json/JSONObject;
+      S {}
+      S options
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$3;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$4;
+      S @type Landroid/widget/CheckBox;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$5;
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$6;
+      S @type Landroid/view/View;
+  - cardLp
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - clip
+      S 
+      S 
+
+      S  ⏎ 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - doApprove
+      S @type Lcom/hiao/v2/ui/ApprovalsScreen$7;
+  - isDescendant
+      S @type Landroid/view/View;
+  - kindLabel
+      S ask
+      S plan
+  - render
+      S @type Ljava/util/HashMap;
+      S id
+      S @type [Ljava/lang/Object;
+      S @type Lorg/json/JSONObject;
+      S callId
+  - riskChip
+      S high
+      S medium
+  - typing
+      S @type Landroid/widget/EditText;
+  - getHost
+  - getProtocol
+  - openConnection
+  - encode
+### Lcom/hiao/v2/ui/CapsScreen$1;  (CapsScreen.java)
+  - <init>
+  - retainAll
+### Lcom/hiao/v2/ui/CapsScreen;  (CapsScreen.java)
+  - <init>
+      S @type [Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Lcom/hiao/v2/ui/Ui$Segmented;
+      S @type [Ljava/lang/String;
+      S @type Lcom/hiao/v2/ui/CapsScreen$1;
+  - access$000
+  - access$1000
+  - access$102
+  - access$1100
+  - access$1200
+  - access$1300
+  - access$1400
+  - access$1500
+  - access$1600
+  - access$202
+  - access$302
+  - access$402
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - actionRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+      S actionId
+      S state
+      S @type Lcom/hiao/v2/ui/CapsScreen$10;
+      S done
+      S undoable
+      S compensated
+      S compensate_failed
+      S @type Ljava/lang/StringBuilder;
+      S capabilityId
+      S  · 
+      S tool
+      S ts
+  - buildActionSeg
+      S @type [Ljava/lang/Object;
+      S @type Lcom/hiao/v2/ui/CapsScreen$8;
+      S @type Landroid/widget/LinearLayout;
+  - buildAuditSeg
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Lcom/hiao/v2/ui/CapsScreen$12;
+      S @type Lcom/hiao/v2/ui/CapsScreen$13;
+  - buildCapsSeg
+  - buildIssueForm
+      S 
+      S /sdcard/DCIM/, /sdcard/Download/
+      S 3
+      S 0
+      S 60
+      S @type Lcom/hiao/v2/ui/CapsScreen$3;
+  - buildLeaseSeg
+      S @type Landroid/widget/LinearLayout;
+  - buildToolsSeg
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - capRow
+      S @type Landroid/widget/LinearLayout;
+      S id
+      S risk
+      S @type Landroid/widget/TextView;
+      S high
+      S title
+  - clip
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+  - compensableCount
+      S @type Lorg/json/JSONObject;
+      S undoable
+      S state
+      S done
+  - compensate
+      S @type Lcom/hiao/v2/ui/CapsScreen$11;
+  - exportAudit
+      S @type Lcom/hiao/v2/ui/CapsScreen$14;
+  - issueLease
+      S @type Lorg/json/JSONObject;
+      S @type Lorg/json/JSONArray;
+      S [,，]
+      S paths
+      S @type Lcom/hiao/v2/ui/CapsScreen$4;
+  - leaseRow
+      S @type Landroid/widget/LinearLayout;
+      S constraints
+      S usedCalls
+      S maxCalls
+      S @type Landroid/widget/TextView;
+      S capabilityId
+      S state
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Ljava/lang/StringBuilder;
+      S @type [Ljava/lang/Object;
+      S deadline
+      S  · 
+      S active
+      S @type Lcom/hiao/v2/ui/CapsScreen$5;
+      S scope
+      S paths
+  - leaseStateColor
+      S active
+      S revoked
+      S exhausted
+      S expired
+  - mergedActions
+      S done
+      S tool
+      S capabilityId
+      S ts
+      S seq
+      S @type Ljava/util/HashMap;
+      S type
+      S data
+      S action/done
+      S action/compensated
+      S actionId
+      S @type Lorg/json/JSONObject;
+      S compensated
+      S ok
+      S state
+      S undoable
+      S undo
+      S compensatedOk
+      S compensate_failed
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/ui/CapsScreen$9;
+  - opRow
+      S @type Landroid/widget/TextView;
+  - paramNames
+      S 
+      S properties
+      S @type Ljava/lang/StringBuilder;
+      S （
+      S , 
+      S @type Ljava/lang/String;
+      S ）
+  - parseIntOr
+  - parseLongOr
+  - progressBar
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/CapsScreen$6;
+  - reloadAll
+      S @type Lcom/hiao/v2/ui/CapsScreen$2;
+  - renderActions
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lorg/json/JSONObject;
+      S state
+      S done
+      S undoable
+  - renderAll
+      S risk
+      S high
+      S @type [Ljava/lang/Object;
+  - renderAudit
+      S hash
+      S seq
+      S 
+      S @type Ljava/lang/StringBuilder;
+      S …
+      S @type [Ljava/lang/Object;
+  - renderCaps
+      S files
+      S system
+      S comms
+      S apps
+      S @type [Ljava/lang/String;
+      S @type [I
+      S category
+  - renderLeases
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - renderTools
+  - reverify
+      S @type Lcom/hiao/v2/ui/CapsScreen$15;
+  - revokeLease
+      S @type Lcom/hiao/v2/ui/CapsScreen$7;
+  - riskLabel
+      S high
+      S medium
+  - runTool
+      S 
+      S @type Lorg/json/JSONObject;
+      S {}
+      S @type Lcom/hiao/v2/ui/CapsScreen$18;
+      S @type [Ljava/lang/Object;
+  - selectSeg
+  - showTryArgsDialog
+      S {}
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Lcom/hiao/v2/ui/CapsScreen$17;
+  - showTryResult
+      S {}
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Ljava/lang/StringBuilder;
+      S  · 
+  - toolRow
+      S @type Landroid/widget/LinearLayout;
+      S function
+      S 
+      S name
+      S description
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/CapsScreen$16;
+      S parameters
+  - optJSONArray
+  - optJSONObject
+  - optLong
+  - optLong
+### Lcom/hiao/v2/ui/ChatScreen$3;  (ChatScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/ChatScreen;  (ChatScreen.java)
+  - <init>
+      S 
+      S @type Ljava/util/ArrayList;
+      S @type Lcom/hiao/v2/ui/ChatScreen$1;
+      S @type Lcom/hiao/v2/ui/ChatScreen$2;
+      S @type Lcom/hiao/v2/ui/ChatScreen$3;
+      S @type Ljava/util/LinkedList;
+      S @type Ljava/util/ArrayDeque;
+      S @type Ljava/util/HashMap;
+      S idle
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/ui/ChatScreen$4;
+      S @type Lcom/hiao/v2/ui/ChatScreen$5;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatScreen$6;
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S global
+  - access$000
+  - access$100
+  - access$1000
+  - access$1100
+  - access$1200
+  - access$1300
+  - access$1400
+  - access$1500
+  - access$1602
+  - access$1700
+  - access$1800
+  - access$1900
+  - access$200
+  - access$2100
+  - access$2200
+  - access$2300
+  - access$2402
+  - access$2500
+  - access$2600
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - addLine
+  - addRetryLine
+  - buildActivityBar
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/view/View;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/TextView;
+  - buildApprovalBanner
+      S callId
+      S risk
+      S high
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatScreen$15;
+      S @type Landroid/widget/TextView;
+      S @type Ljava/lang/StringBuilder;
+      S  · 
+      S @type Lcom/hiao/v2/ui/ChatUi$HitlBanner;
+      S @type Lcom/hiao/v2/ui/ChatScreen$16;
+      S @type Lcom/hiao/v2/ui/ChatScreen$17;
+  - buildApprovalButton
+      S @type Landroid/widget/FrameLayout;
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Lcom/hiao/v2/ui/ChatScreen$9;
+      S @type Landroid/widget/FrameLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+  - buildContinueBanner
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/TextView;
+      S ×
+      S @type Lcom/hiao/v2/ui/ChatScreen$10;
+  - buildEmptyState
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type [I
+      S @type [[I
+  - buildHeader
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/ChatScreen$7;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/ChatScreen$8;
+  - buildInputBar
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Landroid/widget/EditText;
+      S @type Lcom/hiao/v2/ui/ChatScreen$12;
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Lcom/hiao/v2/ui/ChatScreen$13;
+  - buildPlanCard
+      S 
+      S @type Lorg/json/JSONObject;
+      S {}
+      S steps
+      S note
+  - buildScrollPill
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/ChatScreen$21;
+  - closeRoundVisuals
+  - composeActivityText
+      S extracting
+      S @type [Ljava/lang/Object;
+      S tool
+      S @type Ljava/lang/StringBuilder;
+  - copyText
+      S clipboard
+      S @type Landroid/content/ClipboardManager;
+      S hiao
+  - draftKey
+      S global
+  - elapsedSec
+  - exampleCard
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/ChatScreen$11;
+  - insertPendingBanners
+      S @type Ljava/util/HashSet;
+      S @type Lorg/json/JSONObject;
+      S kind
+      S confirm
+      S callId
+      S @type Ljava/util/Map$Entry;
+      S @type Ljava/lang/String;
+      S @type Lcom/hiao/v2/ui/ChatUi$HitlBanner;
+  - newChat
+      S 
+  - onActivityEvent
+      S step
+      S maxSteps
+      S phase
+      S idle
+      S tool
+      S streaming
+  - onChunkEvent
+      S delta
+      S 
+      S phase
+      S content
+      S reasoning
+  - quoteToInput
+      S @type Ljava/lang/StringBuilder;
+      S > 
+      S 
+
+  - renderActivityBar
+      S idle
+  - renderStatus
+      S compat
+      S @type [Ljava/lang/Object;
+      S  · 
+      S @type Landroid/view/View;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Ljava/lang/StringBuilder;
+      S  
+  - resetStreamVisuals
+  - resolveApprovalViaActions
+      S @type Lcom/hiao/v2/ui/ChatScreen$18;
+  - retryClick
+      S @type Lcom/hiao/v2/ui/ChatScreen$20;
+  - roundIcon
+      S @type Landroid/widget/ImageView;
+      S @type Landroid/graphics/drawable/GradientDrawable;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - scrollFlow
+      S @type Lcom/hiao/v2/ui/ChatScreen$19;
+  - send
+  - setRunning
+      S @type Lcom/hiao/v2/ui/ChatUi$RetryRow;
+  - startBreath
+      S @type [F
+      S alpha
+  - startCursorBreath
+      S @type [F
+      S alpha
+  - statusText
+      S @type Landroid/widget/TextView;
+  - stopBreath
+  - stopCursorBreath
+  - submit
+      S settings
+      S 
+      S @type Lcom/hiao/v2/ui/ChatScreen$14;
+  - switchDraftKey
+  - syncActivitySnapshot
+  - tickSeconds
+      S tool
+  - updateFollowState
+  - updateHeaderBadge
+      S 9+
+### Lcom/hiao/v2/ui/ChatUi$2;  (ChatUi.java)
+  - <init>
+### Lcom/hiao/v2/ui/EngineActivity$1;  (EngineActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$1;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$3;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$5;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/MainActivity$6;  (MainActivity.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$10;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$12;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$13;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$15;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$16;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen$27;  (SettingsScreen.java)
+  - <init>
+### Lcom/hiao/v2/ui/SettingsScreen;  (SettingsScreen.java)
+  - <clinit>
+      S https://open.bigmodel.cn/api/paas/v4
+      S 上下文 128K（GLM-4.6 至 200K）
+      S 智谱 GLM
+      S @type [Ljava/lang/String;
+      S https://api.moonshot.cn/v1
+      S 上下文 128K（kimi-k2 256K）
+      S Kimi 月之暗面
+      S https://dashscope.aliyuncs.com/compatible-mode/v1
+      S 上下文 32K–1M（按型号）
+      S 通义千问
+      S https://api.stepfun.com/v1
+      S 上下文 128K
+      S 阶跃 Step
+      S https://api.minimax.chat/v1
+      S 上下文 1M（abab 系列）
+      S MiniMax
+      S https://api.lingyiwanwu.com/v1
+      S 上下文 128K（yi-lightning）
+      S 零一万物
+      S 硅基流动
+      S https://api.siliconflow.cn/v1
+      S 聚合多模型，上下文按型号
+      S OpenRouter
+      S https://openrouter.ai/api/v1
+      S https://api.openai.com/v1
+      S 上下文 128K（GPT-4o）
+      S OpenAI
+      S @type [[Ljava/lang/String;
+  - <init>
+      S @type Landroid/os/Handler;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$2;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$27;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/ScrollView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - access$000
+  - access$100
+  - access$1000
+  - access$1100
+  - access$1200
+  - access$1300
+  - access$1400
+  - access$1500
+  - access$1600
+  - access$1700
+  - access$1800
+  - access$1900
+  - access$200
+  - access$2000
+  - access$2100
+  - access$2200
+  - access$2300
+  - access$2400
+  - access$2500
+  - access$2600
+  - access$2700
+  - access$2800
+  - access$2900
+  - access$300
+  - access$3000
+  - access$3100
+  - access$3200
+  - access$3300
+  - access$3400
+  - access$3500
+  - access$3600
+  - access$3700
+  - access$400
+  - access$500
+  - access$502
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - amooUsage
+      S @type Ljava/lang/StringBuilder;
+      S 【hiao 对接参数】
+桥地址: http://127.0.0.1:8898
+令牌: 
+      S <见 hiao 设置页>
+      S 
+单工具: POST /call  body={"tool":"battery","args":{}}
+任务委托: {"tool":"agent_task","args":{"prompt":"…","wait":false}}
+事件流: GET /events (SSE) · 审批: GET /approvals + POST /approve
+信箱兜底: /sdcard/hiao/cmd_<id>.json → result_<id>.json
+MCP: http://127.0.0.1:8898/mcp?token=
+      S <令牌>
+      S 
+工具面: GET /status（当前 
+      S  项）· 高风险动作需先经用户同意 · JSON 必须 UTF-8
+  - buildAboutGroup
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Ljava/lang/StringBuilder;
+      S 2.8.0-alpha (
+      S )
+  - buildAdvancedGroup
+      S @type Landroid/widget/LinearLayout;
+      S …
+      S @type Lcom/hiao/v2/ui/SettingsScreen$3;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$4;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$IosSwitch;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$5;
+      S 
+      S @type Lcom/hiao/v2/ui/SettingsScreen$6;
+      S /sdcard/hiao
+      S @type Lcom/hiao/v2/ui/SettingsScreen$7;
+  - buildCommonGroup
+      S @type Landroid/widget/LinearLayout;
+  - buildConcurrencyRow
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 任务并发数
+      S @type Landroid/view/View;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$20;
+      S −
+      S @type Lcom/hiao/v2/ui/SettingsScreen$21;
+      S ＋
+      S 同时运行的任务数上限 1–4，超出的任务自动排队
+  - buildDsrGroup
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$33;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$34;
+  - buildEngineGroup
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Lcom/hiao/v2/ui/SettingsScreen$28;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$29;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$30;
+  - buildHelpRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$9;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - buildModelGroup
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/Ui$Segmented;
+      S @type [Ljava/lang/String;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$10;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S DeepSeek
+      S @type Landroid/view/View;
+      S 
+      S @type Lcom/hiao/v2/ui/SettingsScreen$11;
+      S https://api.deepseek.com
+      S sk-…（已保存，留空不改）
+      S sk-…
+      S @type Lcom/hiao/v2/ui/SettingsScreen$12;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$13;
+      S deepseek-chat
+      S deepseek-reasoner
+      S @type Lcom/hiao/v2/ui/SettingsScreen$14;
+      S https://<host>/v1
+      S gpt-4o-mini 等
+      S @type Lcom/hiao/v2/ui/SettingsScreen$15;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$16;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$17;
+  - buildPetCard
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$24;
+      S Amoo 桌面宠物
+      S @type Landroid/view/View;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+      S @type Lcom/hiao/v2/ui/SettingsScreen$IosSwitch;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$25;
+  - buildStepsRow
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 默认步数
+      S @type Landroid/view/View;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$18;
+      S −
+      S @type Lcom/hiao/v2/ui/SettingsScreen$19;
+      S ＋
+      S 单任务最大模型-工具轮数 1–999，对 DeepSeek 与自定义端点同时生效
+  - capsNavRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$8;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 
+  - confirmErase
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$36;
+  - deleteRecursive
+      S @type Ljava/lang/IllegalStateException;
+      S @type Ljava/lang/StringBuilder;
+      S 删除失败：
+  - deriveModelChoice
+      S deepseek-reasoner
+      S deepseek-chat
+  - dsOrCmResult
+  - engineStateLabel
+      S extracting
+      S ready
+      S starting
+      S running
+      S stopped
+      S error
+  - eraseAll
+      S @type Lcom/hiao/v2/ui/SettingsScreen$37;
+  - exportAll
+      S @type Lcom/hiao/v2/ui/SettingsScreen$35;
+  - fillModelChips
+      S @type Ljava/lang/String;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Ljava/lang/StringBuilder;
+      S 共 
+      S  个模型，仅列前 
+      S  个（手动输入可用完整 id）
+  - fillPresetChips
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$1;
+  - loadToken
+      S @type Lcom/hiao/v2/ui/SettingsScreen$26;
+  - mcpUrlFull
+      S @type Ljava/lang/StringBuilder;
+      S http://127.0.0.1:8898/mcp?token=
+  - mcpUrlMasked
+      S …
+      S @type Ljava/lang/StringBuilder;
+      S http://127.0.0.1:8898/mcp?token=
+  - modelChoiceCaption
+      S @type Landroid/widget/TextView;
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - modelChoiceRow
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$23;
+  - onModelChoice
+      S deepseek-chat
+      S deepseek-reasoner
+  - openOverlaySettings
+      S package:
+      S @type Landroid/content/Intent;
+      S android.settings.action.MANAGE_OVERLAY_PERMISSION
+      S @type Ljava/lang/StringBuilder;
+      S android.settings.APPLICATION_DETAILS_SETTINGS
+      S 未能打开系统设置，请手动前往授权
+  - readAll
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+  - readJobsFile
+      S @type Ljava/io/File;
+      S dsh2/jobs.json
+      S @type Lorg/json/JSONObject;
+      S version
+      S jobs
+      S @type Lorg/json/JSONArray;
+  - renderConnection
+      S @type [Ljava/lang/Object;
+      S /sdcard/hiao
+      S 已授权
+      S 未授权
+      S state
+      S active
+  - renderEngine
+      S state
+      S missing
+      S running
+      S error
+      S starting
+      S extracting
+      S ready
+      S progress
+      S done
+      S total
+      S @type [Ljava/lang/Object;
+      S 
+      S adopted
+      S version
+      S patchStale
+      S @type Ljava/lang/StringBuilder;
+      S  · 
+      S @type Lcom/hiao/v2/ui/SettingsScreen$31;
+      S @type Lcom/hiao/v2/ui/SettingsScreen$32;
+  - renderModel
+      S deepseek
+      S compat
+      S @type [Ljava/lang/Object;
+  - renderModelChoice
+  - renderToken
+      S …
+      S @type Ljava/lang/StringBuilder;
+  - shareExport
+      S 
+      S @type Landroid/content/Intent;
+      S android.intent.action.SEND
+      S text/plain
+      S android.intent.extra.TEXT
+      S @type [Ljava/lang/Object;
+  - styleModelChip
+  - testRow
+      S @type Lcom/hiao/v2/ui/SettingsScreen$22;
+      S 
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+  - togglePet
+      S 需要先授权「显示在其他应用上层」
+      S @type Landroid/content/Intent;
+      S @type Lcom/hiao/v2/ui/island/FloatingChatService;
+  - verifyAboutAudit
+      S @type Lcom/hiao/v2/ui/SettingsScreen$38;
+  - versionCode
+  - writeUtf8
+      S @type Ljava/io/FileOutputStream;
+### Lcom/hiao/v2/ui/capability/CapabilityHome$10;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$11;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$12;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$7;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$8;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/CapabilityHome$9;  (CapabilityHome.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView$7;  (ConnectorsView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/ConnectorsView;  (ConnectorsView.java)
+  - <init>
+      S 连接器
+      S 连接器帮 hiao 记住一个网页服务的地址和钥匙（密钥），需要时替你调用它。密钥加密存放在本应用私有空间里，不出现在对话和记录中。
+      S 正在读取…
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$1;
+      S 新建连接器
+  - access$000
+  - access$100
+  - access$1000
+  - access$1100
+  - access$1200
+  - access$1300
+  - access$1400
+  - access$1500
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - addHeaderRow
+      S 头名（如 X-Token）
+      S 内容
+      S @type Landroid/widget/LinearLayout$LayoutParams;
+      S 删
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$11;
+  - collectHeaders
+      S @type Lorg/json/JSONObject;
+      S @type Landroid/widget/LinearLayout;
+      S @type Landroid/widget/EditText;
+      S 
+      S 有一个请求头只填了一半：名字和内容都要填，或者点「删」移除这一行。
+  - confirmRemove
+      S @type Landroid/app/Activity;
+      S @type Landroid/app/AlertDialog$Builder;
+      S 删除连接器
+      S @type Ljava/lang/StringBuilder;
+      S 将删除「
+      S 这个连接器
+      S 」：
+· 只删除保存在本应用里的地址和密钥，不影响对方服务
+· 以后 hiao 就调用不了它了
+· 引用它的自动化钩子会失效
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$13;
+      S 删除
+      S 先不删
+  - doRemove
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$14;
+  - doSave
+      S http://
+      S https://
+      S 网址要以 https:// 或 http:// 开头（建议 https）。
+      S 正在保存…
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$12;
+      S 先给连接器起个名字（1-32 字）。
+  - doTestCall
+      S 
+      S @type Lorg/json/JSONObject;
+      S 请求内容不是合法 JSON：检查引号和逗号。
+      S 请求已发出，等对方回复…
+      S /
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$15;
+  - maskedKeyOf
+      S key
+      S secret
+      S maskedKey
+      S keyMasked
+      S secretMasked
+      S masked_key
+      S @type [Ljava/lang/String;
+      S 
+      S null
+  - openForm
+      S 正在准备新建表单…
+      S 正在读取「原配置」…
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$4;
+  - reloadList
+      S @type Landroid/widget/LinearLayout;
+      S 正在读取…
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$2;
+  - renderForm
+      S ‹ 不改了，回列表
+      S ‹ 回列表
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$5;
+      S 修改连接器
+      S 新建连接器
+      S 
+      S name
+      S 比如：天气服务
+      S 名字（1-32 字，用来在对话里认出它）
+      S base_url
+      S baseUrl
+      S https://example.com/v1
+      S 服务网址（https:// 开头，指向公网）
+      S 密钥 / 访问令牌（已保存的不会回显；留空 = 不修改）
+      S 密钥 / 访问令牌（选填，服务需要才填）
+      S 留空 = 保持不变
+      S 比如：sk-… 或对方给的令牌
+      S 自定义请求头（选填，服务要求才加）
+      S @type Landroid/widget/LinearLayout;
+      S headers
+      S @type Ljava/lang/String;
+      S 已保存的请求头内容出于安全不会回显；要修改就整行重填，用不到的行请点「删」移除。
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$6;
+      S 再加一个请求头
+      S 调用前要先问你吗？
+      S ask
+      S trust
+      S @type Lcom/hiao/v2/ui/capability/CapUi$Segmented;
+      S 每次都问我
+      S 自动允许（仍全记录）
+      S @type [Ljava/lang/String;
+      S auto
+      S 自动允许 = 以后 hiao 调用它不再逐次问你（每次调用都会记进操作记录）。只对你信得过的服务开启。
+      S 试调用（会真实发一次请求到对方服务器）
+      S GET
+      S POST
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$7;
+      S {"city": "北京"}
+      S 请求内容（JSON，选填）
+      S /weather
+      S 路径（拼在网址后面，/ 开头）
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$8;
+      S 发测试请求
+      S 保存修改
+      S 保存连接器
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$9;
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$10;
+      S 删除这个连接器
+  - renderList
+      S 还没有连接器。第一步：点下面「新建连接器」，填一个名字和网址（https:// 开头）；需要密钥的服务再填密钥。
+      S @type Ljava/lang/StringBuilder;
+      S 共 
+      S  个连接器
+      S @type Lorg/json/JSONObject;
+      S id
+      S 
+      S name
+      S 未命名
+      S base_url
+      S baseUrl
+      S @type Lcom/hiao/v2/ui/capability/ConnectorsView$3;
+      S trust
+      S ask
+      S auto
+      S 自动允许
+      S 每次问我
+      S 密钥已保存（
+      S ）
+      S 点一个连接器可以修改它、试调用或删除。
+  - renderTestResult
+      S ok
+      S 请求成功
+      S 请求失败
+      S status
+      S @type Ljava/lang/StringBuilder;
+      S 对方回复码 
+      S error
+      S 
+      S 原因：
+      S body
+      S 对方返回的内容（截断显示）：
+      S 说明地址和密钥都能用。
+      S 可检查网址、路径与密钥后再试一次。
+### Lcom/hiao/v2/ui/capability/HelpView;  (HelpView.java)
+  - <init>
+      S 帮助
+      S 常见问题，点一下标题展开或收起。
+      S 为什么总问我？
+      S 删文件、点屏幕这类动作有风险，hiao 动手前会停下来问你。点「同意并执行」它才动手；不点或等超时了，它当你说「不行」。在审批卡上勾了「本会话不再询问」的同类动作，本次使用期间不再重复问。
+      S 怎么停止任务？
+      S 对话页的发送键在任务运行时会变成「停止」，点一下即可；悬浮面板每个任务后面也有「停止」小钮。超过 10 分钟没动静的任务会自动停——等你确认的任务不算，它不计时。
+      S 数据存在哪？
+      S 对话和记录存在本机应用的私有目录（设置里可一键擦除）；知识库文档存在手机的 /sdcard/hiao/kb；技能放在 /sdcard/hiao/skills。没有任何数据自动上传。
+      S 怎么连电脑？
+      S 打开 设置 → 高级 → 配对令牌，复制令牌；电脑先执行 adb forward tcp:8898 tcp:8898，再访问 http://127.0.0.1:8898。设置里的「amoo 对接」卡片能一键复制完整用法。
+      S 「能力」页是干什么的？
+      S 这里管理 hiao 的「本领」：
+· 技能——教它做事的说明书，可以试读；
+· 知识库——收进你自己的文档，之后随口就能问；
+· 工作流——把一套固定步骤存下来一键执行；
+· 连接器——记住网页服务的地址和密钥，替你调用；
+· 钩子——自动开关，一有动静就提醒你或执行安排好的事。
+平时在对话页说话就行，不用常来。
+  - addFaq
+      S ▾
+      S @type Lcom/hiao/v2/ui/capability/HelpView$1;
+### Lcom/hiao/v2/ui/capability/HooksView$6;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView$7;  (HooksView.java)
+  - <init>
+### Lcom/hiao/v2/ui/capability/HooksView;  (HooksView.java)
+  - <clinit>
+      S approval_requested
+      S tool_executed
+      S task_finished
+      S @type [Ljava/lang/String;
+      S 需要你确认时
+      S 执行了操作时
+      S 任务完成时
+      S webhook
+      S prompt
+      S notify
+  - <init>
+      S @type Lorg/json/JSONObject;
+      S 钩子
+      S 钩子是自动开关：一有动静就替你做事。比如「任务完成就通知我」。每个钩子最短间隔内只做一次，所有自动动作都会记进操作记录。
+      S 正在读取…
+      S @type Landroid/widget/LinearLayout;
+      S @type Lcom/hiao/v2/ui/capability/HooksView$1;
+      S 新建钩子
+  - access$000
+  - access$100
+  - access$1000
+  - access$1102
+  - access$1200
+  - access$1302
+  - access$1400
+  - access$1500
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - actionSummary
+      S 
+      S type
+      S notify
+      S 」
+      S text
+      S 触发时通知你
+      S @type Ljava/lang/StringBuilder;
+      S 通知你：「
+      S webhook
+      S connector
+      S 调用连接器
+      S 「
+      S prompt
+      S 自动让 hiao 执行：
+  - confirmRemove
+      S @type Landroid/app/Activity;
+      S @type Landroid/app/AlertDialog$Builder;
+      S 删除钩子
+      S @type Ljava/lang/StringBuilder;
+      S 将删除「
+      S 」：
+· 这条自动开关从此不再触发
+· 只删除本应用里保存的这条配置
+      S @type Lcom/hiao/v2/ui/capability/HooksView$13;
+      S 删除
+      S 先不删
+  - cooldownLabel
+      S 不限
+      S @type Ljava/lang/StringBuilder;
+      S  秒
+      S  分钟
+  - doRemove
+      S @type Lcom/hiao/v2/ui/capability/HooksView$14;
+  - doSave
+      S ask
+      S approval_requested
+      S notify
+      S 「需要你确认时」这类钩子只支持「通知我」——确认本身还没被同意，自动外呼或自动执行会让确认流程打架。
+      S @type Lorg/json/JSONObject;
+      S task_finished
+      S ok
+      S tool_executed
+      S tool
+      S type
+      S text
+      S webhook
+      S @type Ljava/lang/StringBuilder;
+      S 「
+      S 」设的是每次都问我——自动流程会卡在确认上。先到「连接器」页把它改成自动允许，或换一个自动允许的连接器。
+      S connector
+      S 「调用连接器」要先选一个连接器。
+      S 「让 hiao 执行任务」要写清楚让它做什么。
+      S @type [I
+      S 正在保存…
+      S @type Lcom/hiao/v2/ui/capability/HooksView$12;
+      S 先给钩子起个名字（1-32 字）。
+  - eventLabel
+      S 未知事件
+  - loadConnectorTrust
+      S @type Lcom/hiao/v2/ui/capability/HooksView$11;
+  - openForm
+      S ‹ 不建了，回列表
+      S @type Lcom/hiao/v2/ui/capability/HooksView$5;
+      S 新建钩子
+      S 比如：任务完成提醒我
+      S 名字（1-32 字）
+      S 什么时候触发？
+      S @type Lcom/hiao/v2/ui/capability/CapUi$Segmented;
+      S @type Lcom/hiao/v2/ui/capability/HooksView$6;
+      S @type Landroid/widget/LinearLayout;
+      S 哪种结果触发？
+      S 全部结果
+      S 仅失败时
+      S @type [Ljava/lang/String;
+      S 比如：shot（截屏）
+      S 只在执行某个功能时触发（留空 = 任何操作都触发）
+      S hiao 每次等你确认都会触发（暂不支持只盯某一类操作）。
+      S 触发后做什么？
+      S 调用连接器
+      S 让 hiao 执行任务
+      S 通知我
+      S @type Lcom/hiao/v2/ui/capability/HooksView$7;
+      S 任务完成了：{{answer}}
+      S 通知内容（选填，留空用默认话术；{{answer}} 代表任务结果、{{title}} 代表提醒标题）
+      S @type Lcom/hiao/v2/ui/capability/HooksView$8;
+      S 选一个连接器（未选）
+      S 建议选「自动允许」的连接器（每次都问我的连接器会卡住自动流程）。
+      S 把刚才的结果整理成三句话
+      S 让 hiao 做什么（{{answer}} 代表上一步结果）
+      S 自动执行最多 4 步就停，防止连环做事。
+      S 同类提醒最少间隔多久？
+      S 5 分钟
+      S 30 分钟
+      S 不限
+      S 1 分钟
+      S @type Lcom/hiao/v2/ui/capability/HooksView$9;
+      S 保存钩子
+      S 
+  - pickConnector
+      S @type Lcom/hiao/v2/ui/capability/HooksView$10;
+  - reloadList
+      S @type Landroid/widget/LinearLayout;
+      S 正在读取…
+      S @type Lcom/hiao/v2/ui/capability/HooksView$2;
+  - renderList
+      S 还没有钩子。第一步：点下面「新建钩子」，选「任务完成时」+「通知我」，存一条最简单的试试。
+      S @type Ljava/lang/StringBuilder;
+      S 共 
+      S  条钩子
+      S @type Lorg/json/JSONObject;
+      S id
+      S 
+      S name
+      S 未命名
+      S event
+      S enabled
+      S 启用中 · 点停用
+      S 已停用 · 点启用
+      S @type Lcom/hiao/v2/ui/capability/HooksView$3;
+      S action
+      S cooldown_ms
+      S cooldownSec
+      S 同类间隔 
+      S @type Landroid/widget/TextView;
+      S @type Lcom/hiao/v2/ui/capability/HooksView$4;
+      S 删除
+  - syncActionVisibility
+  - syncMatchVisibility
+### Lcom/hiao/v2/ui/capability/KbView;  (KbView.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/kb
+  - <init>
+      S 知识库
+      S 知识库把你自己的文档收进手机（存在 /sdcard/hiao/kb，不会自动上传）。收进来以后，对 hiao 说「我的知识库里写了什么」它就能答。
+      S 搜一搜
+      S 想找的内容，比如：报销标准
+      S @type Lcom/hiao/v2/ui/capability/KbView$1;
+      S 搜索
+      S 
+      S @type Landroid/widget/LinearLayout;
+      S 导入文档
+      S /sdcard/Documents/说明.txt
+      S 文件路径（txt / markdown 等文本文件）
+      S @type Lcom/hiao/v2/ui/capability/KbView$2;
+      S 浏览文件挑选
+      S @type Lcom/hiao/v2/ui/capability/KbView$3;
+      S 收进知识库
+      S 已收进的文档
+      S 正在读取…
+  - access$000
+  - access$100
+  - access$1000
+  - access$1100
+  - access$1200
+  - access$1300
+  - access$1400
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - addBrowserRow
+  - browseTo
+      S 正在读取…
+      S @type Lcom/hiao/v2/ui/capability/KbView$10;
+  - confirmDelete
+      S @type Landroid/app/Activity;
+      S @type Landroid/app/AlertDialog$Builder;
+      S 删除文档
+      S @type Ljava/lang/StringBuilder;
+      S 将删除《
+      S 》：
+· 从手机的 /sdcard/hiao/kb 目录删除它的全部内容
+· 删除后找不回
+· 如果 hiao 这一会儿正在用它回答问题，重启应用后才完全消失
+      S @type Lcom/hiao/v2/ui/capability/KbView$6;
+      S 删除
+      S 先不删
+      S 删除失败：找不到这篇文档
+  - dispatch
+      S ui
+      S @type Lorg/json/JSONObject;
+      S ok
+      S error
+      S @type Ljava/lang/StringBuilder;
+      S 调用失败: 
+  - doDelete
+      S @type Lcom/hiao/v2/ui/capability/KbView$7;
+  - doImport
+      S 先填文件路径，或点「浏览文件挑选」。
+      S 正在导入（大文件会分块收好）…
+      S @type Lcom/hiao/v2/ui/capability/KbView$9;
+  - doSearch
+      S 先输入想找的内容（至少两个汉字或一个英文单词）。
+      S 正在搜索…
+      S @type Lcom/hiao/v2/ui/capability/KbView$8;
+  - reloadDocs
+      S @type Lcom/hiao/v2/ui/capability/KbView$4;
+  - renderBrowser
+      S /sdcard
+      S @type Lcom/hiao/v2/ui/capability/KbView$11;
+      S 上一级
+      S 这个文件夹是空的。
+      S …只显示前 60 项，请逐层进入。
+      S @type Ljava/io/File;
+      S @type Lcom/hiao/v2/ui/capability/KbView$12;
+      S @type Lcom/hiao/v2/ui/capability/KbView$13;
+  - renderDocs
+      S ok
+      S error
+      S 读取失败
+      S docs
+      S totalChunks
+      S @type Ljava/lang/StringBuilder;
+      S 共 
+      S  篇文档 · 
+      S  段
+      S @type Landroid/widget/LinearLayout;
+      S title
+      S 未命名
+      S chunkCount
+      S importedAt
+      S  · 
+      S 收进
+      S @type Lcom/hiao/v2/ui/capability/KbView$5;
+      S 删除
+      S 还没有文档。第一步：点上面「浏览文件挑选」选一个文本文件，再点「收进知识库」。也可以直接对 hiao 说「把 /sdcard/Documents 里的 txt 导入知识库」。
+  - renderSearch
+      S ok
+      S error
+      S 搜索失败
+      S results
+      S title
+      S 未命名
+      S @type Ljava/lang/StringBuilder;
+      S 第 
+      S i
+      S  段
+      S snippet
+      S 
+      S 搜出 
+      S  段原文。完整内容可在对话里问 hiao。
+      S 没搜到相关内容，换个词试试（至少两个汉字或一个英文单词）。
+  - toggleBrowser
+      S @type Ljava/io/File;
+      S /sdcard/Documents
+      S /sdcard
+### Lcom/hiao/v2/ui/capability/SkillsView;  (SkillsView.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/skills
+  - <init>
+      S 技能
+      S 技能是教 hiao 做事的说明书：hiao 先读它，再照着做。内置技能随应用自带；你也可以把技能包放进手机的 /sdcard/hiao/skills 目录。
+      S 正在读取…
+      S @type Landroid/widget/LinearLayout;
+  - access$000
+  - access$100
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$800
+  - access$900
+  - countInstalled
+  - listNames
+      S @type Ljava/util/ArrayList;
+      S skills
+      S @type Ljava/io/File;
+      S SKILL.md
+  - loadRef
+      S ..
+      S /
+      S \
+      S @type Ljava/lang/StringBuilder;
+      S skills/
+      S /references/
+      S references/
+  - loadSkill
+      S /references
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$SkillDoc;
+      S ..
+      S /
+      S @type Ljava/lang/StringBuilder;
+      S skills/
+      S /SKILL.md
+      S assets
+      S SKILL.md
+      S external
+      S 
+
+…（预览到此为止，完整说明书更长；模型装载时按 64KB 上限读取）
+      S @type Ljava/io/File;
+      S 读不到这本技能：内置与外置目录都没有它的 SKILL.md。外置技能应放在 /sdcard/hiao/skills/
+      S 技能名不合法
+  - openDetail
+      S ‹ 返回技能列表
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$3;
+      S @type Ljava/lang/StringBuilder;
+      S 正在试读「
+      S 」…
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$4;
+  - readAssetBounded
+  - readExternalBounded
+      S @type Ljava/io/File;
+      S /sdcard
+      S @type Ljava/lang/StringBuilder;
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/lang/Exception;
+      S 外置技能文件不存在: 
+      S 外置技能路径越出技能目录
+      S 外置技能根目录异常
+  - reloadList
+      S 正在读取…
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$1;
+  - renderDetail
+      S ‹ 返回技能列表
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$5;
+      S assets
+      S 内置
+      S 外置
+      S @type Ljava/lang/StringBuilder;
+      S 下面是这本技能的说明书开头（试读）。对 hiao 说「用 
+      S  这个技能……」或让它先装载技能，它就会照着做。
+      S 说明书附件（references）
+      S @type Ljava/lang/String;
+      S references/
+      S 试读
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$6;
+  - renderList
+      S 还没有装任何技能。第一步：把技能包（含 SKILL.md 的文件夹）放进手机的 /sdcard/hiao/skills/ 目录，然后回到本页点「返回」刷新。
+      S @type Ljava/lang/String;
+      S assets
+      S @type Lcom/hiao/v2/ui/capability/SkillsView$2;
+      S 内置
+      S 外置
+  - showRefPopup
+      S （空文件或读不到）
+      S @type Landroid/app/Activity;
+      S @type Landroid/app/AlertDialog$Builder;
+      S @type Ljava/lang/StringBuilder;
+      S  · 
+      S 好的
+      S 读到了 
+  - sourceOf
+      S skills
+      S assets
+      S @type Ljava/io/File;
+      S @type Ljava/lang/StringBuilder;
+      S /SKILL.md
+      S external
+      S 
+  - streamToText
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+      S @type Ljava/lang/String;
+      S @type Ljava/lang/StringBuilder;
+      S 
+
+…（超长截断）
+### Lcom/hiao/v2/ui/capability/WorkflowsView;  (WorkflowsView.java)
+  - <clinit>
+      S @type Ljava/io/File;
+      S /sdcard/hiao/workflows
+  - <init>
+      S 工作流
+      S 工作流是一套存好的固定步骤，hiao 会按顺序一步步做。对它说「把……保存成工作流」就能创建；在这里点「运行」立刻照着做一遍。其中需要你确认的操作，它会先停下来问。
+      S 正在读取…
+      S @type Landroid/widget/LinearLayout;
+  - access$000
+  - access$100
+  - access$1000
+  - access$1102
+  - access$1200
+  - access$200
+  - access$300
+  - access$400
+  - access$500
+  - access$600
+  - access$700
+  - access$800
+  - access$900
+  - confirmRun
+      S 已有工作流在运行，请等它结束（或切换页面稍后再来）
+      S @type Landroid/app/Activity;
+      S @type Landroid/app/AlertDialog$Builder;
+      S 运行工作流
+      S @type Ljava/lang/StringBuilder;
+      S 将开始执行《
+      S 》共 
+      S  步：
+· hiao 会按顺序真的动手做
+· 遇到需要确认的操作会先停下来问你
+· 全程最长约 20 分钟，期间可以继续用手机
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$8;
+      S 开始运行
+      S 先不
+  - doRun
+      S @type Ljava/lang/StringBuilder;
+      S 正在运行《
+      S 》…其中需要确认的操作会先问你。
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$9;
+  - formatMs
+      S @type Ljava/lang/StringBuilder;
+      S  毫秒
+      S  秒
+      S  分 
+  - openDetail
+      S ‹ 返回工作流列表
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$4;
+      S @type Ljava/lang/StringBuilder;
+      S 正在读取「
+      S 」…
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$5;
+  - readBounded
+      S @type Ljava/io/FileInputStream;
+      S @type Ljava/io/ByteArrayOutputStream;
+      S @type [B
+  - reloadList
+      S 正在读取…
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$1;
+  - renderDetail
+      S ‹ 返回工作流列表
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$6;
+      S description
+      S 
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$7;
+      S 运行这个工作流
+      S steps
+      S @type Ljava/lang/StringBuilder;
+      S 它会按顺序做这 
+      S  步
+      S 第 
+      S type
+      S prompt
+      S 让 hiao 做
+      S 调用手机功能
+      S text
+      S tool
+      S 调用工具：
+      S args
+      S 这个工作流没有步骤（可能是空保存）。
+  - renderDetailError
+  - renderList
+      S 还没有工作流。第一步：对 hiao 说一句，比如「把看看相册并挑 3 张照片讲讲内容，保存成工作流」，它存好后回到本页点「返回」刷新。
+      S @type Ljava/lang/StringBuilder;
+      S 共 
+      S  个工作流
+      S 
+      S （另有 
+      S  个文件损坏未列出）
+      S @type Lorg/json/JSONObject;
+      S name
+      S 未命名
+      S description
+      S steps
+      S  步
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$2;
+      S 详情
+      S @type Lcom/hiao/v2/ui/capability/WorkflowsView$3;
+      S 运行
+  - renderRunResult
+      S ok
+      S 《
+      S @type Ljava/lang/StringBuilder;
+      S 》跑完了
+      S 》中途停了
+      S steps
+      S 完成 
+      S  步 · 用时 
+      S ms
+      S 。每步结果：
+      S 第 
+      S i
+      S  步（
+      S  秒）
+      S tool
+      S  工具 
+      S 
+      S ：
+      S  hiao 说：
+      S summary
+      S （无内容）
+      S error
+      S 运行失败
+      S partial
+      S 停之前已完成 
+      S  步，修改后可重新运行。
+### Lcom/hiao/v2/ui/island/FloatingChatService$2;  (FloatingChatService.java)
+  - <init>
+### Lcom/hiao/v2/ui/island/FloatingChatService$7;  (FloatingChatService.java)
+  - <init>

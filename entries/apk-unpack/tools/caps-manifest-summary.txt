@@ -1,0 +1,8 @@
+version=1
+capability count=45
+ids: comms.assistant comms.amoo_call comms.share_text comms.open_url comms.notify apps.list_apps apps.start_app apps.ui_dump apps.ui_tap apps.ui_swipe apps.ui_click apps.ui_back apps.ui_home apps.ui_recents apps.shot files.ls files.read files.write files.mkdir files.rm files.mv files.cp files.stat system.clipboard system.toast system.battery system.volume system.brightness system.vibrate system.exec system.engine_start system.engine_stop system.engine_status system.backscreen system.torch system.media_control system.alarm_set system.timer_set system.sensor_read files.exif_read files.kb_import files.kb_search files.kb_list comms.connector_call files.kb_delete
+risk histogram: {"medium":23,"low":12,"high":10}
+requiresConfirmation=true: 17
+irreversible=true: 3
+with reversible: files.write->prev_content/write_prev, files.mkdir->rmdir/rmdir, files.rm->snapshot/restore, files.mv->snapshot/move
+audit digest: comms.connector_call
