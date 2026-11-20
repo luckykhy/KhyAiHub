@@ -164,6 +164,15 @@ jobs:
           channel: stable
           cache: true
 
+      # 需要的 4 个 repository secrets（Settings → Secrets and variables → Actions）：
+      #   KHY_ANDROID_KEYSTORE_BASE64  base64 编码的 khyos-release.keystore
+      #                                 （本机生成：certutil -encode keystore tmp.b64
+      #                                  或 openssl base64 -in keystore）
+      #   KHY_ANDROID_KEY_ALIAS        key.properties 里的 keyAlias，默认 khyos-release
+      #   KHY_ANDROID_STORE_PASSWORD   key.properties 里的 storePassword
+      #   KHY_ANDROID_KEY_PASSWORD     key.properties 里的 keyPassword
+      # build.gradle 的优先级是 KHY_ANDROID_* > key.properties > debug 回退，
+      # 所以这里只设环境变量、不落 key.properties 文件。
       - name: Materialize release keystore
         shell: bash
         env:
