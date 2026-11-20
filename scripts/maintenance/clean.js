@@ -36,6 +36,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 
@@ -47,35 +48,126 @@ const ROOT = path.resolve(__dirname, '..', '..');
  *   rebuild 怎么把它变回来（写不出来的不许登记）
  */
 const TARGETS = [
+  // ── Flutter 移动端（delivery/channel/mobile/khy-os-client-app）────────────
   {
-    rel: 'delivery/mobile/khy-os-client-app/build',
+    rel: 'delivery/channel/mobile/khy-os-client-app/build',
     group: 'build',
-    what: 'Flutter Android 构建缓存（~3.2 GB：native libs、DEX、APK 中间产物）',
+    what: 'Flutter Android 构建缓存（native libs、DEX、APK 中间产物）',
     rebuild: 'flutter build apk / flutter run（自动重建，首次 ~5 分钟）',
   },
   {
-    rel: 'delivery/mobile/khy-os-client-app/.dart_tool',
+    rel: 'delivery/channel/mobile/khy-os-client-app/.dart_tool',
     group: 'build',
-    what: 'Flutter/Dart 工具链缓存（~325 MB：build_runner、hooks）',
+    what: 'Flutter/Dart 工具链缓存（build_runner、hooks）',
     rebuild: 'flutter pub get（自动重建）',
   },
   {
-    rel: 'dist-electron',
+    rel: 'delivery/channel/mobile/khy-os-client-app/android/build',
     group: 'build',
-    what: 'Electron 构建输出（~328 MB）',
-    rebuild: 'pnpm run electron:dev 或 electron-builder',
+    what: 'Gradle 中间产物（AGP 输出）',
+    rebuild: 'cd delivery/channel/mobile/khy-os-client-app/android && ./gradlew assembleRelease',
   },
   {
-    rel: 'apps/khyos-desktop/dist-electron',
+    rel: 'delivery/channel/mobile/khy-os-client-app/android/app/build',
     group: 'build',
-    what: '桌面端 Electron 构建输出（~359 MB）',
-    rebuild: 'pnpm run electron:dev',
+    what: 'Gradle app 模块中间产物（AGP 输出）',
+    rebuild: 'cd delivery/channel/mobile/khy-os-client-app/android && ./gradlew assembleRelease',
   },
+  {
+    rel: 'delivery/channel/mobile/khy-os-client-app/android/.gradle',
+    group: 'build',
+    what: 'Gradle 本地缓存（依赖解析与增量状态）',
+    rebuild: 'cd delivery/channel/mobile/khy-os-client-app/android && ./gradlew assembleRelease（自动重建）',
+  },
+  // ── 前端（delivery/channel/web 与 khyquant）─────────────────────────────
+  {
+    rel: 'delivery/channel/web/ai-frontend/dist',
+    group: 'build',
+    what: 'ai-frontend 的 Vite 产物',
+    rebuild: 'npm run build --prefix delivery/channel/web/ai-frontend',
+  },
+  {
+    rel: 'delivery/channel/web/ai-frontend/coverage',
+    group: 'build',
+    what: 'ai-frontend 的 Vitest 覆盖率报告',
+    rebuild: 'npm run test --prefix delivery/channel/web/ai-frontend -- --coverage',
+  },
+  {
+    rel: 'delivery/channel/web/provider-hub/dist',
+    group: 'build',
+    what: 'provider-hub 的 Vite 产物',
+    rebuild: 'npm run build --prefix delivery/channel/web/provider-hub',
+  },
+  {
+    rel: 'delivery/channel/khyquant/frontend/dist',
+    group: 'build',
+    what: 'khyquant 前端的 Vite 产物',
+    rebuild: 'npm run build --prefix delivery/channel/khyquant/frontend',
+  },
+  // ── 桌面端（apps/khyos-desktop）────────────────────────────────────────
+  {
+    rel: 'apps/khyos-desktop/out',
+    group: 'build',
+    what: 'electron-vite 输出（main/preload/renderer/host/scheduler 五段）',
+    rebuild: 'npm run build --prefix apps/khyos-desktop',
+  },
+  // ── 产物单一根（entries/，LAYOUT-005）──────────────────────────────────
   {
     rel: 'entries/executables',
     group: 'build',
-    what: 'esbuild 模块 bundle、打包可执行文件与安装器输出（[LAYOUT-005] 单一根，2026-09-29 由 dist/ 迁入）',
-    rebuild: 'node packaging/build/esbuild-modules.js --prod（模块 bundle）/ node packaging/build/pack-executable.js --all（可执行）/ packaging/installer/build_installer.js（安装器）',
+    what: 'esbuild 模块 bundle、打包可执行文件与安装器输出（[LAYOUT-005] 单一根）',
+    rebuild: 'node works/ship/build/esbuild-modules.js --prod / node works/ship/build/pack-executable.js --all / node works/ship/installer/build_installer.js',
+  },
+  {
+    rel: 'entries/pip',
+    group: 'build',
+    what: 'pip 分发产物与 setuptools 中间目录（wheel / tar.gz / build / egg-info）',
+    rebuild: 'node scripts/release/build-pip-dist.js',
+  },
+  {
+    rel: 'entries/portable',
+    group: 'build',
+    what: '便携版打包产物（runtime / dev 两种形态的装配目录与 zip）',
+    rebuild: 'npm run portable:package --prefix delivery/extension/scripts/khy-portable',
+  },
+  // ── 品牌 3D 桌面链路（works/brand/khyos-desktop）───────────────────────
+  // 2026-11-20：原登记 out/frames 与 out/.verify 两个子路径，二者均已不存在，
+  // 且 .verify 的 rebuild 写的是 capture.mjs（--selftest）——该模式只在内存里渲染、
+  // 不落盘，真正的链路是 capture.mjs → assemble.mjs → extract-check.mjs。
+  // 改成与 BUILD-OUTPUTS.json 的 khyos-desktop-frames 同粒度（整个 out/）。
+  // 注意 out/_before、_after、_beforefix 是手写诊断快照、全仓零引用，且 capture.mjs
+  // 不会重建它们——要清这三个得单独裁决，别指望这条 rebuild。
+  {
+    rel: 'works/brand/khyos-desktop/out',
+    group: 'build',
+    what: '品牌桌面链路产物（frames/ 逐场景 PNG、dist/khyos-desktop.html、preview/contact 图与音频）',
+    rebuild: 'node works/brand/khyos-desktop/scripts/capture.mjs && node works/brand/khyos-desktop/scripts/assemble.mjs && node works/brand/khyos-desktop/scripts/extract-check.mjs',
+  },
+  {
+    rel: 'works/brand/khyos-desktop/dist',
+    group: 'build',
+    what: '品牌桌面链路交付物（dist/khyos-desktop.html，可离线双击运行）',
+    rebuild: 'npm run build --prefix works/brand/khyos-desktop',
+  },
+  // ── 内核构建产物（runtime/boot/kernel）────────────────────────────────
+  {
+    rel: 'runtime/boot/kernel/build',
+    group: 'build',
+    what: '内核编译输出（.o 对象与磁盘镜像）',
+    rebuild: 'cd runtime/boot/kernel && make（内核 Makefile 自动重建）',
+  },
+  {
+    rel: 'runtime/boot/kernel/moonbit/_build',
+    group: 'build',
+    what: 'MoonBit 工具链输出（工具写死路径，parasitic，见 BUILD-OUTPUTS.json）',
+    rebuild: 'cd runtime/boot/kernel/moonbit && moon build（每次自动重建）',
+  },
+  // ── 前端 vendor（parasitic：Vite dev server 直接服务 public/）──────────
+  {
+    rel: 'delivery/channel/web/ai-frontend/public/vendor',
+    group: 'vendor',
+    what: '前端 vendor 目录（muya 等，寄生路径：Vite dev server 与 build 直接服务）',
+    rebuild: 'node delivery/channel/web/ai-frontend/scripts/sync-md-vendor.mjs',
   },
   {
     rel: 'build',
@@ -84,34 +176,16 @@ const TARGETS = [
     rebuild: 'python -m build（或任一次 pip wheel 构建）',
   },
   {
-    rel: 'apps/ai-frontend/dist',
-    group: 'build',
-    what: 'ai-frontend 的 Vite 产物',
-    rebuild: 'npm run build --prefix apps/ai-frontend',
-  },
-  {
-    rel: 'software/khyquant/frontend/dist',
-    group: 'build',
-    what: 'khyquant 前端的 Vite 产物',
-    rebuild: 'npm run build --prefix software/khyquant/frontend',
-  },
-  {
     rel: 'coverage',
     group: 'build',
     what: '根级覆盖率报告',
     rebuild: 'npm run quality:pr（覆盖率环节自动生成）',
   },
   {
-    rel: 'services/backend/coverage',
-    group: 'build',
-    what: 'backend 覆盖率报告',
-    rebuild: 'cd services/backend && npx jest --coverage',
-  },
-  {
     rel: '.nyc_output',
     group: 'build',
     what: 'c8/nyc 的原始覆盖率数据',
-    rebuild: '同上，跑一次带覆盖率的测试即可',
+    rebuild: '跑一次带覆盖率的测试即可',
   },
   {
     rel: '.cache',
@@ -122,19 +196,26 @@ const TARGETS = [
   {
     rel: 'tmp-cov',
     group: 'build',
-    what: 'quality-gate 覆盖率跑测的临时工作区（k1/k2，内含各自 node_modules 与 c8 原始数据）',
+    what: 'quality-gate 覆盖率跑测的临时工作区（k1/k2，含各自 node_modules 与 c8 原始数据）',
     rebuild: 'npm run quality:gate / npm run cover-unit 每次跑测时重新生成',
   },
+  // ── vendor 组（需 --include-vendor）───────────────────────────────────
   {
-    rel: 'extensions/tools/khy-markdown/vendor',
+    rel: 'delivery/extension/tools/khy-markdown/vendor',
     group: 'vendor',
-    what: 'muya WYSIWYG 引擎（约 11 MB，不进 git）',
-    rebuild: 'node extensions/tools/khy-markdown/muya-embed/ensure-vendor.mjs',
+    what: 'muya WYSIWYG 引擎（esbuild 自打包产物，不进 git）',
+    rebuild: 'node delivery/extension/tools/khy-markdown/muya-embed/ensure-vendor.mjs',
+  },
+  {
+    rel: 'delivery/extension/tools/khy-dsh-compat/vendor',
+    group: 'vendor',
+    what: 'khy-dsh-compat 的自打包产物',
+    rebuild: 'node delivery/extension/tools/khy-dsh-compat/ensure-vendor.mjs',
   },
   {
     rel: 'docs/19_资产/site/mermaid.min.js',
     group: 'vendor',
-    what: '文档站 Mermaid 引擎（约 3.3 MB，不进 git）',
+    what: '文档站 Mermaid 引擎（esbuild 自打包，不进 git）',
     rebuild: 'npm run docs:mermaid',
   },
 ];
@@ -173,6 +254,36 @@ const PROTECTED_EXACT = [
   'scripts',
   'docs',
   'packaging',
+  // 方案 P 后的现役源码根：登记里若出现这些前缀，说明是手滑而非产物
+  'runtime',
+  'delivery',
+  'entries',
+  'works',
+  'works/data',
+  'works/brand',
+  // 2026-11-20 补：归档根本身。上面三个 works/ 子项唯独漏了它，而它是其它所有
+  // 损失的唯一恢复源（dist-electron-pet 仍被 package-and-launch.ps1 当回退启动位）。
+  'works/backup',
+];
+
+/**
+ * 保护清单（精确文件级）：这些**文件本身**不允许登记为清理目标。
+ *
+ * 为什么单列一张表而不用 PROTECTED_SUBTREE 罩住 android/：那会连带作废已登记的
+ * `android/build`、`android/app/build`、`android/.gradle` 三条合法产物，让整表校验
+ * exit 2、cleaner 整体瘫痪。所以只点名到文件。
+ *
+ * 为什么必须有这张表：这四个文件**都没有被 git 跟踪**（.gitignore 屏蔽），
+ * 因此下面那道 git-aware 删除守卫看不见它们。签名密钥一旦没了，
+ * 同一签名身份永远无法复现，所有已装机客户端只能手工迁移——
+ * build-android.ps1 的 rebuild 声明也随之变成"有命令、不可达"。
+ */
+const PROTECTED_FILE_EXACT = [
+  'delivery/channel/mobile/khy-os-client-app/android/khyos-release.keystore',
+  'delivery/channel/mobile/khy-os-client-app/android/key.properties',
+  'delivery/channel/mobile/khy-os-client-app/android/gradlew',
+  'delivery/channel/mobile/khy-os-client-app/android/gradlew.bat',
+  'delivery/channel/mobile/khy-os-client-app/android/build.gradle.kts',
 ];
 
 const toPosix = (p) => p.split(path.sep).join('/');
@@ -206,7 +317,37 @@ function validate(rel) {
   if (PROTECTED_EXACT.includes(posix)) {
     return `是受保护的目录本身：${posix}（只能登记它内部的构建产物）`;
   }
+  if (PROTECTED_FILE_EXACT.includes(posix)) {
+    return `是签名密钥/构建入口文件本身：${posix}（不被 git 跟踪，删了不可恢复）`;
+  }
   return null;
+}
+
+/**
+ * 问 git：某个路径下有多少已跟踪文件。
+ *
+ * 2026-11-20 事故后新增。此前 clean.js 对 git 完全无感知，删除是裸 fs.rmSync，
+ * 于是登记表一旦手滑罩住已跟踪文件，一次 clean 就把版本控制内容删掉——
+ * apps/khyos-desktop/dist-ts 的 61 个 tsc 产物正是这么没的，只能靠 git checkout 捞回。
+ * 现在删除前先问 git，有已跟踪文件就整体拒绝。
+ *
+ * fail-closed：git 查询本身失败时返回 error 而不是空数组。宁可拒绝删除，
+ * 也不要在"不知道有没有跟踪文件"时动手。
+ *
+ * @returns {{files: string[]}|{error: string}}
+ */
+function gitTrackedUnder(abs) {
+  let out;
+  try {
+    out = execFileSync('git', ['ls-files', '--', abs], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+  return { files: out.split(/\r?\n/).filter(Boolean) };
 }
 
 /** 递归量一个路径的字节数（文件直接返回大小）。 */
@@ -288,6 +429,20 @@ for (const t of selected) {
   console.log(`  ${apply ? '✂' : '·'}  ${t.rel}  —  ${mb(bytes)}`);
   console.log(`       内容：${t.what}`);
   console.log(`       重建：${t.rebuild}`);
+
+  // ── git-aware 删除守卫（2026-11-20 后新增）─────────────────────────────
+  // 干跑和真删都执行，让干跑也能提前暴露"这条登记罩住了版本控制内容"。
+  const gitState = gitTrackedUnder(abs);
+  if (gitState.error) {
+    console.log(`  ⛔ ${t.rel} — git 查询失败（${gitState.error}），拒绝删除`);
+    console.log('       （fail-closed：不知道有没有已跟踪文件就不动手。git 不在 PATH？）');
+    continue;
+  }
+  if (gitState.files.length) {
+    console.log(`  ⛔ ${t.rel} — 含 ${gitState.files.length} 个 git 已跟踪文件，拒绝删除`);
+    console.log('       （clean.js 不得删版本控制内容。该登记要么写错了路径，要么这些文件本应 git rm --cached）');
+    continue;
+  }
 
   if (apply) {
     try {
