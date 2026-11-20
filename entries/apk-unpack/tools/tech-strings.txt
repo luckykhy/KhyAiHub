@@ -1,0 +1,592 @@
+591
+事件流: GET /events (SSE) · 审批: GET /approvals + POST /approve
+MCP: http://127.0.0.1:8898/mcp?token=
+ 步禁止 workflow_run（禁止嵌套工作流）
+这是 hiao v2 为官方 DSH 引擎准备的默认工作区（DSH_HOME/workspace）。
+# 由 hiao v2 宿主生成：官方 dsh 在 Linux 经 xdg-user-dir 定位系统「文档」目录，
+# 把 workspace-controller.documentsDirectory 指到 $DSH_HOME/Documents，
+  name: "@deepseek-ai/dsh-api-workspace-controller"
+    documentsDirectory: !!js process.env.DSH_HOME + "/Documents"
+# 由 hiao v2 宿主生成：把官方 dsh 的 MCP 客户端指向本机桥（127.0.0.1:8898 的 /mcp 路由）。
+# config 字段 = @deepseek-ai/dsh-mcp-client 的 StreamableHttpConfig（docs/config-catalog.md）：
+# serverName 须匹配 [A-Za-z0-9_-]{1,32}（docs/subsystems/mcp.md），注入模型的工具名形如 mcp__hiao__<桥侧原名>。
+    - id: mcp-hiao
+      name: "@deepseek-ai/dsh-mcp-client"
+        url: http://127.0.0.1:8898/mcp?token=
+/SKILL.md
+/approvals
+/audit
+/mcp
+/sdcard/hiao/skills
+/sdcard/hiao/workflows
+APPROVAL
+APPROVALS_LISTENER
+APPROVAL_BLOCKING_LISTENER
+APPROVAL_POP_DELAY_MS
+ApprovalActions.java
+ApprovalCopy.java
+Approvals
+Approvals.java
+ApprovalsActivity.java
+ApprovalsScreen.java
+AuditListener
+AuditLog
+AuditLog.java
+BrainRouter.java
+BridgeService
+BridgeService.java
+CHANNEL_BRIDGE
+CONTAINER_APPROVALS
+CapabilityHome 未就绪，能力 Tab 降级 CapsScreen: 
+CapabilityHome 非 View，降级 CapsScreen
+CapabilityHome.java
+CapsActivity.java
+CapsEngine
+CapsEngine.java
+CapsScreen.java
+ConnectorStore
+ConnectorStore.java
+ConnectorTools.java
+ConnectorsView.java
+DSH_HOME
+DSH_PERMISSION_MODE
+DshEngine.java
+ENGINE_LISTENER
+EXTERNAL_SKILLS_DIR
+EngineActivity.java
+EngineAssets 未初始化（App.onCreate 应先调 EngineHost.init）
+EngineAssets.java
+EngineHost.java
+EngineInstaller.java
+EngineStreamCallback
+EngineTools.java
+EngineWatcher.java
+GovernanceTools.java
+HookEngine
+HookEngine.java
+HookStore
+HookStore.java
+HookTools.java
+HooksView.java
+HttpBridge
+HttpBridge.java
+LEASE_TTL_MS
+LOCKED_DSH
+Lcom/hiao/v2/brain/BrainRouter;
+Lcom/hiao/v2/brain/DeepSeekClient;
+Lcom/hiao/v2/brain/ModelsList$1;
+Lcom/hiao/v2/brain/ModelsList$2;
+Lcom/hiao/v2/brain/ModelsList$Cb;
+Lcom/hiao/v2/brain/ModelsList;
+Lcom/hiao/v2/brain/Net$Resp;
+Lcom/hiao/v2/brain/Net;
+Lcom/hiao/v2/brain/OpenAiCompatClient;
+Lcom/hiao/v2/brain/RawBody;
+Lcom/hiao/v2/brain/SseChat$1;
+Lcom/hiao/v2/brain/SseChat$StreamState;
+Lcom/hiao/v2/brain/SseChat$ToolSlot;
+Lcom/hiao/v2/brain/SseChat;
+Lcom/hiao/v2/brain/StreamCallback;
+Lcom/hiao/v2/bridge/BootReceiver;
+Lcom/hiao/v2/bridge/BridgeService$1;
+Lcom/hiao/v2/bridge/BridgeService$2;
+Lcom/hiao/v2/bridge/BridgeService$3;
+Lcom/hiao/v2/bridge/BridgeService$4;
+Lcom/hiao/v2/bridge/BridgeService$5;
+Lcom/hiao/v2/bridge/BridgeService;
+Lcom/hiao/v2/bridge/HttpBridge$1;
+Lcom/hiao/v2/bridge/HttpBridge$2;
+Lcom/hiao/v2/bridge/HttpBridge;
+Lcom/hiao/v2/bridge/Mailbox$1;
+Lcom/hiao/v2/bridge/Mailbox;
+Lcom/hiao/v2/bridge/McpRoute;
+Lcom/hiao/v2/bridge/SseHub$1;
+Lcom/hiao/v2/bridge/SseHub$Client;
+Lcom/hiao/v2/bridge/SseHub;
+Lcom/hiao/v2/core/ConnectorStore;
+Lcom/hiao/v2/core/DshEngine$1;
+Lcom/hiao/v2/core/DshEngine$ActivityStatus;
+Lcom/hiao/v2/core/DshEngine$Listener;
+Lcom/hiao/v2/core/DshEngine;
+Lcom/hiao/v2/core/HookEngine$1;
+Lcom/hiao/v2/core/HookEngine$2;
+Lcom/hiao/v2/core/HookEngine$3;
+Lcom/hiao/v2/core/HookEngine$4;
+Lcom/hiao/v2/core/HookEngine;
+Lcom/hiao/v2/core/HookStore;
+Lcom/hiao/v2/core/MemoryStore$1;
+Lcom/hiao/v2/core/MemoryStore$Scored;
+Lcom/hiao/v2/core/MemoryStore;
+Lcom/hiao/v2/core/WorkerSession$EngineStreamCallback;
+Lcom/hiao/v2/core/engine/EngineAssets$Probe;
+Lcom/hiao/v2/core/engine/EngineAssets;
+Lcom/hiao/v2/core/engine/EngineHost$1;
+Lcom/hiao/v2/core/engine/EngineHost$2;
+Lcom/hiao/v2/core/engine/EngineHost$3;
+Lcom/hiao/v2/core/engine/EngineHost$4;
+Lcom/hiao/v2/core/engine/EngineHost;
+Lcom/hiao/v2/core/engine/EngineInstaller;
+Lcom/hiao/v2/core/engine/EngineTools;
+Lcom/hiao/v2/core/engine/EngineWatcher$1;
+Lcom/hiao/v2/core/engine/EngineWatcher$2;
+Lcom/hiao/v2/core/engine/EngineWatcher$Listener;
+Lcom/hiao/v2/core/engine/EngineWatcher;
+Lcom/hiao/v2/governance/ActionsLog;
+Lcom/hiao/v2/governance/Approvals$BlockingListener;
+Lcom/hiao/v2/governance/Approvals$Pending;
+Lcom/hiao/v2/governance/Approvals;
+Lcom/hiao/v2/governance/AuditLog$AuditListener;
+Lcom/hiao/v2/governance/AuditLog;
+Lcom/hiao/v2/governance/CapsEngine$ManifestFault;
+Lcom/hiao/v2/governance/CapsEngine;
+Lcom/hiao/v2/governance/Compensator;
+Lcom/hiao/v2/governance/Policy$Decision;
+Lcom/hiao/v2/governance/Policy;
+Lcom/hiao/v2/tools/ConnectorTools;
+Lcom/hiao/v2/tools/GovernanceTools;
+Lcom/hiao/v2/tools/HookStore;
+Lcom/hiao/v2/tools/HookTools;
+Lcom/hiao/v2/tools/Memory;
+Lcom/hiao/v2/tools/MemoryTools;
+Lcom/hiao/v2/tools/SkillTools;
+Lcom/hiao/v2/tools/WorkflowTools;
+Lcom/hiao/v2/ui/ApprovalsActivity;
+Lcom/hiao/v2/ui/ApprovalsScreen$1;
+Lcom/hiao/v2/ui/ApprovalsScreen$2;
+Lcom/hiao/v2/ui/ApprovalsScreen$3;
+Lcom/hiao/v2/ui/ApprovalsScreen$4;
+Lcom/hiao/v2/ui/ApprovalsScreen$5$1$1;
+Lcom/hiao/v2/ui/ApprovalsScreen$5$1;
+Lcom/hiao/v2/ui/ApprovalsScreen$5;
+Lcom/hiao/v2/ui/ApprovalsScreen$6$1;
+Lcom/hiao/v2/ui/ApprovalsScreen$6;
+Lcom/hiao/v2/ui/ApprovalsScreen$7$1;
+Lcom/hiao/v2/ui/ApprovalsScreen$7;
+Lcom/hiao/v2/ui/ApprovalsScreen;
+Lcom/hiao/v2/ui/CapsActivity;
+Lcom/hiao/v2/ui/CapsScreen$10;
+Lcom/hiao/v2/ui/CapsScreen$11$1;
+Lcom/hiao/v2/ui/CapsScreen$11;
+Lcom/hiao/v2/ui/CapsScreen$12;
+Lcom/hiao/v2/ui/CapsScreen$13;
+Lcom/hiao/v2/ui/CapsScreen$14;
+Lcom/hiao/v2/ui/CapsScreen$15$1;
+Lcom/hiao/v2/ui/CapsScreen$15;
+Lcom/hiao/v2/ui/CapsScreen$16;
+Lcom/hiao/v2/ui/CapsScreen$17;
+Lcom/hiao/v2/ui/CapsScreen$18$1;
+Lcom/hiao/v2/ui/CapsScreen$18;
+Lcom/hiao/v2/ui/CapsScreen$1;
+Lcom/hiao/v2/ui/CapsScreen$2$1;
+Lcom/hiao/v2/ui/CapsScreen$2;
+Lcom/hiao/v2/ui/CapsScreen$3;
+Lcom/hiao/v2/ui/CapsScreen$4$1;
+Lcom/hiao/v2/ui/CapsScreen$4;
+Lcom/hiao/v2/ui/CapsScreen$5;
+Lcom/hiao/v2/ui/CapsScreen$6;
+Lcom/hiao/v2/ui/CapsScreen$7$1;
+Lcom/hiao/v2/ui/CapsScreen$7;
+Lcom/hiao/v2/ui/CapsScreen$8;
+Lcom/hiao/v2/ui/CapsScreen$9;
+Lcom/hiao/v2/ui/CapsScreen;
+Lcom/hiao/v2/ui/EngineActivity$1;
+Lcom/hiao/v2/ui/EngineActivity$2;
+Lcom/hiao/v2/ui/EngineActivity;
+Lcom/hiao/v2/ui/approval/ApprovalActions;
+Lcom/hiao/v2/ui/approval/ApprovalCopy;
+Lcom/hiao/v2/ui/capability/CapPage$1;
+Lcom/hiao/v2/ui/capability/CapPage$2;
+Lcom/hiao/v2/ui/capability/CapPage$3;
+Lcom/hiao/v2/ui/capability/CapPage$Nav;
+Lcom/hiao/v2/ui/capability/CapPage;
+Lcom/hiao/v2/ui/capability/CapUi$1;
+Lcom/hiao/v2/ui/capability/CapUi$2;
+Lcom/hiao/v2/ui/capability/CapUi$Segmented$1;
+Lcom/hiao/v2/ui/capability/CapUi$Segmented$Listener;
+Lcom/hiao/v2/ui/capability/CapUi$Segmented;
+Lcom/hiao/v2/ui/capability/CapUi;
+Lcom/hiao/v2/ui/capability/CapabilityHome$10;
+Lcom/hiao/v2/ui/capability/CapabilityHome$11;
+Lcom/hiao/v2/ui/capability/CapabilityHome$12;
+Lcom/hiao/v2/ui/capability/CapabilityHome$13$1;
+Lcom/hiao/v2/ui/capability/CapabilityHome$13;
+Lcom/hiao/v2/ui/capability/CapabilityHome$1;
+Lcom/hiao/v2/ui/capability/CapabilityHome$2;
+Lcom/hiao/v2/ui/capability/CapabilityHome$3;
+Lcom/hiao/v2/ui/capability/CapabilityHome$4;
+Lcom/hiao/v2/ui/capability/CapabilityHome$5;
+Lcom/hiao/v2/ui/capability/CapabilityHome$6;
+Lcom/hiao/v2/ui/capability/CapabilityHome$7;
+Lcom/hiao/v2/ui/capability/CapabilityHome$8;
+Lcom/hiao/v2/ui/capability/CapabilityHome$9;
+Lcom/hiao/v2/ui/capability/CapabilityHome$CountFn;
+Lcom/hiao/v2/ui/capability/CapabilityHome;
+Lcom/hiao/v2/ui/capability/ConnectorsView$10;
+Lcom/hiao/v2/ui/capability/ConnectorsView$11;
+Lcom/hiao/v2/ui/capability/ConnectorsView$12$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$12;
+Lcom/hiao/v2/ui/capability/ConnectorsView$13;
+Lcom/hiao/v2/ui/capability/ConnectorsView$14$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$14;
+Lcom/hiao/v2/ui/capability/ConnectorsView$15$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$15;
+Lcom/hiao/v2/ui/capability/ConnectorsView$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$2$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$2;
+Lcom/hiao/v2/ui/capability/ConnectorsView$3;
+Lcom/hiao/v2/ui/capability/ConnectorsView$4$1;
+Lcom/hiao/v2/ui/capability/ConnectorsView$4;
+Lcom/hiao/v2/ui/capability/ConnectorsView$5;
+Lcom/hiao/v2/ui/capability/ConnectorsView$6;
+Lcom/hiao/v2/ui/capability/ConnectorsView$7;
+Lcom/hiao/v2/ui/capability/ConnectorsView$8;
+Lcom/hiao/v2/ui/capability/ConnectorsView$9;
+Lcom/hiao/v2/ui/capability/ConnectorsView;
+Lcom/hiao/v2/ui/capability/HelpView$1;
+Lcom/hiao/v2/ui/capability/HelpView;
+Lcom/hiao/v2/ui/capability/HooksView$10$1$1;
+Lcom/hiao/v2/ui/capability/HooksView$10$1;
+Lcom/hiao/v2/ui/capability/HooksView$10;
+Lcom/hiao/v2/ui/capability/HooksView$11$1;
+Lcom/hiao/v2/ui/capability/HooksView$11;
+Lcom/hiao/v2/ui/capability/HooksView$12$1;
+Lcom/hiao/v2/ui/capability/HooksView$12;
+Lcom/hiao/v2/ui/capability/HooksView$13;
+Lcom/hiao/v2/ui/capability/HooksView$14$1;
+Lcom/hiao/v2/ui/capability/HooksView$14;
+Lcom/hiao/v2/ui/capability/HooksView$1;
+Lcom/hiao/v2/ui/capability/HooksView$2$1;
+Lcom/hiao/v2/ui/capability/HooksView$2;
+Lcom/hiao/v2/ui/capability/HooksView$3$1$1;
+Lcom/hiao/v2/ui/capability/HooksView$3$1;
+Lcom/hiao/v2/ui/capability/HooksView$3;
+Lcom/hiao/v2/ui/capability/HooksView$4;
+Lcom/hiao/v2/ui/capability/HooksView$5;
+Lcom/hiao/v2/ui/capability/HooksView$6;
+Lcom/hiao/v2/ui/capability/HooksView$7;
+Lcom/hiao/v2/ui/capability/HooksView$8;
+Lcom/hiao/v2/ui/capability/HooksView$9;
+Lcom/hiao/v2/ui/capability/HooksView;
+Lcom/hiao/v2/ui/capability/KbView$10$1;
+Lcom/hiao/v2/ui/capability/KbView$10;
+Lcom/hiao/v2/ui/capability/KbView$11;
+Lcom/hiao/v2/ui/capability/KbView$12;
+Lcom/hiao/v2/ui/capability/KbView$13;
+Lcom/hiao/v2/ui/capability/KbView$1;
+Lcom/hiao/v2/ui/capability/KbView$2;
+Lcom/hiao/v2/ui/capability/KbView$3;
+Lcom/hiao/v2/ui/capability/KbView$4$1;
+Lcom/hiao/v2/ui/capability/KbView$4;
+Lcom/hiao/v2/ui/capability/KbView$5;
+Lcom/hiao/v2/ui/capability/KbView$6;
+Lcom/hiao/v2/ui/capability/KbView$7$1;
+Lcom/hiao/v2/ui/capability/KbView$7;
+Lcom/hiao/v2/ui/capability/KbView$8$1;
+Lcom/hiao/v2/ui/capability/KbView$8;
+Lcom/hiao/v2/ui/capability/KbView$9$1;
+Lcom/hiao/v2/ui/capability/KbView$9;
+Lcom/hiao/v2/ui/capability/KbView;
+Lcom/hiao/v2/ui/capability/SkillsView$1$1;
+Lcom/hiao/v2/ui/capability/SkillsView$1;
+Lcom/hiao/v2/ui/capability/SkillsView$2;
+Lcom/hiao/v2/ui/capability/SkillsView$3;
+Lcom/hiao/v2/ui/capability/SkillsView$4$1;
+Lcom/hiao/v2/ui/capability/SkillsView$4;
+Lcom/hiao/v2/ui/capability/SkillsView$5;
+Lcom/hiao/v2/ui/capability/SkillsView$6$1$1;
+Lcom/hiao/v2/ui/capability/SkillsView$6$1;
+Lcom/hiao/v2/ui/capability/SkillsView$6;
+Lcom/hiao/v2/ui/capability/SkillsView$SkillDoc;
+Lcom/hiao/v2/ui/capability/SkillsView;
+Lcom/hiao/v2/ui/capability/WorkflowsView$1$1;
+Lcom/hiao/v2/ui/capability/WorkflowsView$1;
+Lcom/hiao/v2/ui/capability/WorkflowsView$2;
+Lcom/hiao/v2/ui/capability/WorkflowsView$3;
+Lcom/hiao/v2/ui/capability/WorkflowsView$4;
+Lcom/hiao/v2/ui/capability/WorkflowsView$5$1;
+Lcom/hiao/v2/ui/capability/WorkflowsView$5;
+Lcom/hiao/v2/ui/capability/WorkflowsView$6;
+Lcom/hiao/v2/ui/capability/WorkflowsView$7;
+Lcom/hiao/v2/ui/capability/WorkflowsView$8;
+Lcom/hiao/v2/ui/capability/WorkflowsView$9$1;
+Lcom/hiao/v2/ui/capability/WorkflowsView$9;
+Lcom/hiao/v2/ui/capability/WorkflowsView;
+MATCH_APPROVAL
+MAX_HOOKS
+MAX_SKILL_BYTES
+McpRoute.java
+Memory.java
+MemoryStore
+MemoryStore.java
+MemoryTools.java
+NON_CAPABILITY_TOOLS
+RELEASE
+SEG_AUDIT
+SEG_CAPS
+SEG_LEASES
+SESSION_LEASE_MAX_CALLS
+SESSION_LEASE_TTL_MS
+SKILL.md
+SkillDoc
+SkillTools.java
+SkillsView.java
+WorkflowTools.java
+WorkflowsView.java
+aboutAuditChip
+action.type 只能是 notify / webhook / prompt
+addAuditListener
+applyApprovals
+approvalAutoCollapse
+approvalCard
+approvalCount
+approvalHint
+approvalListener
+approvalPop
+approvalWaitMs
+approvalWaitStartMs
+approvalsBox
+approvalsChanged
+approvalsScreen
+audit-
+audit.jsonl
+audit.log 非法: 
+audit.redact 元素必须为字符串: 
+audit.redact 必须为数组: 
+audit/call
+audit/call data 构造失败: 
+auditChipTv
+auditCountTv
+auditHashTv
+auditListener
+awaitingApproval
+bin/dsh.js
+bridge-accept
+bridge-req-
+bridgeChip
+bridgeToken
+buildApprovalBanner
+buildApprovalButton
+buildApprovalsBackRow
+buildAuditSeg
+buildCapabilityHome
+buildCapsSeg
+buildEngineGroup
+buildLeaseSeg
+cancelApproval
+capabilityHome
+capabilityId
+capabilityIdOf
+caps 拒绝审计写入失败: 
+caps 拒绝（清单不可用）
+caps 清单不可用或该调用未声明能力，仅拒绝本次调用
+caps 清单不可用（deny-all）: 
+caps 清单不可用，拒绝签发
+caps 清单缺失或损坏: 
+caps-manifest.json
+capsBox
+capsById
+capsChip
+capsData
+capsNavRow
+capsScreen
+checkLease
+com.hiao.v2.ui.capability.CapabilityHome
+com.stepos.aiengine
+com.stepos.aiengine.action.MODEL_MANAGER
+comms.connector_call
+connectorList
+connectorPick
+connectorRemove
+connectorSave
+connectorTrust
+connectors.json
+connectors.json rename 失败
+connectors.json 写回失败: 
+connectors.json 损坏，已备份并重起空表: 
+consumeLease
+doWebhook
+dsh web: (https?://\S+)
+dsh-engine-home
+dsh-worker-
+dsh/package.json
+dsh2
+dsh2/jobs.json
+dsh2/mailbox/export
+dshEntry
+dshHome
+dshVersion
+elapsedMinusApprovalWait
+engine-host
+engine-runtime.zip
+engine-stdout
+engine-watch
+engine.log
+engine/runtime.zip
+engineChip
+engineListener
+engineOpenBtn
+engineRoot
+engineStartBtn
+engineStateLabel
+engineStopBtn
+engineSub
+event 只能是 task_finished / tool_executed / approval_requested
+exportAudit
+findCapability
+findLeaseLocked
+写入: adb shell run-as com.hiao.v2 sh -c 'cat > files/dsh2/mailbox/cmd_1.json'
+读取: adb shell run-as com.hiao.v2 cat files/dsh2/mailbox/result_1.json
+hiao:bridge
+hiao_v2_bridge
+hook-worker
+hookList
+hookRemove
+hookSave
+hooks.json
+hooks.json rename 失败
+hooks.json 写回失败: 
+hooks.json 损坏，已备份并重起空表: 
+http://127.0.0.1:8898/mcp?token=
+indexOfLeaseLocked
+issueLease
+latestApprovals
+lease/consumed
+lease/consumed 审计写入失败: 
+lease/issued
+lease/issued 审计写入失败: 
+lease/revoked
+lease/revoked 审计写入失败: 
+leaseId
+leaseListBox
+leaseRequired
+leaseRow
+leaseStateColor
+leases.json
+leases.json 损坏，已备份 
+leases.json 第 
+leases.json 缺少 leases 数组
+leasesData
+leasesFile
+leasesJson
+lib/node_modules/@deepseek-ai/dsh/package.json
+loadConnectorTrust
+loadLeasesLocked
+loadSkill
+mApprovalBox
+maxMemory
+mcpEnabled
+mcpRespond
+mcpSwitch
+mcpTokenView
+mcpToolsTv
+mcpUrlFull
+mcpUrlMasked
+memory.json
+memory.json rename 失败
+memory.json 写回失败: 
+memory.json 损坏，已备份 
+memory.json 第 
+memory.json 缺少 items 数组
+memorySearch
+memoryWrite
+name 传技能名装载 SKILL.md；ref 可选读技能目录内 references/ 文档；外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md（含 SKILL.md 的一级目录自动入列）
+node 或 dsh 入口缺失
+node_modules/@deepseek-ai/dsh/package.json
+notifyApproval
+notify|webhook|prompt
+onApprovalRequested
+onAudit
+onBridgeTokenRotated
+onEngineEvent
+onEngineState
+onOpenApprovals
+openApprovals
+openCaps
+pickConnector
+pickedConnector
+readExternalSkill
+releaseForGc
+removeAuditListener
+renderAudit
+renderCaps
+renderEngine
+renderLeases
+resolveApproval
+resolveApprovalViaActions
+revokeLease
+riskFromCapability
+setAllCaps
+setApprovalCount
+setApprovalHint
+setApprovals
+setAwaitingApproval
+setMcpEnabled
+skillList
+skillListTool
+skillLoad
+skills/
+skills/geo-photo/data/admin.json
+skills/geo-photo/data/area_codes.json
+skills/geo-photo/data/calling_codes.json
+skills/geo-photo/data/country_names.json
+skills/geo-photo/data/driving_side.json
+skills/geo-photo/data/plates.json
+skills/geo-photo/data/territories.json
+syncPanelEngineState
+task_finished|tool_executed|approval_requested
+usr/lib/node_modules/@deepseek-ai/dsh/package.json
+val$approvalId
+val$caps
+val$lease
+val$leaseId
+val$leases
+verifyAboutAudit
+waitingApproval
+webhook 执行失败: 
+webhook 时必填：连接器名（须已开免审批）
+webhook 调用失败: 
+webhook 连接器不存在或未开免审批，已跳过: 
+webhook 钩子未绑定连接器: 
+webhookBox
+workflowList
+workflowRun
+workflowSave
+writeWorkflowLocked
+保存失败：action_type 只能是 notify / webhook / prompt
+保存失败：approval_requested 事件只支持 notify 动作
+保存失败：webhook 动作需要 action_connector（连接器名）
+保存失败：webhook 必须绑定已开「免审批」的连接器（
+保存或更新一个自动化钩子（名字唯一，同名即更新）：事件发生时自动执行动作。event 取 task_finished（任务结束）| tool_executed（执行了一个工具）| approval_requested（等你确认时）；action_type 取 notify（发系统通知）| webhook（调用已「免审批」的连接器）| prompt（提交一个新任务，最多 4 步）。approval_requested 只支持 notify；webhook 必须绑定已开「免审批」的连接器。match 是过滤条件，只允许该事件真实携带的字段：task_finished 用 taskId/ok/error，tool_executed 用 tool/risk，approval_requested 用 kind（值为完整匹配，可省略=全部匹配）。
+停止官方 DSH 引擎进程。DSH_HOME 里的会话与工作区数据保留；重启后引擎会生成新的访问令牌。
+列出已安装的技能（内置打包技能与外置 /sdcard/hiao/skills 技能包双源，标明来源）。要看技能全文用 skill_load。
+删除一个外部服务连接器（引用它的钩子 webhook 动作将失效）。
+同名覆盖保存；用 workflow_run 执行
+启动官方 DSH 引擎宿主：首次会解压内置运行时（arm64 node + @deepseek-ai/dsh），随后在本机回环 127.0.0.1:3080 拉起官方 Web 服务。异步触发，用 engine_status 轮询状态。
+在个人知识库（kb_import 导入的文档）里按关键词检索：中文按相邻二字组、英文按整词（小写）匹配，按覆盖×密度打分取前 8；返回文档标题、块序号与片段。适合回查已导入的资料原文；个人长记忆请用 memory_search。
+外置技能文件不存在: /sdcard/hiao/skills/
+外置技能路径越出 /sdcard/hiao/skills: 
+对话和记录存在本机应用的私有目录（设置里可一键擦除）；知识库文档存在手机的 /sdcard/hiao/kb；技能放在 /sdcard/hiao/skills。没有任何数据自动上传。
+工作流名（workflow_save 保存的名字）
+技能是教 hiao 做事的说明书：hiao 先读它，再照着做。内置技能随应用自带；你也可以把技能包放进手机的 /sdcard/hiao/skills 目录。
+把一组固定步骤保存为可复用工作流（/sdcard/hiao/workflows/<name>.json，同名覆盖）。steps 每步 {type:"prompt",text} 或 {type:"tool",tool,args?}；prompt 步的 text 与 tool 步的 args（仅字符串值）里可写 {{变量名}} 与 {{last}}（上一步结果）占位符。最多 8 步；tool 步禁止 workflow_run；tool 名必须在工具清单内。
+旧 connectors.json 删除失败
+旧 hooks.json 删除失败
+旧 memory.json 删除失败
+查询官方 DSH 引擎宿主状态：state（missing/extracting/ready/starting/running/stopped/error）、引擎版本、访问基址与安装进度。
+清单缺少 capabilities 数组
+用途说明（workflow_list 展示）
+禁止嵌套 workflow（workflow_run 不得作为 tool 步）
+组装 approval 广播失败: 
+缺少 audit 声明: 
+缺少钩子 id（hook_list 里取）
+装载 hiao 技能书（Agent Skill 标准的 SKILL.md 玩法文档）：name 缺省列出已装技能（内置 + 外置）；name=技能名返回全文（source=assets|external 标明来源），照着执行。内置优先，当前可用：geo-photo（照片地理定位/网络迷踪，改编自 geo-sleuth）；外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md 即自动入列。
+要看技能全文用 skill_load（name 传技能名）；同名时内置优先，外置技能包放 /sdcard/hiao/skills/<技能名>/SKILL.md 即自动入列
+读不到这本技能：内置与外置目录都没有它的 SKILL.md。外置技能应放在 /sdcard/hiao/skills/
+还没有装任何技能。第一步：把技能包（含 SKILL.md 的文件夹）放进手机的 /sdcard/hiao/skills/ 目录，然后回到本页点「返回」刷新。
+连接器名（connector_save 保存的名字）
+重启引擎后 MCP 互连生效
+钩子 id（hook_list 里取）
+（先用 connector_save 保存）
+（用 workflow_list 查看已保存列表）
+，dsh 入口=
+；外置 /sdcard/hiao/skills/

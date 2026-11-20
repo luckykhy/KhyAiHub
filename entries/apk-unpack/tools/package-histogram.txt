@@ -1,0 +1,18 @@
+total classes: 528
+sum of groups: 528
+354	com/hiao/v2/ui
+57	com/hiao/v2/core
+44	com/hiao/v2/tools
+22	com/hiao/v2/media
+16	com/hiao/v2/bridge
+15	com/hiao/v2/brain
+11	com/hiao/v2/governance
+1	com/hiao/v2/App
+1	com/hiao/v2/R$color
+1	com/hiao/v2/R$drawable
+1	com/hiao/v2/R$mipmap
+1	com/hiao/v2/R$string
+1	com/hiao/v2/R$style
+1	com/hiao/v2/R$xml
+1	com/hiao/v2/R
+1	com/hiao/v2/quick

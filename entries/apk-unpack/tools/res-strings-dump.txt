@@ -1,0 +1,1 @@
+total entries: 348 types: color,drawable,mipmap,string,style,xml
