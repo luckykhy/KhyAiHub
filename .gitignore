@@ -480,8 +480,11 @@ entries/apk-unpack/tools/*
 # (5) works/backup/<日期>/README.md —— 归档清单。归档目录整体是二进制大件、绝不入
 #     版本库，但清单是它唯一的记录：2026-11-20 实测表内数字与磁盘已差约 1 GB
 #     （dist-electron-3d 那 368 MB 根本不存在，pkg 写 654 MB 实际 63 MB），
-#     而因为它自己也被忽略，这种漂移没有任何机制能发现。只放行 README.md，
-#     父链同上：先放行日期目录、用 * 收回兄弟、再放行 README。
+#     而因为它自己也被忽略，这种漂移没有任何机制能发现。只放行 README.md。
+#     父链要从最顶层开始写：works/backup/ 自己被第 353 行排除时，git 无法下降，
+#     单独反选它下面的路径是 no-op（2026-11-20 第一版就漏了第一级，git add 直接拒绝）。
+!works/backup/
+works/backup/*
 !works/backup/build-artifacts-20261120/
 works/backup/build-artifacts-20261120/*
 !works/backup/build-artifacts-20261120/README.md
