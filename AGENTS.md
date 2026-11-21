@@ -141,9 +141,16 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
    （`claimed_by` / `claimed_at` / `lease_expires`，默认 120 分钟）协调，
    租约未到期的任务他人不可抢占 —— 不再需要跨仓库协调。
 
-> ⚠ **`main` 的实际上游是 `khy-mirror/main`（不是 `origin/main`）**。
-> 任何同步脚本或文档都应用 `git rev-parse --abbrev-ref @{upstream}` **动态取上游**，
-> 不要硬编码远端名。详见 `[DESIGN-ARCH-118]` §3.6 与 `[DESIGN-SEMVER-002]`。
+> ⚠ **`main` 目前没有上游**（2026-11-21 解除跟踪）。原上游 `khy-mirror` 的底层仓
+> `luckykhy/khy_os` 已删除（2026-11-04 记载，2026-11-21 经 SSH 复核
+> `Repository not found` 确认）——这正是不硬编码远端名的理由：上游会变、会死，
+> 写死的名字只会安静地指向一个不存在的地方。任何同步脚本与文档仍应用
+> `git rev-parse --abbrev-ref @{upstream}` **动态取上游**。
+> 详见 `[DESIGN-ARCH-118]` §3.6 与 `[DESIGN-SEMVER-002]`。
+>
+> ⚠ **`origin` 的 `main` 禁止直推**：`origin` 即 KhyAiHub 分发仓，其 `main` 是 curated
+> 历史，与本地历史不相交，只应由 `scripts/release/sync-dist.js` 追加；
+> `mirror-sync.js` 已内置该禁区（`origin/main` 直推打 `[SKIP]` 并清掉队列里的死账）。
 >
 > ⚠ **`works/record/ai/hq/` 必须入仓**（原 `<root>/.ai/hq/`，B档 W9′ 迁入）：`works/data/khy/` / `works/data/khyos/` / `.khyquant/` 都被 gitignore（本机态），
 > 所以任务/Bug 状态**只能**放 `.ai/`，放别处会导致多机不同步。
@@ -427,8 +434,8 @@ R-1 规定了什么时候该 bump，但**没有任何东西在那个时刻提醒
 #### 分发仓 `KhyAiHub`：只推 GitHub，Gitee 由 mirror 派生
 
 > **作用域**：这一小节只管 **`KhyAiHub` 这个分发仓**（`luckykhy/KhyAiHub` ↔
-> `luckyhaoyunkhy/KhyAiHub`）。它与上面「多机协作自举」那节的 `origin` / `khy-mirror`
-> **不是同一套远端**——那节讲的是本开发仓的内部拓扑，这节讲的是把内容发出去的那一个仓。
+> `luckyhaoyunkhy/KhyAiHub`）。它与上面「多机协作自举」那节讲的**开发仓上游**
+> **不是同一套远端**——那节讲本开发仓的内部同步，这节讲的是把内容发出去的那一个仓。
 > 别把两处的远端名混用。
 
 **拓扑（唯一正确形态）**：
