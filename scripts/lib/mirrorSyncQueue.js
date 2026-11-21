@@ -17,6 +17,7 @@
  *   - redactSecrets(text)        写盘前抹掉 URL 内联凭据 / 令牌样式串（纯）
  *   - upsertEntry / removeEntry  队列 reducer，按 (remote, branch) 去重（纯）
  *   - planWork({...})            待推项 + 本次目标 -> 有序工作清单（纯）
+ *   - directPushForbiddenReason  直推禁区判定（纯）：分发仓 main 禁直推，只走 sync-dist
  * 真正的落盘、git 调用在 scripts/sync/mirror-sync.js 里做。
  *
  * 红线：任何写入队列文件的文本都必须先过 redactSecrets。git 的报错会原样回显远端
@@ -272,6 +273,30 @@ function removeEntry(queue, target) {
   };
 }
 
+/* 直推禁区 -------------------------------------------------------------------- */
+
+// origin（= KhyAiHub 分发仓）的 main 是 curated 历史：为公开可读性手工排过，与本地
+// 历史是两条不相交的线——直推只会拿到 non-fast-forward，而强推又会破坏 Gitee 镜像的
+// fast-forward。它只应由 scripts/release/sync-dist.js 以「追加」演进（那里的头部
+// 注释有完整缘由）。功能分支不受限：历史与 origin 共享，直推是快进。
+// 2026-11-21 实测：hook 对每个 main 提交都尝试 origin 直推，每次都被拒、每次入队，
+// 队列里躺着一条永远还不清的账——所以禁区放在这里，而不是靠人记得。
+const DIRECT_PUSH_FORBIDDEN = Object.freeze({
+  origin: Object.freeze(['main']),
+});
+
+/**
+ * 某个 (远端, 分支) 是否禁止直推。返回原因串（空串 = 放行）。
+ * @param {string} remote
+ * @param {string} branch
+ * @returns {string}
+ */
+function directPushForbiddenReason(remote, branch) {
+  const denied = DIRECT_PUSH_FORBIDDEN[_str(remote)];
+  if (!denied || !denied.includes(_str(branch))) return '';
+  return '分发仓 curated 历史只走 sync-dist 追加，直推必 non-fast-forward';
+}
+
 /**
  * 本次要推哪些 (远端, 分支)：队列欠账优先（先补历史），再推本次目标。
  *
@@ -280,12 +305,15 @@ function removeEntry(queue, target) {
  * 的 tip 变了。所以 tips 里 tip 与失败时记录的 commit 不同的 diverged 条目自动放行一次
  * —— 否则用户照着 hint 执行 rebase + retry 之后什么都不会发生，还得自己想起加 --force。
  *
+ * 禁区目标（directPushForbiddenReason）既不推也不入队，进 skipped 并带原因——
+ * 调用方负责清掉队列里对应的死账并告知用户。
+ *
  * @param {object} options
  * @param {object} options.queue     当前队列
  * @param {object[]} options.targets 本次显式目标 [{remote, branch}]
  * @param {object} [options.tips]    分支名 -> 当前本地 tip（用于判断 rebase 是否已发生）
  * @param {boolean} [options.force]  连未变动的 diverged 一起重放
- * @returns {{work: object[], held: object[]}}
+ * @returns {{work: object[], held: object[], skipped: object[]}}
  */
 function planWork(options) {
   const opts = options && typeof options === 'object' ? options : {};
@@ -296,11 +324,18 @@ function planWork(options) {
 
   const work = [];
   const held = [];
+  const skipped = [];
   const seen = new Set();
 
   for (const entry of queue.entries) {
     const key = entryKey(entry);
     if (seen.has(key)) continue;
+    const forbidden = directPushForbiddenReason(entry.remote, entry.branch);
+    if (forbidden) {
+      seen.add(key);
+      skipped.push({ remote: entry.remote, branch: entry.branch, reason: forbidden });
+      continue;
+    }
     if (!force && !describeKind(entry.kind).retryable && !_movedSinceFailure(entry, tips)) {
       held.push(entry);
       continue;
@@ -321,11 +356,17 @@ function planWork(options) {
     if (!remote || !branch) continue;
     const key = `${remote} ${branch}`;
     if (seen.has(key)) continue;
+    const forbidden = directPushForbiddenReason(remote, branch);
+    if (forbidden) {
+      seen.add(key);
+      skipped.push({ remote, branch, reason: forbidden });
+      continue;
+    }
     seen.add(key);
     work.push({ remote, branch, reason: 'current', kind: '', attempts: 0 });
   }
 
-  return { work, held };
+  return { work, held, skipped };
 }
 
 /**
@@ -370,5 +411,6 @@ module.exports = {
   upsertEntry,
   removeEntry,
   planWork,
+  directPushForbiddenReason,
   describeQueue,
 };

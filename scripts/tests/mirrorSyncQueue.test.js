@@ -140,18 +140,18 @@ test('planWork: 队列欠账排在本次目标之前，同一目标不推两次'
   });
   const plan = queue.planWork({
     queue: state,
-    targets: [{ remote: 'gitee', branch: 'main' }, { remote: 'origin', branch: 'main' }],
+    targets: [{ remote: 'gitee', branch: 'main' }, { remote: 'origin', branch: 'dev' }],
   });
   assert.deepEqual(
     plan.work.map(item => `${item.remote}/${item.branch}:${item.reason}`),
-    ['gitee/main:queued', 'origin/main:current'],
+    ['gitee/main:queued', 'origin/dev:current'],
   );
   assert.equal(plan.held.length, 0);
 });
 
 test('planWork: diverged 默认只上报，--force 才重放', () => {
   const state = queue.upsertEntry(null, {
-    remote: 'origin',
+    remote: 'gitee',
     branch: 'main',
     commit: 'aaa',
     kind: queue.KIND_DIVERGED,
@@ -168,7 +168,7 @@ test('planWork: diverged 默认只上报，--force 才重放', () => {
 
 test('planWork: rebase 之后（本地 tip 变了）diverged 自动放行，无需 --force', () => {
   const state = queue.upsertEntry(null, {
-    remote: 'origin',
+    remote: 'gitee',
     branch: 'main',
     commit: 'aaa',
     kind: queue.KIND_DIVERGED,
@@ -197,4 +197,36 @@ test('describeQueue: 每行都带动作、目标与进度', () => {
   assert.match(lines[0], /gitee\/main/);
   assert.match(lines[0], /已尝试 1 次/);
   assert.deepEqual(queue.describeQueue(null), []);
+});
+
+test('directPushForbiddenReason: 分发仓 main 禁直推，功能分支与其它远端放行', () => {
+  assert.ok(queue.directPushForbiddenReason('origin', 'main').length > 0);
+  assert.equal(queue.directPushForbiddenReason('origin', 'refactor/core-multiterm'), '');
+  assert.equal(queue.directPushForbiddenReason('gitee', 'main'), '');
+  assert.equal(queue.directPushForbiddenReason('', 'main'), '');
+  assert.equal(queue.directPushForbiddenReason('origin', ''), '');
+});
+
+test('planWork: 禁区目标既不推也不入队，进 skipped 并带原因', () => {
+  const plan = queue.planWork({
+    queue: null,
+    targets: [{ remote: 'origin', branch: 'main' }, { remote: 'origin', branch: 'dev' }],
+  });
+  assert.deepEqual(plan.work.map(item => `${item.remote}/${item.branch}`), ['origin/dev']);
+  assert.equal(plan.skipped.length, 1);
+  assert.equal(plan.skipped[0].remote, 'origin');
+  assert.equal(plan.skipped[0].branch, 'main');
+  assert.ok(plan.skipped[0].reason.length > 0, '跳过必须带原因，否则用户不知道该信谁');
+});
+
+test('planWork: 队列里的禁区死账同样被滤出（旧版本或手改留下的 origin/main）', () => {
+  // 不经 upsertEntry 直接构造：模拟历史遗留 / 手改的队列文件。
+  const state = {
+    version: 1,
+    entries: [{ remote: 'origin', branch: 'main', kind: queue.KIND_NETWORK, attempts: 3 }],
+  };
+  const plan = queue.planWork({ queue: state, targets: [] });
+  assert.equal(plan.work.length, 0);
+  assert.equal(plan.held.length, 0);
+  assert.equal(plan.skipped.length, 1);
 });

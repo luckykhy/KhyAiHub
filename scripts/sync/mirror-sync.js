@@ -14,6 +14,10 @@
  *   node scripts/sync/mirror-sync.js retry      # 只补推队列（网络/令牌恢复后用）
  *   node scripts/sync/mirror-sync.js status     # 只看欠账，不发起任何推送
  *
+ * 直推禁区：origin 的 main 是 KhyAiHub 分发仓的 curated 历史，与本地历史不相交，
+ * 禁止直推——它只应由 scripts/release/sync-dist.js 以「追加」演进。被禁的目标打
+ * [SKIP] 并从队列清掉，判定在 scripts/lib/mirrorSyncQueue.js（纯函数，有契约测试）。
+ *
  * 常用参数：
  *   --branch=<name>     指定分支（默认当前分支）
  *   --remote=<name>     只处理某个远端，可重复
@@ -254,9 +258,17 @@ async function main() {
     if (!tips[entry.branch]) tips[entry.branch] = branchTip(root, entry.branch);
   }
 
-  const { work, held } = queueLib.planWork({ queue, targets, tips, force: options.force });
+  const { work, held, skipped } = queueLib.planWork({ queue, targets, tips, force: options.force });
+
+  // 禁区目标永远推不成功：清掉队列里对应的死账，而不是每次提交重放同一次 rejected
+  // （与下方「本地分支已删除」同一处理——还不清的账不该一直躺在清单里）。
+  for (const item of skipped) {
+    queue = queueLib.removeEntry(queue, { remote: item.remote, branch: item.branch, at: new Date().toISOString() });
+    console.log(`[SKIP] ${item.remote}/${item.branch} 直推被禁——${item.reason}`);
+  }
 
   if (work.length === 0 && held.length === 0) {
+    if (skipped.length > 0) writeQueue(root, queue);
     if (options.action === 'retry') console.log('[OK] 镜像补推队列为空，无需补推。');
     return 0;
   }
