@@ -494,18 +494,28 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
    （2026-10-10 由已删除的 `luckykhy/khy_os_private` 合并而来；那个仓只剩
    main + 3 个 dependabot 分支，内容全部本地已有，删除无损失。）
 
-### 分支备份现状（2026-10-11 实测，2026-11-04 修订）
+### 分支备份现状（2026-10-11 实测，2026-11-04 / 2026-11-21 修订）
 
-本地 25 个分支（`refs/heads`）已按下述口径备份到 `KhyAiHub`：
+本地分支已按下述口径备份到 `KhyAiHub`（2026-11-21 整合后远端共 7 个分支）：
 
 | 落点 | 内容 |
 |---|---|
 | `archive/full-history` | `main` 的 853 笔治理前全历史 |
-| `archive/branch/<原名>` | 15 个本地分支逐一推送 |
+| `archive/branch/<原名>` | `backup/workspace-20261010`、`chore/hygiene-20261010`、`chore/repo-layer-taxonomy`、`archive/branch/main` 四个 |
+| `archive/branch/backup/main-snapshots-20260927` | 治理改造期 12 条平行快照线的合一存档（见下） |
 
-**已备份（16 个）**：`main`、`backup/main-r3~r11`（9 个）、`backup/main-ai-polluted-20260927`、
-`backup/main-pre-sanitize-20260927`、`backup/workspace-20261010`、`chore/hygiene-20261010`、
-`chore/repo-layer-taxonomy`、`rebuild/from-scratch`。
+**已备份（5 个原名 + 1 个合一存档 + full-history）**：`main`、`backup/workspace-20261010`、
+`chore/hygiene-20261010`、`chore/repo-layer-taxonomy`、`archive/branch/main`、
+`archive/full-history`、`archive/branch/backup/main-snapshots-20260927`。
+
+**2026-11-21 分支整合**（KhyAiHub 22 → 7）：① 删 3 个内容已在 `main` 的工作分支
+（`refactor/core-multiterm`、`chore/docker-image-slim-20261102`、`feat/thinking-fold-20261103`）；
+② 删与 `main-r11` 同 SHA 的冗余 ref `rebuild/from-scratch`；③ 治理改造期的 13 个 ref
+（`backup/main-r3~r11` 10 个 + `main-ai-polluted` + `main-pre-sanitize` + 上述冗余项，
+实为 12 条独立线）经一个 **12 父存档提交**合一。数值核：12 线合计可达 694 个提交，
+合并分支 695（= 694 + 存档提交本身），12 个 tip 经 `merge-base --is-ancestor` 全部可达，
+其中 **637 个**不重于 `full-history` 与 `main`——提交零损失，只是不再各占分支名，
+各线原 tip 记在该存档提交的信息里。
 
 **⚠ 未能备份（8 个）——本地对象库损坏，非疏忽**：
 
