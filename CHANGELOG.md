@@ -5,6 +5,21 @@ All notable changes to khy OS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.3
+
+khy OS 1.2.3:开发态批次收口——分发仓同步与分支合并的运维收口；mirror-sync 补上「分发仓 main 禁直推」的禁区，队列里不再躺永远还不清的账。
+
+### Highlights
+
+- **mirror-sync 内置直推禁区**（`scripts/lib/mirrorSyncQueue.js` + `scripts/sync/mirror-sync.js`）：`origin` 的 `main` 是 KhyAiHub 分发仓的 curated 历史，与本地历史不相交，直推只会拿到 non-fast-forward。此前 post-commit 钩子对每个 main 提交都尝试直推、每次被拒、每次入队——队列里躺着一条结构上永远还不清的账。现禁区判定是纯函数（`directPushForbiddenReason`，三条契约测试守着），被禁目标打 `[SKIP]` 并清掉死账，钩子实测不再触网。
+- **分支合并与分发仓追平**：`refactor/core-multiterm`（领先 257 笔）合入 main（合并提交落在功能分支侧、main 快进——合并提交的 3984 文件 delta 过不了变更面守卫，换拓扑后每笔新提交都是小 delta）；本地积压的 280 笔提交经 `scripts/release/sync-dist.js` 逐笔追加进 KhyAiHub，每批都过「链尖树 == 本地 HEAD 树」校验，Gitee 由 `sync-gitee.yml` 镜像派生、不直推。
+- **上游指引订正**（`AGENTS.md`）：`khy-mirror` 的底层仓 `luckykhy/khy_os` 已删除（2026-11-21 经 SSH 复核确认），main 的上游跟踪已解除；文档从「实际上游是 khy-mirror」改为「动态取上游 + origin 的 main 禁直推」。
+
+### Compatibility
+
+- 安装 / 升级:`pip install -U khy-os` 或 `npm install -g @khy-os/khy-os`;`khy --version` 应报告 `1.2.3`。
+
+---
 ## 1.2.2
 
 khy OS 1.2.2:开发态批次收口——思维链与工具执行在三端成块可读、分发仓迁到 KhyAiHub、文档主张首次变成可机检的事实。
