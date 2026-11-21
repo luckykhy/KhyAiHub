@@ -534,8 +534,12 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
 **2026-11-04 修复**：删除 10 个错位 loose 对象文件（2026-09-23 一次失败修复的遗留——
 内容与文件名哈希不符，`fsck` 报 hash-path mismatch）。缺失的 22 个对象无法恢复，且它们
 本身就是「生成 pack 整包失败」的原因：实测 `git gc` 在 repack 遍历 commit `e13045cc`
-的父提交时 `fatal` 退出。本库压缩请走不遍历 refs 的 `git prune-packed` + `git repack -d`，
-**`git gc` 不可用**（每小时的 Git Maintenance 任务也会因此继续失败，无害）。
+的父提交时 `fatal` 退出。**2026-11-21 补测**：`git repack -d` 同样 fatal
+（`unable to read 121661084f…`，正是那批缺失对象之一）——原结论只验证了 `git gc` 不可用，
+并未验证 repack 可用，实际它也会在同一批缺失对象上死。**本库目前没有任何可用的压缩路径**：
+`git prune-packed` 安全但恒空转（prune-packable 为 0），`git prune` 与任何形式的
+repack/gc 都过不了对象遍历。松散对象与悬挂对象只能原状保留（每小时的 Git Maintenance
+任务也会因此继续失败，无害）。
 备份在 `%TEMP%\zcode-bash-InxfvX\gitobj-backup-20261104\`（含 manifest，可原路拷回）。
 
 **现状**：6 个受损分支的 `git log` 可走——2026-09-23 预设的 4 个 replace 引用
